@@ -1,0 +1,52 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Build outputs
+dist/
+dist-ssr/
+out/
+build/
+
+# Bun specific
+.bun/
+# Buka komen baris di bawah jika kamu TIDAK ingin menyimpan lockfile Bun di Git
+# bun.lockb
+# bun.lock
+
+# Vite & Tooling caches
+.vite/
+.eslintcache
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment variables (Sangat penting agar credential tidak bocor)
+.env
+.env.local
+.env.*.local
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
