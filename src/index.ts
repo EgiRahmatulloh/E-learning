@@ -2,6 +2,7 @@ import { Elysia } from "elysia";
 import { staticPlugin } from "@elysia/static";
 
 const isProd = Bun.env.NODE_ENV === "production";
+const html = !isProd ? await import("../index.html") : null;
 
 const app = new Elysia();
 
@@ -10,6 +11,16 @@ app.get("/api/hello", () => ({
   message: "Hello from Elysia!",
   status: "Connected",
 }));
+
+// 1b. DEV: Sajikan file statis dari public/ (gambar, favicon, dll)
+if (!isProd) {
+  app.use(
+    staticPlugin({
+      assets: "public",
+      prefix: "/",
+    })
+  );
+}
 
 // 2. PRODUCTION: Serahkan semua urusan statis & SPA ke Elysia Static Plugin
 if (isProd) {
@@ -21,33 +32,31 @@ if (isProd) {
     })
   );
 } 
-// 3. DEVELOPMENT: Hanya perlu handle HMR untuk root/SPA routes
-else {
-  app.get("/*", async ({ path, set }) => {
-    if (path.includes(".")) {
-      set.status = 404;
-      return "Not Found";
-    }
-    try {
-      return (await import("../index.html")).default;
-    } catch (e) {
-      set.status = 500;
-      return "Development index.html not found";
-    }
-  });
-}
+
 
 // 4. Jalankan Server
-app.listen({
-  port: process.env.PORT || 3000,
-  hostname: "0.0.0.0",
+const port = process.env.PORT || 3000;
+const hostname = isProd ? "0.0.0.0" : "localhost";
+
+const server = Bun.serve({
+  port,
+  hostname,
   development: !isProd && {
     hmr: true,
     console: true,
   },
+  routes: {
+    ...(!isProd && html ? {
+      "/": html.default,
+      "/index.html": html.default,
+    } : {}),
+  } as any,
+  fetch(req) {
+    return app.fetch(req);
+  },
 });
 
-console.log(`🚀 Server running at ${app.server?.url} [${isProd ? "production" : "development"}]`);
+console.log(`🚀 Server running at ${server.url} [${isProd ? "production" : "development"}]`);
 console.log("🦊 Elysia is ready to handle requests!");
 
 export default app;
