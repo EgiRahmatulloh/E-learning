@@ -1,0 +1,33 @@
+# Dependency directories
+node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+out/
+
+# Caches
+.vite/
+.eslintcache
+.bun/
+
+# Local env files
+.env.local
+.env.*.local
+*.local
+
+# Git & Editor files
+.git/
+.github/
+.vscode/
+.idea/
+*.suo
+*.sln
+*.swp
+*.backup
+
+# Docker files
+Dockerfile
+.dockerignore
+docker-compose.yml
