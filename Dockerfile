@@ -22,11 +22,11 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Salin package.json, lockfile, dan tsconfig (untuk resolusi path alias Bun)
-COPY package.json bun.lock tsconfig.json ./
+# Salin package.json, lockfile, tsconfig, dan drizzle config
+COPY package.json bun.lock tsconfig.json drizzle.config.ts ./
 
-# Instal hanya dependency production untuk menghemat ruang
-RUN bun install --frozen-lockfile --production
+# Instal semua dependensi agar drizzle-kit dapat digunakan saat inisialisasi database
+RUN bun install --frozen-lockfile
 
 # Salin hasil build frontend dari stage builder
 COPY --from=builder /app/dist ./dist
@@ -37,5 +37,5 @@ COPY --from=builder /app/src ./src
 # Expose port yang digunakan aplikasi (default: 3000)
 EXPOSE 3000
 
-# Jalankan server menggunakan skrip start yang ada di package.json
-CMD ["bun", "run", "start"]
+# Jalankan inisialisasi/push skema database lalu mulai server
+CMD ["sh", "-c", "bun run db:push && bun run start"]
