@@ -116,11 +116,22 @@ function App() {
   const [activeNewsTab, setActiveNewsTab] = useState<"semua" | "sekolah" | "aktivitas" | "prestasi">("semua")
   const [activeAlumniTab, setActiveAlumniTab] = useState<number | "semua">("semua")
 
+  // Helper to safely parse user from localStorage
+  const getLocalStorageUser = (): { id: number; name: string; username: string; role: string } | null => {
+    try {
+      const stored = localStorage.getItem("user");
+      return stored ? JSON.parse(stored) : null;
+    } catch (e) {
+      console.error("Failed to parse user session from localStorage:", e);
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      return null;
+    }
+  };
+
   // Authentication States
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"))
-  const [user, setUser] = useState<{ id: number; name: string; username: string; role: string } | null>(
-    localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!) : null
-  )
+  const [user, setUser] = useState<{ id: number; name: string; username: string; role: string } | null>(getLocalStorageUser())
   const [loginDialogOpen, setLoginDialogOpen] = useState(false)
   const [infoDialogOpen, setInfoDialogOpen] = useState(false)
   const [loginUsername, setLoginUsername] = useState("")
@@ -154,32 +165,37 @@ function App() {
     }
   }, [user, currentPath]);
 
-  // Verify token on mount/change
+  // Verify token on mount/change with AbortController cleanup
   useEffect(() => {
-    if (token) {
-      fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      .then(res => {
-        if (!res.ok) throw new Error("Expired session");
-        return res.json();
-      })
-      .then(data => {
-        if (data.success) {
-          setUser(data.user);
-          localStorage.setItem("user", JSON.stringify(data.user));
-        }
-      })
-      .catch(() => {
-        setToken(null);
-        setUser(null);
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        navigate("/");
-      });
-    }
+    if (!token) return;
+
+    const controller = new AbortController();
+    fetch('/api/auth/me', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      signal: controller.signal
+    })
+    .then(res => {
+      if (!res.ok) throw new Error("Expired session");
+      return res.json();
+    })
+    .then(data => {
+      if (data.success) {
+        setUser(data.user);
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+    })
+    .catch((err) => {
+      if (err.name === 'AbortError') return;
+      setToken(null);
+      setUser(null);
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/");
+    });
+
+    return () => controller.abort();
   }, [token])
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -204,8 +220,9 @@ function App() {
         setLoginPassword("");
         navigate("/dashboard");
       }
-    } catch (err: any) {
-      setLoginError(err.message || "Koneksi ke server gagal");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Koneksi ke server gagal";
+      setLoginError(message);
     } finally {
       setLoginLoading(false);
     }

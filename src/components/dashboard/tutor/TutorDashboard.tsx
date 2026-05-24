@@ -1,9 +1,21 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { CheckCircle2 } from "lucide-react";
 
 export function TutorDashboard() {
+  const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
+
+  const showToast = (message: string) => {
+    setToast({ message, show: true });
+    const timer = setTimeout(() => {
+      setToast({ message: "", show: false });
+    }, 3000);
+    return () => clearTimeout(timer);
+  };
+
   return (
-    <Card className="border-slate-200/60 bg-white p-6 rounded-2xl shadow-sm space-y-6 animate-in fade-in duration-300">
+    <Card className="border-slate-200/60 bg-white p-6 rounded-2xl shadow-sm space-y-6 animate-in fade-in duration-300 relative">
       <div>
         <h3 className="text-lg font-black text-[#280f91]">Penilaian Warga Belajar</h3>
         <p className="text-xs text-slate-500 font-semibold">Silakan berikan evaluasi nilai tugas mingguan warga belajar Paket B & C.</p>
@@ -28,7 +40,7 @@ export function TutorDashboard() {
               <td className="py-4 px-4 font-black text-slate-800">85 / 100</td>
               <td className="py-4 px-4">
                 <Button 
-                  onClick={() => alert("Nilai berhasil disimpan!")}
+                  onClick={() => showToast("Nilai Ahmad Fauzi berhasil disimpan!")}
                   size="sm" 
                   className="rounded-lg bg-[#280f91] hover:bg-[#ff6105] text-white font-bold text-xs h-8 px-3 cursor-pointer transition-colors"
                 >
@@ -43,7 +55,7 @@ export function TutorDashboard() {
               <td className="py-4 px-4 font-black text-slate-800">90 / 100</td>
               <td className="py-4 px-4">
                 <Button 
-                  onClick={() => alert("Nilai berhasil disimpan!")}
+                  onClick={() => showToast("Nilai Siti Rahma berhasil disimpan!")}
                   size="sm" 
                   className="rounded-lg bg-[#280f91] hover:bg-[#ff6105] text-white font-bold text-xs h-8 px-3 cursor-pointer transition-colors"
                 >
@@ -54,6 +66,14 @@ export function TutorDashboard() {
           </tbody>
         </table>
       </div>
+
+      {/* Floating Modern Toast Notification */}
+      {toast.show && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-slate-900/95 backdrop-blur-md text-white px-5 py-4 rounded-2xl shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-6 duration-300">
+          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+          <span className="text-sm font-bold tracking-tight">{toast.message}</span>
+        </div>
+      )}
     </Card>
   );
 }

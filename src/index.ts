@@ -12,11 +12,21 @@ await seedDatabase();
 const isProd = Bun.env.NODE_ENV === "production";
 const html = !isProd ? await import("../index.html") : null;
 
+// Validasi JWT_SECRET yang aman
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret && isProd) {
+  throw new Error("❌ CRITICAL: JWT_SECRET environment variable is missing in production!");
+}
+if (!jwtSecret) {
+  console.warn("⚠️ Warning: JWT_SECRET is missing. Using insecure fallback secret for development.");
+}
+const finalJwtSecret = jwtSecret || 'super-secret-dev-key-pkbm-menuju-makmur';
+
 const app = new Elysia()
   .use(
     jwt({
       name: 'jwt',
-      secret: process.env.JWT_SECRET || 'super-secret-key-pkbm-menuju-makmur',
+      secret: finalJwtSecret,
       schema: t.Object({
         id: t.Numeric(),
         username: t.String(),
@@ -137,8 +147,15 @@ if (isProd) {
     })
   );
   
-  // Fallback rute untuk SPA agar refresh halaman /dashboard aman di produksi
-  app.get("/dashboard", () => Bun.file("dist/index.html"));
+  // Wildcard fallback rute untuk SPA di produksi agar refresh halaman aman
+  app.get("/*", ({ set, request }) => {
+    const url = new URL(request.url);
+    if (url.pathname.startsWith("/api/") || url.pathname.includes(".")) {
+      set.status = 404;
+      return "Not Found";
+    }
+    return Bun.file("dist/index.html");
+  });
 } 
 
 
