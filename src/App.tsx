@@ -3,6 +3,7 @@ import './App.css'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import DashboardPage from "@/components/dashboard/DashboardPage"
 import { 
   GraduationCap, 
   BookOpen, 
@@ -104,6 +105,8 @@ interface GalleryItem {
   image: string;
 }
 
+
+
 function App() {
   const [backendData, setBackendData] = useState<{ message: string; status: string } | null>(null)
   
@@ -112,6 +115,109 @@ function App() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [activeNewsTab, setActiveNewsTab] = useState<"semua" | "sekolah" | "aktivitas" | "prestasi">("semua")
   const [activeAlumniTab, setActiveAlumniTab] = useState<number | "semua">("semua")
+
+  // Authentication States
+  const [token, setToken] = useState<string | null>(localStorage.getItem("token"))
+  const [user, setUser] = useState<{ id: number; name: string; username: string; role: string } | null>(
+    localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!) : null
+  )
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false)
+  const [infoDialogOpen, setInfoDialogOpen] = useState(false)
+  const [loginUsername, setLoginUsername] = useState("")
+  const [loginPassword, setLoginPassword] = useState("")
+  const [loginError, setLoginError] = useState("")
+  const [loginLoading, setLoginLoading] = useState(false)
+
+  // URL Path State for SPA Routing
+  const [currentPath, setCurrentPath] = useState(window.location.pathname)
+
+  // Listen to browser navigation changes (e.g. back/forward buttons)
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const navigate = (path: string) => {
+    window.history.pushState({}, "", path);
+    setCurrentPath(path);
+  };
+
+  // Auth route guards to keep URL & login state in sync
+  useEffect(() => {
+    if (user && currentPath === "/") {
+      navigate("/dashboard");
+    } else if (!user && currentPath === "/dashboard") {
+      navigate("/");
+    }
+  }, [user, currentPath]);
+
+  // Verify token on mount/change
+  useEffect(() => {
+    if (token) {
+      fetch('/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Expired session");
+        return res.json();
+      })
+      .then(data => {
+        if (data.success) {
+          setUser(data.user);
+          localStorage.setItem("user", JSON.stringify(data.user));
+        }
+      })
+      .catch(() => {
+        setToken(null);
+        setUser(null);
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/");
+      });
+    }
+  }, [token])
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError("");
+    setLoginLoading(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: loginUsername, password: loginPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Gagal masuk");
+      if (data.success) {
+        setToken(data.token);
+        setUser(data.user);
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        setLoginDialogOpen(false);
+        setLoginUsername("");
+        setLoginPassword("");
+        navigate("/dashboard");
+      }
+    } catch (err: any) {
+      setLoginError(err.message || "Koneksi ke server gagal");
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/");
+  };
   
   // Mock Data aligned with Canva specs
   const slides = [
@@ -340,6 +446,14 @@ function App() {
     ? newsItems 
     : newsItems.filter(n => n.category === activeNewsTab)
 
+  if (user && currentPath === "/dashboard") {
+    return (
+      <TooltipProvider>
+        <DashboardPage user={user} handleLogout={handleLogout} />
+      </TooltipProvider>
+    );
+  }
+
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-slate-50/50 text-slate-900 font-sans selection:bg-[#280f91] selection:text-white">
@@ -372,14 +486,16 @@ function App() {
             <a href="#kontak" className="text-sm font-semibold text-slate-600 hover:text-[#280f91] transition-colors">Kontak</a>
           </nav>
 
-          {/* E-Learning Quick Access Button */}
+          {/* E-Learning Quick Access & Auth Buttons */}
           <div className="hidden lg:flex items-center gap-3">
             <a href="#layanan">
-              <Button className="rounded-full bg-[#280f91] text-white hover:bg-[#ff6105] transition-all font-bold px-6 shadow-md shadow-[#280f91]/20 group">
+              <Button className="rounded-full bg-[#280f91] text-white hover:bg-[#ff6105] transition-all font-bold px-5 shadow-md shadow-[#280f91]/20 group">
                 Portal Belajar
                 <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
               </Button>
             </a>
+
+
           </div>
 
           {/* Mobile menu toggle */}
@@ -407,10 +523,12 @@ function App() {
             </nav>
             <Separator />
             <a href="#layanan" onClick={() => setMobileMenuOpen(false)} className="block">
-              <Button className="w-full rounded-full bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11">
+              <Button className="w-full rounded-full bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 mb-2">
                 Akses E-Learning
               </Button>
             </a>
+
+
           </div>
         )}
       </header>
@@ -430,6 +548,8 @@ function App() {
           </div>
         </div>
       </div>
+
+
 
       {/* 3. HERO SECTION with Canva Outline Texts and Visual Carousel */}
       <section id="beranda" className="relative bg-white pt-12 pb-24 overflow-hidden">
@@ -653,10 +773,11 @@ function App() {
                 </div>
               </CardContent>
               <CardFooter className="p-6 pt-0">
-                <Dialog>
+                <Dialog open={infoDialogOpen} onOpenChange={setInfoDialogOpen}>
                   <DialogTrigger asChild>
                     <Button 
-                      className="w-full rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 transition-colors shadow-md shadow-[#280f91]/20"
+                      onClick={() => setInfoDialogOpen(true)}
+                      className="w-full rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 transition-colors shadow-md shadow-[#280f91]/20 cursor-pointer"
                     >
                       Masuk E-Learning
                     </Button>
@@ -690,11 +811,14 @@ function App() {
                     </div>
                     <DialogFooter className="flex sm:justify-between gap-2 border-t border-slate-100 pt-4">
                       <DialogClose asChild>
-                        <Button variant="outline" className="rounded-xl font-bold">Batal</Button>
+                        <Button variant="outline" className="rounded-xl font-bold cursor-pointer">Batal</Button>
                       </DialogClose>
                       <Button 
-                        onClick={() => alert("Mengarahkan ke halaman autentikasi E-Learning portal kesetaraan...")}
-                        className="rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 px-6 shadow-md shadow-[#280f91]/20"
+                        onClick={() => {
+                          setInfoDialogOpen(false);
+                          setLoginDialogOpen(true);
+                        }}
+                        className="rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 px-6 shadow-md shadow-[#280f91]/20 cursor-pointer"
                       >
                         Lanjutkan Ke Login
                       </Button>
@@ -1538,6 +1662,69 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {/* 11. LOGIN DIALOG MODAL */}
+      <Dialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen}>
+        <DialogContent className="sm:max-w-[425px] border-[#280f91]/20 bg-white/95 backdrop-blur-md">
+          <DialogHeader>
+            <div className="mx-auto p-3 bg-[#280f91]/10 rounded-2xl text-[#280f91] w-fit mb-2">
+              <GraduationCap className="h-8 w-8" />
+            </div>
+            <DialogTitle className="text-2xl font-black text-[#280f91] text-center">Masuk ke Portal Belajar</DialogTitle>
+            <DialogDescription className="text-slate-500 text-center font-medium">
+              Gunakan akun default per role untuk mencoba fitur dashboard kesetaraan.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleLogin} className="space-y-4 py-4">
+            {loginError && (
+              <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 text-xs font-bold rounded-xl flex items-center gap-2 animate-in shake duration-300">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{loginError}</span>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-xs font-black text-slate-700 uppercase tracking-widest block">Username atau Email</label>
+              <input
+                type="text"
+                required
+                placeholder="Contoh: admin, tutor, atau siswa"
+                value={loginUsername}
+                onChange={(e) => setLoginUsername(e.target.value)}
+                className="w-full h-11 px-4 border border-slate-200 rounded-xl font-medium focus:outline-none focus:border-[#280f91] transition-all bg-slate-50/50"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-black text-slate-700 uppercase tracking-widest block">Password</label>
+              <input
+                type="password"
+                required
+                placeholder="••••••••"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                className="w-full h-11 px-4 border border-slate-200 rounded-xl font-medium focus:outline-none focus:border-[#280f91] transition-all bg-slate-50/50"
+              />
+            </div>
+
+            <div className="bg-[#e5fbff] border border-blue-100 rounded-xl p-3 text-[11px] font-semibold text-blue-700 space-y-1">
+              <span className="block font-black text-xs text-[#280f91] uppercase tracking-wider mb-1">🔑 Info Akun Dummy (Seed):</span>
+              <span className="block">• <strong>Admin:</strong> admin / admin123</span>
+              <span className="block">• <strong>Tutor:</strong> tutor / tutor123</span>
+              <span className="block">• <strong>Siswa:</strong> siswa / siswa123</span>
+            </div>
+
+            <Button 
+              type="submit" 
+              disabled={loginLoading}
+              className="w-full h-12 bg-[#280f91] text-white hover:bg-[#ff6105] font-black rounded-xl shadow-md transition-all mt-4 cursor-pointer"
+            >
+              {loginLoading ? "Memproses..." : "Masuk Sekarang"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
       </div>
     </TooltipProvider>
   )
