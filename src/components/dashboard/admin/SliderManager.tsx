@@ -29,7 +29,33 @@ const DEFAULT_SLIDES: SlideData[] = [
 
 const STORAGE_KEY = "pkbm_slider_data";
 
-export function SliderManager() {
+interface SliderManagerProps {
+  userRole: string;
+}
+
+// Strict slide validation type guard
+function isValidSlide(slide: any): slide is SlideData {
+  return (
+    slide !== null &&
+    typeof slide === "object" &&
+    typeof slide.image === "string" &&
+    slide.image.trim() !== "" &&
+    typeof slide.title === "string" &&
+    typeof slide.description === "string"
+  );
+}
+
+export function SliderManager({ userRole }: SliderManagerProps) {
+  // Authorization check: only admin can access this administrative view
+  if (userRole !== "admin") {
+    return (
+      <Card className="border-red-100 bg-red-50 p-6 rounded-2xl shadow-xs">
+        <h3 className="text-lg font-black text-red-900 mb-2">Akses Ditolak</h3>
+        <p className="text-sm font-semibold text-red-700">Anda tidak memiliki wewenang untuk mengakses halaman pengaturan slider ini.</p>
+      </Card>
+    );
+  }
+
   const [slides, setSlides] = useState<SlideData[]>(DEFAULT_SLIDES);
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
@@ -39,8 +65,11 @@ export function SliderManager() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length === 3) {
-          setSlides(parsed);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const validated = parsed.filter(isValidSlide);
+          if (validated.length === parsed.length) {
+            setSlides(validated);
+          }
         }
       } catch {
         // ignore invalid data
@@ -73,8 +102,13 @@ export function SliderManager() {
   };
 
   const handleSave = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(slides));
-    showToast("Perubahan slider beranda berhasil disimpan!");
+    // Validate structural integrity of slides before saving to local storage
+    if (slides.every(isValidSlide)) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(slides));
+      showToast("Perubahan slider beranda berhasil disimpan!");
+    } else {
+      showToast("Gagal menyimpan: Struktur data slide tidak valid.");
+    }
   };
 
   return (
@@ -82,7 +116,7 @@ export function SliderManager() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4 gap-4">
         <div>
           <h3 className="text-lg font-black text-[#280f91]">Kelola Slider Beranda</h3>
-          <p className="text-xs text-slate-500 font-semibold">Atur gambar, judul, dan deskripsi untuk 3 slide hero di halaman utama.</p>
+          <p className="text-xs text-slate-500 font-semibold">Atur gambar, judul, dan deskripsi untuk slide hero di halaman utama.</p>
         </div>
         <Button
           onClick={handleSave}

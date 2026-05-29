@@ -29,10 +29,11 @@ interface HeroProps {
   onServiceClick?: (service: "e-spmb" | "e-learning" | "e-ujian") => void;
 }
 
-// Validation function to safeguard slider data rendering
+// Strict slide validation type guard
 function isValidSlide(slide: any): slide is SlideData {
   return (
-    slide &&
+    slide !== null &&
+    typeof slide === "object" &&
     typeof slide.image === "string" &&
     slide.image.trim() !== "" &&
     typeof slide.title === "string" &&
@@ -83,6 +84,9 @@ export default function Hero({ onServiceClick }: HeroProps) {
 
   const startAutoSlide = useCallback(() => {
     clearAutoSlideTimer();
+    // Do not auto-slide if there is only 1 slide
+    if (slides.length <= 1) return;
+
     autoSlideTimerRef.current = setTimeout(() => {
       clearTransitionTimer();
       setIsTransitioning(true);
@@ -125,12 +129,15 @@ export default function Hero({ onServiceClick }: HeroProps) {
   return (
     <section id="beranda" className="relative w-full overflow-hidden h-screen min-h-screen">
       {/* ===== SLIDER BACKGROUND ===== */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 bg-slate-950">
         {slides.map((slide, idx) => (
           <div
             key={idx}
-            className="absolute inset-0 transition-opacity duration-700 ease-in-out"
-            style={{ opacity: idx === currentSlide && !isTransitioning ? 1 : 0 }}
+            className="absolute inset-0 transition-opacity duration-700 ease-in-out bg-slate-950"
+            style={{ 
+              opacity: idx === currentSlide && !isTransitioning ? 1 : 0,
+              zIndex: idx === currentSlide ? 1 : 0
+            }}
           >
             <img
               src={slide.image}
@@ -199,23 +206,25 @@ export default function Hero({ onServiceClick }: HeroProps) {
             </blockquote>
 
             {/* Slide Indicator Dots */}
-            <div className="flex items-center gap-3 mt-8 justify-center lg:justify-start">
-              {slides.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => goToSlide(idx)}
-                  className={`h-3 rounded-full transition-all duration-500 cursor-pointer ${
-                    idx === currentSlide
-                      ? "w-10 bg-[#cafc05] shadow-md shadow-[#cafc05]/30"
-                      : "w-3 bg-white/40 hover:bg-white/70"
-                  }`}
-                  aria-label={`Slide ${idx + 1}`}
-                />
-              ))}
-              <span className="text-xs font-bold text-white/50 ml-2 tabular-nums">
-                {currentSlide + 1} / {slides.length}
-              </span>
-            </div>
+            {slides.length > 1 && (
+              <div className="flex items-center gap-3 mt-8 justify-center lg:justify-start">
+                {slides.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => goToSlide(idx)}
+                    className={`h-3 rounded-full transition-all duration-500 cursor-pointer ${
+                      idx === currentSlide
+                        ? "w-10 bg-[#cafc05] shadow-md shadow-[#cafc05]/30"
+                        : "w-3 bg-white/40 hover:bg-white/70"
+                    }`}
+                    aria-label={`Slide ${idx + 1}`}
+                  />
+                ))}
+                <span className="text-xs font-bold text-white/50 ml-2 tabular-nums">
+                  {currentSlide + 1} / {slides.length}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* ===== RIGHT: Layanan Digital Portal ===== */}
@@ -261,20 +270,24 @@ export default function Hero({ onServiceClick }: HeroProps) {
       </div>
 
       {/* ===== SLIDER NAVIGATION ARROWS ===== */}
-      <button
-        onClick={prevSlide}
-        className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md hover:bg-white/20 active:scale-90 transition-all cursor-pointer shadow-lg"
-        aria-label="Previous slide"
-      >
-        <ChevronLeft className="h-6 w-6 sm:h-7 sm:w-7" />
-      </button>
-      <button
-        onClick={nextSlide}
-        className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md hover:bg-white/20 active:scale-90 transition-all cursor-pointer shadow-lg"
-        aria-label="Next slide"
-      >
-        <ChevronRight className="h-6 w-6 sm:h-7 sm:w-7" />
-      </button>
+      {slides.length > 1 && (
+        <>
+          <button
+            onClick={prevSlide}
+            className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md hover:bg-white/20 active:scale-90 transition-all cursor-pointer shadow-lg"
+            aria-label="Previous slide"
+          >
+            <ChevronLeft className="h-6 w-6 sm:h-7 sm:w-7" />
+          </button>
+          <button
+            onClick={nextSlide}
+            className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md hover:bg-white/20 active:scale-90 transition-all cursor-pointer shadow-lg"
+            aria-label="Next slide"
+          >
+            <ChevronRight className="h-6 w-6 sm:h-7 sm:w-7" />
+          </button>
+        </>
+      )}
 
       {/* ===== WHATSAPP FLOATING BUTTON ===== */}
       <a
