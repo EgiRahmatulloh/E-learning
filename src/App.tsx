@@ -20,7 +20,8 @@ import Footer from "./components/landing/Footer";
 import LoginModal from "./components/landing/LoginModal";
 
 function App() {
-  const [backendData, setBackendData] = useState<{ message: string; status: string } | null>(null);
+
+  const [activeServiceDialog, setActiveServiceDialog] = useState<"e-spmb" | "e-learning" | "e-ujian" | null>(null);
 
   // Authentication States
   const getLocalStorageUser = (): { id: number; name: string; username: string; role: string } | null => {
@@ -102,24 +103,7 @@ function App() {
     return () => controller.abort();
   }, [token]);
 
-  // Backend status check (fetches the Elysia server hello API)
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch('/api/hello', { signal: controller.signal })
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then(data => setBackendData(data))
-      .catch(err => {
-        if (err.name !== 'AbortError') {
-          console.error("Failed to connect to backend:", err);
-        }
-      });
-    return () => controller.abort();
-  }, []);
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,11 +156,15 @@ function App() {
       <div className="min-h-screen bg-slate-50/50 text-slate-900 font-sans selection:bg-[#280f91] selection:text-white">
         <Header />
         
+        <Hero onServiceClick={(service) => setActiveServiceDialog(service)} />
+        
+        <Services
+          onLoginClick={() => setLoginDialogOpen(true)}
+          activeDialog={activeServiceDialog}
+          onDialogClose={() => setActiveServiceDialog(null)}
+        />
+        
         <Ticker />
-        
-        <Hero />
-        
-        <Services backendData={backendData} onLoginClick={() => setLoginDialogOpen(true)} />
         
         <Agenda />
         

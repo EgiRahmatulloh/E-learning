@@ -1,141 +1,305 @@
-import { useState, useEffect } from "react";
-import { Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
 
-const slides = [
+interface SlideData {
+  image: string;
+  title: string;
+  description: string;
+}
+
+const DEFAULT_SLIDES: SlideData[] = [
   {
+    image: "/images/0e985c33b3e1f88efc234765edf73af2.jpg",
     title: "Pendidikan Setara & Fleksibel",
     description: "Belajar tanpa batas usia, waktu, maupun keadaan. Kami siap membimbing Anda meraih masa depan gemilang.",
-    image: "/images/0e985c33b3e1f88efc234765edf73af2.jpg",
-    stats: "350+ Warga Belajar Aktif",
-    tagline: "Paket A, B, & C"
   },
   {
+    image: "/images/8c928d7128a4a86625e224dd9d3fa78b.png",
     title: "Ujian Pendidikan Kesetaraan (UPK)",
     description: "Penyelenggara resmi Ujian Pendidikan Kesetaraan Paket B & Paket C dengan fasilitas terstandarisasi.",
-    image: "/images/8c928d7128a4a86625e224dd9d3fa78b.png",
-    stats: "Kelulusan Terakreditasi",
-    tagline: "Penyelenggara Resmi"
   },
   {
+    image: "/images/73129d8e548b4795ba15eaafa5d0e39c.jpg",
     title: "Kreativitas & Produk Karya Warga Belajar",
     description: "Mendukung kemandirian warga belajar dengan melatih keterampilan dan mempromosikan produk kreatif buatan mandiri.",
-    image: "/images/73129d8e548b4795ba15eaafa5d0e39c.jpg",
-    stats: "Kreatif & Mandiri",
-    tagline: "Wirausaha Muda"
-  }
+  },
 ];
 
-export default function Hero() {
-  const [currentSlide, setCurrentSlide] = useState(0);
+interface HeroProps {
+  onServiceClick?: (service: "e-spmb" | "e-learning" | "e-ujian") => void;
+}
 
-  // Slide loop timer
+// Strict slide validation type guard
+function isValidSlide(slide: any): slide is SlideData {
+  return (
+    slide !== null &&
+    typeof slide === "object" &&
+    typeof slide.image === "string" &&
+    slide.image.trim() !== "" &&
+    typeof slide.title === "string" &&
+    typeof slide.description === "string"
+  );
+}
+
+export default function Hero({ onServiceClick }: HeroProps) {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [slides, setSlides] = useState<SlideData[]>(DEFAULT_SLIDES);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const transitionTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const autoSlideTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Load and validate slider data from localStorage safely
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 6000);
-    return () => clearInterval(timer);
+    try {
+      const stored = localStorage.getItem("pkbm_slider_data");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const validated = parsed.filter(isValidSlide);
+          if (validated.length > 0) {
+            setSlides(validated);
+            return;
+          }
+        }
+      }
+    } catch {
+      // fallback to defaults
+    }
+    setSlides(DEFAULT_SLIDES);
   }, []);
 
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  const clearTransitionTimer = () => {
+    if (transitionTimerRef.current) {
+      clearTimeout(transitionTimerRef.current);
+      transitionTimerRef.current = null;
+    }
   };
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  const clearAutoSlideTimer = () => {
+    if (autoSlideTimerRef.current) {
+      clearTimeout(autoSlideTimerRef.current);
+      autoSlideTimerRef.current = null;
+    }
   };
+
+  const startAutoSlide = useCallback(() => {
+    clearAutoSlideTimer();
+    // Do not auto-slide if there is only 1 slide
+    if (slides.length <= 1) return;
+
+    autoSlideTimerRef.current = setTimeout(() => {
+      clearTransitionTimer();
+      setIsTransitioning(true);
+      transitionTimerRef.current = setTimeout(() => {
+        setCurrentSlide((prev) => (prev + 1) % slides.length);
+        setIsTransitioning(false);
+        startAutoSlide(); // Trigger next slide timeout seamlessly
+      }, 400);
+    }, 6000);
+  }, [slides.length]);
+
+  // Handle timeout-based auto slide instead of interval to avoid glitches
+  useEffect(() => {
+    startAutoSlide();
+    return () => {
+      clearAutoSlideTimer();
+      clearTransitionTimer();
+    };
+  }, [startAutoSlide]);
+
+  const goToSlide = useCallback((idx: number) => {
+    clearAutoSlideTimer();
+    clearTransitionTimer();
+    setIsTransitioning(true);
+    transitionTimerRef.current = setTimeout(() => {
+      setCurrentSlide(idx);
+      setIsTransitioning(false);
+      startAutoSlide(); // Resume auto-sliding from the newly active slide
+    }, 400);
+  }, [startAutoSlide]);
+
+  const prevSlide = useCallback(() => {
+    goToSlide((currentSlide - 1 + slides.length) % slides.length);
+  }, [currentSlide, slides.length, goToSlide]);
+
+  const nextSlide = useCallback(() => {
+    goToSlide((currentSlide + 1) % slides.length);
+  }, [currentSlide, slides.length, goToSlide]);
 
   return (
-    <section id="beranda" className="relative bg-white pt-12 pb-24 overflow-hidden">
-      {/* Decorative Grid Background */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-60"></div>
-      
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="text-center space-y-6 max-w-4xl mx-auto mb-16">
-          {/* Outlined Glowing Canva-style welcome header */}
-          <div className="inline-block relative">
-            <span className="relative z-10 block text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-[#0ff60a] drop-shadow-[0_2px_10px_rgba(15,246,10,0.3)] select-none">
-              Selamat Datang
-            </span>
-            <span className="absolute inset-0 block text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-white stroke-2 select-none -translate-y-[1px]" style={{ WebkitTextStroke: '2px #280f91' }}>
-              Selamat Datang
-            </span>
+    <section id="beranda" className="relative w-full overflow-hidden h-screen min-h-screen">
+      {/* ===== SLIDER BACKGROUND ===== */}
+      <div className="absolute inset-0 z-0 bg-slate-950">
+        {slides.map((slide, idx) => (
+          <div
+            key={idx}
+            className="absolute inset-0 transition-opacity duration-700 ease-in-out bg-slate-950"
+            style={{ 
+              opacity: idx === currentSlide && !isTransitioning ? 1 : 0,
+              zIndex: idx === currentSlide ? 1 : 0
+            }}
+          >
+            <img
+              src={slide.image}
+              alt={slide.title}
+              className="absolute inset-0 w-full h-full object-cover"
+              loading={idx === 0 ? "eager" : "lazy"}
+            />
           </div>
+        ))}
+        {/* Dark gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/30 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 z-10" />
+      </div>
 
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-[#280f91] select-none leading-none">
-            Di Website <span className="text-[#ff6105] relative inline-block">
-              PKBM MENUJU MAKMUR
-              <span className="absolute bottom-0 left-0 w-full h-[6px] bg-[#cafc05]/80 rounded-full -z-10"></span>
-            </span>
-          </h1>
+      {/* ===== MAIN CONTENT OVERLAY ===== */}
+      <div className="relative z-20 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-full flex items-center min-h-screen">
+        <div className="w-full flex flex-col lg:flex-row items-center lg:items-end justify-between gap-8 py-16 sm:py-20">
           
-          <p className="text-lg sm:text-2xl font-bold leading-relaxed text-[#280f91]/90 max-w-3xl mx-auto drop-shadow-xs italic px-4">
-            “Belajar tidak mengenal batas usia, waktu, maupun keadaan. Wujudkan masa depan yang lebih baik melalui pendidikan”
-          </p>
-        </div>
+          {/* ===== LEFT: Welcome Text ===== */}
+          <div className="flex-1 max-w-2xl text-center lg:text-left space-y-4">
+            {/* Decorative "Selamat Datang" */}
+            <h2
+              className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl leading-none select-none"
+              style={{
+                fontFamily: "'Playfair Display', 'Georgia', serif",
+                fontStyle: "italic",
+                fontWeight: 700,
+                color: "#0ff60a",
+                textShadow: "0 2px 20px rgba(15, 246, 10, 0.4), 0 0 40px rgba(15, 246, 10, 0.15)",
+              }}
+            >
+              Selamat Datang
+            </h2>
 
-        {/* Interactive Slideshow Carousel */}
-        <div className="relative max-w-5xl mx-auto">
-          {/* The Slide Display */}
-          <div className="relative h-[320px] sm:h-[460px] w-full overflow-hidden rounded-3xl border-4 border-[#280f91] bg-slate-900 shadow-2xl transition-all">
-            {slides.map((slide, idx) => (
-              <div 
-                key={idx}
-                className={`absolute inset-0 flex flex-col justify-end p-8 sm:p-16 transition-opacity duration-1000 ${
-                  idx === currentSlide ? "opacity-100 z-10 animate-in fade-in duration-1000" : "opacity-0 z-0 pointer-events-none"
-                }`}
+            {/* "Di Website" */}
+            <h3
+              className="text-2xl sm:text-3xl lg:text-4xl font-black text-white leading-tight select-none"
+              style={{
+                fontFamily: "'Playfair Display', 'Georgia', serif",
+                fontStyle: "italic",
+                textShadow: "0 2px 10px rgba(0,0,0,0.5)",
+              }}
+            >
+              Di Website
+            </h3>
+
+            {/* "PKBM MENUJU MAKMUR" */}
+            <h1
+              className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black leading-none select-none tracking-tight"
+              style={{
+                color: "#ff6105",
+                textShadow: "0 3px 15px rgba(255, 97, 5, 0.3), 2px 2px 0px rgba(0,0,0,0.3)",
+              }}
+            >
+              PKBM MENUJU MAKMUR
+            </h1>
+
+            {/* Quote */}
+            <blockquote className="relative mt-6 pl-4 border-l-4 border-[#cafc05]/60">
+              <p
+                className="text-sm sm:text-base lg:text-lg text-white/90 italic font-medium leading-relaxed"
+                style={{ textShadow: "0 1px 8px rgba(0,0,0,0.4)" }}
               >
-                <img src={slide.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent"></div>
-                
-                {/* Slide Content */}
-                <div className="relative z-20 space-y-3 max-w-2xl text-white">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white/20 backdrop-blur-md px-3.5 py-1 text-xs font-black tracking-widest text-[#cafc05] uppercase border border-white/10">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    {slide.tagline}
-                  </span>
-                  <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
-                    {slide.title}
-                  </h2>
-                  <p className="text-sm sm:text-base text-slate-200 leading-relaxed font-medium">
-                    {slide.description}
-                  </p>
-                  <div className="pt-2 flex items-center gap-4 text-xs font-bold text-[#cafc05]">
-                    <span className="h-2 w-2 rounded-full bg-[#cafc05]"></span>
-                    {slide.stats}
-                  </div>
-                </div>
-              </div>
-            ))}
+                "Belajar tidak mengenal batas usia, waktu, maupun keadaan. Wujudkan masa depan yang lebih baik melalui pendidikan"
+              </p>
+            </blockquote>
 
-            {/* Navigation Arrows */}
-            <button 
-              onClick={prevSlide}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md hover:bg-black/60 active:scale-95 transition-all cursor-pointer"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-            <button 
-              onClick={nextSlide}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md hover:bg-black/60 active:scale-95 transition-all cursor-pointer"
-            >
-              <ChevronRight className="h-6 w-6" />
-            </button>
+            {/* Slide Indicator Dots */}
+            {slides.length > 1 && (
+              <div className="flex items-center gap-3 mt-8 justify-center lg:justify-start">
+                {slides.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => goToSlide(idx)}
+                    className={`h-3 rounded-full transition-all duration-500 cursor-pointer ${
+                      idx === currentSlide
+                        ? "w-10 bg-[#cafc05] shadow-md shadow-[#cafc05]/30"
+                        : "w-3 bg-white/40 hover:bg-white/70"
+                    }`}
+                    aria-label={`Slide ${idx + 1}`}
+                  />
+                ))}
+                <span className="text-xs font-bold text-white/50 ml-2 tabular-nums">
+                  {currentSlide + 1} / {slides.length}
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Indicator Dots */}
-          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 z-20">
-            {slides.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentSlide(idx)}
-                className={`h-3 rounded-full transition-all duration-300 cursor-pointer ${
-                  idx === currentSlide ? "w-8 bg-[#280f91]" : "w-3 bg-slate-300"
-                }`}
-              />
-            ))}
+          {/* ===== RIGHT: Layanan Digital Portal ===== */}
+          <div className="shrink-0 w-full sm:w-auto">
+            <div className="max-w-xs mx-auto lg:mx-0">
+              <h4 
+                className="text-center text-xl sm:text-2xl font-black text-white mb-6 tracking-tight"
+                style={{ textShadow: "0 2px 10px rgba(0,0,0,0.6)" }}
+              >
+                Layanan Digital
+              </h4>
+              <div className="space-y-3">
+                {/* E-SPMB Button */}
+                <button
+                  onClick={() => onServiceClick?.("e-spmb")}
+                  className="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-black text-base sm:text-lg tracking-wider py-4 px-6 shadow-lg shadow-purple-900/30 hover:shadow-xl hover:shadow-purple-800/40 active:scale-[0.97] transition-all duration-200 cursor-pointer"
+                >
+                  <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                  <span className="relative">E-SPMB</span>
+                </button>
+
+                {/* E-LEARNING Button */}
+                <button
+                  onClick={() => onServiceClick?.("e-learning")}
+                  className="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#280f91] to-indigo-700 hover:from-indigo-600 hover:to-[#280f91] text-white font-black text-base sm:text-lg tracking-wider py-4 px-6 shadow-lg shadow-indigo-900/30 hover:shadow-xl hover:shadow-indigo-800/40 active:scale-[0.97] transition-all duration-200 cursor-pointer"
+                >
+                  <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                  <span className="relative">E-LEARNING</span>
+                </button>
+
+                {/* E-UJIAN Button */}
+                <button
+                  onClick={() => onServiceClick?.("e-ujian")}
+                  className="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#ff6105] to-amber-500 hover:from-amber-500 hover:to-[#ff6105] text-white font-black text-base sm:text-lg tracking-wider py-4 px-6 shadow-lg shadow-orange-900/30 hover:shadow-xl hover:shadow-orange-700/40 active:scale-[0.97] transition-all duration-200 cursor-pointer"
+                >
+                  <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                  <span className="relative">E-UJIAN</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* ===== SLIDER NAVIGATION ARROWS ===== */}
+      {slides.length > 1 && (
+        <>
+          <button
+            onClick={prevSlide}
+            className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md hover:bg-white/20 active:scale-90 transition-all cursor-pointer shadow-lg"
+            aria-label="Previous slide"
+          >
+            <ChevronLeft className="h-6 w-6 sm:h-7 sm:w-7" />
+          </button>
+          <button
+            onClick={nextSlide}
+            className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md hover:bg-white/20 active:scale-90 transition-all cursor-pointer shadow-lg"
+            aria-label="Next slide"
+          >
+            <ChevronRight className="h-6 w-6 sm:h-7 sm:w-7" />
+          </button>
+        </>
+      )}
+
+      {/* ===== WHATSAPP FLOATING BUTTON ===== */}
+      <a
+        href="https://wa.me/6282128594025?text=Halo%20Admin%20PKBM%20Menuju%20Makmur"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-2xl shadow-green-600/40 hover:bg-green-600 hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer animate-bounce"
+        style={{ animationDuration: "2s", animationIterationCount: 3 }}
+        aria-label="Hubungi via WhatsApp"
+      >
+        <MessageCircle className="h-7 w-7" />
+      </a>
     </section>
   );
 }

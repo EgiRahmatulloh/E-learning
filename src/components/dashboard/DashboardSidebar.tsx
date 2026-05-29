@@ -48,6 +48,7 @@ const menuItems: MenuItem[] = [
     label: "WEBSITE",
     icon: <Globe className="h-5 w-5" />,
     children: [
+      { id: "slider-beranda", label: "SLIDER BERANDA", icon: <Image className="h-4 w-4" /> },
       { id: "header", label: "HEADER", icon: <Type className="h-4 w-4" /> },
       { id: "pengumuman", label: "PENGUMUMAN", icon: <Megaphone className="h-4 w-4" /> },
       { id: "website-profil", label: "PROFIL SEKOLAH", icon: <User className="h-4 w-4" /> },
