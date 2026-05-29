@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
 
 const DEFAULT_SLIDES = [
@@ -26,8 +26,8 @@ interface HeroProps {
 export default function Hero({ onServiceClick }: HeroProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState(DEFAULT_SLIDES);
-  const [dateTime, setDateTime] = useState(new Date());
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const transitionTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load slider data from localStorage (set by admin panel)
   useEffect(() => {
@@ -44,27 +44,36 @@ export default function Hero({ onServiceClick }: HeroProps) {
     }
   }, []);
 
+  const clearTransitionTimer = () => {
+    if (transitionTimerRef.current) {
+      clearTimeout(transitionTimerRef.current);
+      transitionTimerRef.current = null;
+    }
+  };
+
   // Auto-slide timer
   useEffect(() => {
     const timer = setInterval(() => {
+      clearTransitionTimer();
       setIsTransitioning(true);
-      setTimeout(() => {
+      transitionTimerRef.current = setTimeout(() => {
         setCurrentSlide((prev) => (prev + 1) % slides.length);
         setIsTransitioning(false);
       }, 400);
     }, 6000);
-    return () => clearInterval(timer);
+
+    return () => {
+      clearInterval(timer);
+      clearTransitionTimer();
+    };
   }, [slides.length]);
 
-  // Real-time clock
-  useEffect(() => {
-    const timer = setInterval(() => setDateTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+
 
   const goToSlide = useCallback((idx: number) => {
+    clearTransitionTimer();
     setIsTransitioning(true);
-    setTimeout(() => {
+    transitionTimerRef.current = setTimeout(() => {
       setCurrentSlide(idx);
       setIsTransitioning(false);
     }, 400);
@@ -78,15 +87,6 @@ export default function Hero({ onServiceClick }: HeroProps) {
     goToSlide((currentSlide + 1) % slides.length);
   }, [currentSlide, slides.length, goToSlide]);
 
-  const formatDate = (d: Date) => {
-    const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-    const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
-  };
-
-  const formatTime = (d: Date) => {
-    return d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  };
 
   return (
     <section id="beranda" className="relative w-full overflow-hidden h-screen min-h-screen">
@@ -111,17 +111,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 z-10" />
       </div>
 
-      {/* ===== DATE/TIME BADGE (Top Right) ===== */}
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30">
-        <div className="bg-[#280f91]/90 backdrop-blur-md text-white px-4 py-2 rounded-xl shadow-lg border border-white/10">
-          <div className="text-[10px] font-bold tracking-wider uppercase text-purple-200 text-center">
-            {formatDate(dateTime)}
-          </div>
-          <div className="text-lg font-black tracking-widest text-center tabular-nums leading-tight mt-0.5">
-            {formatTime(dateTime)}
-          </div>
-        </div>
-      </div>
+
 
       {/* ===== MAIN CONTENT OVERLAY ===== */}
       <div className="relative z-20 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-full flex items-center min-h-screen">

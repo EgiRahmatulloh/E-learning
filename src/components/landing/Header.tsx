@@ -1,11 +1,25 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Menu, X, ArrowRight } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [dateTime, setDateTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setDateTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatDate = (d: Date) => {
+    const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  };
+
+  const formatTime = (d: Date) => {
+    return d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -59,6 +73,22 @@ export default function Header() {
           <a href="#alumni" className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Alumni</a>
           <a href="#galeri" className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Galeri</a>
         </nav>
+
+        {/* Desktop Date/Time Badge */}
+        <div className="hidden lg:block shrink-0">
+          <div className={`backdrop-blur-md px-4 py-1.5 rounded-2xl border transition-all duration-300 ${
+            isScrolled 
+              ? "bg-[#280f91]/90 text-white border-white/10 shadow-md shadow-[#280f91]/20" 
+              : "bg-white/15 text-white border-white/20 shadow-xs"
+          }`}>
+            <div className="text-[9px] font-extrabold tracking-wider uppercase text-center opacity-90">
+              {formatDate(dateTime)}
+            </div>
+            <div className="text-sm font-black tracking-widest text-center tabular-nums leading-none mt-0.5">
+              {formatTime(dateTime)}
+            </div>
+          </div>
+        </div>
 
         {/* Mobile menu toggle */}
         <button

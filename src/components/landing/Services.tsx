@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,7 +12,6 @@ import {
 import {
   CheckCircle2,
   MessageCircle,
-  Award,
 } from "lucide-react";
 
 interface ServicesProps {
@@ -22,7 +21,18 @@ interface ServicesProps {
   onDialogClose: () => void;
 }
 
-export default function Services({ backendData, onLoginClick, activeDialog, onDialogClose }: ServicesProps) {
+export default function Services({ backendData: _backendData, onLoginClick, activeDialog, onDialogClose }: ServicesProps) {
+  const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
+
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => {
+        setToast({ message: "", show: false });
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast.show]);
+
   return (
     <>
       {/* ===== E-SPMB Dialog ===== */}
@@ -73,47 +83,44 @@ export default function Services({ backendData, onLoginClick, activeDialog, onDi
       <Dialog open={activeDialog === "e-learning"} onOpenChange={(open) => !open && onDialogClose()}>
         <DialogContent className="sm:max-w-md bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-black text-[#280f91]">Akses Portal E-Learning</DialogTitle>
-            <DialogDescription className="text-sm font-semibold text-slate-500">PKBM Menuju Makmur Portal Siswa & Tutor</DialogDescription>
+            <DialogTitle className="text-xl font-black text-[#280f91]">Portal E-Learning Mandiri</DialogTitle>
+            <DialogDescription className="text-sm font-semibold text-indigo-700">Akses Pembelajaran Digital & Modul</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <p className="text-slate-600 text-sm leading-relaxed font-semibold">
-              Gunakan akun NISN (Nomor Induk Siswa Nasional) sebagai username dan kata sandi default yang diberikan oleh wali kelas Anda untuk masuk.
+              Gunakan akun resmi yang diberikan oleh administrator untuk masuk ke portal E-Learning dan mengakses modul pembelajaran.
             </p>
-            <div className="space-y-3 bg-slate-50 rounded-xl p-4 border border-slate-200/80">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-slate-500">Status Server:</span>
-                {backendData ? (
-                  <span className="font-black text-emerald-600 uppercase">Aktif (Bun/Elysia)</span>
-                ) : (
-                  <span className="font-black text-amber-600 uppercase">Menghubungkan...</span>
-                )}
+            <div className="space-y-2.5 text-xs text-slate-500 font-bold bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+              <span className="block text-indigo-950 uppercase tracking-wider text-[10px] font-black">Layanan Mandiri:</span>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-indigo-600 shrink-0" />
+                <span>Unduh Modul Kurikulum Merdeka & K-13 Lengkap</span>
               </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-slate-500">Kecepatan Respon:</span>
-                <span className="font-black text-[#280f91]">~ 12ms</span>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-indigo-600 shrink-0" />
+                <span>Mengerjakan Tugas Interaktif & Diskusi Kelas</span>
               </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-slate-500">Jumlah Warga Belajar Aktif:</span>
-                <span className="font-black text-[#ff6150]">350+ Siswa</span>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-indigo-600 shrink-0" />
+                <span>Melihat Hasil Rekapitulasi Kehadiran & Nilai Tugas</span>
               </div>
             </div>
-            <p className="text-xs text-[#280f91] font-bold leading-relaxed bg-[#e5fbff] p-3 rounded-lg border border-blue-200/60">
-              💡 Jika Anda lupa kata sandi atau mengalami kendala login, silakan hubungi bagian IT/tutor pendamping Anda untuk reset credential.
+            <p className="text-xs text-slate-500 leading-relaxed font-medium">
+              Hubungi wali kelas atau admin E-Learning jika Anda lupa password atau memerlukan bantuan teknis akun belajar Anda.
             </p>
           </div>
           <DialogFooter className="flex sm:justify-between gap-2 border-t border-slate-100 pt-4">
             <DialogClose asChild>
-              <Button variant="outline" className="rounded-xl font-bold cursor-pointer">Batal</Button>
+              <Button variant="outline" className="rounded-xl font-bold cursor-pointer">Tutup</Button>
             </DialogClose>
             <Button 
               onClick={() => {
                 onDialogClose();
                 onLoginClick();
               }}
-              className="rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 px-6 shadow-md shadow-[#280f91]/20 cursor-pointer"
+              className="rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 px-5 shadow-xs cursor-pointer"
             >
-              Lanjutkan Ke Login
+              Masuk Kelas Belajar
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -128,7 +135,7 @@ export default function Services({ backendData, onLoginClick, activeDialog, onDi
           </DialogHeader>
           <div className="space-y-4 py-4">
             <p className="text-slate-600 text-sm leading-relaxed font-semibold">
-              Sistem ujian berbasis komputer kesetaraan Paket B dan Paket C terakreditasi nasional. 
+              Sistem ujian berbasis komputer kesetaraan Paket B dan Paket C terakreditasi nasional.
             </p>
             <div className="space-y-2.5 text-xs text-slate-500 font-bold bg-emerald-50 p-4 rounded-xl border border-emerald-100">
               <span className="block text-emerald-950 uppercase tracking-wider text-[10px] font-black">Informasi Teknis:</span>
@@ -155,11 +162,7 @@ export default function Services({ backendData, onLoginClick, activeDialog, onDi
             </DialogClose>
             <Button 
               onClick={() => {
-                const toast = document.createElement("div");
-                toast.className = "fixed bottom-6 right-6 bg-emerald-600 text-white px-5 py-3 rounded-xl shadow-xl text-sm font-bold z-[9999] animate-in slide-in-from-bottom-4 duration-300";
-                toast.textContent = "Portal Ujian belum tersedia di luar jadwal UPK.";
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 3000);
+                setToast({ message: "Portal Ujian belum tersedia di luar jadwal UPK.", show: true });
               }}
               className="rounded-xl bg-emerald-600 hover:bg-[#ff6105] text-white font-bold h-11 px-5 shadow-xs cursor-pointer"
             >
@@ -168,6 +171,12 @@ export default function Services({ backendData, onLoginClick, activeDialog, onDi
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {toast.show && (
+        <div className="fixed bottom-6 right-6 bg-emerald-600 text-white px-5 py-3 rounded-xl shadow-xl text-sm font-bold z-[9999] animate-in slide-in-from-bottom-4 duration-300">
+          {toast.message}
+        </div>
+      )}
     </>
   );
 }

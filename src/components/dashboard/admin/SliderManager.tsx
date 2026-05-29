@@ -31,6 +31,7 @@ const STORAGE_KEY = "pkbm_slider_data";
 
 export function SliderManager() {
   const [slides, setSlides] = useState<SlideData[]>(DEFAULT_SLIDES);
+  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
 
   useEffect(() => {
@@ -47,12 +48,17 @@ export function SliderManager() {
     }
   }, []);
 
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => {
+        setToast({ message: "", show: false });
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast.show]);
+
   const showToast = (message: string) => {
     setToast({ message, show: true });
-    const timer = setTimeout(() => {
-      setToast({ message: "", show: false });
-    }, 3000);
-    return () => clearTimeout(timer);
   };
 
   const handleSlideChange = (index: number, field: keyof SlideData, value: string) => {
@@ -61,6 +67,9 @@ export function SliderManager() {
       updated[index] = { ...updated[index], [field]: value };
       return updated;
     });
+    if (field === "image") {
+      setImageErrors((prev) => ({ ...prev, [index]: false }));
+    }
   };
 
   const handleSave = () => {
@@ -96,14 +105,13 @@ export function SliderManager() {
             <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4">
               <div className="space-y-2">
                 <div className="aspect-video rounded-lg overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
-                  {slide.image ? (
+                  {slide.image && !imageErrors[index] ? (
                     <img
                       src={slide.image}
                       alt={`Slide ${index + 1}`}
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = "none";
-                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden");
+                      onError={() => {
+                        setImageErrors((prev) => ({ ...prev, [index]: true }));
                       }}
                     />
                   ) : (
