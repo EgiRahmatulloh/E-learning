@@ -9,6 +9,9 @@ import { seedDatabase } from "./server/db/seed";
 // Jalankan Seeding Database otomatis saat startup
 await seedDatabase();
 
+// Hash dummy untuk mitigasi timing attack (dibuat saat startup agar valid)
+const DUMMY_HASH = await Bun.password.hash("dummy-password-never-matches", { algorithm: "bcrypt" });
+
 const isProd = Bun.env.NODE_ENV === "production";
 const html = !isProd ? await import("../index.html") : null;
 
@@ -52,16 +55,19 @@ app.post("/api/auth/login", async ({ body, jwt, set }) => {
       .where(or(eq(users.username, username), eq(users.email, username)))
       .get();
 
-    if (!user) {
+    // Mencegah timing attack dengan memverifikasi dummy hash jika user tidak ditemukan
+    const hashToVerify = user ? user.password : DUMMY_HASH;
+    const isPasswordValid = await Bun.password.verify(password, hashToVerify);
+
+    if (!user || !isPasswordValid) {
       set.status = 401;
       return { message: "Username/Email atau Password salah" };
     }
 
-    // Verifikasi hash password bawaan Bun
-    const isPasswordValid = await Bun.password.verify(password, user.password);
-    if (!isPasswordValid) {
-      set.status = 401;
-      return { message: "Username/Email atau Password salah" };
+    // Cek apakah akun aktif
+    if (!user.isActive) {
+      set.status = 403;
+      return { message: "Akun Anda telah dinonaktifkan. Silakan hubungi administrator." };
     }
 
     // Terbitkan JWT token
@@ -114,6 +120,7 @@ app.get("/api/auth/me", async ({ headers, jwt, set }) => {
       email: users.email,
       username: users.username,
       role: users.role,
+      isActive: users.isActive,
     })
     .from(users)
     .where(eq(users.id, Number(payload.id)))
@@ -124,7 +131,14 @@ app.get("/api/auth/me", async ({ headers, jwt, set }) => {
     return { message: "User tidak ditemukan" };
   }
 
-  return { success: true, user };
+  // Cek apakah akun aktif
+  if (!user.isActive) {
+    set.status = 403;
+    return { message: "Akun Anda telah dinonaktifkan" };
+  }
+
+  const { isActive, ...cleanUser } = user;
+  return { success: true, user: cleanUser };
 });
 
 // 1b. DEV: Sajikan file statis dari public/ (gambar, favicon, dll)
