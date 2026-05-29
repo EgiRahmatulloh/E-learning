@@ -96,19 +96,6 @@ const menuItems: MenuItem[] = [
   },
 ];
 
-// Stat card data
-const mainStats = [
-  { label: "JUMLAH TUTOR", value: "12", color: "from-cyan-400 to-cyan-500" },
-  { label: "JUMLAH WARGA BELAJAR", value: "350", color: "from-cyan-400 to-cyan-500" },
-  { label: "JUMLAH ROMBEL", value: "9", color: "from-cyan-400 to-cyan-500" },
-  { label: "JUMLAH PRODUK WB", value: "24", color: "from-cyan-400 to-cyan-500" },
-  { label: "JUMLAH WB PAKET A", value: "85", color: "from-cyan-400 to-teal-500" },
-  { label: "JUMLAH WB PAKET B", value: "120", color: "from-cyan-400 to-teal-500" },
-  { label: "JUMLAH WB PAKET C", value: "145", color: "from-cyan-400 to-teal-500" },
-  { label: "JUMLAH ALUMNI", value: "580", color: "from-cyan-400 to-teal-500" },
-  { label: "JUMLAH PENGUNJUNG", value: "1.247", color: "from-cyan-500 to-sky-500" },
-];
-
 export default function DashboardPage({ user, handleLogout }: DashboardPageProps) {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
