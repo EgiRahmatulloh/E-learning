@@ -52,13 +52,18 @@ const menuItems: MenuItem[] = [
     icon: <LayoutDashboard className="h-5 w-5" />,
   },
   {
+    id: "akademik",
+    label: "AKADEMIK",
+    icon: <GraduationCap className="h-5 w-5" />,
+  },
+  {
     id: "website",
     label: "WEBSITE",
     icon: <Globe className="h-5 w-5" />,
     children: [
       { id: "header", label: "HEADER", icon: <Type className="h-4 w-4" /> },
       { id: "pengumuman", label: "PENGUMUMAN", icon: <Megaphone className="h-4 w-4" /> },
-      { id: "profil", label: "PROFIL", icon: <User className="h-4 w-4" /> },
+      { id: "website-profil", label: "PROFIL SEKOLAH", icon: <User className="h-4 w-4" /> },
       { id: "agenda", label: "AGENDA", icon: <CalendarDays className="h-4 w-4" /> },
       { id: "berita", label: "BERITA", icon: <Newspaper className="h-4 w-4" /> },
       { id: "tutor", label: "TUTOR", icon: <GraduationCap className="h-4 w-4" /> },
@@ -84,6 +89,11 @@ const menuItems: MenuItem[] = [
     label: "E-SPMB",
     icon: <ClipboardList className="h-5 w-5" />,
   },
+  {
+    id: "profil",
+    label: "PROFIL SAYA",
+    icon: <User className="h-5 w-5" />,
+  },
 ];
 
 // Stat card data
@@ -103,15 +113,37 @@ export default function DashboardPage({ user, handleLogout }: DashboardPageProps
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [websiteExpanded, setWebsiteExpanded] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
 
   const handleMenuClick = (id: string) => {
-    if (id === "website") {
-      setWebsiteExpanded(!websiteExpanded);
+    const item = menuItems.find(m => m.id === id);
+    if (item?.children) {
+      setExpandedMenus(prev => ({ ...prev, [id]: !prev[id] }));
     } else {
       setActiveTab(id);
       setMobileSidebarOpen(false);
     }
+  };
+
+  // Filter sidebar menu items dynamically by role
+  const filteredMenuItems = menuItems.filter(item => {
+    if (user.role !== "admin") {
+      // Non-admin cannot see WEBSITE and E-SPMB
+      if (item.id === "website" || item.id === "e-spmb") {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  // Get dynamic menu item label depending on role
+  const getMenuItemLabel = (item: MenuItem) => {
+    if (item.id === "akademik") {
+      if (user.role === "admin") return "KELOLA WARGA BELAJAR";
+      if (user.role === "tutor") return "KELOLA NILAI & KELAS";
+      if (user.role === "siswa") return "AKTIVITAS BELAJAR";
+    }
+    return item.label;
   };
 
   // Render sidebar content (shared between desktop & mobile)
@@ -134,7 +166,7 @@ export default function DashboardPage({ user, handleLogout }: DashboardPageProps
 
       {/* Navigation Menu */}
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1 custom-scrollbar">
-        {menuItems.map((item) => (
+        {filteredMenuItems.map((item) => (
           <div key={item.id}>
             <button
               onClick={() => handleMenuClick(item.id)}
@@ -147,16 +179,16 @@ export default function DashboardPage({ user, handleLogout }: DashboardPageProps
               <span className={`transition-colors ${activeTab === item.id ? "text-cyan-300" : "text-white/50 group-hover:text-cyan-300"}`}>
                 {item.icon}
               </span>
-              <span className="flex-1 text-left tracking-wide">{item.label}</span>
+              <span className="flex-1 text-left tracking-wide">{getMenuItemLabel(item)}</span>
               {item.children && (
                 <span className="text-white/40">
-                  {websiteExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  {expandedMenus[item.id] ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                 </span>
               )}
             </button>
 
             {/* Sub-menu */}
-            {item.children && websiteExpanded && (
+            {item.children && expandedMenus[item.id] && (
               <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-white/10 pl-3 animate-in slide-in-from-top-2 duration-200">
                 {item.children.map((child) => (
                   <button
@@ -183,45 +215,114 @@ export default function DashboardPage({ user, handleLogout }: DashboardPageProps
     </div>
   );
 
-  // Render the main dashboard content (stat cards)
-  const renderDashboardContent = () => (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 animate-in fade-in duration-500">
-      {mainStats.map((stat, idx) => (
-        <div
-          key={idx}
-          className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${stat.color} p-5 shadow-lg shadow-cyan-500/20 hover:shadow-xl hover:shadow-cyan-500/30 hover:scale-[1.03] transition-all duration-300 cursor-default group`}
-        >
-          {/* Decorative circle */}
-          <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/10 group-hover:scale-125 transition-transform duration-500" />
-          <div className="absolute -right-2 -bottom-2 h-12 w-12 rounded-full bg-white/5" />
+  // Render the main dashboard content (stat cards & welcome banner)
+  const renderDashboardContent = () => {
+    // Welcome header banner text based on role
+    let welcomeText = "";
+    if (user.role === "admin") {
+      welcomeText = "Anda terhubung sebagai Administrator. Gunakan menu sebelah kiri untuk mengawasi seluruh aktivitas kesetaraan.";
+    } else if (user.role === "tutor") {
+      welcomeText = "Anda terhubung sebagai Tutor Pendidik. Kelola proses mengajar, unggah materi kelas digital, dan berikan evaluasi.";
+    } else {
+      welcomeText = "Tetap semangat mengejar masa depan gemilang! Semua aktivitas belajar, rapor, dan kuis Anda dapat diakses secara real-time.";
+    }
 
-          <div className="relative z-10">
-            <span className="block text-3xl sm:text-4xl font-black text-white drop-shadow-sm leading-none mb-2">
-              {stat.value}
+    // Role-specific stats
+    let roleStats: { label: string; value: string; color: string; status?: string }[] = [];
+    if (user.role === "admin") {
+      roleStats = [
+        { label: "JUMLAH TUTOR", value: "12", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
+        { label: "JUMLAH WARGA BELAJAR", value: "350", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
+        { label: "JUMLAH ROMBEL", value: "9", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
+        { label: "JUMLAH PRODUK WB", value: "24", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
+        { label: "JUMLAH WB PAKET A", value: "85", color: "from-cyan-400 to-teal-500", status: "Siswa" },
+        { label: "JUMLAH WB PAKET B", value: "120", color: "from-cyan-400 to-teal-500", status: "Siswa" },
+        { label: "JUMLAH WB PAKET C", value: "145", color: "from-cyan-400 to-teal-500", status: "Siswa" },
+        { label: "JUMLAH ALUMNI", value: "580", color: "from-cyan-400 to-teal-500", status: "Lulus" },
+        { label: "JUMLAH PENGUNJUNG", value: "1.247", color: "from-cyan-500 to-sky-500", status: "Hari Ini" },
+      ];
+    } else if (user.role === "tutor") {
+      roleStats = [
+        { label: "KELAS PENGAJARAN", value: "3 Kelas", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
+        { label: "TUGAS MASUK", value: "45 Tugas", color: "from-amber-400 to-amber-500", status: "Perlu Review" },
+        { label: "RATA-RATA PRESENSI", value: "92%", color: "from-teal-400 to-teal-500", status: "Sangat Baik" },
+      ];
+    } else {
+      // siswa
+      roleStats = [
+        { label: "MATA PELAJARAN", value: "5 Matpel", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
+        { label: "TUGAS AKTIF", value: "2 Tugas", color: "from-amber-400 to-amber-500", status: "Belum Selesai" },
+        { label: "INDEKS PRESTASI", value: "88.5", color: "from-teal-400 to-teal-500", status: "Sangat Baik" },
+      ];
+    }
+
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        {/* Welcome Glowing Header in Cyan Theme */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-600 via-cyan-700 to-cyan-800 p-6 sm:p-8 text-white shadow-lg shadow-cyan-900/20">
+          {/* Decorative shapes */}
+          <div className="absolute right-0 top-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
+          <div className="absolute left-1/3 bottom-0 w-48 h-48 bg-cyan-500/20 rounded-full blur-2xl"></div>
+
+          <div className="relative z-10 space-y-3">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-500/30 border border-cyan-400/30 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-cyan-100">
+              Sesi Aktif
             </span>
-            <span className="block text-[11px] font-bold text-white/90 uppercase tracking-wider leading-tight">
-              {stat.label}
-            </span>
+            <h2 className="text-xl sm:text-2xl font-black leading-tight">
+              Selamat datang di Portal Kelas, {user.name}!
+            </h2>
+            <p className="text-cyan-100 text-xs sm:text-sm font-medium leading-relaxed max-w-2xl">
+              {welcomeText}
+            </p>
           </div>
         </div>
-      ))}
 
-      {/* Info / Catatan Card */}
-      <div className="col-span-2 sm:col-span-2 lg:col-span-3 relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200/60 p-6 shadow-md">
-        <div className="absolute right-4 top-4 text-4xl opacity-30 select-none">📌</div>
-        <div className="space-y-2">
-          <h4 className="text-sm font-black text-amber-800 uppercase tracking-wider">Catatan</h4>
-          <p className="text-sm text-amber-700 font-semibold leading-relaxed">
-            Data statistik di atas diambil secara otomatis dari database. Pastikan data selalu diperbarui
-            untuk menjaga akurasi informasi dashboard.
-          </p>
-          <p className="text-xs text-amber-600/80 font-medium italic">
-            Terakhir diperbarui: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-          </p>
+        {/* Statistics Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {roleStats.map((stat, idx) => (
+            <div
+              key={idx}
+              className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${stat.color} p-5 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-default group`}
+            >
+              <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/10 group-hover:scale-125 transition-transform duration-500" />
+              <div className="absolute -right-2 -bottom-2 h-12 w-12 rounded-full bg-white/5" />
+
+              <div className="relative z-10 flex flex-col h-full justify-between">
+                <div>
+                  <span className="block text-2xl sm:text-3xl font-black text-white drop-shadow-sm leading-none mb-1">
+                    {stat.value}
+                  </span>
+                  <span className="block text-[10px] font-bold text-white/90 uppercase tracking-wider leading-tight mb-2">
+                    {stat.label}
+                  </span>
+                </div>
+                {stat.status && (
+                  <span className="inline-block self-start text-[9px] font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full text-white/95 mt-auto">
+                    {stat.status}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+
+          {/* Info / Catatan Card */}
+          <div className="col-span-2 sm:col-span-2 lg:col-span-4 relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200/60 p-6 shadow-xs">
+            <div className="absolute right-4 top-4 text-4xl opacity-30 select-none">📌</div>
+            <div className="space-y-2">
+              <h4 className="text-sm font-black text-amber-800 uppercase tracking-wider">Catatan</h4>
+              <p className="text-sm text-amber-700 font-semibold leading-relaxed">
+                Data statistik di atas diambil secara otomatis dari database. Pastikan data selalu diperbarui
+                untuk menjaga akurasi informasi dashboard.
+              </p>
+              <p className="text-xs text-amber-600/80 font-medium italic">
+                Terakhir diperbarui: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Right sidebar quick stats
   const renderRightSidebar = () => (
@@ -314,6 +415,38 @@ export default function DashboardPage({ user, handleLogout }: DashboardPageProps
           {user.role === "admin" && <AdminDashboard />}
           {user.role === "tutor" && <TutorDashboard />}
           {user.role === "siswa" && <SiswaDashboard />}
+        </div>
+      );
+    }
+    if (activeTab === "profil") {
+      return (
+        <div className="max-w-2xl animate-in fade-in duration-300">
+          <div className="rounded-2xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-sm space-y-6">
+            <div className="border-b border-slate-100 pb-4">
+              <h3 className="text-lg font-black text-cyan-900">Profil Akun Saya</h3>
+              <p className="text-xs text-slate-500 font-semibold">Informasi kredensial dan identitas terdaftar Anda.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 font-medium text-slate-700">
+              <div className="space-y-1">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Nama Lengkap</span>
+                <span className="text-base font-black text-slate-800">{user.name}</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Alamat Email</span>
+                <span className="text-base font-semibold">{user.email || `${user.username}@pkbmmakmur.org`}</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Username Akun</span>
+                <span className="text-base font-semibold font-mono text-slate-600">{user.username}</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Role / Otoritas Sesi</span>
+                <span className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-3 py-0.5 text-xs font-bold text-emerald-700 uppercase tracking-widest mt-1">
+                  {user.role}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       );
     }
