@@ -103,12 +103,12 @@ export default function Services({ backendData, onLoginClick }: ServicesProps) {
                     <DialogClose asChild>
                       <Button variant="outline" className="rounded-xl font-bold cursor-pointer">Tutup</Button>
                     </DialogClose>
-                    <a href="https://wa.me/6282128594025?text=Halo%20Admin%20PKBM%20Menuju%20Makmur,%20saya%20tertarik%20mendaftar%20sebagai%20siswa%20baru.%20Mohon%20panduan%20E-SPMB%20online." target="_blank" rel="noopener noreferrer">
-                      <Button className="rounded-xl bg-purple-600 hover:bg-[#ff6105] text-white font-bold h-11 px-5 flex items-center gap-2 cursor-pointer">
+                    <Button asChild className="rounded-xl bg-purple-600 hover:bg-[#ff6105] text-white font-bold h-11 px-5 flex items-center gap-2 cursor-pointer">
+                      <a href="https://wa.me/6282128594025?text=Halo%20Admin%20PKBM%20Menuju%20Makmur,%20saya%20tertarik%20mendaftar%20sebagai%20siswa%20baru.%20Mohon%20panduan%20E-SPMB%20online." target="_blank" rel="noopener noreferrer">
                         <MessageCircle className="h-5 w-5" />
                         Daftar via WhatsApp
-                      </Button>
-                    </a>
+                      </a>
+                    </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -159,7 +159,6 @@ export default function Services({ backendData, onLoginClick }: ServicesProps) {
               <Dialog open={infoDialogOpen} onOpenChange={setInfoDialogOpen}>
                 <DialogTrigger asChild>
                   <Button 
-                    onClick={() => setInfoDialogOpen(true)}
                     className="w-full rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 transition-colors shadow-md shadow-[#280f91]/20 cursor-pointer"
                   >
                     Masuk E-Learning

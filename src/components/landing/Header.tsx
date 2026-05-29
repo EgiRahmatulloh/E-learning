@@ -37,12 +37,12 @@ export default function Header() {
 
         {/* E-Learning Quick Access & Auth Buttons */}
         <div className="hidden lg:flex items-center gap-3">
-          <a href="#layanan">
-            <Button className="rounded-full bg-[#280f91] text-white hover:bg-[#ff6105] transition-all font-bold px-5 shadow-md shadow-[#280f91]/20 group cursor-pointer">
+          <Button asChild className="rounded-full bg-[#280f91] text-white hover:bg-[#ff6105] transition-all font-bold px-5 shadow-md shadow-[#280f91]/20 group cursor-pointer">
+            <a href="#layanan">
               Portal Belajar
               <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </a>
+            </a>
+          </Button>
         </div>
 
         {/* Mobile menu toggle */}

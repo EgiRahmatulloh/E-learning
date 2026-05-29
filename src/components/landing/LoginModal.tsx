@@ -53,8 +53,9 @@ export default function LoginModal({
           )}
 
           <div className="space-y-2">
-            <label className="text-xs font-black text-slate-700 uppercase tracking-widest block">Username atau Email</label>
+            <label htmlFor="login-username" className="text-xs font-black text-slate-700 uppercase tracking-widest block">Username atau Email</label>
             <input
+              id="login-username"
               type="text"
               required
               placeholder="Contoh: admin, tutor, atau siswa"
@@ -65,8 +66,9 @@ export default function LoginModal({
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-black text-slate-700 uppercase tracking-widest block">Password</label>
+            <label htmlFor="login-password" className="text-xs font-black text-slate-700 uppercase tracking-widest block">Password</label>
             <input
+              id="login-password"
               type="password"
               required
               placeholder="••••••••"

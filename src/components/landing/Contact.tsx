@@ -88,17 +88,16 @@ export default function Contact() {
               </div>
               
               <div className="mt-6 shrink-0">
-                <a 
-                  href="https://maps.app.goo.gl/Hp5bXgiobn5McmL39" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="block"
-                >
-                  <Button className="w-full rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-12 transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#280f91]/15 group cursor-pointer">
+                <Button asChild className="w-full rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-12 transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#280f91]/15 group cursor-pointer">
+                  <a 
+                    href="https://maps.app.goo.gl/Hp5bXgiobn5McmL39" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                  >
                     <MapPin className="h-5 w-5 group-hover:scale-110 transition-transform" />
                     Buka Rute di Google Maps
-                  </Button>
-                </a>
+                  </a>
+                </Button>
               </div>
             </Card>
           </div>

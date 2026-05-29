@@ -100,19 +100,16 @@ export default function Products() {
                   <CardFooter className="p-6 pt-0" onClick={(e) => e.stopPropagation()}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <a 
-                          href={product.waLink} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="w-full relative"
-                        >
-                          <Button 
-                            className="w-full rounded-xl bg-emerald-600 hover:bg-[#ff6105] text-white font-bold h-11 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        <Button asChild className="w-full rounded-xl bg-emerald-600 hover:bg-[#ff6105] text-white font-bold h-11 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                          <a 
+                            href={product.waLink} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
                           >
                             <MessageCircle className="h-5 w-5" />
                             Hubungi Penjual
-                          </Button>
-                        </a>
+                          </a>
+                        </Button>
                       </TooltipTrigger>
                       <TooltipContent className="bg-slate-950 text-white font-bold py-1.5 px-3 rounded-lg shadow-xl text-xs">
                         Hubungi penjual via WhatsApp

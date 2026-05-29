@@ -120,9 +120,9 @@ export default function Tutors() {
                   </div>
                   <div className="space-y-2">
                     <span className="block text-xs font-extrabold text-[#280f91] uppercase tracking-wider">Biografi & Dedikasi</span>
-                    <DialogDescription className="text-slate-600 text-sm font-medium leading-relaxed">
+                    <p className="text-slate-600 text-sm font-medium leading-relaxed">
                       {tutor.bio}
-                    </DialogDescription>
+                    </p>
                   </div>
                 </div>
                 <DialogFooter className="border-t border-slate-100 pt-4 mt-2">
