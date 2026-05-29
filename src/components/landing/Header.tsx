@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 
-export default function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+// Separate ClockBadge component to completely isolate render scope and prevent Header re-renders
+function ClockBadge({ isScrolled }: { isScrolled: boolean }) {
   const [dateTime, setDateTime] = useState(new Date());
 
   useEffect(() => {
@@ -20,6 +19,26 @@ export default function Header() {
   const formatTime = (d: Date) => {
     return d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   };
+
+  return (
+    <div className={`backdrop-blur-md px-4 py-1.5 rounded-2xl border transition-all duration-300 ${
+      isScrolled 
+        ? "bg-[#280f91]/90 text-white border-white/10 shadow-md shadow-[#280f91]/20" 
+        : "bg-white/15 text-white border-white/20 shadow-xs"
+    }`}>
+      <div className="text-[9px] font-extrabold tracking-wider uppercase text-center opacity-90">
+        {formatDate(dateTime)}
+      </div>
+      <div className="text-sm font-black tracking-widest text-center tabular-nums leading-none mt-0.5">
+        {formatTime(dateTime)}
+      </div>
+    </div>
+  );
+}
+
+export default function Header() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -74,20 +93,9 @@ export default function Header() {
           <a href="#galeri" className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Galeri</a>
         </nav>
 
-        {/* Desktop Date/Time Badge */}
+        {/* Desktop Date/Time Badge (Isolated Component) */}
         <div className="hidden lg:block shrink-0">
-          <div className={`backdrop-blur-md px-4 py-1.5 rounded-2xl border transition-all duration-300 ${
-            isScrolled 
-              ? "bg-[#280f91]/90 text-white border-white/10 shadow-md shadow-[#280f91]/20" 
-              : "bg-white/15 text-white border-white/20 shadow-xs"
-          }`}>
-            <div className="text-[9px] font-extrabold tracking-wider uppercase text-center opacity-90">
-              {formatDate(dateTime)}
-            </div>
-            <div className="text-sm font-black tracking-widest text-center tabular-nums leading-none mt-0.5">
-              {formatTime(dateTime)}
-            </div>
-          </div>
+          <ClockBadge isScrolled={isScrolled} />
         </div>
 
         {/* Mobile menu toggle */}

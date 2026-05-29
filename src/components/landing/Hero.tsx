@@ -1,7 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
 
-const DEFAULT_SLIDES = [
+interface SlideData {
+  image: string;
+  title: string;
+  description: string;
+}
+
+const DEFAULT_SLIDES: SlideData[] = [
   {
     image: "/images/0e985c33b3e1f88efc234765edf73af2.jpg",
     title: "Pendidikan Setara & Fleksibel",
@@ -23,25 +29,42 @@ interface HeroProps {
   onServiceClick?: (service: "e-spmb" | "e-learning" | "e-ujian") => void;
 }
 
+// Validation function to safeguard slider data rendering
+function isValidSlide(slide: any): slide is SlideData {
+  return (
+    slide &&
+    typeof slide.image === "string" &&
+    slide.image.trim() !== "" &&
+    typeof slide.title === "string" &&
+    typeof slide.description === "string"
+  );
+}
+
 export default function Hero({ onServiceClick }: HeroProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [slides, setSlides] = useState(DEFAULT_SLIDES);
+  const [slides, setSlides] = useState<SlideData[]>(DEFAULT_SLIDES);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const transitionTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const autoSlideTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load slider data from localStorage (set by admin panel)
+  // Load and validate slider data from localStorage safely
   useEffect(() => {
     try {
       const stored = localStorage.getItem("pkbm_slider_data");
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setSlides(parsed);
+          const validated = parsed.filter(isValidSlide);
+          if (validated.length > 0) {
+            setSlides(validated);
+            return;
+          }
         }
       }
     } catch {
       // fallback to defaults
     }
+    setSlides(DEFAULT_SLIDES);
   }, []);
 
   const clearTransitionTimer = () => {
@@ -51,33 +74,45 @@ export default function Hero({ onServiceClick }: HeroProps) {
     }
   };
 
-  // Auto-slide timer
-  useEffect(() => {
-    const timer = setInterval(() => {
+  const clearAutoSlideTimer = () => {
+    if (autoSlideTimerRef.current) {
+      clearTimeout(autoSlideTimerRef.current);
+      autoSlideTimerRef.current = null;
+    }
+  };
+
+  const startAutoSlide = useCallback(() => {
+    clearAutoSlideTimer();
+    autoSlideTimerRef.current = setTimeout(() => {
       clearTransitionTimer();
       setIsTransitioning(true);
       transitionTimerRef.current = setTimeout(() => {
         setCurrentSlide((prev) => (prev + 1) % slides.length);
         setIsTransitioning(false);
+        startAutoSlide(); // Trigger next slide timeout seamlessly
       }, 400);
     }, 6000);
-
-    return () => {
-      clearInterval(timer);
-      clearTransitionTimer();
-    };
   }, [slides.length]);
 
-
+  // Handle timeout-based auto slide instead of interval to avoid glitches
+  useEffect(() => {
+    startAutoSlide();
+    return () => {
+      clearAutoSlideTimer();
+      clearTransitionTimer();
+    };
+  }, [startAutoSlide]);
 
   const goToSlide = useCallback((idx: number) => {
+    clearAutoSlideTimer();
     clearTransitionTimer();
     setIsTransitioning(true);
     transitionTimerRef.current = setTimeout(() => {
       setCurrentSlide(idx);
       setIsTransitioning(false);
+      startAutoSlide(); // Resume auto-sliding from the newly active slide
     }, 400);
-  }, []);
+  }, [startAutoSlide]);
 
   const prevSlide = useCallback(() => {
     goToSlide((currentSlide - 1 + slides.length) % slides.length);
@@ -86,7 +121,6 @@ export default function Hero({ onServiceClick }: HeroProps) {
   const nextSlide = useCallback(() => {
     goToSlide((currentSlide + 1) % slides.length);
   }, [currentSlide, slides.length, goToSlide]);
-
 
   return (
     <section id="beranda" className="relative w-full overflow-hidden h-screen min-h-screen">
@@ -110,8 +144,6 @@ export default function Hero({ onServiceClick }: HeroProps) {
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/30 z-10" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 z-10" />
       </div>
-
-
 
       {/* ===== MAIN CONTENT OVERLAY ===== */}
       <div className="relative z-20 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-full flex items-center min-h-screen">

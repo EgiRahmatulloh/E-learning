@@ -15,13 +15,12 @@ import {
 } from "lucide-react";
 
 interface ServicesProps {
-  backendData: { message: string; status: string } | null;
   onLoginClick: () => void;
   activeDialog: "e-spmb" | "e-learning" | "e-ujian" | null;
   onDialogClose: () => void;
 }
 
-export default function Services({ backendData: _backendData, onLoginClick, activeDialog, onDialogClose }: ServicesProps) {
+export default function Services({ onLoginClick, activeDialog, onDialogClose }: ServicesProps) {
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
 
   useEffect(() => {
