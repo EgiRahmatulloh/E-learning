@@ -21,6 +21,7 @@ import LoginModal from "./components/landing/LoginModal";
 
 function App() {
   const [backendData, setBackendData] = useState<{ message: string; status: string } | null>(null);
+  const [activeServiceDialog, setActiveServiceDialog] = useState<"e-spmb" | "e-learning" | "e-ujian" | null>(null);
 
   // Authentication States
   const getLocalStorageUser = (): { id: number; name: string; username: string; role: string } | null => {
@@ -172,11 +173,16 @@ function App() {
       <div className="min-h-screen bg-slate-50/50 text-slate-900 font-sans selection:bg-[#280f91] selection:text-white">
         <Header />
         
+        <Hero onServiceClick={(service) => setActiveServiceDialog(service)} />
+        
+        <Services
+          backendData={backendData}
+          onLoginClick={() => setLoginDialogOpen(true)}
+          activeDialog={activeServiceDialog}
+          onDialogClose={() => setActiveServiceDialog(null)}
+        />
+        
         <Ticker />
-        
-        <Hero />
-        
-        <Services backendData={backendData} onLoginClick={() => setLoginDialogOpen(true)} />
         
         <Agenda />
         

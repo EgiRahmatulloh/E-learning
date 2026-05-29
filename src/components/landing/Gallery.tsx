@@ -23,7 +23,7 @@ const galleryItems: GalleryItem[] = [
 
 export default function Gallery() {
   return (
-    <section className="py-24 bg-white relative">
+    <section id="galeri" className="py-24 bg-white relative">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
           <span className="text-xs font-extrabold uppercase tracking-widest text-[#ff6105] bg-orange-100 rounded-full px-4 py-1.5 inline-block">
