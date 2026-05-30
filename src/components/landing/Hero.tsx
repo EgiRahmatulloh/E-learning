@@ -55,7 +55,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
           if (activeSlides.length > 0) {
             setSlides(activeSlides);
           } else {
-            setSlides(validated);
+            setSlides(DEFAULT_SLIDES);
           }
           localStorage.setItem("pkbm_slider_data", JSON.stringify(validated));
           return;
@@ -75,7 +75,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
             if (activeSlides.length > 0) {
               setSlides(activeSlides);
             } else {
-              setSlides(validated);
+              setSlides(DEFAULT_SLIDES);
             }
             return;
           }

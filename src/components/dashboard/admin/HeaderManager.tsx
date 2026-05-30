@@ -8,7 +8,6 @@ interface SlideData {
   title: string;
   status: "AKTIF" | "NON AKTIF";
   image: string;
-  description: string; // for compatibility with Hero.tsx
 }
 
 const STORAGE_KEY = "pkbm_slider_data";
@@ -26,7 +25,6 @@ export function HeaderManager() {
   const [formTitle, setFormTitle] = useState("");
   const [formStatus, setFormStatus] = useState<"AKTIF" | "NON AKTIF">("AKTIF");
   const [formImage, setFormImage] = useState("");
-  const [formDescription, setFormDescription] = useState("");
   const [dragOver, setDragOver] = useState(false);
 
   const fetchSliders = async () => {
@@ -40,7 +38,6 @@ export function HeaderManager() {
           title: item.title || "",
           status: item.status || "AKTIF",
           image: item.image || "",
-          description: item.description || "",
         }));
         setSlides(mapped);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
@@ -83,12 +80,20 @@ export function HeaderManager() {
       return;
     }
 
+    const token = localStorage.getItem("token");
+    let apiSuccess = false;
+    let apiErrorMessage = "";
+    let isNetworkError = false;
+
     try {
       if (editId && !isNaN(Number(editId)) && !String(editId).startsWith("local-")) {
         // Edit mode (database record)
         const res = await fetch(`/api/sliders/${editId}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
           body: JSON.stringify({
             title: formTitle,
             image: formImage,
@@ -98,14 +103,18 @@ export function HeaderManager() {
         const data = await res.json();
         if (data.success) {
           showToast("Slider berhasil diperbarui!");
+          apiSuccess = true;
         } else {
-          throw new Error(data.message);
+          apiErrorMessage = data.message || "Gagal memperbarui data slider";
         }
       } else {
         // Add mode (database record)
         const res = await fetch("/api/sliders", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
           body: JSON.stringify({
             title: formTitle,
             image: formImage,
@@ -115,14 +124,31 @@ export function HeaderManager() {
         const data = await res.json();
         if (data.success) {
           showToast("Slider baru berhasil ditambahkan!");
+          apiSuccess = true;
         } else {
-          throw new Error(data.message);
+          apiErrorMessage = data.message || "Gagal menambahkan data slider";
         }
       }
-      fetchSliders();
-      closeForm();
-    } catch {
-      // Local storage fallback
+
+      if (apiSuccess) {
+        fetchSliders();
+        closeForm();
+        return;
+      } else {
+        showToast(apiErrorMessage);
+        return;
+      }
+    } catch (err) {
+      if (err instanceof TypeError) {
+        isNetworkError = true;
+      } else {
+        showToast("Terjadi kesalahan sistem saat menyimpan.");
+        return;
+      }
+    }
+
+    // Local storage fallback ONLY on genuine fetch/network failures
+    if (isNetworkError) {
       let updatedSlides: SlideData[] = [];
       if (editId) {
         updatedSlides = slides.map((slide) =>
@@ -132,11 +158,10 @@ export function HeaderManager() {
                 title: formTitle,
                 status: formStatus,
                 image: formImage,
-                description: formDescription || `Deskripsi untuk ${formTitle}`,
               }
             : slide
         );
-        showToast("Slider diperbarui secara lokal!");
+        showToast("Slider diperbarui secara lokal (Offline)!");
       } else {
         const newSlide: SlideData = {
           id: "local-" + Date.now().toString(),
@@ -144,10 +169,9 @@ export function HeaderManager() {
           title: formTitle,
           status: formStatus,
           image: formImage,
-          description: formDescription || `Deskripsi untuk ${formTitle}`,
         };
         updatedSlides = [...slides, newSlide];
-        showToast("Slider ditambahkan secara lokal!");
+        showToast("Slider ditambahkan secara lokal (Offline)!");
       }
       setSlides(updatedSlides);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSlides));
@@ -157,10 +181,14 @@ export function HeaderManager() {
 
   const handleDelete = async (id: string) => {
     if (confirm("Apakah Anda yakin ingin menghapus slider ini?")) {
+      const token = localStorage.getItem("token");
       try {
         if (!isNaN(Number(id)) && !String(id).startsWith("local-")) {
           const res = await fetch(`/api/sliders/${id}`, {
             method: "DELETE",
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
           });
           const data = await res.json();
           if (data.success) {
@@ -168,16 +196,21 @@ export function HeaderManager() {
             fetchSliders();
             return;
           } else {
-            throw new Error(data.message);
+            showToast(data.message || "Gagal menghapus data dari server");
+            return;
           }
         } else {
-          throw new Error("Local item");
+          throw new TypeError("Local item");
         }
-      } catch {
-        const updated = slides.filter((slide) => slide.id !== id);
-        setSlides(updated);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        showToast("Slider berhasil dihapus!");
+      } catch (err) {
+        if (err instanceof TypeError) {
+          const updated = slides.filter((slide) => slide.id !== id);
+          setSlides(updated);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+          showToast("Slider berhasil dihapus secara lokal!");
+        } else {
+          showToast("Terjadi kesalahan saat menghapus.");
+        }
       }
     }
   };
@@ -187,7 +220,6 @@ export function HeaderManager() {
     setFormTitle("");
     setFormStatus("AKTIF");
     setFormImage("");
-    setFormDescription("");
     setIsFormOpen(true);
   };
 
@@ -196,7 +228,6 @@ export function HeaderManager() {
     setFormTitle(slide.title);
     setFormStatus(slide.status);
     setFormImage(slide.image);
-    setFormDescription(slide.description);
     setIsFormOpen(true);
   };
 

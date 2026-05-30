@@ -153,7 +153,19 @@ app.get("/api/sliders", async () => {
 });
 
 // Tambah slider baru
-app.post("/api/sliders", async ({ body, set }) => {
+app.post("/api/sliders", async ({ body, headers, jwt, set }) => {
+  const authHeader = headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    set.status = 401;
+    return { success: false, message: "Akses ditolak, token hilang" };
+  }
+  const token = authHeader.split(' ')[1];
+  const payload = await jwt.verify(token);
+  if (!payload || payload.role !== 'admin') {
+    set.status = 403;
+    return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
+  }
+
   const { title, image, status } = body;
   try {
     const inserted = await db.insert(sliders).values({
@@ -177,7 +189,19 @@ app.post("/api/sliders", async ({ body, set }) => {
 });
 
 // Update slider
-app.put("/api/sliders/:id", async ({ params, body, set }) => {
+app.put("/api/sliders/:id", async ({ params, body, headers, jwt, set }) => {
+  const authHeader = headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    set.status = 401;
+    return { success: false, message: "Akses ditolak, token hilang" };
+  }
+  const token = authHeader.split(' ')[1];
+  const payload = await jwt.verify(token);
+  if (!payload || payload.role !== 'admin') {
+    set.status = 403;
+    return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
+  }
+
   const id = Number(params.id);
   const { title, image, status } = body;
   try {
@@ -211,7 +235,19 @@ app.put("/api/sliders/:id", async ({ params, body, set }) => {
 });
 
 // Hapus slider
-app.delete("/api/sliders/:id", async ({ params, set }) => {
+app.delete("/api/sliders/:id", async ({ params, headers, jwt, set }) => {
+  const authHeader = headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    set.status = 401;
+    return { success: false, message: "Akses ditolak, token hilang" };
+  }
+  const token = authHeader.split(' ')[1];
+  const payload = await jwt.verify(token);
+  if (!payload || payload.role !== 'admin') {
+    set.status = 403;
+    return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
+  }
+
   const id = Number(params.id);
   try {
     await db.delete(sliders).where(eq(sliders.id, id)).run();
