@@ -14,6 +14,23 @@ const STORAGE_KEY = "pkbm_slider_data";
 
 const DEFAULT_SLIDES: SlideData[] = [];
 
+// Safe LocalStorage helpers to prevent runtime errors in restricted environments
+const getSafeItem = (key: string): string | null => {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+const setSafeItem = (key: string, value: string) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // ignore storage exceptions in private/restricted mode
+  }
+};
+
 export function HeaderManager() {
   const [slides, setSlides] = useState<SlideData[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -41,12 +58,12 @@ export function HeaderManager() {
           image: item.image || "",
         }));
         setSlides(mapped);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
+        setSafeItem(STORAGE_KEY, JSON.stringify(mapped));
       } else {
         throw new Error("Invalid structure");
       }
     } catch {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = getSafeItem(STORAGE_KEY);
       if (saved) {
         try {
           setSlides(JSON.parse(saved));
@@ -81,7 +98,7 @@ export function HeaderManager() {
       return;
     }
 
-    const token = localStorage.getItem("token");
+    const token = getSafeItem("token");
     let apiSuccess = false;
     let apiErrorMessage = "";
     let isNetworkError = false;
@@ -175,39 +192,45 @@ export function HeaderManager() {
         showToast("Slider ditambahkan secara lokal (Offline)!");
       }
       setSlides(updatedSlides);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSlides));
+      setSafeItem(STORAGE_KEY, JSON.stringify(updatedSlides));
       closeForm();
     }
   };
 
   const handleDelete = async (id: string) => {
     if (confirm("Apakah Anda yakin ingin menghapus slider ini?")) {
-      const token = localStorage.getItem("token");
+      const isLocal = String(id).startsWith("local-") || isNaN(Number(id));
+
+      if (isLocal) {
+        // Safe, exception-free local deletion flow
+        const updated = slides.filter((slide) => slide.id !== id);
+        setSlides(updated);
+        setSafeItem(STORAGE_KEY, JSON.stringify(updated));
+        showToast("Slider berhasil dihapus secara lokal!");
+        return;
+      }
+
+      const token = getSafeItem("token");
       try {
-        if (!isNaN(Number(id)) && !String(id).startsWith("local-")) {
-          const res = await fetch(`/api/sliders/${id}`, {
-            method: "DELETE",
-            headers: {
-              "Authorization": `Bearer ${token}`
-            }
-          });
-          const data = await res.json();
-          if (data.success) {
-            showToast("Slider berhasil dihapus!");
-            fetchSliders();
-            return;
-          } else {
-            showToast(data.message || "Gagal menghapus data dari server");
-            return;
+        const res = await fetch(`/api/sliders/${id}`, {
+          method: "DELETE",
+          headers: {
+            "Authorization": `Bearer ${token}`
           }
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("Slider berhasil dihapus!");
+          fetchSliders();
         } else {
-          throw new TypeError("Local item");
+          showToast(data.message || "Gagal menghapus data dari server");
         }
       } catch (err) {
         if (err instanceof TypeError) {
+          // Network failure offline fallback
           const updated = slides.filter((slide) => slide.id !== id);
           setSlides(updated);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+          setSafeItem(STORAGE_KEY, JSON.stringify(updated));
           showToast("Slider berhasil dihapus secara lokal!");
         } else {
           showToast("Terjadi kesalahan saat menghapus.");

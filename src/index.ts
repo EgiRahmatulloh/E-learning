@@ -5,6 +5,7 @@ import { db } from "./server/db";
 import { users, sliders } from "./server/db/schema";
 import { eq, or } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
+import fs from "fs";
 
 // Jalankan Seeding Database otomatis saat startup
 await seedDatabase();
@@ -143,11 +144,12 @@ app.get("/api/auth/me", async ({ headers, jwt, set }) => {
 
 // --- API SLIDER ROUTES ---
 // Ambil semua slider
-app.get("/api/sliders", async () => {
+app.get("/api/sliders", async ({ set }) => {
   try {
     const list = await db.select().from(sliders).all();
     return { success: true, data: list };
   } catch (e) {
+    set.status = 500;
     return { success: false, message: "Gagal mengambil data slider" };
   }
 });
@@ -288,7 +290,15 @@ app.post("/api/upload", async ({ body, headers, jwt, set }) => {
     return { success: false, message: "Berkas tidak valid" };
   }
 
-  // Validasi Tipe Berkas (Hanya Gambar)
+  // Validasi Ekstensi Berkas (Hanya Gambar yang Aman)
+  const allowedExtensions = ["jpg", "jpeg", "png", "webp", "gif", "svg"];
+  const fileExt = file.name.split(".").pop()?.toLowerCase();
+  if (!fileExt || !allowedExtensions.includes(fileExt)) {
+    set.status = 400;
+    return { success: false, message: "Hanya ekstensi gambar (.jpg, .jpeg, .png, .webp, .gif, .svg) yang diperbolehkan" };
+  }
+
+  // Validasi Mime-Type (Hanya Gambar)
   if (!file.type.startsWith("image/")) {
     set.status = 400;
     return { success: false, message: "Hanya berkas gambar yang diperbolehkan" };
@@ -301,12 +311,10 @@ app.post("/api/upload", async ({ body, headers, jwt, set }) => {
   }
 
   const uploadDir = "public/uploads";
-  const fs = require("fs");
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
 
-  const fileExt = file.name.split(".").pop();
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
   const filePath = `${uploadDir}/${fileName}`;
 
