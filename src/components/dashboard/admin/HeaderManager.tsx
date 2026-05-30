@@ -84,7 +84,7 @@ export function HeaderManager() {
     }
 
     try {
-      if (editId && !isNaN(Number(editId))) {
+      if (editId && !isNaN(Number(editId)) && !String(editId).startsWith("local-")) {
         // Edit mode (database record)
         const res = await fetch(`/api/sliders/${editId}`, {
           method: "PUT",
@@ -93,7 +93,6 @@ export function HeaderManager() {
             title: formTitle,
             image: formImage,
             status: formStatus,
-            description: formDescription || `Deskripsi untuk ${formTitle}`,
           }),
         });
         const data = await res.json();
@@ -111,7 +110,6 @@ export function HeaderManager() {
             title: formTitle,
             image: formImage,
             status: formStatus,
-            description: formDescription || `Deskripsi untuk ${formTitle}`,
           }),
         });
         const data = await res.json();
@@ -141,7 +139,7 @@ export function HeaderManager() {
         showToast("Slider diperbarui secara lokal!");
       } else {
         const newSlide: SlideData = {
-          id: Date.now().toString(),
+          id: "local-" + Date.now().toString(),
           creator: "ADMIN",
           title: formTitle,
           status: formStatus,
@@ -160,7 +158,7 @@ export function HeaderManager() {
   const handleDelete = async (id: string) => {
     if (confirm("Apakah Anda yakin ingin menghapus slider ini?")) {
       try {
-        if (!isNaN(Number(id))) {
+        if (!isNaN(Number(id)) && !String(id).startsWith("local-")) {
           const res = await fetch(`/api/sliders/${id}`, {
             method: "DELETE",
           });

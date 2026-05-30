@@ -6,7 +6,20 @@ interface SlideData {
   title: string;
 }
 
-const DEFAULT_SLIDES: SlideData[] = [];
+const DEFAULT_SLIDES: SlideData[] = [
+  {
+    image: "/images/0e985c33b3e1f88efc234765edf73af2.jpg",
+    title: "Pendidikan Setara & Fleksibel",
+  },
+  {
+    image: "/images/8c928d7128a4a86625e224dd9d3fa78b.png",
+    title: "Ujian Pendidikan Kesetaraan (UPK)",
+  },
+  {
+    image: "/images/73129d8e548b4795ba15eaafa5d0e39c.jpg",
+    title: "Kreativitas & Produk Karya Warga Belajar",
+  },
+];
 
 interface HeroProps {
   onServiceClick?: (service: "e-spmb" | "e-learning" | "e-ujian") => void;

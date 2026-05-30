@@ -62,18 +62,6 @@ export async function seedDatabase() {
     }
 
     // Seed sliders table if empty
-    db.run(sql`
-      CREATE TABLE IF NOT EXISTS sliders (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        creator TEXT NOT NULL DEFAULT 'ADMIN',
-        title TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'AKTIF',
-        image TEXT NOT NULL,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    console.log("📦 Tabel sliders siap.");
 
     const resultSliders = await db.select({ value: count() }).from(sliders).get();
     const sliderCount = resultSliders?.value || 0;
