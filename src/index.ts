@@ -2,9 +2,10 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { staticPlugin } from "@elysia/static";
 import { db } from "./server/db";
-import { users } from "./server/db/schema";
+import { users, sliders } from "./server/db/schema";
 import { eq, or } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
+import fs from "fs";
 
 // Jalankan Seeding Database otomatis saat startup
 await seedDatabase();
@@ -140,6 +141,199 @@ app.get("/api/auth/me", async ({ headers, jwt, set }) => {
   const { isActive, ...cleanUser } = user;
   return { success: true, user: cleanUser };
 });
+
+// --- API SLIDER ROUTES ---
+// Ambil semua slider
+app.get("/api/sliders", async ({ set }) => {
+  try {
+    const list = await db.select().from(sliders).all();
+    return { success: true, data: list };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data slider" };
+  }
+});
+
+// Tambah slider baru
+app.post("/api/sliders", async ({ body, headers, jwt, set }) => {
+  const authHeader = headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    set.status = 401;
+    return { success: false, message: "Akses ditolak, token hilang" };
+  }
+  const token = authHeader.split(' ')[1];
+  const payload = await jwt.verify(token);
+  if (!payload || payload.role !== 'admin') {
+    set.status = 403;
+    return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
+  }
+
+  const { title, image, status } = body;
+  try {
+    const inserted = await db.insert(sliders).values({
+      title,
+      image,
+      status: status || "AKTIF",
+      creator: "ADMIN",
+    }).returning().get();
+    
+    return { success: true, data: inserted };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menambahkan data slider" };
+  }
+}, {
+  body: t.Object({
+    title: t.String(),
+    image: t.String(),
+    status: t.Optional(t.String()),
+  })
+});
+
+// Update slider
+app.put("/api/sliders/:id", async ({ params, body, headers, jwt, set }) => {
+  const authHeader = headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    set.status = 401;
+    return { success: false, message: "Akses ditolak, token hilang" };
+  }
+  const token = authHeader.split(' ')[1];
+  const payload = await jwt.verify(token);
+  if (!payload || payload.role !== 'admin') {
+    set.status = 403;
+    return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
+  }
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  const { title, image, status } = body;
+  try {
+    const updated = await db.update(sliders)
+      .set({
+        title,
+        image,
+        status,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(sliders.id, id))
+      .returning()
+      .get();
+      
+    if (!updated) {
+      set.status = 404;
+      return { success: false, message: "Slider tidak ditemukan" };
+    }
+    
+    return { success: true, data: updated };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal memperbarui data slider" };
+  }
+}, {
+  body: t.Object({
+    title: t.String(),
+    image: t.String(),
+    status: t.String(),
+  })
+});
+
+// Hapus slider
+app.delete("/api/sliders/:id", async ({ params, headers, jwt, set }) => {
+  const authHeader = headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    set.status = 401;
+    return { success: false, message: "Akses ditolak, token hilang" };
+  }
+  const token = authHeader.split(' ')[1];
+  const payload = await jwt.verify(token);
+  if (!payload || payload.role !== 'admin') {
+    set.status = 403;
+    return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
+  }
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    await db.delete(sliders).where(eq(sliders.id, id)).run();
+    return { success: true, message: "Slider berhasil dihapus" };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menghapus slider" };
+  }
+});
+
+// Endpoint untuk Unggah Berkas Gambar Fisik (Aman & Efisien)
+app.post("/api/upload", async ({ body, headers, jwt, set }) => {
+  const authHeader = headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    set.status = 401;
+    return { success: false, message: "Akses ditolak, token hilang" };
+  }
+  const token = authHeader.split(' ')[1];
+  const payload = await jwt.verify(token);
+  if (!payload || payload.role !== 'admin') {
+    set.status = 403;
+    return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
+  }
+
+  const { file } = body;
+  if (!file || !(file instanceof File)) {
+    set.status = 400;
+    return { success: false, message: "Berkas tidak valid" };
+  }
+
+  // Validasi Ekstensi Berkas (Hanya Gambar yang Aman)
+  const allowedExtensions = ["jpg", "jpeg", "png", "webp", "gif", "svg"];
+  const fileExt = file.name.split(".").pop()?.toLowerCase();
+  if (!fileExt || !allowedExtensions.includes(fileExt)) {
+    set.status = 400;
+    return { success: false, message: "Hanya ekstensi gambar (.jpg, .jpeg, .png, .webp, .gif, .svg) yang diperbolehkan" };
+  }
+
+  // Validasi Mime-Type (Hanya Gambar)
+  if (!file.type.startsWith("image/")) {
+    set.status = 400;
+    return { success: false, message: "Hanya berkas gambar yang diperbolehkan" };
+  }
+
+  // Validasi Ukuran Berkas (Maksimal 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    set.status = 400;
+    return { success: false, message: "Ukuran berkas melebihi batas 5MB" };
+  }
+
+  const uploadDir = "public/uploads";
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+  const filePath = `${uploadDir}/${fileName}`;
+
+  await Bun.write(filePath, file);
+
+  return { success: true, url: `/uploads/${fileName}` };
+}, {
+  body: t.Object({
+    file: t.File()
+  })
+});
+
+// Sajikan berkas unggahan gambar statis dari public/uploads secara global
+app.use(
+  staticPlugin({
+    assets: "public/uploads",
+    prefix: "/uploads",
+  })
+);
 
 // 1b. DEV: Sajikan file statis dari public/ (gambar, favicon, dll)
 if (!isProd) {

@@ -17,3 +17,18 @@ export const users = sqliteTable('users', {
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+
+export const sliders = sqliteTable('sliders', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  creator: text('creator').notNull().default('ADMIN'),
+  title: text('title').notNull(),
+  status: text('status').notNull().default('AKTIF'), // 'AKTIF' or 'NON AKTIF'
+  image: text('image').notNull(),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at')
+    .$defaultFn(() => new Date().toISOString())
+    .$onUpdate(() => new Date().toISOString()),
+});
+
+export type Slider = typeof sliders.$inferSelect;
+export type NewSlider = typeof sliders.$inferInsert;

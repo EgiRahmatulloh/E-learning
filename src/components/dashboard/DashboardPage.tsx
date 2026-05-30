@@ -9,7 +9,7 @@ import {
 import { AdminDashboard } from "./admin/AdminDashboard";
 import { TutorDashboard } from "./tutor/TutorDashboard";
 import { SiswaDashboard } from "./siswa/SiswaDashboard";
-import { SliderManager } from "./admin/SliderManager";
+import { HeaderManager } from "./admin/HeaderManager";
 
 // Dashboard Sub-components
 import DashboardSidebar from "./DashboardSidebar";
@@ -78,10 +78,10 @@ export default function DashboardPage({ user, handleLogout }: DashboardPageProps
         </div>
       );
     }
-    if (activeTab === "slider-beranda") {
+    if (activeTab === "header") {
       return (
         <div className="space-y-6 animate-in fade-in duration-300">
-          <SliderManager userRole={user.role} />
+          <HeaderManager />
         </div>
       );
     }
