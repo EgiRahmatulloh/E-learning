@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { staticPlugin } from "@elysia/static";
 import { db } from "./server/db";
-import { users } from "./server/db/schema";
+import { users, sliders } from "./server/db/schema";
 import { eq, or } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
 
@@ -139,6 +139,87 @@ app.get("/api/auth/me", async ({ headers, jwt, set }) => {
 
   const { isActive, ...cleanUser } = user;
   return { success: true, user: cleanUser };
+});
+
+// --- API SLIDER ROUTES ---
+// Ambil semua slider
+app.get("/api/sliders", async () => {
+  try {
+    const list = await db.select().from(sliders).all();
+    return { success: true, data: list };
+  } catch (e) {
+    return { success: false, message: "Gagal mengambil data slider" };
+  }
+});
+
+// Tambah slider baru
+app.post("/api/sliders", async ({ body, set }) => {
+  const { title, image, status } = body;
+  try {
+    const inserted = await db.insert(sliders).values({
+      title,
+      image,
+      status: status || "AKTIF",
+      creator: "ADMIN",
+    }).returning().get();
+    
+    return { success: true, data: inserted };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menambahkan data slider" };
+  }
+}, {
+  body: t.Object({
+    title: t.String(),
+    image: t.String(),
+    status: t.Optional(t.String()),
+  })
+});
+
+// Update slider
+app.put("/api/sliders/:id", async ({ params, body, set }) => {
+  const id = Number(params.id);
+  const { title, image, status } = body;
+  try {
+    const updated = await db.update(sliders)
+      .set({
+        title,
+        image,
+        status,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(sliders.id, id))
+      .returning()
+      .get();
+      
+    if (!updated) {
+      set.status = 404;
+      return { success: false, message: "Slider tidak ditemukan" };
+    }
+    
+    return { success: true, data: updated };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal memperbarui data slider" };
+  }
+}, {
+  body: t.Object({
+    title: t.String(),
+    image: t.String(),
+    status: t.String(),
+  })
+});
+
+// Hapus slider
+app.delete("/api/sliders/:id", async ({ params, set }) => {
+  const id = Number(params.id);
+  try {
+    await db.delete(sliders).where(eq(sliders.id, id)).run();
+    return { success: true, message: "Slider berhasil dihapus" };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menghapus slider" };
+  }
 });
 
 // 1b. DEV: Sajikan file statis dari public/ (gambar, favicon, dll)

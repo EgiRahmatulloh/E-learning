@@ -4,26 +4,9 @@ import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
 interface SlideData {
   image: string;
   title: string;
-  description: string;
 }
 
-const DEFAULT_SLIDES: SlideData[] = [
-  {
-    image: "/images/0e985c33b3e1f88efc234765edf73af2.jpg",
-    title: "Pendidikan Setara & Fleksibel",
-    description: "Belajar tanpa batas usia, waktu, maupun keadaan. Kami siap membimbing Anda meraih masa depan gemilang.",
-  },
-  {
-    image: "/images/8c928d7128a4a86625e224dd9d3fa78b.png",
-    title: "Ujian Pendidikan Kesetaraan (UPK)",
-    description: "Penyelenggara resmi Ujian Pendidikan Kesetaraan Paket B & Paket C dengan fasilitas terstandarisasi.",
-  },
-  {
-    image: "/images/73129d8e548b4795ba15eaafa5d0e39c.jpg",
-    title: "Kreativitas & Produk Karya Warga Belajar",
-    description: "Mendukung kemandirian warga belajar dengan melatih keterampilan dan mempromosikan produk kreatif buatan mandiri.",
-  },
-];
+const DEFAULT_SLIDES: SlideData[] = [];
 
 interface HeroProps {
   onServiceClick?: (service: "e-spmb" | "e-learning" | "e-ujian") => void;
@@ -36,8 +19,7 @@ function isValidSlide(slide: any): slide is SlideData {
     typeof slide === "object" &&
     typeof slide.image === "string" &&
     slide.image.trim() !== "" &&
-    typeof slide.title === "string" &&
-    typeof slide.description === "string"
+    typeof slide.title === "string"
   );
 }
 
@@ -48,24 +30,50 @@ export default function Hero({ onServiceClick }: HeroProps) {
   const transitionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const autoSlideTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load and validate slider data from localStorage safely
+  // Load slider data from API with localStorage fallback
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("pkbm_slider_data");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const validated = parsed.filter(isValidSlide);
-          if (validated.length > 0) {
+    const fetchLandingSliders = async () => {
+      try {
+        const res = await fetch("/api/sliders");
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          const validated = data.data.filter(isValidSlide);
+          const activeSlides = validated.filter((slide: any) => slide.status !== "NON AKTIF");
+          if (activeSlides.length > 0) {
+            setSlides(activeSlides);
+          } else {
             setSlides(validated);
+          }
+          localStorage.setItem("pkbm_slider_data", JSON.stringify(validated));
+          return;
+        }
+      } catch {
+        // network failure fallback to localStorage
+      }
+
+      // Local storage fallback
+      try {
+        const stored = localStorage.getItem("pkbm_slider_data");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const validated = parsed.filter(isValidSlide);
+            const activeSlides = validated.filter((slide: any) => slide.status !== "NON AKTIF");
+            if (activeSlides.length > 0) {
+              setSlides(activeSlides);
+            } else {
+              setSlides(validated);
+            }
             return;
           }
         }
+      } catch {
+        // ignore
       }
-    } catch {
-      // fallback to defaults
-    }
-    setSlides(DEFAULT_SLIDES);
+      setSlides(DEFAULT_SLIDES);
+    };
+
+    fetchLandingSliders();
   }, []);
 
   const clearTransitionTimer = () => {
