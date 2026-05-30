@@ -203,6 +203,11 @@ app.put("/api/sliders/:id", async ({ params, body, headers, jwt, set }) => {
   }
 
   const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
   const { title, image, status } = body;
   try {
     const updated = await db.update(sliders)
@@ -249,6 +254,11 @@ app.delete("/api/sliders/:id", async ({ params, headers, jwt, set }) => {
   }
 
   const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
   try {
     await db.delete(sliders).where(eq(sliders.id, id)).run();
     return { success: true, message: "Slider berhasil dihapus" };
@@ -257,6 +267,65 @@ app.delete("/api/sliders/:id", async ({ params, headers, jwt, set }) => {
     return { success: false, message: "Gagal menghapus slider" };
   }
 });
+
+// Endpoint untuk Unggah Berkas Gambar Fisik (Aman & Efisien)
+app.post("/api/upload", async ({ body, headers, jwt, set }) => {
+  const authHeader = headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    set.status = 401;
+    return { success: false, message: "Akses ditolak, token hilang" };
+  }
+  const token = authHeader.split(' ')[1];
+  const payload = await jwt.verify(token);
+  if (!payload || payload.role !== 'admin') {
+    set.status = 403;
+    return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
+  }
+
+  const { file } = body;
+  if (!file || !(file instanceof File)) {
+    set.status = 400;
+    return { success: false, message: "Berkas tidak valid" };
+  }
+
+  // Validasi Tipe Berkas (Hanya Gambar)
+  if (!file.type.startsWith("image/")) {
+    set.status = 400;
+    return { success: false, message: "Hanya berkas gambar yang diperbolehkan" };
+  }
+
+  // Validasi Ukuran Berkas (Maksimal 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    set.status = 400;
+    return { success: false, message: "Ukuran berkas melebihi batas 5MB" };
+  }
+
+  const uploadDir = "public/uploads";
+  const fs = require("fs");
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  const fileExt = file.name.split(".").pop();
+  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+  const filePath = `${uploadDir}/${fileName}`;
+
+  await Bun.write(filePath, file);
+
+  return { success: true, url: `/uploads/${fileName}` };
+}, {
+  body: t.Object({
+    file: t.File()
+  })
+});
+
+// Sajikan berkas unggahan gambar statis dari public/uploads secara global
+app.use(
+  staticPlugin({
+    assets: "public/uploads",
+    prefix: "/uploads",
+  })
+);
 
 // 1b. DEV: Sajikan file statis dari public/ (gambar, favicon, dll)
 if (!isProd) {

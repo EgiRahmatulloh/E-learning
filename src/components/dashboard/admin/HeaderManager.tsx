@@ -26,6 +26,7 @@ export function HeaderManager() {
   const [formStatus, setFormStatus] = useState<"AKTIF" | "NON AKTIF">("AKTIF");
   const [formImage, setFormImage] = useState("");
   const [dragOver, setDragOver] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const fetchSliders = async () => {
     try {
@@ -244,16 +245,52 @@ export function HeaderManager() {
     }
   };
 
-  const processFile = (file: File) => {
+  const processFile = async (file: File) => {
+    // Validasi tipe berkas di sisi klien
+    if (!file.type.startsWith("image/")) {
+      showToast("Hanya berkas gambar yang diperbolehkan!");
+      return;
+    }
     if (file.size > 5 * 1024 * 1024) {
       showToast("Ukuran gambar melebihi batas 5MB!");
       return;
     }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormImage(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+
+    setUploading(true);
+    const token = localStorage.getItem("token");
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        },
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        setFormImage(data.url);
+        showToast("Gambar berhasil diunggah!");
+      } else {
+        throw new Error(data.message || "Gagal mengunggah gambar");
+      }
+    } catch (err: any) {
+      // Local fallback: convert to Base64 ONLY on offline/TypeError network errors
+      if (err instanceof TypeError) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setFormImage(reader.result as string);
+          showToast("Gambar disimpan secara lokal (Offline)!");
+        };
+        reader.readAsDataURL(file);
+      } else {
+        showToast(err.message || "Gagal mengunggah gambar.");
+      }
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -488,7 +525,14 @@ export function HeaderManager() {
                       className="hidden"
                     />
 
-                    {formImage ? (
+                    {uploading ? (
+                      <div className="flex flex-col items-center justify-center py-4">
+                        <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-purple-600 mb-2" />
+                        <span className="text-xs font-black tracking-wider uppercase block text-white/90">
+                          SEDANG MENGUNGGAH...
+                        </span>
+                      </div>
+                    ) : formImage ? (
                       <div className="relative w-full h-24 flex items-center justify-center">
                         <img
                           src={formImage}

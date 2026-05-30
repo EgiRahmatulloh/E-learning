@@ -1,6 +1,6 @@
 import { db } from "./index";
 import { users, sliders } from "./schema";
-import { count, sql } from "drizzle-orm";
+import { count } from "drizzle-orm";
 
 export async function seedDatabase() {
   try {
