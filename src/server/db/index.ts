@@ -24,6 +24,19 @@ CREATE TABLE IF NOT EXISTS sliders (
 );
 `);
 
+// Inisialisasi tabel announcements otomatis jika belum ada
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS announcements (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  creator TEXT NOT NULL DEFAULT 'ADMIN',
+  text TEXT NOT NULL,
+  date TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'AKTIF',
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+`);
+
 // Inisialisasi tabel users otomatis jika belum ada
 sqlite.exec(`
 CREATE TABLE IF NOT EXISTS users (

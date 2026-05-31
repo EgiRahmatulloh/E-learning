@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { staticPlugin } from "@elysia/static";
 import { db } from "./server/db";
-import { users, sliders } from "./server/db/schema";
+import { users, sliders, announcements } from "./server/db/schema";
 import { eq, or } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
 import fs from "fs";
@@ -267,6 +267,134 @@ app.delete("/api/sliders/:id", async ({ params, headers, jwt, set }) => {
   } catch (e) {
     set.status = 500;
     return { success: false, message: "Gagal menghapus slider" };
+  }
+});
+
+// --- API ANNOUNCEMENT ROUTES ---
+// Ambil semua pengumuman
+app.get("/api/announcements", async ({ set }) => {
+  try {
+    const list = await db.select().from(announcements).all();
+    return { success: true, data: list };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data pengumuman" };
+  }
+});
+
+// Tambah pengumuman baru
+app.post("/api/announcements", async ({ body, headers, jwt, set }) => {
+  const authHeader = headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    set.status = 401;
+    return { success: false, message: "Akses ditolak, token hilang" };
+  }
+  const token = authHeader.split(' ')[1];
+  const payload = await jwt.verify(token);
+  if (!payload || payload.role !== 'admin') {
+    set.status = 403;
+    return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
+  }
+
+  const { text, date, status } = body;
+  try {
+    const inserted = await db.insert(announcements).values({
+      text,
+      date,
+      status: status || "AKTIF",
+      creator: "ADMIN",
+    }).returning().get();
+    
+    return { success: true, data: inserted };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menambahkan data pengumuman" };
+  }
+}, {
+  body: t.Object({
+    text: t.String(),
+    date: t.String(),
+    status: t.Optional(t.String()),
+  })
+});
+
+// Update pengumuman
+app.put("/api/announcements/:id", async ({ params, body, headers, jwt, set }) => {
+  const authHeader = headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    set.status = 401;
+    return { success: false, message: "Akses ditolak, token hilang" };
+  }
+  const token = authHeader.split(' ')[1];
+  const payload = await jwt.verify(token);
+  if (!payload || payload.role !== 'admin') {
+    set.status = 403;
+    return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
+  }
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  const { text, date, status } = body;
+  try {
+    const updated = await db.update(announcements)
+      .set({
+        text,
+        date,
+        status,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(announcements.id, id))
+      .returning()
+      .get();
+      
+    if (!updated) {
+      set.status = 404;
+      return { success: false, message: "Pengumuman tidak ditemukan" };
+    }
+    
+    return { success: true, data: updated };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal memperbarui data pengumuman" };
+  }
+}, {
+  body: t.Object({
+    text: t.String(),
+    date: t.String(),
+    status: t.String(),
+  })
+});
+
+// Hapus pengumuman
+app.delete("/api/announcements/:id", async ({ params, headers, jwt, set }) => {
+  const authHeader = headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    set.status = 401;
+    return { success: false, message: "Akses ditolak, token hilang" };
+  }
+  const token = authHeader.split(' ')[1];
+  const payload = await jwt.verify(token);
+  if (!payload || payload.role !== 'admin') {
+    set.status = 403;
+    return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
+  }
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    await db.delete(announcements).where(eq(announcements.id, id)).run();
+    return { success: true, message: "Pengumuman berhasil dihapus" };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menghapus pengumuman" };
   }
 });
 

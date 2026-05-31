@@ -32,3 +32,18 @@ export const sliders = sqliteTable('sliders', {
 
 export type Slider = typeof sliders.$inferSelect;
 export type NewSlider = typeof sliders.$inferInsert;
+
+export const announcements = sqliteTable('announcements', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  creator: text('creator').notNull().default('ADMIN'),
+  text: text('text').notNull(),
+  date: text('date').notNull(), // format 'DD-MM-YYYY' or calendar date
+  status: text('status').notNull().default('AKTIF'), // 'AKTIF' or 'TIDAK AKTIF'
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at')
+    .$defaultFn(() => new Date().toISOString())
+    .$onUpdate(() => new Date().toISOString()),
+});
+
+export type Announcement = typeof announcements.$inferSelect;
+export type NewAnnouncement = typeof announcements.$inferInsert;

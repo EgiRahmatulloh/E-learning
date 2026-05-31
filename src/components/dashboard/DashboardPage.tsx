@@ -10,6 +10,7 @@ import { AdminDashboard } from "./admin/AdminDashboard";
 import { TutorDashboard } from "./tutor/TutorDashboard";
 import { SiswaDashboard } from "./siswa/SiswaDashboard";
 import { HeaderManager } from "./admin/HeaderManager";
+import AnnouncementManager from "./admin/AnnouncementManager";
 
 // Dashboard Sub-components
 import DashboardSidebar from "./DashboardSidebar";
@@ -82,6 +83,13 @@ export default function DashboardPage({ user, handleLogout }: DashboardPageProps
       return (
         <div className="space-y-6 animate-in fade-in duration-300">
           <HeaderManager />
+        </div>
+      );
+    }
+    if (activeTab === "pengumuman") {
+      return (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <AnnouncementManager />
         </div>
       );
     }

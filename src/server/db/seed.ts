@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { users, sliders } from "./schema";
+import { users, sliders, announcements } from "./schema";
 import { count } from "drizzle-orm";
 
 export async function seedDatabase() {
@@ -46,7 +46,6 @@ export async function seedDatabase() {
     }
 
     // Seed sliders table if empty
-
     const resultSliders = await db.select({ value: count() }).from(sliders).get();
     const sliderCount = resultSliders?.value || 0;
     if (sliderCount === 0) {
@@ -74,6 +73,24 @@ export async function seedDatabase() {
       console.log("✅ Seeding sliders berhasil!");
     } else {
       console.log(`ℹ️ Database memiliki ${sliderCount} sliders, seeding diabaikan.`);
+    }
+
+    // Seed announcements table if empty
+    const resultAnnouncements = await db.select({ value: count() }).from(announcements).get();
+    const annCount = resultAnnouncements?.value || 0;
+    if (annCount === 0) {
+      console.log("🌱 Database announcements kosong, seeding default announcements...");
+      await db.insert(announcements).values([
+        {
+          creator: "ADMIN",
+          text: "PENILAIAN SUMATIF AKHIR TAHUN AKAN DILAKSANAKAN PADA TANGGAL",
+          date: "16-07-2026",
+          status: "AKTIF",
+        }
+      ]);
+      console.log("✅ Seeding announcements berhasil!");
+    } else {
+      console.log(`ℹ️ Database memiliki ${annCount} announcements, seeding diabaikan.`);
     }
   } catch (error) {
     console.error("❌ Gagal melakukan seeding database:", error);
