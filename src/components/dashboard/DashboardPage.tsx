@@ -10,6 +10,7 @@ import { AdminDashboard } from "./admin/AdminDashboard";
 import { TutorDashboard } from "./tutor/TutorDashboard";
 import { SiswaDashboard } from "./siswa/SiswaDashboard";
 import { HeaderManager } from "./admin/HeaderManager";
+import AnnouncementManager from "./admin/AnnouncementManager";
 
 // Dashboard Sub-components
 import DashboardSidebar from "./DashboardSidebar";
@@ -82,6 +83,20 @@ export default function DashboardPage({ user, handleLogout }: DashboardPageProps
       return (
         <div className="space-y-6 animate-in fade-in duration-300">
           <HeaderManager />
+        </div>
+      );
+    }
+    if (activeTab === "pengumuman") {
+      if (user.role !== "admin") {
+        return (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
+            🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka manajemen pengumuman.
+          </div>
+        );
+      }
+      return (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <AnnouncementManager />
         </div>
       );
     }
