@@ -169,7 +169,7 @@ export default function AnnouncementManager() {
         return;
       }
     } catch (err) {
-      if (err instanceof TypeError) {
+      if (err instanceof TypeError || !navigator.onLine) {
         isNetworkError = true;
       } else {
         showToast("Terjadi kesalahan sistem saat menyimpan.");
@@ -252,8 +252,12 @@ export default function AnnouncementManager() {
   const openAddForm = () => {
     setEditId(null);
     setFormText("");
-    // Default today date YYYY-MM-DD
-    const today = new Date().toISOString().split("T")[0];
+    // Default today date YYYY-MM-DD in local timezone
+    const localDate = new Date();
+    const yyyy = localDate.getFullYear();
+    const mm = String(localDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(localDate.getDate()).padStart(2, '0');
+    const today = `${yyyy}-${mm}-${dd}`;
     setFormDate(today);
     setFormStatus("AKTIF");
     setIsFormOpen(true);

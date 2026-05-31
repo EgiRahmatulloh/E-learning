@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertCircle, ArrowRight } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 interface Announcement {
   id: string;
@@ -14,7 +14,10 @@ export default function Ticker() {
 
   useEffect(() => {
     fetch("/api/announcements")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Gagal mengambil data pengumuman");
+        return res.json();
+      })
       .then((data) => {
         if (data.success && Array.isArray(data.data)) {
           // Filter only active announcements

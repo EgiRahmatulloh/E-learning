@@ -142,6 +142,24 @@ app.get("/api/auth/me", async ({ headers, jwt, set }) => {
   return { success: true, user: cleanUser };
 });
 
+// Helper untuk validasi Admin secara aman
+const verifyAdmin = async (headers: Record<string, string | undefined>, jwt: any, set: any) => {
+  const authHeader = headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    set.status = 401;
+    return { success: false, message: "Akses ditolak, token hilang" };
+  }
+
+  const token = authHeader.split(' ')[1];
+  const payload = await jwt.verify(token);
+  if (!payload || payload.role !== 'admin') {
+    set.status = 403;
+    return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
+  }
+
+  return null; // Valid
+};
+
 // --- API SLIDER ROUTES ---
 // Ambil semua slider
 app.get("/api/sliders", async ({ set }) => {
@@ -156,17 +174,8 @@ app.get("/api/sliders", async ({ set }) => {
 
 // Tambah slider baru
 app.post("/api/sliders", async ({ body, headers, jwt, set }) => {
-  const authHeader = headers['authorization'];
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    set.status = 401;
-    return { success: false, message: "Akses ditolak, token hilang" };
-  }
-  const token = authHeader.split(' ')[1];
-  const payload = await jwt.verify(token);
-  if (!payload || payload.role !== 'admin') {
-    set.status = 403;
-    return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
-  }
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
 
   const { title, image, status } = body;
   try {
@@ -192,17 +201,8 @@ app.post("/api/sliders", async ({ body, headers, jwt, set }) => {
 
 // Update slider
 app.put("/api/sliders/:id", async ({ params, body, headers, jwt, set }) => {
-  const authHeader = headers['authorization'];
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    set.status = 401;
-    return { success: false, message: "Akses ditolak, token hilang" };
-  }
-  const token = authHeader.split(' ')[1];
-  const payload = await jwt.verify(token);
-  if (!payload || payload.role !== 'admin') {
-    set.status = 403;
-    return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
-  }
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
 
   const id = Number(params.id);
   if (isNaN(id)) {
@@ -243,17 +243,8 @@ app.put("/api/sliders/:id", async ({ params, body, headers, jwt, set }) => {
 
 // Hapus slider
 app.delete("/api/sliders/:id", async ({ params, headers, jwt, set }) => {
-  const authHeader = headers['authorization'];
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    set.status = 401;
-    return { success: false, message: "Akses ditolak, token hilang" };
-  }
-  const token = authHeader.split(' ')[1];
-  const payload = await jwt.verify(token);
-  if (!payload || payload.role !== 'admin') {
-    set.status = 403;
-    return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
-  }
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
 
   const id = Number(params.id);
   if (isNaN(id)) {
@@ -284,17 +275,8 @@ app.get("/api/announcements", async ({ set }) => {
 
 // Tambah pengumuman baru
 app.post("/api/announcements", async ({ body, headers, jwt, set }) => {
-  const authHeader = headers['authorization'];
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    set.status = 401;
-    return { success: false, message: "Akses ditolak, token hilang" };
-  }
-  const token = authHeader.split(' ')[1];
-  const payload = await jwt.verify(token);
-  if (!payload || payload.role !== 'admin') {
-    set.status = 403;
-    return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
-  }
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
 
   const { text, date, status } = body;
   try {
@@ -320,17 +302,8 @@ app.post("/api/announcements", async ({ body, headers, jwt, set }) => {
 
 // Update pengumuman
 app.put("/api/announcements/:id", async ({ params, body, headers, jwt, set }) => {
-  const authHeader = headers['authorization'];
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    set.status = 401;
-    return { success: false, message: "Akses ditolak, token hilang" };
-  }
-  const token = authHeader.split(' ')[1];
-  const payload = await jwt.verify(token);
-  if (!payload || payload.role !== 'admin') {
-    set.status = 403;
-    return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
-  }
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
 
   const id = Number(params.id);
   if (isNaN(id)) {
@@ -371,17 +344,8 @@ app.put("/api/announcements/:id", async ({ params, body, headers, jwt, set }) =>
 
 // Hapus pengumuman
 app.delete("/api/announcements/:id", async ({ params, headers, jwt, set }) => {
-  const authHeader = headers['authorization'];
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    set.status = 401;
-    return { success: false, message: "Akses ditolak, token hilang" };
-  }
-  const token = authHeader.split(' ')[1];
-  const payload = await jwt.verify(token);
-  if (!payload || payload.role !== 'admin') {
-    set.status = 403;
-    return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
-  }
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
 
   const id = Number(params.id);
   if (isNaN(id)) {
@@ -400,17 +364,8 @@ app.delete("/api/announcements/:id", async ({ params, headers, jwt, set }) => {
 
 // Endpoint untuk Unggah Berkas Gambar Fisik (Aman & Efisien)
 app.post("/api/upload", async ({ body, headers, jwt, set }) => {
-  const authHeader = headers['authorization'];
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    set.status = 401;
-    return { success: false, message: "Akses ditolak, token hilang" };
-  }
-  const token = authHeader.split(' ')[1];
-  const payload = await jwt.verify(token);
-  if (!payload || payload.role !== 'admin') {
-    set.status = 403;
-    return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
-  }
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
 
   const { file } = body;
   if (!file || !(file instanceof File)) {
