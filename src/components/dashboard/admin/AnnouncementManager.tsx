@@ -6,37 +6,9 @@ interface AnnouncementData {
   id: string;
   creator: string;
   text: string;
-  date: string; // Format YYYY-MM-DD or DD-MM-YYYY
+  date: string; // Format YYYY-MM-DD
   status: "AKTIF" | "TIDAK AKTIF";
 }
-
-const STORAGE_KEY = "pkbm_announcement_data";
-
-const DEFAULT_ANNOUNCEMENTS: AnnouncementData[] = [
-  {
-    id: "1",
-    creator: "ADMIN",
-    text: "PENILAIAN SUMATIF AKHIR TAHUN AKAN DILAKSANAKAN PADA TANGGAL",
-    date: "2026-07-16",
-    status: "AKTIF"
-  }
-];
-
-const getSafeItem = (key: string): string | null => {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-};
-
-const setSafeItem = (key: string, value: string) => {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    // ignore
-  }
-};
 
 const formatDateDisplay = (dateStr: string | null | undefined) => {
   if (!dateStr || typeof dateStr !== "string") return "";
@@ -63,16 +35,6 @@ export default function AnnouncementManager() {
   const [formStatus, setFormStatus] = useState<"AKTIF" | "TIDAK AKTIF">("AKTIF");
 
   const fetchAnnouncements = async () => {
-    let localItems: AnnouncementData[] = [];
-    const saved = getSafeItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        localItems = JSON.parse(saved);
-      } catch {
-        // ignore
-      }
-    }
-
     try {
       const res = await fetch("/api/announcements");
       if (!res.ok) throw new Error("Gagal mengambil data dari server");
@@ -85,27 +47,12 @@ export default function AnnouncementManager() {
           date: item.date || "",
           status: item.status || "AKTIF",
         }));
-
-        // Filter local items that are strictly offline-created (start with "local-")
-        // and have not been uploaded/duplicated on server
-        const offlineOnly = localItems.filter((local) => {
-          const isLocalOnly = String(local.id).startsWith("local-");
-          const alreadySynced = serverMapped.some(
-            (srv) => srv.text === local.text && srv.date === local.date
-          );
-          return isLocalOnly && !alreadySynced;
-        });
-
-        // Merge offline-only items with server items to prevent data loss and UI duplication
-        const mergedList = [...serverMapped, ...offlineOnly];
-        setAnnouncements(mergedList);
-        setSafeItem(STORAGE_KEY, JSON.stringify(mergedList));
+        setAnnouncements(serverMapped);
       } else {
-        throw new Error("Invalid structure");
+        throw new Error("Struktur data tidak valid");
       }
-    } catch {
-      // Fallback completely to local storage
-      setAnnouncements(localItems.length > 0 ? localItems : DEFAULT_ANNOUNCEMENTS);
+    } catch (err: any) {
+      showToast(err.message || "Gagal menghubungkan ke server");
     }
   };
 
@@ -131,14 +78,10 @@ export default function AnnouncementManager() {
       return;
     }
 
-    const token = getSafeItem("token");
-    let apiSuccess = false;
-    let apiErrorMessage = "";
-    let isNetworkError = false;
-
+    const token = localStorage.getItem("token");
     try {
-      if (editId && !isNaN(Number(editId)) && !String(editId).startsWith("local-")) {
-        // Edit mode (database record)
+      if (editId) {
+        // Edit mode
         const res = await fetch(`/api/announcements/${editId}`, {
           method: "PUT",
           headers: { 
@@ -151,15 +94,17 @@ export default function AnnouncementManager() {
             status: formStatus,
           }),
         });
+        
         const data = await res.json();
-        if (data.success) {
+        if (res.ok && data.success) {
           showToast("Pengumuman berhasil diperbarui!");
-          apiSuccess = true;
+          fetchAnnouncements();
+          closeForm();
         } else {
-          apiErrorMessage = data.message || "Gagal memperbarui data pengumuman";
+          showToast(data.message || "Gagal memperbarui data pengumuman");
         }
       } else {
-        // Add mode (database record)
+        // Add mode
         const res = await fetch("/api/announcements", {
           method: "POST",
           headers: { 
@@ -172,77 +117,24 @@ export default function AnnouncementManager() {
             status: formStatus,
           }),
         });
+
         const data = await res.json();
-        if (data.success) {
+        if (res.ok && data.success) {
           showToast("Pengumuman baru berhasil ditambahkan!");
-          apiSuccess = true;
+          fetchAnnouncements();
+          closeForm();
         } else {
-          apiErrorMessage = data.message || "Gagal menambahkan data pengumuman";
+          showToast(data.message || "Gagal menambahkan data pengumuman");
         }
       }
-
-      if (apiSuccess) {
-        fetchAnnouncements();
-        closeForm();
-        return;
-      } else {
-        showToast(apiErrorMessage);
-        return;
-      }
-    } catch (err) {
-      if (err instanceof TypeError || !navigator.onLine) {
-        isNetworkError = true;
-      } else {
-        showToast("Terjadi kesalahan sistem saat menyimpan.");
-        return;
-      }
-    }
-
-    // Local storage fallback ONLY on genuine fetch/network failures
-    if (isNetworkError) {
-      let updated: AnnouncementData[] = [];
-      if (editId) {
-        updated = announcements.map((item) =>
-          item.id === editId
-            ? {
-                ...item,
-                text: formText,
-                date: formDate,
-                status: formStatus,
-              }
-            : item
-        );
-        showToast("Pengumuman diperbarui secara lokal (Offline)!");
-      } else {
-        const newItem: AnnouncementData = {
-          id: "local-" + Date.now().toString(),
-          creator: "ADMIN",
-          text: formText,
-          date: formDate,
-          status: formStatus,
-        };
-        updated = [...announcements, newItem];
-        showToast("Pengumuman ditambahkan secara lokal (Offline)!");
-      }
-      setAnnouncements(updated);
-      setSafeItem(STORAGE_KEY, JSON.stringify(updated));
-      closeForm();
+    } catch {
+      showToast("Gagal menyimpan: periksa koneksi internet Anda.");
     }
   };
 
   const handleDelete = async (id: string) => {
     if (confirm("Apakah Anda yakin ingin menghapus pengumuman ini?")) {
-      const isLocal = String(id).startsWith("local-") || isNaN(Number(id));
-
-      if (isLocal) {
-        const updated = announcements.filter((item) => item.id !== id);
-        setAnnouncements(updated);
-        setSafeItem(STORAGE_KEY, JSON.stringify(updated));
-        showToast("Pengumuman berhasil dihapus secara lokal!");
-        return;
-      }
-
-      const token = getSafeItem("token");
+      const token = localStorage.getItem("token");
       try {
         const res = await fetch(`/api/announcements/${id}`, {
           method: "DELETE",
@@ -251,21 +143,14 @@ export default function AnnouncementManager() {
           }
         });
         const data = await res.json();
-        if (data.success) {
+        if (res.ok && data.success) {
           showToast("Pengumuman berhasil dihapus!");
           fetchAnnouncements();
         } else {
           showToast(data.message || "Gagal menghapus data dari server");
         }
-      } catch (err) {
-        if (err instanceof TypeError) {
-          const updated = announcements.filter((item) => item.id !== id);
-          setAnnouncements(updated);
-          setSafeItem(STORAGE_KEY, JSON.stringify(updated));
-          showToast("Pengumuman berhasil dihapus secara lokal!");
-        } else {
-          showToast("Terjadi kesalahan saat menghapus.");
-        }
+      } catch {
+        showToast("Gagal menghapus: periksa koneksi internet Anda.");
       }
     }
   };
