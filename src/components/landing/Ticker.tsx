@@ -9,6 +9,17 @@ interface Announcement {
   status: string;
 }
 
+const formatDateDisplay = (dateStr: string) => {
+  if (dateStr.includes("-")) {
+    const parts = dateStr.split("-");
+    if (parts[0].length === 4) {
+      const [yyyy, mm, dd] = parts;
+      return `${dd}-${mm}-${yyyy}`;
+    }
+  }
+  return dateStr;
+};
+
 export default function Ticker() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
 
@@ -42,7 +53,7 @@ export default function Ticker() {
         </span>
         <div className="text-sm md:text-base font-bold text-[#280f91] text-center md:text-left leading-relaxed">
           <span className="animate-in fade-in duration-300">
-            📢 {activeAnnouncement.text} <span className="text-[#ff6105] font-extrabold tracking-wide">{activeAnnouncement.date}</span>
+            📢 {activeAnnouncement.text} <span className="text-[#ff6105] font-extrabold tracking-wide">{formatDateDisplay(activeAnnouncement.date)}</span>
           </span>
         </div>
       </div>

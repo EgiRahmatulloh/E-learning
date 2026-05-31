@@ -152,7 +152,12 @@ const verifyAdmin = async (headers: Record<string, string | undefined>, jwt: any
 
   const token = authHeader.split(' ')[1];
   const payload = await jwt.verify(token);
-  if (!payload || payload.role !== 'admin') {
+  if (!payload) {
+    set.status = 401;
+    return { success: false, message: "Sesi Anda telah kedaluwarsa, silakan masuk kembali" };
+  }
+
+  if (payload.role !== 'admin') {
     set.status = 403;
     return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
   }
@@ -296,7 +301,7 @@ app.post("/api/announcements", async ({ body, headers, jwt, set }) => {
   body: t.Object({
     text: t.String(),
     date: t.String(),
-    status: t.Optional(t.String()),
+    status: t.Optional(t.Union([t.Literal('AKTIF'), t.Literal('TIDAK AKTIF')])),
   })
 });
 
@@ -338,7 +343,7 @@ app.put("/api/announcements/:id", async ({ params, body, headers, jwt, set }) =>
   body: t.Object({
     text: t.String(),
     date: t.String(),
-    status: t.String(),
+    status: t.Union([t.Literal('AKTIF'), t.Literal('TIDAK AKTIF')]),
   })
 });
 

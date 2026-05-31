@@ -84,7 +84,7 @@ export async function seedDatabase() {
         {
           creator: "ADMIN",
           text: "PENILAIAN SUMATIF AKHIR TAHUN AKAN DILAKSANAKAN PADA TANGGAL",
-          date: "16-07-2026",
+          date: "2026-07-16",
           status: "AKTIF",
         }
       ]);

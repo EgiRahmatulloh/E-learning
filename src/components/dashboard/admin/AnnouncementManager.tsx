@@ -17,7 +17,7 @@ const DEFAULT_ANNOUNCEMENTS: AnnouncementData[] = [
     id: "1",
     creator: "ADMIN",
     text: "PENILAIAN SUMATIF AKHIR TAHUN AKAN DILAKSANAKAN PADA TANGGAL",
-    date: "16-07-2026",
+    date: "2026-07-16",
     status: "AKTIF"
   }
 ];
@@ -36,6 +36,17 @@ const setSafeItem = (key: string, value: string) => {
   } catch {
     // ignore
   }
+};
+
+const formatDateDisplay = (dateStr: string) => {
+  if (dateStr.includes("-")) {
+    const parts = dateStr.split("-");
+    if (parts[0].length === 4) {
+      const [yyyy, mm, dd] = parts;
+      return `${dd}-${mm}-${yyyy}`;
+    }
+  }
+  return dateStr;
 };
 
 export default function AnnouncementManager() {
@@ -103,13 +114,6 @@ export default function AnnouncementManager() {
       return;
     }
 
-    // Format date from YYYY-MM-DD input to DD-MM-YYYY if needed, or keep it clean
-    let formattedDate = formDate;
-    if (formDate.includes("-") && formDate.split("-")[0].length === 4) {
-      const [yyyy, mm, dd] = formDate.split("-");
-      formattedDate = `${dd}-${mm}-${yyyy}`;
-    }
-
     const token = getSafeItem("token");
     let apiSuccess = false;
     let apiErrorMessage = "";
@@ -126,7 +130,7 @@ export default function AnnouncementManager() {
           },
           body: JSON.stringify({
             text: formText,
-            date: formattedDate,
+            date: formDate,
             status: formStatus,
           }),
         });
@@ -147,7 +151,7 @@ export default function AnnouncementManager() {
           },
           body: JSON.stringify({
             text: formText,
-            date: formattedDate,
+            date: formDate,
             status: formStatus,
           }),
         });
@@ -186,7 +190,7 @@ export default function AnnouncementManager() {
             ? {
                 ...item,
                 text: formText,
-                date: formattedDate,
+                date: formDate,
                 status: formStatus,
               }
             : item
@@ -197,7 +201,7 @@ export default function AnnouncementManager() {
           id: "local-" + Date.now().toString(),
           creator: "ADMIN",
           text: formText,
-          date: formattedDate,
+          date: formDate,
           status: formStatus,
         };
         updated = [...announcements, newItem];
@@ -368,7 +372,7 @@ export default function AnnouncementManager() {
                       {item.text}
                     </td>
                     <td className="py-4 px-6 border-r border-slate-100 text-center font-mono text-slate-600">
-                      {item.date}
+                      {formatDateDisplay(item.date)}
                     </td>
                     <td className="py-4 px-6 border-r border-slate-100 text-center">
                       <span
