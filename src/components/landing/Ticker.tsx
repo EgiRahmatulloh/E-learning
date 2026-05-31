@@ -9,11 +9,12 @@ interface Announcement {
   status: string;
 }
 
-const formatDateDisplay = (dateStr: string) => {
-  if (dateStr.includes("-")) {
-    const parts = dateStr.split("-");
-    if (parts[0].length === 4) {
-      const [yyyy, mm, dd] = parts;
+const formatDateDisplay = (dateStr: string | null | undefined) => {
+  if (!dateStr || typeof dateStr !== "string") return "";
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    const [yyyy, mm, dd] = parts;
+    if (yyyy && yyyy.length === 4 && mm && mm.length === 2 && dd && dd.length === 2) {
       return `${dd}-${mm}-${yyyy}`;
     }
   }

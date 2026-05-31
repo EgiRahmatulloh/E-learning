@@ -299,8 +299,8 @@ app.post("/api/announcements", async ({ body, headers, jwt, set }) => {
   }
 }, {
   body: t.Object({
-    text: t.String(),
-    date: t.String(),
+    text: t.String({ minLength: 1 }),
+    date: t.String({ minLength: 10, maxLength: 10 }),
     status: t.Optional(t.Union([t.Literal('AKTIF'), t.Literal('TIDAK AKTIF')])),
   })
 });
@@ -341,8 +341,8 @@ app.put("/api/announcements/:id", async ({ params, body, headers, jwt, set }) =>
   }
 }, {
   body: t.Object({
-    text: t.String(),
-    date: t.String(),
+    text: t.String({ minLength: 1 }),
+    date: t.String({ minLength: 10, maxLength: 10 }),
     status: t.Union([t.Literal('AKTIF'), t.Literal('TIDAK AKTIF')]),
   })
 });
