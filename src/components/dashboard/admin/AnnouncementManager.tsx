@@ -38,10 +38,11 @@ const setSafeItem = (key: string, value: string) => {
   }
 };
 
-const formatDateDisplay = (dateStr: string) => {
+const formatDateDisplay = (dateStr: string | null | undefined) => {
+  if (!dateStr || typeof dateStr !== "string") return "";
   if (dateStr.includes("-")) {
     const parts = dateStr.split("-");
-    if (parts[0].length === 4) {
+    if (parts[0].length === 4 && parts.length === 3) {
       const [yyyy, mm, dd] = parts;
       return `${dd}-${mm}-${yyyy}`;
     }
@@ -62,33 +63,49 @@ export default function AnnouncementManager() {
   const [formStatus, setFormStatus] = useState<"AKTIF" | "TIDAK AKTIF">("AKTIF");
 
   const fetchAnnouncements = async () => {
+    let localItems: AnnouncementData[] = [];
+    const saved = getSafeItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        localItems = JSON.parse(saved);
+      } catch {
+        // ignore
+      }
+    }
+
     try {
       const res = await fetch("/api/announcements");
+      if (!res.ok) throw new Error("Gagal mengambil data dari server");
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
-        const mapped = data.data.map((item: any) => ({
+        const serverMapped: AnnouncementData[] = data.data.map((item: any) => ({
           id: String(item.id),
           creator: item.creator || "ADMIN",
           text: item.text || "",
           date: item.date || "",
           status: item.status || "AKTIF",
         }));
-        setAnnouncements(mapped);
-        setSafeItem(STORAGE_KEY, JSON.stringify(mapped));
+
+        // Filter local items that are strictly offline-created (start with "local-")
+        // and have not been uploaded/duplicated on server
+        const offlineOnly = localItems.filter((local) => {
+          const isLocalOnly = String(local.id).startsWith("local-");
+          const alreadySynced = serverMapped.some(
+            (srv) => srv.text === local.text && srv.date === local.date
+          );
+          return isLocalOnly && !alreadySynced;
+        });
+
+        // Merge offline-only items with server items to prevent data loss and UI duplication
+        const mergedList = [...serverMapped, ...offlineOnly];
+        setAnnouncements(mergedList);
+        setSafeItem(STORAGE_KEY, JSON.stringify(mergedList));
       } else {
         throw new Error("Invalid structure");
       }
     } catch {
-      const saved = getSafeItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          setAnnouncements(JSON.parse(saved));
-        } catch {
-          setAnnouncements(DEFAULT_ANNOUNCEMENTS);
-        }
-      } else {
-        setAnnouncements(DEFAULT_ANNOUNCEMENTS);
-      }
+      // Fallback completely to local storage
+      setAnnouncements(localItems.length > 0 ? localItems : DEFAULT_ANNOUNCEMENTS);
     }
   };
 
