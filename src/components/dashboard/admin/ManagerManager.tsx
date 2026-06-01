@@ -89,6 +89,7 @@ export default function ManagerManager() {
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
   const toastTimeoutRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dbManagerIds, setDbManagerIds] = useState<Set<number>>(new Set());
 
   const fetchManagers = async () => {
     try {
@@ -105,6 +106,7 @@ export default function ManagerManager() {
           ...item,
         }));
         setManagersList(sanitized);
+        setDbManagerIds(new Set(sanitized.map((m: any) => Number(m.id))));
         if (sanitized.length > 0 && !selectedManager.nama) {
           setSelectedManager(sanitized[0]);
         }
@@ -127,6 +129,8 @@ export default function ManagerManager() {
             ...item,
           }));
           setManagersList(sanitized);
+          const dbIds = sanitized.filter((m: any) => m.id && String(m.id).length < 10).map((m: any) => Number(m.id));
+          setDbManagerIds(new Set(dbIds));
           if (sanitized.length > 0 && !selectedManager.nama) {
             setSelectedManager(sanitized[0]);
           }
@@ -145,17 +149,38 @@ export default function ManagerManager() {
       const token = getSafeItem("token");
       
       showToast("Sinkronisasi data pengelola ke server...");
+
+      // 1. Sync offline deletions first
+      const deletedIdsStr = getSafeItem("pkbm_managers_deleted_ids") || "[]";
+      const deletedIds: number[] = JSON.parse(deletedIdsStr);
+      if (deletedIds.length > 0) {
+        for (const delId of deletedIds) {
+          try {
+            await fetch(`/api/managers/${delId}`, {
+              method: "DELETE",
+              headers: {
+                "Authorization": `Bearer ${token}`,
+              },
+            });
+          } catch {
+            // If deleting a specific record fails on server, keep trying others
+          }
+        }
+        setSafeItem("pkbm_managers_deleted_ids", "[]");
+      }
       
+      // 2. Sync creations and updates
       let updatedList = [...list];
       
       for (let i = 0; i < updatedList.length; i++) {
         const manager = updatedList[i];
-        const method = manager.id && String(manager.id).length < 10 ? "PUT" : "POST";
+        
+        // Determine method based on whether the ID exists in our known server database records
+        const method = manager.id && dbManagerIds.has(Number(manager.id)) ? "PUT" : "POST";
         const url = method === "PUT" ? `/api/managers/${manager.id}` : "/api/managers";
         
-        // Strip temp local ID on POST payload to prevent schema validation failures
-        const { id: _, ...payload } = manager;
-        const bodyToSend = method === "POST" ? payload : manager;
+        // Strip the id property from the body payload for both POST and PUT requests to prevent validation failures
+        const { id: _, ...bodyToSend } = manager;
         
         const res = await fetch(url, {
           method,
@@ -351,6 +376,15 @@ export default function ManagerManager() {
     if (isNetworkError) {
       const remaining = managersList.filter((m) => m.id !== selectedManager.id);
       try {
+        // Track offline deletion if it was a saved server record (existed in dbManagerIds)
+        if (selectedManager.id && dbManagerIds.has(Number(selectedManager.id))) {
+          const deletedIdsStr = getSafeItem("pkbm_managers_deleted_ids") || "[]";
+          const deletedIds: number[] = JSON.parse(deletedIdsStr);
+          if (!deletedIds.includes(Number(selectedManager.id))) {
+            deletedIds.push(Number(selectedManager.id));
+            setSafeItem("pkbm_managers_deleted_ids", JSON.stringify(deletedIds));
+          }
+        }
         setSafeItem(STORAGE_KEY, JSON.stringify(remaining));
         setManagersList(remaining);
         showToast("Dihapus secara lokal (Offline)!");
