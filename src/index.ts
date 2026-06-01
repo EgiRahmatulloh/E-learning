@@ -475,9 +475,13 @@ app.post("/api/managers", async ({ body, headers, jwt, set }) => {
     agama: t.String(),
     pendidikan: t.String(),
     email: t.String(),
-    tambahan: t.String(),
+    tanggalMulaiTugas: t.String(),
+    nomorSkPengangkatan: t.String(),
+    lembagaPengangkat: t.String(),
+    nomorSkPenugasan: t.String(),
+    lembagaPenugas: t.String(),
     alamat: t.String(),
-    password: t.String(),
+    password: t.Optional(t.String()),
     foto: t.String(),
   })
 });
@@ -531,9 +535,13 @@ app.put("/api/managers/:id", async ({ params, body, headers, jwt, set }) => {
     agama: t.String(),
     pendidikan: t.String(),
     email: t.String(),
-    tambahan: t.String(),
+    tanggalMulaiTugas: t.String(),
+    nomorSkPengangkatan: t.String(),
+    lembagaPengangkat: t.String(),
+    nomorSkPenugasan: t.String(),
+    lembagaPenugas: t.String(),
     alamat: t.String(),
-    password: t.String(),
+    password: t.Optional(t.String()),
     foto: t.String(),
   })
 });
