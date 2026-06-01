@@ -52,4 +52,30 @@ CREATE TABLE IF NOT EXISTS users (
 );
 `);
 
+// Inisialisasi tabel institution_profile otomatis jika belum ada
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS institution_profile (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nama_lembaga TEXT NOT NULL DEFAULT '',
+  npsn TEXT NOT NULL DEFAULT '',
+  nomor_induk_lembaga TEXT NOT NULL DEFAULT '',
+  status_akreditasi TEXT NOT NULL DEFAULT '',
+  tahun_berdiri TEXT NOT NULL DEFAULT '',
+  nomor_telepon TEXT NOT NULL DEFAULT '',
+  email TEXT NOT NULL DEFAULT '',
+  alamat_lengkap TEXT NOT NULL DEFAULT '',
+  no_izin_pendirian TEXT NOT NULL DEFAULT '',
+  izin_yayasan TEXT NOT NULL DEFAULT '',
+  izin_operasional TEXT NOT NULL DEFAULT '',
+  npwp TEXT NOT NULL DEFAULT '',
+  rekening_nomor TEXT NOT NULL DEFAULT '',
+  rekening_atas_nama TEXT NOT NULL DEFAULT '',
+  rekening_nama_bank TEXT NOT NULL DEFAULT '',
+  foto TEXT NOT NULL DEFAULT '',
+  gambar TEXT NOT NULL DEFAULT '',
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+`);
+
 export const db = drizzle(sqlite, { schema });

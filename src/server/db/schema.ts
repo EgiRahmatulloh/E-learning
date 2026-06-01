@@ -47,3 +47,32 @@ export const announcements = sqliteTable('announcements', {
 
 export type Announcement = typeof announcements.$inferSelect;
 export type NewAnnouncement = typeof announcements.$inferInsert;
+
+export const institutionProfile = sqliteTable('institution_profile', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  namaLembaga: text('nama_lembaga').notNull().default(''),
+  npsn: text('npsn').notNull().default(''),
+  nomorIndukLembaga: text('nomor_induk_lembaga').notNull().default(''),
+  statusAkreditasi: text('status_akreditasi').notNull().default(''),
+  tahunBerdiri: text('tahun_berdiri').notNull().default(''),
+  nomorTelepon: text('nomor_telepon').notNull().default(''),
+  email: text('email').notNull().default(''),
+  alamatLengkap: text('alamat_lengkap').notNull().default(''),
+  noIzinPendirian: text('no_izin_pendirian').notNull().default(''),
+  izinYayasan: text('izin_yayasan').notNull().default(''),
+  izinOperasional: text('izin_operasional').notNull().default(''),
+  npwp: text('npwp').notNull().default(''),
+  rekeningNomor: text('rekening_nomor').notNull().default(''),
+  rekeningAtasNama: text('rekening_atas_nama').notNull().default(''),
+  rekeningNamaBank: text('rekening_nama_bank').notNull().default(''),
+  foto: text('foto').notNull().default(''),
+  gambar: text('gambar').notNull().default(''),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at')
+    .$defaultFn(() => new Date().toISOString())
+    .$onUpdate(() => new Date().toISOString()),
+});
+
+export type InstitutionProfile = typeof institutionProfile.$inferSelect;
+export type NewInstitutionProfile = typeof institutionProfile.$inferInsert;
+
