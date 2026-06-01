@@ -235,13 +235,16 @@ export default function ManagerManager() {
       const method = isNew ? "POST" : "PUT";
       const url = isNew ? "/api/managers" : `/api/managers/${selectedManager.id}`;
       
+      // Strip ID from the request body to prevent backend schema validation failures
+      const { id, ...payload } = selectedManager;
+      
       const res = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify(selectedManager),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (data.success) {
@@ -417,13 +420,20 @@ export default function ManagerManager() {
 
   const handleDownloadData = () => {
     try {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(managersList, null, 2));
+      const jsonString = JSON.stringify(managersList, null, 2);
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      
       const downloadAnchor = document.createElement("a");
-      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("href", url);
       downloadAnchor.setAttribute("download", "data_pengelola.json");
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
-      downloadAnchor.remove();
+      
+      // Cleanup
+      document.body.removeChild(downloadAnchor);
+      URL.revokeObjectURL(url);
+      
       showToast("Data pengelola berhasil diunduh!");
     } catch {
       showToast("Gagal mengunduh data pengelola.");
