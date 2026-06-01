@@ -513,14 +513,32 @@ export default function ManagerManager() {
             foto: item.foto || "",
           }));
 
-          setManagersList(sanitized);
-          try {
-            setSafeItem(STORAGE_KEY, JSON.stringify(sanitized));
-          } catch {}
-          if (sanitized.length > 0) {
-            setSelectedManager(sanitized[0]);
+          // Merge rather than overwrite: if a record with the same NIK or nama exists, update it. Otherwise, append.
+          const mergedList = [...managersList];
+          for (const imported of sanitized) {
+            const matchIndex = mergedList.findIndex(
+              (m) => (m.nik && imported.nik && m.nik === imported.nik) || (m.nama && m.nama === imported.nama)
+            );
+            if (matchIndex > -1) {
+              mergedList[matchIndex] = {
+                ...mergedList[matchIndex],
+                ...imported,
+                id: mergedList[matchIndex].id, // Preserve original database ID
+              };
+            } else {
+              mergedList.push(imported);
+            }
           }
-          showToast("Data pengelola berhasil diunggah dan disimpan!");
+
+          setManagersList(mergedList);
+          setHasUnsyncedOfflineData(true); // Mark as unsynced offline data so it can be synced to server
+          try {
+            setSafeItem(STORAGE_KEY, JSON.stringify(mergedList));
+          } catch {}
+          if (mergedList.length > 0) {
+            setSelectedManager(mergedList[0]);
+          }
+          showToast("Data pengelola berhasil diunggah dan digabungkan!");
         } else {
           showToast("Format berkas JSON tidak valid (harus berupa array).");
         }
@@ -703,13 +721,31 @@ export default function ManagerManager() {
       {isFormOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in duration-300">
           {/* Backdrop Click Closes Popup */}
-          <div className="absolute inset-0 cursor-default" onClick={() => { setIsFormOpen(false); setIsLocked(true); setIsNew(false); }} />
+          <div className="absolute inset-0 cursor-default" onClick={() => { 
+            if (!isLocked) {
+              if (!confirm("Anda sedang mengedit data. Apakah Anda yakin ingin menutup form dan membuang perubahan?")) {
+                return;
+              }
+            }
+            setIsFormOpen(false); 
+            setIsLocked(true); 
+            setIsNew(false); 
+          }} />
           
           <div className="bg-[#00bcd4] w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 sm:p-8 rounded-3xl border-4 border-white shadow-2xl relative animate-in slide-in-from-bottom-8 duration-300 text-white select-text">
             
             {/* Elegant Close Button */}
             <button
-              onClick={() => { setIsFormOpen(false); setIsLocked(true); setIsNew(false); }}
+              onClick={() => { 
+                if (!isLocked) {
+                  if (!confirm("Anda sedang mengedit data. Apakah Anda yakin ingin menutup form dan membuang perubahan?")) {
+                    return;
+                  }
+                }
+                setIsFormOpen(false); 
+                setIsLocked(true); 
+                setIsNew(false); 
+              }}
               className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-white/20 text-white hover:bg-white/30 flex items-center justify-center transition-colors cursor-pointer text-sm font-black shadow-inner"
             >
               ✕
