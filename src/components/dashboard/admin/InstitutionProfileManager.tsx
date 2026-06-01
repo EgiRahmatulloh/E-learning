@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Edit3, Save, UploadCloud } from "lucide-react";
 
@@ -67,6 +67,7 @@ export default function InstitutionProfileManager() {
   const [uploadingFoto, setUploadingFoto] = useState(false);
   const [uploadingGambar, setUploadingGambar] = useState(false);
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
+  const toastTimeoutRef = useRef<any>(null);
 
   const fetchProfile = async () => {
     try {
@@ -101,9 +102,13 @@ export default function InstitutionProfileManager() {
   }, []);
 
   const showToast = (message: string) => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
     setToast({ message, show: true });
-    setTimeout(() => {
+    toastTimeoutRef.current = setTimeout(() => {
       setToast({ message: "", show: false });
+      toastTimeoutRef.current = null;
     }, 3000);
   };
 
@@ -156,7 +161,7 @@ export default function InstitutionProfileManager() {
         } else {
           showToast("⚠️ Offline: Gagal menyimpan secara lokal.");
         }
-        setIsLocked(true);
+        setIsLocked(false); // Tetap buka kunci form agar pengguna bisa memperbaiki input/gambar
       }
     }
   };
