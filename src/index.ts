@@ -437,7 +437,8 @@ app.post("/api/institution-profile", async ({ body, headers, jwt, set }) => {
 app.get("/api/managers", async ({ set }) => {
   try {
     const list = await db.select().from(managers).all();
-    return { success: true, data: list };
+    const safeList = list.map(({ password, ...rest }) => rest);
+    return { success: true, data: safeList };
   } catch (e) {
     set.status = 500;
     return { success: false, message: "Gagal mengambil data pengelola" };
@@ -450,11 +451,15 @@ app.post("/api/managers", async ({ body, headers, jwt, set }) => {
   if (authError) return authError;
 
   try {
+    const { password, ...otherFields } = body;
+    const hashedPassword = password ? await Bun.password.hash(password) : "";
     const inserted = await db.insert(managers).values({
-      ...body,
+      ...otherFields,
+      password: hashedPassword,
     }).returning().get();
     
-    return { success: true, data: inserted };
+    const { password: _, ...safeData } = inserted;
+    return { success: true, data: safeData };
   } catch (e) {
     set.status = 500;
     return { success: false, message: "Gagal menambahkan data pengelola" };
@@ -489,9 +494,15 @@ app.put("/api/managers/:id", async ({ params, body, headers, jwt, set }) => {
   }
 
   try {
+    const { password, ...otherFields } = body;
+    const updateData: Record<string, any> = { ...otherFields };
+    if (password && password.trim() !== "") {
+      updateData.password = await Bun.password.hash(password);
+    }
+
     const updated = await db.update(managers)
       .set({
-        ...body,
+        ...updateData,
         updatedAt: new Date().toISOString(),
       })
       .where(eq(managers.id, id))
@@ -503,7 +514,8 @@ app.put("/api/managers/:id", async ({ params, body, headers, jwt, set }) => {
       return { success: false, message: "Pengelola tidak ditemukan" };
     }
     
-    return { success: true, data: updated };
+    const { password: _, ...safeData } = updated;
+    return { success: true, data: safeData };
   } catch (e) {
     set.status = 500;
     return { success: false, message: "Gagal memperbarui data pengelola" };

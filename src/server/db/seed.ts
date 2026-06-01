@@ -129,6 +129,9 @@ export async function seedDatabase() {
     const managerCount = resultManagers?.value || 0;
     if (managerCount === 0) {
       console.log("🌱 Database managers kosong, seeding default managers...");
+      
+      const hashDefaultManager = await Bun.password.hash("password123");
+
       await db.insert(managers).values([
         {
           nama: "H. MAMAN SUPARMAN, S.Pd.",
@@ -142,7 +145,7 @@ export async function seedDatabase() {
           email: "mamansuparman@pkbmmakmur.org",
           tambahan: "Kepala Lembaga Utama",
           alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
-          password: "password123",
+          password: hashDefaultManager,
           foto: "/images/2c06b6fab7e6a9490c046e362160f2d0.png",
         },
         {
@@ -157,7 +160,7 @@ export async function seedDatabase() {
           email: "sitiaminah@pkbmmakmur.org",
           tambahan: "Manajemen Keuangan",
           alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
-          password: "password123",
+          password: hashDefaultManager,
           foto: "/images/2c06b6fab7e6a9490c046e362160f2d0.png",
         }
       ]);

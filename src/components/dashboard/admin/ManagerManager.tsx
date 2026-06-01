@@ -323,7 +323,12 @@ export default function ManagerManager() {
       if (err instanceof TypeError) {
         const reader = new FileReader();
         reader.onloadend = () => {
-          handleFieldChange("foto", reader.result as string);
+          const base64Data = reader.result as string;
+          if (base64Data.length > 1.5 * 1024 * 1024) { // Limit to 1.5MB base64 characters (~1.1MB file size) to prevent localStorage quota issues
+            showToast("⚠️ Offline: Berkas gambar terlalu besar untuk disimpan offline (Maks 1MB)!");
+            return;
+          }
+          handleFieldChange("foto", base64Data);
           showToast("Foto disimpan secara lokal (Offline)!");
         };
         reader.readAsDataURL(file);
@@ -359,6 +364,14 @@ export default function ManagerManager() {
       try {
         const parsed = JSON.parse(event.target?.result as string);
         if (Array.isArray(parsed)) {
+          // Schema validation check for reliability
+          const isValid = parsed.every(
+            (item) => typeof item === "object" && item !== null && "nama" in item && "jabatan" in item
+          );
+          if (!isValid) {
+            showToast("Format berkas JSON tidak valid! Tiap item wajib memiliki bidang 'nama' dan 'jabatan'.");
+            return;
+          }
           // Save list
           setManagersList(parsed);
           try {
@@ -369,7 +382,7 @@ export default function ManagerManager() {
           }
           showToast("Data pengelola berhasil diunggah dan disimpan!");
         } else {
-          showToast("Format berkas JSON tidak valid (harus array).");
+          showToast("Format berkas JSON tidak valid (harus berupa array).");
         }
       } catch {
         showToast("Gagal memproses berkas JSON.");
