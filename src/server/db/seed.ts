@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { users, sliders, announcements, institutionProfile } from "./schema";
+import { users, sliders, announcements, institutionProfile, managers } from "./schema";
 import { count } from "drizzle-orm";
 
 export async function seedDatabase() {
@@ -123,8 +123,51 @@ export async function seedDatabase() {
     } else {
       console.log(`ℹ️ Database memiliki ${profileCount} institution_profile, seeding diabaikan.`);
     }
+
+    // Seed managers if empty
+    const resultManagers = await db.select({ value: count() }).from(managers).get();
+    const managerCount = resultManagers?.value || 0;
+    if (managerCount === 0) {
+      console.log("🌱 Database managers kosong, seeding default managers...");
+      await db.insert(managers).values([
+        {
+          nama: "H. MAMAN SUPARMAN, S.Pd.",
+          nik: "3207123456789001",
+          jabatan: "Ketua PKBM",
+          nuptk: "1234567890123456",
+          tempatTglLahir: "Ciamis, 12-05-1970",
+          jenisKelamin: "Laki-laki",
+          agama: "Islam",
+          pendidikan: "S1 Pendidikan Kesetaraan",
+          email: "mamansuparman@pkbmmakmur.org",
+          tambahan: "Kepala Lembaga Utama",
+          alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
+          password: "password123",
+          foto: "/images/2c06b6fab7e6a9490c046e362160f2d0.png",
+        },
+        {
+          nama: "Siti Aminah, S.E.",
+          nik: "3207123456789002",
+          jabatan: "Bendahara",
+          nuptk: "9876543210987654",
+          tempatTglLahir: "Ciamis, 24-04-1994",
+          jenisKelamin: "Perempuan",
+          agama: "Islam",
+          pendidikan: "S1 Akuntansi",
+          email: "sitiaminah@pkbmmakmur.org",
+          tambahan: "Manajemen Keuangan",
+          alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
+          password: "password123",
+          foto: "/images/2c06b6fab7e6a9490c046e362160f2d0.png",
+        }
+      ]);
+      console.log("✅ Seeding managers berhasil!");
+    } else {
+      console.log(`ℹ️ Database memiliki ${managerCount} managers, seeding diabaikan.`);
+    }
   } catch (error) {
     console.error("❌ Gagal melakukan seeding database:", error);
   }
 }
+
 

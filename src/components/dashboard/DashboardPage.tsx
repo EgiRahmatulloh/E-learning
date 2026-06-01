@@ -12,6 +12,7 @@ import { SiswaDashboard } from "./siswa/SiswaDashboard";
 import { HeaderManager } from "./admin/HeaderManager";
 import AnnouncementManager from "./admin/AnnouncementManager";
 import InstitutionProfileManager from "./admin/InstitutionProfileManager";
+import ManagerManager from "./admin/ManagerManager";
 
 // Dashboard Sub-components
 import DashboardSidebar from "./DashboardSidebar";
@@ -112,6 +113,20 @@ export default function DashboardPage({ user, handleLogout }: DashboardPageProps
       return (
         <div className="animate-in fade-in duration-300">
           <InstitutionProfileManager />
+        </div>
+      );
+    }
+    if (activeTab === "data-pengelola") {
+      if (user.role !== "admin") {
+        return (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
+            🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka data pengelola.
+          </div>
+        );
+      }
+      return (
+        <div className="animate-in fade-in duration-300">
+          <ManagerManager />
         </div>
       );
     }
