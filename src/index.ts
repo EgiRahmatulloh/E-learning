@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { staticPlugin } from "@elysia/static";
 import { db } from "./server/db";
-import { users, sliders, announcements, institutionProfile } from "./server/db/schema";
+import { users, sliders, announcements, institutionProfile, managers } from "./server/db/schema";
 import { eq, or } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
 import fs from "fs";
@@ -431,6 +431,144 @@ app.post("/api/institution-profile", async ({ body, headers, jwt, set }) => {
     gambar: t.String(),
   })
 });
+
+// --- API MANAGERS ROUTES ---
+// Ambil semua pengelola
+app.get("/api/managers", async ({ headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  try {
+    const list = await db.select().from(managers).all();
+    const safeList = list.map(({ password, ...rest }) => rest);
+    return { success: true, data: safeList };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data pengelola" };
+  }
+});
+
+// Tambah pengelola baru
+app.post("/api/managers", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  try {
+    const { password, ...otherFields } = body;
+    const hashedPassword = password ? await Bun.password.hash(password) : "";
+    const inserted = await db.insert(managers).values({
+      ...otherFields,
+      password: hashedPassword,
+    }).returning().get();
+    
+    const { password: _, ...safeData } = inserted;
+    return { success: true, data: safeData };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menambahkan data pengelola" };
+  }
+}, {
+  body: t.Object({
+    nama: t.String(),
+    nik: t.String(),
+    jabatan: t.String(),
+    nuptk: t.String(),
+    tempatTglLahir: t.String(),
+    jenisKelamin: t.String(),
+    agama: t.String(),
+    pendidikan: t.String(),
+    email: t.String(),
+    tanggalMulaiTugas: t.String(),
+    nomorSkPengangkatan: t.String(),
+    lembagaPengangkat: t.String(),
+    nomorSkPenugasan: t.String(),
+    lembagaPenugas: t.String(),
+    alamat: t.String(),
+    password: t.Optional(t.String()),
+    foto: t.String(),
+  })
+});
+
+// Update pengelola
+app.put("/api/managers/:id", async ({ params, body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    const { password, ...otherFields } = body;
+    const updateData: Record<string, any> = { ...otherFields };
+    if (password && password.trim() !== "") {
+      updateData.password = await Bun.password.hash(password);
+    }
+
+    const updated = await db.update(managers)
+      .set({
+        ...updateData,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(managers.id, id))
+      .returning()
+      .get();
+      
+    if (!updated) {
+      set.status = 404;
+      return { success: false, message: "Pengelola tidak ditemukan" };
+    }
+    
+    const { password: _, ...safeData } = updated;
+    return { success: true, data: safeData };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal memperbarui data pengelola" };
+  }
+}, {
+  body: t.Object({
+    nama: t.String(),
+    nik: t.String(),
+    jabatan: t.String(),
+    nuptk: t.String(),
+    tempatTglLahir: t.String(),
+    jenisKelamin: t.String(),
+    agama: t.String(),
+    pendidikan: t.String(),
+    email: t.String(),
+    tanggalMulaiTugas: t.String(),
+    nomorSkPengangkatan: t.String(),
+    lembagaPengangkat: t.String(),
+    nomorSkPenugasan: t.String(),
+    lembagaPenugas: t.String(),
+    alamat: t.String(),
+    password: t.Optional(t.String()),
+    foto: t.String(),
+  })
+});
+
+// Hapus pengelola
+app.delete("/api/managers/:id", async ({ params, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    await db.delete(managers).where(eq(managers.id, id)).run();
+    return { success: true, message: "Pengelola berhasil dihapus" };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menghapus pengelola" };
+  }
+});
+
 
 // Endpoint untuk Unggah Berkas Gambar Fisik (Aman & Efisien)
 app.post("/api/upload", async ({ body, headers, jwt, set }) => {
