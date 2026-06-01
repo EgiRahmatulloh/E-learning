@@ -92,15 +92,24 @@ export default function ManagerManager() {
 
   const fetchManagers = async () => {
     try {
-      const res = await fetch("/api/managers");
+      const token = getSafeItem("token");
+      const res = await fetch("/api/managers", {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
       const data = await res.json();
       if (data.success && data.data) {
-        setManagersList(data.data);
-        if (data.data.length > 0 && !selectedManager.nama) {
-          setSelectedManager(data.data[0]);
+        const sanitized = data.data.map((item: any) => ({
+          ...DEFAULT_MANAGER,
+          ...item,
+        }));
+        setManagersList(sanitized);
+        if (sanitized.length > 0 && !selectedManager.nama) {
+          setSelectedManager(sanitized[0]);
         }
         try {
-          setSafeItem(STORAGE_KEY, JSON.stringify(data.data));
+          setSafeItem(STORAGE_KEY, JSON.stringify(sanitized));
         } catch {
           // ignore seeding write failures
         }
@@ -113,9 +122,13 @@ export default function ManagerManager() {
       if (saved) {
         try {
           const list = JSON.parse(saved);
-          setManagersList(list);
-          if (list.length > 0 && !selectedManager.nama) {
-            setSelectedManager(list[0]);
+          const sanitized = list.map((item: any) => ({
+            ...DEFAULT_MANAGER,
+            ...item,
+          }));
+          setManagersList(sanitized);
+          if (sanitized.length > 0 && !selectedManager.nama) {
+            setSelectedManager(sanitized[0]);
           }
         } catch {
           setManagersList([]);
@@ -133,24 +146,43 @@ export default function ManagerManager() {
       
       showToast("Sinkronisasi data pengelola ke server...");
       
-      for (const manager of list) {
+      let updatedList = [...list];
+      
+      for (let i = 0; i < updatedList.length; i++) {
+        const manager = updatedList[i];
         const method = manager.id && String(manager.id).length < 10 ? "PUT" : "POST";
         const url = method === "PUT" ? `/api/managers/${manager.id}` : "/api/managers";
         
-        await fetch(url, {
+        // Strip temp local ID on POST payload to prevent schema validation failures
+        const { id: _, ...payload } = manager;
+        const bodyToSend = method === "POST" ? payload : manager;
+        
+        const res = await fetch(url, {
           method,
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
           },
-          body: JSON.stringify(manager),
+          body: JSON.stringify(bodyToSend),
         });
+        
+        const resData = await res.json();
+        if (resData.success && resData.data) {
+          // Update the specific record in the local list with the server-returned data (has correct DB id)
+          updatedList[i] = resData.data;
+          // Update localStorage immediately after each record to prevent duplication on partial sync failures
+          setSafeItem(STORAGE_KEY, JSON.stringify(updatedList));
+          setManagersList(updatedList);
+        } else {
+          throw new Error(resData.message || "Gagal sinkronisasi data");
+        }
       }
+      
       showToast("Sinkronisasi data ke server berhasil!");
       setHasUnsyncedOfflineData(false);
       fetchManagers();
-    } catch {
-      showToast("⚠️ Gagal sinkronisasi. Periksa koneksi internet Anda!");
+    } catch (err: any) {
+      showToast(`⚠️ Sinkronisasi terhenti: ${err.message || 'Periksa koneksi internet!'}`);
     }
   };
 
@@ -415,13 +447,34 @@ export default function ManagerManager() {
             showToast("Format berkas JSON tidak valid! Tiap item wajib memiliki bidang 'nama' dan 'jabatan'.");
             return;
           }
-          // Save list
-          setManagersList(parsed);
+          
+          // Sanitize and merge with DEFAULT_MANAGER to prevent uncontrolled input warning and undefined errors
+          const sanitized = parsed.map((item) => ({
+            ...DEFAULT_MANAGER,
+            ...item,
+            // Fallback empty values if they are null or not present
+            nuptk: item.nuptk || "",
+            tempatTglLahir: item.tempatTglLahir || "",
+            jenisKelamin: item.jenisKelamin || "",
+            agama: item.agama || "",
+            pendidikan: item.pendidikan || "",
+            email: item.email || "",
+            tanggalMulaiTugas: item.tanggalMulaiTugas || "",
+            nomorSkPengangkatan: item.nomorSkPengangkatan || "",
+            lembagaPengangkat: item.lembagaPengangkat || "",
+            nomorSkPenugasan: item.nomorSkPenugasan || "",
+            lembagaPenugas: item.lembagaPenugas || "",
+            alamat: item.alamat || "",
+            password: item.password || "",
+            foto: item.foto || "",
+          }));
+
+          setManagersList(sanitized);
           try {
-            setSafeItem(STORAGE_KEY, JSON.stringify(parsed));
+            setSafeItem(STORAGE_KEY, JSON.stringify(sanitized));
           } catch {}
-          if (parsed.length > 0) {
-            setSelectedManager(parsed[0]);
+          if (sanitized.length > 0) {
+            setSelectedManager(sanitized[0]);
           }
           showToast("Data pengelola berhasil diunggah dan disimpan!");
         } else {
@@ -436,8 +489,8 @@ export default function ManagerManager() {
 
   // Filtered List based on Search inputs
   const filteredList = managersList.filter((m) => {
-    const matchName = m.nama.toLowerCase().includes(searchName.toLowerCase());
-    const matchNik = m.nik.toLowerCase().includes(searchNik.toLowerCase());
+    const matchName = (m.nama || "").toLowerCase().includes(searchName.toLowerCase());
+    const matchNik = (m.nik || "").toLowerCase().includes(searchNik.toLowerCase());
     return matchName && matchNik;
   });
 

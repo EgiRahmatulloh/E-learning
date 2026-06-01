@@ -434,7 +434,10 @@ app.post("/api/institution-profile", async ({ body, headers, jwt, set }) => {
 
 // --- API MANAGERS ROUTES ---
 // Ambil semua pengelola
-app.get("/api/managers", async ({ set }) => {
+app.get("/api/managers", async ({ headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
   try {
     const list = await db.select().from(managers).all();
     const safeList = list.map(({ password, ...rest }) => rest);
