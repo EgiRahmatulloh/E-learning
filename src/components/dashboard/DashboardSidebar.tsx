@@ -24,7 +24,12 @@ interface MenuItem {
   id: string;
   label: string;
   icon: React.ReactNode;
-  children?: { id: string; label: string; icon: React.ReactNode }[];
+  children?: { 
+    id: string; 
+    label: string; 
+    icon: React.ReactNode; 
+    children?: { id: string; label: string }[] 
+  }[];
 }
 
 const menuItems: MenuItem[] = [
@@ -50,7 +55,22 @@ const menuItems: MenuItem[] = [
     children: [
       { id: "header", label: "HEADER", icon: <Type className="h-4 w-4" /> },
       { id: "pengumuman", label: "PENGUMUMAN", icon: <Megaphone className="h-4 w-4" /> },
-      { id: "website-profil", label: "PROFIL SEKOLAH", icon: <User className="h-4 w-4" /> },
+      // Collapsible Profil Sub-menu
+      {
+        id: "profil-group",
+        label: "PROFIL",
+        icon: <User className="h-4 w-4" />,
+        children: [
+          { id: "identitas-lembaga", label: "IDENTITAS LEMBAGA" },
+          { id: "data-pengelola", label: "DATA PENGELOLA" },
+          { id: "visi-misi", label: "VISI DAN MISI" },
+          { id: "program-pendidikan", label: "PROGRAM PENDIDIKAN" },
+          { id: "sarana-fasilitas", label: "SARANA DAN FASILITAS" },
+          { id: "prestasi", label: "PRESTASI" },
+          { id: "titik-layanan", label: "TITIK LAYANAN" },
+        ]
+      },
+      // Other Website items
       { id: "agenda", label: "AGENDA", icon: <CalendarDays className="h-4 w-4" /> },
       { id: "berita", label: "BERITA", icon: <Newspaper className="h-4 w-4" /> },
       { id: "tutor", label: "TUTOR", icon: <GraduationCap className="h-4 w-4" /> },
@@ -166,23 +186,68 @@ export default function DashboardSidebar({
             {/* Sub-menu */}
             {item.children && expandedMenus[item.id] && (
               <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-white/10 pl-3 animate-in slide-in-from-top-2 duration-200">
-                {item.children.map((child) => (
-                  <button
-                    key={child.id}
-                    onClick={() => {
-                      setActiveTab(child.id);
-                      setMobileSidebarOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      activeTab === child.id
-                        ? "bg-white/15 text-cyan-300"
-                        : "text-white/50 hover:bg-white/10 hover:text-white/80"
-                    }`}
-                  >
-                    <span className={activeTab === child.id ? "text-cyan-300" : "text-white/30"}>{child.icon}</span>
-                    {child.label}
-                  </button>
-                ))}
+                {item.children.map((child) => {
+                  const hasSubChildren = !!child.children;
+                  const isSubExpanded = !!expandedMenus[child.id];
+
+                  if (hasSubChildren) {
+                    return (
+                      <div key={child.id} className="space-y-0.5">
+                        <button
+                          onClick={() => {
+                            setExpandedMenus((prev) => ({ ...prev, [child.id]: !prev[child.id] }));
+                          }}
+                          className="w-full flex items-center gap-2.5 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer text-white/70 hover:bg-white/10 hover:text-white"
+                        >
+                          <span className="text-white/30">{child.icon}</span>
+                          <span className="flex-1 text-left uppercase">{child.label}</span>
+                          <span className="text-white/40">
+                            {isSubExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                          </span>
+                        </button>
+                        {isSubExpanded && (
+                          <div className="ml-3 mt-1 space-y-0.5 border-l border-white/10 pl-3 animate-in slide-in-from-top-1 duration-200">
+                            {child.children?.map((subChild) => (
+                              <button
+                                key={subChild.id}
+                                onClick={() => {
+                                  setActiveTab(subChild.id);
+                                  setMobileSidebarOpen(false);
+                                }}
+                                className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-left transition-all cursor-pointer ${
+                                  activeTab === subChild.id
+                                    ? "bg-white/15 text-cyan-300"
+                                    : "text-white/50 hover:bg-white/10 hover:text-white/85"
+                                }`}
+                              >
+                                <span className="h-1.5 w-1.5 rounded-full bg-cyan-300"></span>
+                                {subChild.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <button
+                      key={child.id}
+                      onClick={() => {
+                        setActiveTab(child.id);
+                        setMobileSidebarOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-bold text-left transition-all cursor-pointer ${
+                        activeTab === child.id
+                          ? "bg-white/15 text-cyan-300"
+                          : "text-white/70 hover:bg-white/10 hover:text-white/90"
+                      }`}
+                    >
+                      <span className={activeTab === child.id ? "text-cyan-300" : "text-white/30"}>{child.icon}</span>
+                      {child.label}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

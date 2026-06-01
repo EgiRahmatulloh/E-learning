@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { staticPlugin } from "@elysia/static";
 import { db } from "./server/db";
-import { users, sliders, announcements } from "./server/db/schema";
+import { users, sliders, announcements, institutionProfile } from "./server/db/schema";
 import { eq, or } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
 import fs from "fs";
@@ -365,6 +365,71 @@ app.delete("/api/announcements/:id", async ({ params, headers, jwt, set }) => {
     set.status = 500;
     return { success: false, message: "Gagal menghapus pengumuman" };
   }
+});
+
+// --- API INSTITUTION PROFILE ROUTES ---
+// Ambil profil lembaga
+app.get("/api/institution-profile", async ({ set }) => {
+  try {
+    const profile = await db.select().from(institutionProfile).get();
+    return { success: true, data: profile || null };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data identitas lembaga" };
+  }
+});
+
+// Update/Simpan profil lembaga
+app.post("/api/institution-profile", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  try {
+    // Cari apakah sudah ada profil
+    const existing = await db.select().from(institutionProfile).get();
+    if (existing) {
+      // Update
+      const updated = await db.update(institutionProfile)
+        .set({
+          ...body,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(institutionProfile.id, existing.id))
+        .returning()
+        .get();
+      return { success: true, data: updated };
+    } else {
+      // Insert
+      const inserted = await db.insert(institutionProfile)
+        .values(body)
+        .returning()
+        .get();
+      return { success: true, data: inserted };
+    }
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menyimpan data identitas lembaga" };
+  }
+}, {
+  body: t.Object({
+    namaLembaga: t.String(),
+    npsn: t.String(),
+    nomorIndukLembaga: t.String(),
+    statusAkreditasi: t.String(),
+    tahunBerdiri: t.String(),
+    nomorTelepon: t.String(),
+    email: t.String(),
+    alamatLengkap: t.String(),
+    noIzinPendirian: t.String(),
+    izinYayasan: t.String(),
+    izinOperasional: t.String(),
+    npwp: t.String(),
+    rekeningNomor: t.String(),
+    rekeningAtasNama: t.String(),
+    rekeningNamaBank: t.String(),
+    foto: t.String(),
+    gambar: t.String(),
+  })
 });
 
 // Endpoint untuk Unggah Berkas Gambar Fisik (Aman & Efisien)
