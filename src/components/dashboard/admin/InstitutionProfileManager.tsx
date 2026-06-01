@@ -56,8 +56,8 @@ const getSafeItem = (key: string): string | null => {
 const setSafeItem = (key: string, value: string) => {
   try {
     localStorage.setItem(key, value);
-  } catch {
-    // ignore
+  } catch (e) {
+    throw e;
   }
 };
 
@@ -74,11 +74,15 @@ export default function InstitutionProfileManager() {
       const data = await res.json();
       if (data.success && data.data) {
         setProfile(data.data);
-        setSafeItem(STORAGE_KEY, JSON.stringify(data.data));
+        try {
+          setSafeItem(STORAGE_KEY, JSON.stringify(data.data));
+        } catch {
+          // ignore seeding write failures
+        }
       } else {
         throw new Error("Invalid structure");
       }
-    } catch {
+    } catch (err) {
       const saved = getSafeItem(STORAGE_KEY);
       if (saved) {
         try {
@@ -142,9 +146,18 @@ export default function InstitutionProfileManager() {
 
     // Local storage fallback ONLY on genuine fetch/network failures
     if (isNetworkError) {
-      setSafeItem(STORAGE_KEY, JSON.stringify(profile));
-      showToast("Identitas Lembaga disimpan secara lokal (Offline)!");
-      setIsLocked(true);
+      try {
+        setSafeItem(STORAGE_KEY, JSON.stringify(profile));
+        showToast("Identitas Lembaga disimpan secara lokal (Offline)!");
+        setIsLocked(true);
+      } catch (e: any) {
+        if (e.name === "QuotaExceededError" || e.name === "NS_ERROR_DOM_QUOTA_REACHED") {
+          showToast("⚠️ Offline: Gagal menyimpan karena ukuran gambar/foto terlalu besar!");
+        } else {
+          showToast("⚠️ Offline: Gagal menyimpan secara lokal.");
+        }
+        setIsLocked(true);
+      }
     }
   };
 
@@ -161,7 +174,7 @@ export default function InstitutionProfileManager() {
     if (type === "foto") setUploadingFoto(true);
     else setUploadingGambar(true);
 
-    const token = localStorage.getItem("token");
+    const token = getSafeItem("token");
     const formData = new FormData();
     formData.append("file", file);
 
@@ -527,7 +540,10 @@ export default function InstitutionProfileManager() {
               disabled={isLocked}
               onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (file) processUpload(file, "foto");
+                if (file) {
+                  processUpload(file, "foto");
+                  e.target.value = "";
+                }
               }}
               className="hidden"
             />
@@ -603,7 +619,10 @@ export default function InstitutionProfileManager() {
             disabled={isLocked}
             onChange={(e) => {
               const file = e.target.files?.[0];
-              if (file) processUpload(file, "gambar");
+              if (file) {
+                processUpload(file, "gambar");
+                e.target.value = "";
+              }
             }}
             className="hidden"
           />
