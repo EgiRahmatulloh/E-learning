@@ -1120,6 +1120,22 @@ app.get("/api/managers", async ({ headers, jwt, set }) => {
   }
 });
 
+// Ambil data pengelola untuk publik (landing page)
+app.get("/api/public-managers", async ({ set }) => {
+  try {
+    const list = await db.select({
+      id: managers.id,
+      nama: managers.nama,
+      jabatan: managers.jabatan,
+      foto: managers.foto,
+    }).from(managers).all();
+    return { success: true, data: list };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data pengelola" };
+  }
+});
+
 // Tambah pengelola baru
 app.post("/api/managers", async ({ body, headers, jwt, set }) => {
   const authError = await verifyAdmin(headers, jwt, set);
