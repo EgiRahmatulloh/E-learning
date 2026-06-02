@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { users, sliders, announcements, institutionProfile, managers, visionMission } from "./schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms } from "./schema";
 import { count } from "drizzle-orm";
 
 export async function seedDatabase() {
@@ -138,6 +138,30 @@ export async function seedDatabase() {
       console.log("✅ Seeding vision_mission berhasil!");
     } else {
       console.log(`ℹ️ Database memiliki ${vmCount} vision_mission, seeding diabaikan.`);
+    }
+
+    // Seed education_programs if empty
+    const resultPrograms = await db.select({ value: count() }).from(educationPrograms).get();
+    const programsCount = resultPrograms?.value || 0;
+    if (programsCount === 0) {
+      console.log("🌱 Database education_programs kosong, seeding default education programs...");
+      await db.insert(educationPrograms).values([
+        {
+          program: "PAKET C",
+          penjab: "H. MAMAN SUPARMAN, S.Pd.",
+          keterangan: "Pendidikan kesetaraan Paket C (Setara SMA) untuk membekali warga belajar dengan pengetahuan akademis, keterampilan wirausaha, serta ijazah resmi kelulusan.",
+          foto: "/images/8c928d7128a4a86625e224dd9d3fa78b.png",
+        },
+        {
+          program: "PAKET B",
+          penjab: "Siti Aminah, S.E.",
+          keterangan: "Pendidikan kesetaraan Paket B (Setara SMP) untuk memberikan bekal pengetahuan dasar menengah, keterampilan hidup, dan ijazah kesetaraan.",
+          foto: "/images/73129d8e548b4795ba15eaafa5d0e39c.jpg",
+        }
+      ]);
+      console.log("✅ Seeding education_programs berhasil!");
+    } else {
+      console.log(`ℹ️ Database memiliki ${programsCount} education_programs, seeding diabaikan.`);
     }
 
     // Seed managers if empty

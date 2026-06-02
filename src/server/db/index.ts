@@ -89,6 +89,19 @@ CREATE TABLE IF NOT EXISTS vision_mission (
 );
 `);
 
+// Inisialisasi tabel education_programs otomatis jika belum ada
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS education_programs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  program TEXT NOT NULL DEFAULT '',
+  penjab TEXT NOT NULL DEFAULT '',
+  keterangan TEXT NOT NULL DEFAULT '',
+  foto TEXT NOT NULL DEFAULT '',
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+`);
+
 // Inisialisasi tabel managers otomatis jika belum ada
 sqlite.exec(`
 CREATE TABLE IF NOT EXISTS managers (
