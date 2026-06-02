@@ -140,4 +140,20 @@ CREATE TABLE IF NOT EXISTS managers (
 );
 `);
 
+// Inisialisasi tabel achievements otomatis jika belum ada
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS achievements (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nama TEXT NOT NULL DEFAULT '',
+  tahun TEXT NOT NULL DEFAULT '',
+  tingkat TEXT NOT NULL DEFAULT '',
+  penyelenggara TEXT NOT NULL DEFAULT '',
+  peserta TEXT NOT NULL DEFAULT '',
+  keterangan TEXT NOT NULL DEFAULT '',
+  foto TEXT NOT NULL DEFAULT '',
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+`);
+
 export const db = drizzle(sqlite, { schema });

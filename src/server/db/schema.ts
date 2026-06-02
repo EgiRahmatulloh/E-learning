@@ -144,6 +144,20 @@ export const managers = sqliteTable('managers', {
 });
 
 export type Manager = typeof managers.$inferSelect;
-export type NewManager = typeof managers.$inferInsert;
+export type NewManager = typeof managers.$inferInsert;export const achievements = sqliteTable('achievements', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  nama: text('nama').notNull().default(''),
+  tahun: text('tahun').notNull().default(''),
+  tingkat: text('tingkat').notNull().default(''),
+  penyelenggara: text('penyelenggara').notNull().default(''),
+  peserta: text('peserta').notNull().default(''),
+  keterangan: text('keterangan').notNull().default(''),
+  foto: text('foto').notNull().default(''),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at')
+    .$defaultFn(() => new Date().toISOString())
+    .$onUpdate(() => new Date().toISOString()),
+});
 
-
+export type Achievement = typeof achievements.$inferSelect;
+export type NewAchievement = typeof achievements.$inferInsert;
