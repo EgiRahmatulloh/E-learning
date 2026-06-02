@@ -58,3 +58,5 @@ Thumbs.db
 
 # Database & SQLite
 src/server/sqlite.db
+src/server/sqlite.db-shm
+src/server/sqlite.db-wal

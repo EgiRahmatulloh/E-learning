@@ -78,6 +78,17 @@ CREATE TABLE IF NOT EXISTS institution_profile (
 );
 `);
 
+// Inisialisasi tabel vision_mission otomatis jika belum ada
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS vision_mission (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  visi TEXT NOT NULL DEFAULT '',
+  misi TEXT NOT NULL DEFAULT '',
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+`);
+
 // Inisialisasi tabel managers otomatis jika belum ada
 sqlite.exec(`
 CREATE TABLE IF NOT EXISTS managers (

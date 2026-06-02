@@ -24,13 +24,28 @@ interface MenuItem {
   id: string;
   label: string;
   icon: React.ReactNode;
-  children?: { 
-    id: string; 
-    label: string; 
-    icon: React.ReactNode; 
-    children?: { id: string; label: string }[] 
+  children?: {
+    id: string;
+    label: string;
+    icon: React.ReactNode;
+    children?: { id: string; label: string }[]
   }[];
 }
+
+export const TAB_LABELS: Record<string, string> = {
+  dashboard: "DASHBOARD",
+  "visi-misi": "VISI DAN MISI",
+  "identitas-lembaga": "IDENTITAS LEMBAGA",
+  "data-pengelola": "DATA PENGELOLA",
+  "kelola-nilai": "KELOLA NILAI & KELAS",
+  "aktivitas-belajar": "AKTIVITAS BELAJAR",
+  profil: "PROFIL SAYA",
+};
+
+export const getTabLabel = (id: string): string => {
+  if (TAB_LABELS[id]) return TAB_LABELS[id];
+  return id.replace(/-/g, " ").toUpperCase();
+};
 
 const menuItems: MenuItem[] = [
   {

@@ -76,6 +76,19 @@ export const institutionProfile = sqliteTable('institution_profile', {
 export type InstitutionProfile = typeof institutionProfile.$inferSelect;
 export type NewInstitutionProfile = typeof institutionProfile.$inferInsert;
 
+export const visionMission = sqliteTable('vision_mission', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  visi: text('visi').notNull().default(''),
+  misi: text('misi').notNull().default(''),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at')
+    .$defaultFn(() => new Date().toISOString())
+    .$onUpdate(() => new Date().toISOString()),
+});
+
+export type VisionMission = typeof visionMission.$inferSelect;
+export type NewVisionMission = typeof visionMission.$inferInsert;
+
 export const managers = sqliteTable('managers', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   nama: text('nama').notNull().default(''),
