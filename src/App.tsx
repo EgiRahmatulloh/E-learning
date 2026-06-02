@@ -153,34 +153,44 @@ function App() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-slate-50/50 text-slate-900 font-sans selection:bg-[#280f91] selection:text-white">
-        <Header />
+      <div className={`min-h-screen bg-slate-50/50 text-slate-900 font-sans selection:bg-[#280f91] selection:text-white ${
+        currentPath === "/profile" ? "animate-in fade-in duration-300" : ""
+      }`}>
+        <Header currentPath={currentPath} onNavigate={navigate} />
         
-        <Hero onServiceClick={(service) => setActiveServiceDialog(service)} />
-        
-        <Services
-          onLoginClick={() => setLoginDialogOpen(true)}
-          activeDialog={activeServiceDialog}
-          onDialogClose={() => setActiveServiceDialog(null)}
-        />
-        
-        <Ticker />
-        
-        <Agenda />
-        
-        <Profile />
-        
-        <News />
-        
-        <Tutors />
-        
-        <Products />
-        
-        <Testimonials />
-        
-        <Gallery />
-        
-        <Contact />
+        {currentPath === "/profile" ? (
+          <div className="pt-20">
+            <Profile isDetailed={true} onNavigate={navigate} />
+          </div>
+        ) : (
+          <>
+            <Hero onServiceClick={(service) => setActiveServiceDialog(service)} />
+            
+            <Services
+              onLoginClick={() => setLoginDialogOpen(true)}
+              activeDialog={activeServiceDialog}
+              onDialogClose={() => setActiveServiceDialog(null)}
+            />
+            
+            <Ticker />
+            
+            <Agenda />
+            
+            <Profile isDetailed={false} onNavigate={navigate} />
+            
+            <News />
+            
+            <Tutors />
+            
+            <Products />
+            
+            <Testimonials />
+            
+            <Gallery />
+            
+            <Contact />
+          </>
+        )}
         
         <Footer />
 

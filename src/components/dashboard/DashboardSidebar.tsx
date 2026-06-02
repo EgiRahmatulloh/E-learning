@@ -168,7 +168,7 @@ export default function DashboardSidebar({
           <img
             src="/images/2c06b6fab7e6a9490c046e362160f2d0.png"
             alt="PKBM Menuju Makmur"
-            className="h-12 w-12 rounded-xl shadow-lg shadow-black/20 bg-white/10 p-0.5"
+            className="h-12 w-12 rounded-xl shadow-lg shadow-black/20 bg-white/10 p-0.5 object-contain"
           />
           <div className="min-w-0">
             <span className="block text-[10px] font-black tracking-[0.2em] text-cyan-300 uppercase">PKBM</span>
