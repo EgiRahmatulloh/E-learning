@@ -163,3 +163,21 @@ export const achievements = sqliteTable('achievements', {
 
 export type Achievement = typeof achievements.$inferSelect;
 export type NewAchievement = typeof achievements.$inferInsert;
+
+export const servicePoints = sqliteTable('service_points', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  nama: text('nama').notNull().default(''),
+  alamat: text('alamat').notNull().default(''),
+  penjab: text('penjab').notNull().default(''),
+  waktuPembelajaran: text('waktu_pembelajaran').notNull().default(''),
+  jumlahWb: text('jumlah_wb').notNull().default(''),
+  keterangan: text('keterangan').notNull().default(''),
+  foto: text('foto').notNull().default(''),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at')
+    .$defaultFn(() => new Date().toISOString())
+    .$onUpdate(() => new Date().toISOString()),
+});
+
+export type ServicePoint = typeof servicePoints.$inferSelect;
+export type NewServicePoint = typeof servicePoints.$inferInsert;

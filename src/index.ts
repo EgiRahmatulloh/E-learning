@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { staticPlugin } from "@elysia/static";
 import { db } from "./server/db";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements } from "./server/db/schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints } from "./server/db/schema";
 import { eq, or } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
 import fs from "fs";
@@ -917,6 +917,188 @@ app.post("/api/achievements/import", async ({ body, headers, jwt, set }) => {
     tingkat: t.String({ minLength: 1 }),
     penyelenggara: t.Optional(t.String()),
     peserta: t.Optional(t.String()),
+    keterangan: t.Optional(t.String()),
+    foto: t.Optional(t.String()),
+  }))
+});
+
+// --- API SERVICE POINTS ROUTES ---
+// Ambil semua titik layanan
+app.get("/api/service-points", async ({ set }) => {
+  try {
+    const list = await db.select().from(servicePoints).all();
+    return { success: true, data: list };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data titik layanan" };
+  }
+});
+
+// Tambah titik layanan baru
+app.post("/api/service-points", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const { nama, alamat, penjab, waktuPembelajaran, jumlahWb, keterangan, foto } = body;
+  try {
+    const inserted = await db.insert(servicePoints).values({
+      nama,
+      alamat,
+      penjab,
+      waktuPembelajaran,
+      jumlahWb,
+      keterangan,
+      foto,
+    }).returning().get();
+    return { success: true, data: inserted };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menambahkan data titik layanan" };
+  }
+}, {
+  body: t.Object({
+    nama: t.String({ minLength: 1 }),
+    alamat: t.String({ minLength: 1 }),
+    penjab: t.String({ minLength: 1 }),
+    waktuPembelajaran: t.String(),
+    jumlahWb: t.String(),
+    keterangan: t.String(),
+    foto: t.String(),
+  })
+});
+
+// Update titik layanan
+app.put("/api/service-points/:id", async ({ params, body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  const { nama, alamat, penjab, waktuPembelajaran, jumlahWb, keterangan, foto } = body;
+  try {
+    const existing = await db.select().from(servicePoints).where(eq(servicePoints.id, id)).get();
+    if (!existing) {
+      set.status = 404;
+      return { success: false, message: "Data titik layanan tidak ditemukan" };
+    }
+
+    const updated = await db.update(servicePoints)
+      .set({
+        nama,
+        alamat,
+        penjab,
+        waktuPembelajaran,
+        jumlahWb,
+        keterangan,
+        foto,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(servicePoints.id, id))
+      .returning()
+      .get();
+    
+    return { success: true, data: updated };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal memperbarui data titik layanan" };
+  }
+}, {
+  body: t.Object({
+    nama: t.String({ minLength: 1 }),
+    alamat: t.String({ minLength: 1 }),
+    penjab: t.String({ minLength: 1 }),
+    waktuPembelajaran: t.String(),
+    jumlahWb: t.String(),
+    keterangan: t.String(),
+    foto: t.String(),
+  })
+});
+
+// Hapus titik layanan
+app.delete("/api/service-points/:id", async ({ params, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    const existing = await db.select().from(servicePoints).where(eq(servicePoints.id, id)).get();
+    if (!existing) {
+      set.status = 404;
+      return { success: false, message: "Data titik layanan tidak ditemukan" };
+    }
+
+    await db.delete(servicePoints).where(eq(servicePoints.id, id)).run();
+    return { success: true, message: "Data titik layanan berhasil dihapus" };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menghapus data titik layanan" };
+  }
+});
+
+// Impor titik layanan secara masal
+app.post("/api/service-points/import", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const list = body;
+  if (!Array.isArray(list)) {
+    set.status = 400;
+    return { success: false, message: "Format data tidak valid, harus berupa array" };
+  }
+
+  try {
+    const validItems = list.filter(item => 
+      item && 
+      typeof item === 'object' && 
+      typeof item.nama === 'string' && item.nama.trim().length > 0 &&
+      typeof item.alamat === 'string' && item.alamat.trim().length > 0 &&
+      typeof item.penjab === 'string' && item.penjab.trim().length > 0
+    );
+
+    if (validItems.length === 0) {
+      set.status = 400;
+      return { success: false, message: "Tidak ada data valid untuk diimpor" };
+    }
+
+    const insertValues = validItems.map(item => ({
+      nama: item.nama,
+      alamat: item.alamat,
+      penjab: item.penjab,
+      waktuPembelajaran: typeof item.waktuPembelajaran === 'string' ? item.waktuPembelajaran : '',
+      jumlahWb: typeof item.jumlahWb === 'string' ? item.jumlahWb : '',
+      keterangan: typeof item.keterangan === 'string' ? item.keterangan : '',
+      foto: typeof item.foto === 'string' ? item.foto : '',
+    }));
+
+    // Chunk inserts to avoid SQLite parameter limits
+    const chunkSize = 100;
+    await db.transaction(async (tx) => {
+      for (let i = 0; i < insertValues.length; i += chunkSize) {
+        const chunk = insertValues.slice(i, i + chunkSize);
+        await tx.insert(servicePoints).values(chunk).run();
+      }
+    });
+    return { success: true, message: `Berhasil mengimpor ${insertValues.length} data titik layanan` };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengimpor data titik layanan" };
+  }
+}, {
+  body: t.Array(t.Object({
+    nama: t.String({ minLength: 1 }),
+    alamat: t.String({ minLength: 1 }),
+    penjab: t.String({ minLength: 1 }),
+    waktuPembelajaran: t.Optional(t.String()),
+    jumlahWb: t.Optional(t.String()),
     keterangan: t.Optional(t.String()),
     foto: t.Optional(t.String()),
   }))
