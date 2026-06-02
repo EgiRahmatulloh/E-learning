@@ -513,8 +513,8 @@ app.post("/api/education-programs", async ({ body, headers, jwt, set }) => {
   }
 }, {
   body: t.Object({
-    program: t.String(),
-    penjab: t.String(),
+    program: t.String({ minLength: 1 }),
+    penjab: t.String({ minLength: 1 }),
     keterangan: t.String(),
     foto: t.String(),
   })
@@ -557,8 +557,8 @@ app.put("/api/education-programs/:id", async ({ params, body, headers, jwt, set 
   }
 }, {
   body: t.Object({
-    program: t.String(),
-    penjab: t.String(),
+    program: t.String({ minLength: 1 }),
+    penjab: t.String({ minLength: 1 }),
     keterangan: t.String(),
     foto: t.String(),
   })
@@ -576,6 +576,11 @@ app.delete("/api/education-programs/:id", async ({ params, headers, jwt, set }) 
   }
 
   try {
+    const existing = await db.select().from(educationPrograms).where(eq(educationPrograms.id, id)).get();
+    if (!existing) {
+      set.status = 404;
+      return { success: false, message: "Program pendidikan tidak ditemukan" };
+    }
     await db.delete(educationPrograms).where(eq(educationPrograms.id, id)).run();
     return { success: true, message: "Program pendidikan berhasil dihapus" };
   } catch (e) {

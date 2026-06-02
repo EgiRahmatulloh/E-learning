@@ -72,6 +72,7 @@ export default function EducationProgramManager() {
   const fetchPrograms = useCallback(async () => {
     try {
       const res = await fetch("/api/education-programs");
+      if (!res.ok) throw new Error("Gagal mengambil data dari server");
       const resData = await res.json();
       if (resData.success && resData.data) {
         setPrograms(resData.data);
@@ -97,6 +98,7 @@ export default function EducationProgramManager() {
           "Authorization": `Bearer ${token}`,
         }
       });
+      if (!res.ok) throw new Error("Gagal mengambil data dari server");
       const resData = await res.json();
       if (resData.success && resData.data) {
         setManagers(resData.data);
@@ -190,16 +192,7 @@ export default function EducationProgramManager() {
         throw new Error(data.message || "Gagal mengunggah gambar");
       }
     } catch (err: any) {
-      if (err instanceof TypeError) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setFoto(reader.result as string);
-          showToast("Gambar disimpan secara lokal (Offline)!");
-        };
-        reader.readAsDataURL(file);
-      } else {
-        showToast(err.message || "Gagal mengunggah gambar.");
-      }
+      showToast(err.message || "Gagal mengunggah gambar.");
     } finally {
       setUploading(false);
     }
@@ -255,9 +248,9 @@ export default function EducationProgramManager() {
   const filteredPrograms = programs.filter((p) => {
     const q = searchQuery.toLowerCase();
     return (
-      p.program.toLowerCase().includes(q) ||
-      p.penjab.toLowerCase().includes(q) ||
-      p.keterangan.toLowerCase().includes(q)
+      (p?.program || "").toLowerCase().includes(q) ||
+      (p?.penjab || "").toLowerCase().includes(q) ||
+      (p?.keterangan || "").toLowerCase().includes(q)
     );
   });
 
