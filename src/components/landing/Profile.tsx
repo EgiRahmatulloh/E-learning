@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { 
   Info, Users, Target, BookOpen, Layers, Award, MapPin, 
-  Phone, Mail, Shield, Landmark, UserCheck, Clock, Group
+  Phone, Mail, Shield, Landmark, UserCheck, Clock, Group, CheckCircle2
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface InstitutionProfile {
   namaLembaga: string;
@@ -73,7 +74,111 @@ interface ServicePoint {
   foto: string;
 }
 
-export default function Profile() {
+interface ProfileProps {
+  isDetailed?: boolean;
+  onNavigate?: (path: string) => void;
+}
+
+export default function Profile({ isDetailed = false, onNavigate }: ProfileProps) {
+  // If isDetailed is false, render original homepage profile overview:
+  if (!isDetailed) {
+    const handleReadMore = (e: React.MouseEvent) => {
+      e.preventDefault();
+      if (onNavigate) {
+        onNavigate("/profile");
+      } else {
+        window.history.pushState({}, "", "/profile");
+        window.dispatchEvent(new PopStateEvent("popstate"));
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    return (
+      <section id="profil" className="py-24 bg-white relative">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Visual Stats Grid */}
+            <div className="grid grid-cols-2 gap-6 relative">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-[#cafc05]/20 blur-3xl rounded-full -z-10"></div>
+              
+              <div className="p-6 rounded-2xl border border-slate-100 bg-white shadow-xl hover:-translate-y-1.5 transition-transform flex flex-col items-center text-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#280f91] to-purple-600 text-white shadow-md">
+                  <Users className="h-6 w-6" />
+                </div>
+                <span className="text-3xl font-black text-[#280f91]">350+</span>
+                <span className="text-xs font-black text-slate-400 tracking-wider uppercase">Warga Belajar</span>
+              </div>
+
+              <div className="p-6 rounded-2xl border border-slate-100 bg-white shadow-xl hover:-translate-y-1.5 transition-transform flex flex-col items-center text-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#ff6105] to-orange-400 text-white shadow-md">
+                  <Award className="h-6 w-6" />
+                </div>
+                <span className="text-3xl font-black text-[#280f91]">500+</span>
+                <span className="text-xs font-black text-slate-400 tracking-wider uppercase">Lulusan Alumni</span>
+              </div>
+
+              <div className="p-6 rounded-2xl border border-slate-100 bg-white shadow-xl hover:-translate-y-1.5 transition-transform flex flex-col items-center text-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-teal-400 text-white shadow-md">
+                  <BookOpen className="h-6 w-6" />
+                </div>
+                <span className="text-3xl font-black text-[#280f91]">18</span>
+                <span className="text-xs font-black text-slate-400 tracking-wider uppercase">Tutor Kompeten</span>
+              </div>
+
+              <div className="p-6 rounded-2xl border border-slate-100 bg-white shadow-xl hover:-translate-y-1.5 transition-transform flex flex-col items-center text-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-400 text-white shadow-md">
+                  <Layers className="h-6 w-6" />
+                </div>
+                <span className="text-3xl font-black text-[#280f91]">12</span>
+                <span className="text-xs font-black text-slate-400 tracking-wider uppercase">Rombel Kelas</span>
+              </div>
+            </div>
+
+            {/* Profile Info */}
+            <div className="space-y-6">
+              <span className="text-xs font-extrabold uppercase tracking-widest text-[#280f91] bg-slate-100 rounded-full px-4 py-1.5 inline-block">
+                Mengenal Sekolah Kami
+              </span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#280f91] tracking-tight leading-tight">
+                Membina Potensi, Menciptakan <span className="text-[#ff6105]">Masa Depan</span>
+              </h2>
+              <p className="text-slate-600 leading-relaxed font-medium">
+                Pusat Kegiatan Belajar Masyarakat (PKBM) Menuju Makmur hadir di Kabupaten Ciamis sebagai wadah pendidikan nonformal terakreditasi resmi. Kami menyelenggarakan pendidikan kesetaraan Paket A (Setara SD), Paket B (Setara SMP), dan Paket C (Setara SMA) untuk membina SDM berkualitas yang mandiri dan berdaya saing.
+              </p>
+              <div className="space-y-3.5">
+                <div className="flex items-center gap-3 text-slate-700 font-bold text-sm">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                  Materi ajar fleksibel, mudah diikuti oleh pekerja/wirausaha.
+                </div>
+                <div className="flex items-center gap-3 text-slate-700 font-bold text-sm">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                  Didukung sarana komputer modern untuk Ujian Berbasis Komputer (UNBK).
+                </div>
+                <div className="flex items-center gap-3 text-slate-700 font-bold text-sm">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                  Dibimbing oleh tenaga pengajar dan tutor tersertifikasi resmi.
+                </div>
+              </div>
+              <div className="pt-2 flex items-center gap-4">
+                <Button 
+                  onClick={handleReadMore}
+                  className="rounded-full bg-[#280f91] hover:bg-[#ff6105] text-white font-bold px-8 h-12 shadow-md shadow-[#280f91]/10 cursor-pointer"
+                >
+                  Selengkapnya (Profil Detail)
+                </Button>
+                <a href="#kontak">
+                  <Button variant="outline" className="rounded-full border-slate-200 text-slate-700 hover:bg-slate-50 font-bold px-8 h-12 cursor-pointer">
+                    Hubungi Kami
+                  </Button>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   const [activeTab, setActiveTab] = useState<"identitas" | "pengelola" | "visi-misi" | "program" | "sarana" | "prestasi" | "layanan">("identitas");
 
   // State data
@@ -89,6 +194,17 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const safeFetch = async (url: string) => {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return await res.json();
+      } catch (err) {
+        console.error(`Gagal memuat ${url}:`, err);
+        return { success: false };
+      }
+    };
+
     const fetchAllData = async () => {
       setLoading(true);
       try {
@@ -101,22 +217,22 @@ export default function Profile() {
           resAchievements,
           resServicePoints
         ] = await Promise.all([
-          fetch("/api/institution-profile").then(r => r.json()),
-          fetch("/api/public-managers").then(r => r.json()),
-          fetch("/api/vision-mission").then(r => r.json()),
-          fetch("/api/education-programs").then(r => r.json()),
-          fetch("/api/facilities").then(r => r.json()),
-          fetch("/api/achievements").then(r => r.json()),
-          fetch("/api/service-points").then(r => r.json())
+          safeFetch("/api/institution-profile"),
+          safeFetch("/api/public-managers"),
+          safeFetch("/api/vision-mission"),
+          safeFetch("/api/education-programs"),
+          safeFetch("/api/facilities"),
+          safeFetch("/api/achievements"),
+          safeFetch("/api/service-points")
         ]);
 
-        if (resProfile.success) setProfile(resProfile.data);
-        if (resManagers.success) setManagers(resManagers.data);
-        if (resVM.success) setVisionMission(resVM.data);
-        if (resPrograms.success) setPrograms(resPrograms.data);
-        if (resFacilities.success) setFacilities(resFacilities.data);
-        if (resAchievements.success) setAchievements(resAchievements.data);
-        if (resServicePoints.success) setServicePoints(resServicePoints.data);
+        if (resProfile?.success) setProfile(resProfile.data);
+        if (resManagers?.success) setManagers(resManagers.data);
+        if (resVM?.success) setVisionMission(resVM.data);
+        if (resPrograms?.success) setPrograms(resPrograms.data);
+        if (resFacilities?.success) setFacilities(resFacilities.data);
+        if (resAchievements?.success) setAchievements(resAchievements.data);
+        if (resServicePoints?.success) setServicePoints(resServicePoints.data);
       } catch (err) {
         console.error("Gagal mengambil data profil", err);
       } finally {

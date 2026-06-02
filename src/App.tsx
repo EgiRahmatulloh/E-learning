@@ -151,10 +151,45 @@ function App() {
     );
   }
 
+  if (currentPath === "/profile") {
+    return (
+      <TooltipProvider>
+        <div className="min-h-screen bg-slate-50/50 text-slate-900 font-sans selection:bg-[#280f91] selection:text-white animate-in fade-in duration-300">
+          <Header currentPath={currentPath} onNavigate={navigate} />
+          
+          <div className="pt-20">
+            <Profile isDetailed={true} onNavigate={navigate} />
+          </div>
+          
+          <Footer />
+
+          <LoginModal
+            isOpen={loginDialogOpen}
+            onOpenChange={(open) => {
+              setLoginDialogOpen(open);
+              if (!open) {
+                setLoginError("");
+                setLoginUsername("");
+                setLoginPassword("");
+              }
+            }}
+            onSubmit={handleLogin}
+            loginUsername={loginUsername}
+            setLoginUsername={setLoginUsername}
+            loginPassword={loginPassword}
+            setLoginPassword={setLoginPassword}
+            loginError={loginError}
+            loginLoading={loginLoading}
+          />
+        </div>
+      </TooltipProvider>
+    );
+  }
+
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-slate-50/50 text-slate-900 font-sans selection:bg-[#280f91] selection:text-white">
-        <Header />
+        <Header currentPath={currentPath} onNavigate={navigate} />
         
         <Hero onServiceClick={(service) => setActiveServiceDialog(service)} />
         
@@ -168,7 +203,7 @@ function App() {
         
         <Agenda />
         
-        <Profile />
+        <Profile isDetailed={false} onNavigate={navigate} />
         
         <News />
         
