@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities } from "./schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements } from "./schema";
 import { count } from "drizzle-orm";
 
 export async function seedDatabase() {
@@ -237,6 +237,27 @@ export async function seedDatabase() {
       console.log("✅ Seeding managers berhasil!");
     } else {
       console.log(`ℹ️ Database memiliki ${managerCount} managers, seeding diabaikan.`);
+    }
+
+    // Seed achievements if empty
+    const resultAchievements = await db.select({ value: count() }).from(achievements).get();
+    const achievementsCount = resultAchievements?.value || 0;
+    if (achievementsCount === 0) {
+      console.log("🌱 Database achievements kosong, seeding default achievements...");
+      await db.insert(achievements).values([
+        {
+          nama: "JUARA 1 LOMBA MEWARNAI",
+          tahun: "2026",
+          tingkat: "KABUPATEN CIAMIS",
+          penyelenggara: "DISDIK KABUPATEN CIAMIS",
+          peserta: "WARGA BELAJAR PAKET C",
+          keterangan: "ALHAMDULILLAH SISWI BERHASIL",
+          foto: "",
+        }
+      ]);
+      console.log("✅ Seeding achievements berhasil!");
+    } else {
+      console.log(`ℹ️ Database memiliki ${achievementsCount} achievements, seeding diabaikan.`);
     }
   } catch (error) {
     console.error("❌ Gagal melakukan seeding database:", error);

@@ -2,14 +2,18 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Edit3, Trash2, Search, UploadCloud, Plus, Save, X, Upload, Download } from "lucide-react";
 
-interface Facility {
+interface Achievement {
   id: number;
   nama: string;
+  tahun: string;
+  tingkat: string;
+  penyelenggara: string;
+  peserta: string;
   keterangan: string;
   foto: string;
 }
 
-const STORAGE_KEY_FACILITIES = "pkbm_facilities_list";
+const STORAGE_KEY_ACHIEVEMENTS = "pkbm_achievements_list";
 
 const getSafeItem = (key: string): string | null => {
   try {
@@ -25,14 +29,18 @@ const setSafeItem = (key: string, value: string) => {
   } catch {}
 };
 
-export default function FacilitiesManager() {
-  const [facilities, setFacilities] = useState<Facility[]>([]);
+export default function AchievementsManager() {
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   
   // Form states
   const [formVisible, setFormVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [nama, setNama] = useState("");
+  const [tahun, setTahun] = useState("");
+  const [tingkat, setTingkat] = useState("");
+  const [penyelenggara, setPenyelenggara] = useState("");
+  const [peserta, setPeserta] = useState("");
   const [keterangan, setKeterangan] = useState("");
   const [foto, setFoto] = useState("");
   
@@ -60,52 +68,60 @@ export default function FacilitiesManager() {
     };
   }, []);
 
-  const fetchFacilities = useCallback(async () => {
+  const fetchAchievements = useCallback(async () => {
     try {
-      const res = await fetch("/api/facilities");
+      const res = await fetch("/api/achievements");
       if (!res.ok) throw new Error("Gagal mengambil data dari server");
       const resData = await res.json();
       if (resData.success && resData.data) {
-        setFacilities(resData.data);
-        setSafeItem(STORAGE_KEY_FACILITIES, JSON.stringify(resData.data));
+        setAchievements(resData.data);
+        setSafeItem(STORAGE_KEY_ACHIEVEMENTS, JSON.stringify(resData.data));
       }
     } catch (err) {
-      const saved = getSafeItem(STORAGE_KEY_FACILITIES);
+      const saved = getSafeItem(STORAGE_KEY_ACHIEVEMENTS);
       if (saved) {
         try {
-          setFacilities(JSON.parse(saved));
+          setAchievements(JSON.parse(saved));
         } catch {
-          setFacilities([]);
+          setAchievements([]);
         }
       }
     }
   }, []);
 
   useEffect(() => {
-    fetchFacilities();
-  }, [fetchFacilities]);
+    fetchAchievements();
+  }, [fetchAchievements]);
 
   const resetForm = () => {
     setNama("");
+    setTahun("");
+    setTingkat("");
+    setPenyelenggara("");
+    setPeserta("");
     setKeterangan("");
     setFoto("");
     setEditId(null);
     setFormVisible(false);
   };
 
-  const handleEditClick = (item: Facility) => {
+  const handleEditClick = (item: Achievement) => {
     setEditId(item.id);
     setNama(item.nama);
+    setTahun(item.tahun);
+    setTingkat(item.tingkat);
+    setPenyelenggara(item.penyelenggara);
+    setPeserta(item.peserta);
     setKeterangan(item.keterangan);
     setFoto(item.foto);
     setFormVisible(true);
   };
 
   const handleDeleteClick = async (id: number) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus sarana dan fasilitas ini?")) return;
+    if (!confirm("Apakah Anda yakin ingin menghapus data prestasi ini?")) return;
     const token = getSafeItem("token");
     try {
-      const res = await fetch(`/api/facilities/${id}`, {
+      const res = await fetch(`/api/achievements/${id}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -113,8 +129,8 @@ export default function FacilitiesManager() {
       });
       const resData = await res.json();
       if (resData.success) {
-        showToast("Sarana dan fasilitas berhasil dihapus!");
-        fetchFacilities();
+        showToast("Data prestasi berhasil dihapus!");
+        fetchAchievements();
       } else {
         showToast(resData.message || "Gagal menghapus data");
       }
@@ -162,17 +178,33 @@ export default function FacilitiesManager() {
 
   const handleSave = async () => {
     if (!nama.trim()) {
-      showToast("Nama Sarana/Fasilitas tidak boleh kosong!");
+      showToast("Nama Prestasi tidak boleh kosong!");
+      return;
+    }
+    if (!tahun.trim()) {
+      showToast("Tahun tidak boleh kosong!");
+      return;
+    }
+    if (!tingkat.trim()) {
+      showToast("Tingkat tidak boleh kosong!");
       return;
     }
 
     const token = getSafeItem("token");
-    const bodyData = { nama, keterangan, foto };
+    const bodyData = {
+      nama,
+      tahun,
+      tingkat,
+      penyelenggara,
+      peserta,
+      keterangan,
+      foto
+    };
 
     try {
       let res;
       if (editId !== null) {
-        res = await fetch(`/api/facilities/${editId}`, {
+        res = await fetch(`/api/achievements/${editId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -181,7 +213,7 @@ export default function FacilitiesManager() {
           body: JSON.stringify(bodyData),
         });
       } else {
-        res = await fetch("/api/facilities", {
+        res = await fetch("/api/achievements", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -193,11 +225,11 @@ export default function FacilitiesManager() {
 
       const resData = await res.json();
       if (resData.success) {
-        showToast(editId !== null ? "Sarana berhasil diperbarui!" : "Sarana baru berhasil ditambahkan!");
+        showToast(editId !== null ? "Data prestasi berhasil diperbarui!" : "Data prestasi baru berhasil ditambahkan!");
         resetForm();
-        fetchFacilities();
+        fetchAchievements();
       } else {
-        showToast(resData.message || "Gagal menyimpan sarana.");
+        showToast(resData.message || "Gagal menyimpan data prestasi.");
       }
     } catch (err) {
       showToast("Gagal menyimpan data ke server.");
@@ -206,22 +238,26 @@ export default function FacilitiesManager() {
 
   // CSV Export Logic
   const handleExportCSV = () => {
-    if (facilities.length === 0) {
+    if (achievements.length === 0) {
       showToast("Tidak ada data untuk diekspor!");
       return;
     }
-    const headers = ["NAMA", "KETERANGAN", "FOTO"];
-    const rows = facilities.map(f => [
-      `"${(f.nama || "").replace(/"/g, '""')}"`,
-      `"${(f.keterangan || "").replace(/"/g, '""')}"`,
-      `"${(f.foto || "").replace(/"/g, '""')}"`
+    const headers = ["NAMA PRESTASI", "TAHUN", "TINGKAT", "PENYELENGGARA", "PESERTA", "KETERANGAN", "FOTO"];
+    const rows = achievements.map(a => [
+      `"${(a.nama || "").replace(/"/g, '""')}"`,
+      `"${(a.tahun || "").replace(/"/g, '""')}"`,
+      `"${(a.tingkat || "").replace(/"/g, '""')}"`,
+      `"${(a.penyelenggara || "").replace(/"/g, '""')}"`,
+      `"${(a.peserta || "").replace(/"/g, '""')}"`,
+      `"${(a.keterangan || "").replace(/"/g, '""')}"`,
+      `"${(a.foto || "").replace(/"/g, '""')}"`
     ]);
     const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", "sarana_dan_fasilitas.csv");
+    link.setAttribute("download", "prestasi.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -239,7 +275,15 @@ export default function FacilitiesManager() {
       if (!text) return;
       
       const lines = text.split("\n");
-      const importedData: { nama: string; keterangan: string; foto: string }[] = [];
+      const importedData: {
+        nama: string;
+        tahun: string;
+        tingkat: string;
+        penyelenggara: string;
+        peserta: string;
+        keterangan: string;
+        foto: string;
+      }[] = [];
       
       let startIdx = 0;
       if (lines[0] && (lines[0].toLowerCase().includes("nama") || lines[0].toLowerCase().includes("name"))) {
@@ -276,23 +320,27 @@ export default function FacilitiesManager() {
         
         const cleanCols = parseCSVLine(line);
         
-        if (cleanCols[0]) {
+        if (cleanCols[0] && cleanCols[1] && cleanCols[2]) {
           importedData.push({
             nama: cleanCols[0],
-            keterangan: cleanCols[1] || "",
-            foto: cleanCols[2] || "",
+            tahun: cleanCols[1],
+            tingkat: cleanCols[2],
+            penyelenggara: cleanCols[3] || "",
+            peserta: cleanCols[4] || "",
+            keterangan: cleanCols[5] || "",
+            foto: cleanCols[6] || "",
           });
         }
       }
       
       if (importedData.length === 0) {
-        showToast("Format CSV kosong atau tidak valid!");
+        showToast("Format CSV kosong atau tidak valid! Pastikan Nama, Tahun, dan Tingkat tidak kosong.");
         return;
       }
       
       const token = getSafeItem("token");
       try {
-        const res = await fetch("/api/facilities/import", {
+        const res = await fetch("/api/achievements/import", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -303,7 +351,7 @@ export default function FacilitiesManager() {
         const resData = await res.json();
         if (resData.success) {
           showToast(resData.message || "Berhasil mengimpor data!");
-          fetchFacilities();
+          fetchAchievements();
         } else {
           showToast(resData.message || "Gagal mengimpor data");
         }
@@ -316,11 +364,15 @@ export default function FacilitiesManager() {
   };
 
   // Search filter
-  const filteredFacilities = facilities.filter((f) => {
+  const filteredAchievements = achievements.filter((a) => {
     const q = searchQuery.toLowerCase();
     return (
-      (f.nama || "").toLowerCase().includes(q) ||
-      (f.keterangan || "").toLowerCase().includes(q)
+      (a.nama || "").toLowerCase().includes(q) ||
+      (a.tahun || "").toLowerCase().includes(q) ||
+      (a.tingkat || "").toLowerCase().includes(q) ||
+      (a.penyelenggara || "").toLowerCase().includes(q) ||
+      (a.peserta || "").toLowerCase().includes(q) ||
+      (a.keterangan || "").toLowerCase().includes(q)
     );
   });
 
@@ -376,22 +428,30 @@ export default function FacilitiesManager() {
 
       {/* TABLE SECTION */}
       <div className="overflow-x-auto rounded-2xl border border-cyan-200/80 bg-white shadow-sm">
-        <table className="w-full text-left border-collapse min-w-[700px]">
+        <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
             <tr className="bg-cyan-400 text-cyan-950 font-black text-xs uppercase tracking-wider border-b border-cyan-200">
               <th className="py-4 px-4 text-center w-16">NO</th>
-              <th className="py-4 px-6 w-56">NAMA SARANA DAN FASILITAS</th>
+              <th className="py-4 px-6 w-48">NAMA PRESTASI</th>
+              <th className="py-4 px-4 text-center w-24">TAHUN</th>
+              <th className="py-4 px-6 w-36">TINGKAT</th>
+              <th className="py-4 px-6 w-48">PENYELENGGARA</th>
+              <th className="py-4 px-44 w-36">PESERTA</th>
               <th className="py-4 px-6">KETERANGAN</th>
-              <th className="py-4 px-6 w-48 text-center">FOTO</th>
+              <th className="py-4 px-6 w-36 text-center">FOTO</th>
               <th className="py-4 px-6 w-32 text-center">AKSI</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-            {filteredFacilities.length > 0 ? (
-              filteredFacilities.map((item, idx) => (
+            {filteredAchievements.length > 0 ? (
+              filteredAchievements.map((item, idx) => (
                 <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="py-4 px-4 text-center font-bold text-slate-400">{idx + 1}</td>
                   <td className="py-4 px-6 font-extrabold text-slate-900">{item.nama}</td>
+                  <td className="py-4 px-4 text-center font-extrabold text-slate-900">{item.tahun}</td>
+                  <td className="py-4 px-6 font-extrabold text-slate-900">{item.tingkat}</td>
+                  <td className="py-4 px-6 text-slate-650 leading-relaxed font-semibold">{item.penyelenggara}</td>
+                  <td className="py-4 px-6 text-slate-650 leading-relaxed font-semibold">{item.peserta}</td>
                   <td className="py-4 px-6 text-slate-650 leading-relaxed font-medium line-clamp-3 md:line-clamp-none mt-2">{item.keterangan}</td>
                   <td className="py-4 px-6 text-center">
                     {item.foto ? (
@@ -404,7 +464,7 @@ export default function FacilitiesManager() {
                       <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">TIDAK ADA FOTO</span>
                     )}
                   </td>
-                  <td className="py-4 px-6">
+                  <td className="py-4 px-6 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <button
                         onClick={() => handleEditClick(item)}
@@ -424,8 +484,8 @@ export default function FacilitiesManager() {
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="py-8 text-center text-slate-400 font-bold uppercase">
-                  Tidak ada sarana & fasilitas ditemukan
+                <td colSpan={9} className="py-8 text-center text-slate-400 font-bold uppercase">
+                  Tidak ada data prestasi ditemukan
                 </td>
               </tr>
             )}
@@ -461,18 +521,76 @@ export default function FacilitiesManager() {
               {/* Form Inputs Grid */}
               <div className="md:col-span-3 space-y-4">
                 
-                {/* NAMA SARANA */}
+                {/* NAMA PRESTASI */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
-                    NAMA SARANA DAN FASILITAS
+                    NAMA PRESTASI
                   </label>
                   <input
                     type="text"
                     value={nama}
                     onChange={(e) => setNama(e.target.value)}
-                    placeholder="Masukkan nama sarana/fasilitas (Contoh: Ruang Belajar)"
-                    className="w-full h-11 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                    placeholder="Masukkan nama prestasi"
+                    className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
                   />
+                </div>
+
+                {/* TAHUN & TINGKAT (Row) */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                      TAHUN
+                    </label>
+                    <input
+                      type="text"
+                      value={tahun}
+                      onChange={(e) => setTahun(e.target.value)}
+                      placeholder="Contoh: 2026"
+                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                      TINGKAT
+                    </label>
+                    <input
+                      type="text"
+                      value={tingkat}
+                      onChange={(e) => setTingkat(e.target.value)}
+                      placeholder="Contoh: Kabupaten Ciamis"
+                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                    />
+                  </div>
+                </div>
+
+                {/* PENYELENGGARA & PESERTA (Row) */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                      PENYELENGGARA
+                    </label>
+                    <input
+                      type="text"
+                      value={penyelenggara}
+                      onChange={(e) => setPenyelenggara(e.target.value)}
+                      placeholder="Contoh: Disdik Kabupaten Ciamis"
+                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                      PESERTA
+                    </label>
+                    <input
+                      type="text"
+                      value={peserta}
+                      onChange={(e) => setPeserta(e.target.value)}
+                      placeholder="Contoh: Warga Belajar Paket C"
+                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                    />
+                  </div>
                 </div>
 
                 {/* KETERANGAN */}
@@ -481,10 +599,10 @@ export default function FacilitiesManager() {
                     KETERANGAN
                   </label>
                   <textarea
-                    rows={6}
+                    rows={4}
                     value={keterangan}
                     onChange={(e) => setKeterangan(e.target.value)}
-                    placeholder="Masukkan keterangan lengkap sarana dan fasilitas..."
+                    placeholder="Masukkan keterangan lengkap prestasi..."
                     className="w-full p-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner resize-none leading-relaxed"
                   />
                 </div>
@@ -503,11 +621,11 @@ export default function FacilitiesManager() {
                     const file = e.dataTransfer.files?.[0];
                     if (file) processUpload(file);
                   }}
-                  onClick={() => document.getElementById("facility-file-upload")?.click()}
+                  onClick={() => document.getElementById("achievement-file-upload")?.click()}
                   className="w-full aspect-square border-4 border-dashed border-white/60 hover:border-white rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden transition-all text-center bg-cyan-300/40 hover:bg-cyan-350/50 cursor-pointer"
                 >
                   <input
-                    id="facility-file-upload"
+                    id="achievement-file-upload"
                     type="file"
                     accept="image/*"
                     onChange={(e) => {
@@ -529,7 +647,7 @@ export default function FacilitiesManager() {
                     <div className="w-full h-full relative group">
                       <img
                         src={foto}
-                        alt="Pratinjau Fasilitas"
+                        alt="Pratinjau Prestasi"
                         className="w-full h-full object-cover rounded-lg"
                       />
                       <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-lg">

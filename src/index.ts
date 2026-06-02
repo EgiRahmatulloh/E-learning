@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { staticPlugin } from "@elysia/static";
 import { db } from "./server/db";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities } from "./server/db/schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements } from "./server/db/schema";
 import { eq, or } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
 import fs from "fs";
@@ -721,10 +721,12 @@ app.post("/api/facilities/import", async ({ body, headers, jwt, set }) => {
 
     // Chunk inserts to avoid SQLite parameter limits
     const chunkSize = 100;
-    for (let i = 0; i < insertValues.length; i += chunkSize) {
-      const chunk = insertValues.slice(i, i + chunkSize);
-      await db.insert(facilities).values(chunk).run();
-    }
+    await db.transaction(async (tx) => {
+      for (let i = 0; i < insertValues.length; i += chunkSize) {
+        const chunk = insertValues.slice(i, i + chunkSize);
+        await tx.insert(facilities).values(chunk).run();
+      }
+    });
     return { success: true, message: `Berhasil mengimpor ${insertValues.length} sarana dan fasilitas` };
   } catch (e) {
     set.status = 500;
@@ -733,6 +735,188 @@ app.post("/api/facilities/import", async ({ body, headers, jwt, set }) => {
 }, {
   body: t.Array(t.Object({
     nama: t.String({ minLength: 1 }),
+    keterangan: t.Optional(t.String()),
+    foto: t.Optional(t.String()),
+  }))
+});
+
+// --- API ACHIEVEMENTS ROUTES ---
+// Ambil semua prestasi
+app.get("/api/achievements", async ({ set }) => {
+  try {
+    const list = await db.select().from(achievements).all();
+    return { success: true, data: list };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data prestasi" };
+  }
+});
+
+// Tambah prestasi baru
+app.post("/api/achievements", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const { nama, tahun, tingkat, penyelenggara, peserta, keterangan, foto } = body;
+  try {
+    const inserted = await db.insert(achievements).values({
+      nama,
+      tahun,
+      tingkat,
+      penyelenggara,
+      peserta,
+      keterangan,
+      foto,
+    }).returning().get();
+    return { success: true, data: inserted };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menambahkan data prestasi" };
+  }
+}, {
+  body: t.Object({
+    nama: t.String({ minLength: 1 }),
+    tahun: t.String({ minLength: 1 }),
+    tingkat: t.String({ minLength: 1 }),
+    penyelenggara: t.String(),
+    peserta: t.String(),
+    keterangan: t.String(),
+    foto: t.String(),
+  })
+});
+
+// Update prestasi
+app.put("/api/achievements/:id", async ({ params, body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  const { nama, tahun, tingkat, penyelenggara, peserta, keterangan, foto } = body;
+  try {
+    const existing = await db.select().from(achievements).where(eq(achievements.id, id)).get();
+    if (!existing) {
+      set.status = 404;
+      return { success: false, message: "Data prestasi tidak ditemukan" };
+    }
+
+    const updated = await db.update(achievements)
+      .set({
+        nama,
+        tahun,
+        tingkat,
+        penyelenggara,
+        peserta,
+        keterangan,
+        foto,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(achievements.id, id))
+      .returning()
+      .get();
+    
+    return { success: true, data: updated };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal memperbarui data prestasi" };
+  }
+}, {
+  body: t.Object({
+    nama: t.String({ minLength: 1 }),
+    tahun: t.String({ minLength: 1 }),
+    tingkat: t.String({ minLength: 1 }),
+    penyelenggara: t.String(),
+    peserta: t.String(),
+    keterangan: t.String(),
+    foto: t.String(),
+  })
+});
+
+// Hapus prestasi
+app.delete("/api/achievements/:id", async ({ params, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    const existing = await db.select().from(achievements).where(eq(achievements.id, id)).get();
+    if (!existing) {
+      set.status = 404;
+      return { success: false, message: "Data prestasi tidak ditemukan" };
+    }
+
+    await db.delete(achievements).where(eq(achievements.id, id)).run();
+    return { success: true, message: "Data prestasi berhasil dihapus" };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menghapus data prestasi" };
+  }
+});
+
+// Impor prestasi secara masal
+app.post("/api/achievements/import", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const list = body;
+  if (!Array.isArray(list)) {
+    set.status = 400;
+    return { success: false, message: "Format data tidak valid, harus berupa array" };
+  }
+
+  try {
+    const validItems = list.filter(item => 
+      item && 
+      typeof item === 'object' && 
+      typeof item.nama === 'string' && item.nama.trim().length > 0 &&
+      typeof item.tahun === 'string' && item.tahun.trim().length > 0 &&
+      typeof item.tingkat === 'string' && item.tingkat.trim().length > 0
+    );
+
+    if (validItems.length === 0) {
+      set.status = 400;
+      return { success: false, message: "Tidak ada data valid untuk diimpor" };
+    }
+
+    const insertValues = validItems.map(item => ({
+      nama: item.nama,
+      tahun: item.tahun,
+      tingkat: item.tingkat,
+      penyelenggara: typeof item.penyelenggara === 'string' ? item.penyelenggara : '',
+      peserta: typeof item.peserta === 'string' ? item.peserta : '',
+      keterangan: typeof item.keterangan === 'string' ? item.keterangan : '',
+      foto: typeof item.foto === 'string' ? item.foto : '',
+    }));
+
+    // Chunk inserts to avoid SQLite parameter limits
+    const chunkSize = 100;
+    await db.transaction(async (tx) => {
+      for (let i = 0; i < insertValues.length; i += chunkSize) {
+        const chunk = insertValues.slice(i, i + chunkSize);
+        await tx.insert(achievements).values(chunk).run();
+      }
+    });
+    return { success: true, message: `Berhasil mengimpor ${insertValues.length} data prestasi` };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengimpor data prestasi" };
+  }
+}, {
+  body: t.Array(t.Object({
+    nama: t.String({ minLength: 1 }),
+    tahun: t.String({ minLength: 1 }),
+    tingkat: t.String({ minLength: 1 }),
+    penyelenggara: t.Optional(t.String()),
+    peserta: t.Optional(t.String()),
     keterangan: t.Optional(t.String()),
     foto: t.Optional(t.String()),
   }))
