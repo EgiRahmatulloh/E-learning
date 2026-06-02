@@ -89,6 +89,21 @@ export const visionMission = sqliteTable('vision_mission', {
 export type VisionMission = typeof visionMission.$inferSelect;
 export type NewVisionMission = typeof visionMission.$inferInsert;
 
+export const educationPrograms = sqliteTable('education_programs', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  program: text('program').notNull().default(''),
+  penjab: text('penjab').notNull().default(''),
+  keterangan: text('keterangan').notNull().default(''),
+  foto: text('foto').notNull().default(''),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at')
+    .$defaultFn(() => new Date().toISOString())
+    .$onUpdate(() => new Date().toISOString()),
+});
+
+export type EducationProgram = typeof educationPrograms.$inferSelect;
+export type NewEducationProgram = typeof educationPrograms.$inferInsert;
+
 export const managers = sqliteTable('managers', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   nama: text('nama').notNull().default(''),

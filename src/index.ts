@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { staticPlugin } from "@elysia/static";
 import { db } from "./server/db";
-import { users, sliders, announcements, institutionProfile, managers, visionMission } from "./server/db/schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms } from "./server/db/schema";
 import { eq, or } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
 import fs from "fs";
@@ -479,6 +479,109 @@ app.post("/api/vision-mission", async ({ body, headers, jwt, set }) => {
     visi: t.String(),
     misi: t.String(),
   })
+});
+
+// --- API EDUCATION PROGRAMS ROUTES ---
+// Ambil semua program
+app.get("/api/education-programs", async ({ set }) => {
+  try {
+    const list = await db.select().from(educationPrograms).all();
+    return { success: true, data: list };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data program pendidikan" };
+  }
+});
+
+// Tambah program baru
+app.post("/api/education-programs", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const { program, penjab, keterangan, foto } = body;
+  try {
+    const inserted = await db.insert(educationPrograms).values({
+      program,
+      penjab,
+      keterangan,
+      foto,
+    }).returning().get();
+    return { success: true, data: inserted };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menambahkan program pendidikan" };
+  }
+}, {
+  body: t.Object({
+    program: t.String(),
+    penjab: t.String(),
+    keterangan: t.String(),
+    foto: t.String(),
+  })
+});
+
+// Update program
+app.put("/api/education-programs/:id", async ({ params, body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  const { program, penjab, keterangan, foto } = body;
+  try {
+    const updated = await db.update(educationPrograms)
+      .set({
+        program,
+        penjab,
+        keterangan,
+        foto,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(educationPrograms.id, id))
+      .returning()
+      .get();
+      
+    if (!updated) {
+      set.status = 404;
+      return { success: false, message: "Program pendidikan tidak ditemukan" };
+    }
+    
+    return { success: true, data: updated };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal memperbarui program pendidikan" };
+  }
+}, {
+  body: t.Object({
+    program: t.String(),
+    penjab: t.String(),
+    keterangan: t.String(),
+    foto: t.String(),
+  })
+});
+
+// Hapus program
+app.delete("/api/education-programs/:id", async ({ params, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    await db.delete(educationPrograms).where(eq(educationPrograms.id, id)).run();
+    return { success: true, message: "Program pendidikan berhasil dihapus" };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menghapus program pendidikan" };
+  }
 });
 
 // --- API MANAGERS ROUTES ---
