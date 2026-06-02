@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { users, sliders, announcements, institutionProfile, managers } from "./schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission } from "./schema";
 import { count } from "drizzle-orm";
 
 export async function seedDatabase() {
@@ -122,6 +122,22 @@ export async function seedDatabase() {
       console.log("✅ Seeding institution_profile berhasil!");
     } else {
       console.log(`ℹ️ Database memiliki ${profileCount} institution_profile, seeding diabaikan.`);
+    }
+
+    // Seed vision_mission if empty
+    const resultVisionMission = await db.select({ value: count() }).from(visionMission).get();
+    const vmCount = resultVisionMission?.value || 0;
+    if (vmCount === 0) {
+      console.log("🌱 Database vision_mission kosong, seeding default vision & mission...");
+      await db.insert(visionMission).values([
+        {
+          visi: "Menjadi lembaga pendidikan nonformal yang unggul dalam membentuk sumber daya manusia yang mandiri, berkarakter, dan berdaya saing.",
+          misi: "1. Menyelenggarakan program pendidikan kesetaraan Paket A, Paket B, dan Paket C yang berkualitas dan inklusif.\n2. Menyelenggarakan pelatihan keterampilan wirausaha dan kecakapan hidup yang relevan dengan kebutuhan pasar.\n3. Meningkatkan profesionalisme dan kompetensi pendidik serta tenaga kependidikan secara berkelanjutan.\n4. Membangun kemitraan yang luas dengan dunia usaha, industri, dan instansi terkait untuk penyaluran lulusan.",
+        }
+      ]);
+      console.log("✅ Seeding vision_mission berhasil!");
+    } else {
+      console.log(`ℹ️ Database memiliki ${vmCount} vision_mission, seeding diabaikan.`);
     }
 
     // Seed managers if empty

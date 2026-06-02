@@ -13,9 +13,10 @@ import { HeaderManager } from "./admin/HeaderManager";
 import AnnouncementManager from "./admin/AnnouncementManager";
 import InstitutionProfileManager from "./admin/InstitutionProfileManager";
 import ManagerManager from "./admin/ManagerManager";
+import VisiMisiManager from "./admin/VisiMisiManager";
 
 // Dashboard Sub-components
-import DashboardSidebar from "./DashboardSidebar";
+import DashboardSidebar, { getTabLabel } from "./DashboardSidebar";
 import DashboardRightSidebar from "./DashboardRightSidebar";
 import WelcomeBanner from "./WelcomeBanner";
 import RoleStatsGrid from "./RoleStatsGrid";
@@ -130,6 +131,20 @@ export default function DashboardPage({ user, handleLogout }: DashboardPageProps
         </div>
       );
     }
+    if (activeTab === "visi-misi") {
+      if (user.role !== "admin") {
+        return (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
+            🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka Visi dan Misi.
+          </div>
+        );
+      }
+      return (
+        <div className="animate-in fade-in duration-300">
+          <VisiMisiManager />
+        </div>
+      );
+    }
 
     // Placeholder for other pages
     return (
@@ -138,7 +153,7 @@ export default function DashboardPage({ user, handleLogout }: DashboardPageProps
           <LayoutDashboard className="h-10 w-10 text-cyan-600" />
         </div>
         <h3 className="text-xl font-black text-slate-700 uppercase tracking-wide">
-          {activeTab.replace(/-/g, " ").toUpperCase()}
+          {getTabLabel(activeTab)}
         </h3>
         <p className="text-sm text-slate-500 font-semibold max-w-sm">
           Halaman ini sedang dalam pengembangan. Silakan kembali ke Dashboard untuk melihat statistik.
@@ -218,7 +233,7 @@ export default function DashboardPage({ user, handleLogout }: DashboardPageProps
 
               {/* Page Title */}
               <h1 className="text-xl sm:text-2xl font-black text-cyan-900 tracking-tight uppercase">
-                {activeTab === "dashboard" ? "Dashboard" : activeTab.replace(/-/g, " ").toUpperCase()}
+                {getTabLabel(activeTab)}
               </h1>
             </div>
 
