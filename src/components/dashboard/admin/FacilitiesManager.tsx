@@ -246,18 +246,35 @@ export default function FacilitiesManager() {
         startIdx = 1;
       }
       
+      const parseCSVLine = (textLine: string): string[] => {
+        const result: string[] = [];
+        let current = "";
+        let inQuotes = false;
+        for (let i = 0; i < textLine.length; i++) {
+          const char = textLine[i];
+          if (char === '"') {
+            if (inQuotes && textLine[i + 1] === '"') {
+              current += '"';
+              i++;
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = "";
+          } else {
+            current += char;
+          }
+        }
+        result.push(current.trim());
+        return result;
+      };
+
       for (let i = startIdx; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!line) continue;
         
-        // Robust split by comma and strip quotes
-        const cleanCols = line.split(",").map(col => {
-          let c = col.trim();
-          if (c.startsWith('"') && c.endsWith('"')) {
-            c = c.substring(1, c.length - 1).replace(/""/g, '"');
-          }
-          return c;
-        });
+        const cleanCols = parseCSVLine(line);
         
         if (cleanCols[0]) {
           importedData.push({

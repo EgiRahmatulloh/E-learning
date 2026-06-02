@@ -144,7 +144,9 @@ export const managers = sqliteTable('managers', {
 });
 
 export type Manager = typeof managers.$inferSelect;
-export type NewManager = typeof managers.$inferInsert;export const achievements = sqliteTable('achievements', {
+export type NewManager = typeof managers.$inferInsert;
+
+export const achievements = sqliteTable('achievements', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   nama: text('nama').notNull().default(''),
   tahun: text('tahun').notNull().default(''),

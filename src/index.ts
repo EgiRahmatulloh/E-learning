@@ -721,10 +721,12 @@ app.post("/api/facilities/import", async ({ body, headers, jwt, set }) => {
 
     // Chunk inserts to avoid SQLite parameter limits
     const chunkSize = 100;
-    for (let i = 0; i < insertValues.length; i += chunkSize) {
-      const chunk = insertValues.slice(i, i + chunkSize);
-      await db.insert(facilities).values(chunk).run();
-    }
+    await db.transaction(async (tx) => {
+      for (let i = 0; i < insertValues.length; i += chunkSize) {
+        const chunk = insertValues.slice(i, i + chunkSize);
+        await tx.insert(facilities).values(chunk).run();
+      }
+    });
     return { success: true, message: `Berhasil mengimpor ${insertValues.length} sarana dan fasilitas` };
   } catch (e) {
     set.status = 500;
@@ -897,10 +899,12 @@ app.post("/api/achievements/import", async ({ body, headers, jwt, set }) => {
 
     // Chunk inserts to avoid SQLite parameter limits
     const chunkSize = 100;
-    for (let i = 0; i < insertValues.length; i += chunkSize) {
-      const chunk = insertValues.slice(i, i + chunkSize);
-      await db.insert(achievements).values(chunk).run();
-    }
+    await db.transaction(async (tx) => {
+      for (let i = 0; i < insertValues.length; i += chunkSize) {
+        const chunk = insertValues.slice(i, i + chunkSize);
+        await tx.insert(achievements).values(chunk).run();
+      }
+    });
     return { success: true, message: `Berhasil mengimpor ${insertValues.length} data prestasi` };
   } catch (e) {
     set.status = 500;
