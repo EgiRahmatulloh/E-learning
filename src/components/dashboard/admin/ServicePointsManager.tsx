@@ -587,6 +587,9 @@ export function ServicePointsManager() {
                     className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
                   >
                     <option value="">-- PILIH PENANGGUNG JAWAB --</option>
+                    {penjab && !managers.some((m) => m.nama === penjab) && (
+                      <option value={penjab}>{penjab} (Tidak Terdaftar)</option>
+                    )}
                     {managers.map((m) => (
                       <option key={m.id} value={m.nama}>
                         {m.nama} ({m.jabatan})
