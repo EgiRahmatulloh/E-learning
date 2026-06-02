@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms } from "./schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities } from "./schema";
 import { count } from "drizzle-orm";
 
 export async function seedDatabase() {
@@ -162,6 +162,28 @@ export async function seedDatabase() {
       console.log("✅ Seeding education_programs berhasil!");
     } else {
       console.log(`ℹ️ Database memiliki ${programsCount} education_programs, seeding diabaikan.`);
+    }
+
+    // Seed facilities if empty
+    const resultFacilities = await db.select({ value: count() }).from(facilities).get();
+    const facilitiesCount = resultFacilities?.value || 0;
+    if (facilitiesCount === 0) {
+      console.log("🌱 Database facilities kosong, seeding default facilities...");
+      await db.insert(facilities).values([
+        {
+          nama: "RUANG BELAJAR",
+          keterangan: "RUANG BELAJAR DI PKBM MENUJU MAKMUR",
+          foto: "/images/0e985c33b3e1f88efc234765edf73af2.jpg",
+        },
+        {
+          nama: "LAB KOMPUTER",
+          keterangan: "Laboratorium komputer lengkap dengan akses internet berkecepatan tinggi untuk mendukung pembelajaran digital dan pelaksanaan ANBK.",
+          foto: "/images/8c928d7128a4a86625e224dd9d3fa78b.png",
+        }
+      ]);
+      console.log("✅ Seeding facilities berhasil!");
+    } else {
+      console.log(`ℹ️ Database memiliki ${facilitiesCount} facilities, seeding diabaikan.`);
     }
 
     // Seed managers if empty
