@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { staticPlugin } from "@elysia/static";
 import { db } from "./server/db";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms } from "./server/db/schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities } from "./server/db/schema";
 import { eq, or } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
 import fs from "fs";
@@ -587,6 +587,155 @@ app.delete("/api/education-programs/:id", async ({ params, headers, jwt, set }) 
     set.status = 500;
     return { success: false, message: "Gagal menghapus program pendidikan" };
   }
+});
+
+// --- API FACILITIES ROUTES ---
+// Ambil semua sarana dan fasilitas
+app.get("/api/facilities", async ({ set }) => {
+  try {
+    const list = await db.select().from(facilities).all();
+    return { success: true, data: list };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data sarana dan fasilitas" };
+  }
+});
+
+// Tambah sarana baru
+app.post("/api/facilities", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const { nama, keterangan, foto } = body;
+  try {
+    const inserted = await db.insert(facilities).values({
+      nama,
+      keterangan,
+      foto,
+    }).returning().get();
+    return { success: true, data: inserted };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menambahkan data sarana dan fasilitas" };
+  }
+}, {
+  body: t.Object({
+    nama: t.String({ minLength: 1 }),
+    keterangan: t.String(),
+    foto: t.String(),
+  })
+});
+
+// Update sarana
+app.put("/api/facilities/:id", async ({ params, body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  const { nama, keterangan, foto } = body;
+  try {
+    const existing = await db.select().from(facilities).where(eq(facilities.id, id)).get();
+    if (!existing) {
+      set.status = 404;
+      return { success: false, message: "Sarana dan fasilitas tidak ditemukan" };
+    }
+
+    const updated = await db.update(facilities)
+      .set({
+        nama,
+        keterangan,
+        foto,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(facilities.id, id))
+      .returning()
+      .get();
+    
+    return { success: true, data: updated };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal memperbarui data sarana dan fasilitas" };
+  }
+}, {
+  body: t.Object({
+    nama: t.String({ minLength: 1 }),
+    keterangan: t.String(),
+    foto: t.String(),
+  })
+});
+
+// Hapus sarana
+app.delete("/api/facilities/:id", async ({ params, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    const existing = await db.select().from(facilities).where(eq(facilities.id, id)).get();
+    if (!existing) {
+      set.status = 404;
+      return { success: false, message: "Sarana dan fasilitas tidak ditemukan" };
+    }
+
+    await db.delete(facilities).where(eq(facilities.id, id)).run();
+    return { success: true, message: "Sarana dan fasilitas berhasil dihapus" };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menghapus data sarana dan fasilitas" };
+  }
+});
+
+// Impor sarana secara masal
+app.post("/api/facilities/import", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const list = body;
+  if (!Array.isArray(list)) {
+    set.status = 400;
+    return { success: false, message: "Format data tidak valid, harus berupa array" };
+  }
+
+  try {
+    const validItems = list.filter(item => item && typeof item === 'object' && typeof item.nama === 'string' && item.nama.trim().length > 0);
+    if (validItems.length === 0) {
+      set.status = 400;
+      return { success: false, message: "Tidak ada data valid untuk diimpor" };
+    }
+
+    const insertValues = validItems.map(item => ({
+      nama: item.nama,
+      keterangan: typeof item.keterangan === 'string' ? item.keterangan : '',
+      foto: typeof item.foto === 'string' ? item.foto : '',
+    }));
+
+    // Chunk inserts to avoid SQLite parameter limits
+    const chunkSize = 100;
+    for (let i = 0; i < insertValues.length; i += chunkSize) {
+      const chunk = insertValues.slice(i, i + chunkSize);
+      await db.insert(facilities).values(chunk).run();
+    }
+    return { success: true, message: `Berhasil mengimpor ${insertValues.length} sarana dan fasilitas` };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengimpor data sarana dan fasilitas" };
+  }
+}, {
+  body: t.Array(t.Object({
+    nama: t.String({ minLength: 1 }),
+    keterangan: t.Optional(t.String()),
+    foto: t.Optional(t.String()),
+  }))
 });
 
 // --- API MANAGERS ROUTES ---

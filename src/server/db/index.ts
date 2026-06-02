@@ -102,6 +102,18 @@ CREATE TABLE IF NOT EXISTS education_programs (
 );
 `);
 
+// Inisialisasi tabel facilities otomatis jika belum ada
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS facilities (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nama TEXT NOT NULL DEFAULT '',
+  keterangan TEXT NOT NULL DEFAULT '',
+  foto TEXT NOT NULL DEFAULT '',
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+`);
+
 // Inisialisasi tabel managers otomatis jika belum ada
 sqlite.exec(`
 CREATE TABLE IF NOT EXISTS managers (

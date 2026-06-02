@@ -104,6 +104,20 @@ export const educationPrograms = sqliteTable('education_programs', {
 export type EducationProgram = typeof educationPrograms.$inferSelect;
 export type NewEducationProgram = typeof educationPrograms.$inferInsert;
 
+export const facilities = sqliteTable('facilities', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  nama: text('nama').notNull().default(''),
+  keterangan: text('keterangan').notNull().default(''),
+  foto: text('foto').notNull().default(''),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at')
+    .$defaultFn(() => new Date().toISOString())
+    .$onUpdate(() => new Date().toISOString()),
+});
+
+export type Facility = typeof facilities.$inferSelect;
+export type NewFacility = typeof facilities.$inferInsert;
+
 export const managers = sqliteTable('managers', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   nama: text('nama').notNull().default(''),
