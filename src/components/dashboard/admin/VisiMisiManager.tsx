@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Edit3, Save } from "lucide-react";
 
@@ -34,9 +34,9 @@ export default function VisiMisiManager() {
   const [data, setData] = useState<VisionMissionData>(DEFAULT_DATA);
   const [isLocked, setIsLocked] = useState(true);
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
-  const toastTimeoutRef = useRef<any>(null);
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchVisionMission = async () => {
+  const fetchVisionMission = useCallback(async () => {
     try {
       const res = await fetch("/api/vision-mission");
       const resData = await res.json();
@@ -66,10 +66,18 @@ export default function VisiMisiManager() {
         setData(DEFAULT_DATA);
       }
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchVisionMission();
+  }, [fetchVisionMission]);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+    };
   }, []);
 
   const showToast = (message: string) => {
