@@ -151,71 +151,46 @@ function App() {
     );
   }
 
-  if (currentPath === "/profile") {
-    return (
-      <TooltipProvider>
-        <div className="min-h-screen bg-slate-50/50 text-slate-900 font-sans selection:bg-[#280f91] selection:text-white animate-in fade-in duration-300">
-          <Header currentPath={currentPath} onNavigate={navigate} />
-          
+  return (
+    <TooltipProvider>
+      <div className={`min-h-screen bg-slate-50/50 text-slate-900 font-sans selection:bg-[#280f91] selection:text-white ${
+        currentPath === "/profile" ? "animate-in fade-in duration-300" : ""
+      }`}>
+        <Header currentPath={currentPath} onNavigate={navigate} />
+        
+        {currentPath === "/profile" ? (
           <div className="pt-20">
             <Profile isDetailed={true} onNavigate={navigate} />
           </div>
-          
-          <Footer />
-
-          <LoginModal
-            isOpen={loginDialogOpen}
-            onOpenChange={(open) => {
-              setLoginDialogOpen(open);
-              if (!open) {
-                setLoginError("");
-                setLoginUsername("");
-                setLoginPassword("");
-              }
-            }}
-            onSubmit={handleLogin}
-            loginUsername={loginUsername}
-            setLoginUsername={setLoginUsername}
-            loginPassword={loginPassword}
-            setLoginPassword={setLoginPassword}
-            loginError={loginError}
-            loginLoading={loginLoading}
-          />
-        </div>
-      </TooltipProvider>
-    );
-  }
-
-  return (
-    <TooltipProvider>
-      <div className="min-h-screen bg-slate-50/50 text-slate-900 font-sans selection:bg-[#280f91] selection:text-white">
-        <Header currentPath={currentPath} onNavigate={navigate} />
-        
-        <Hero onServiceClick={(service) => setActiveServiceDialog(service)} />
-        
-        <Services
-          onLoginClick={() => setLoginDialogOpen(true)}
-          activeDialog={activeServiceDialog}
-          onDialogClose={() => setActiveServiceDialog(null)}
-        />
-        
-        <Ticker />
-        
-        <Agenda />
-        
-        <Profile isDetailed={false} onNavigate={navigate} />
-        
-        <News />
-        
-        <Tutors />
-        
-        <Products />
-        
-        <Testimonials />
-        
-        <Gallery />
-        
-        <Contact />
+        ) : (
+          <>
+            <Hero onServiceClick={(service) => setActiveServiceDialog(service)} />
+            
+            <Services
+              onLoginClick={() => setLoginDialogOpen(true)}
+              activeDialog={activeServiceDialog}
+              onDialogClose={() => setActiveServiceDialog(null)}
+            />
+            
+            <Ticker />
+            
+            <Agenda />
+            
+            <Profile isDetailed={false} onNavigate={navigate} />
+            
+            <News />
+            
+            <Tutors />
+            
+            <Products />
+            
+            <Testimonials />
+            
+            <Gallery />
+            
+            <Contact />
+          </>
+        )}
         
         <Footer />
 

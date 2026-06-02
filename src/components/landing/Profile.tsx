@@ -80,6 +80,72 @@ interface ProfileProps {
 }
 
 export default function Profile({ isDetailed = false, onNavigate }: ProfileProps) {
+  const [activeTab, setActiveTab] = useState<"identitas" | "pengelola" | "visi-misi" | "program" | "sarana" | "prestasi" | "layanan">("identitas");
+
+  // State data
+  const [profile, setProfile] = useState<InstitutionProfile | null>(null);
+  const [managers, setManagers] = useState<Manager[]>([]);
+  const [visionMission, setVisionMission] = useState<VisionMission | null>(null);
+  const [programs, setPrograms] = useState<EducationProgram[]>([]);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [servicePoints, setServicePoints] = useState<ServicePoint[]>([]);
+
+  // Loading state
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isDetailed) return;
+
+    const safeFetch = async (url: string) => {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return await res.json();
+      } catch (err) {
+        console.error(`Gagal memuat ${url}:`, err);
+        return { success: false };
+      }
+    };
+
+    const fetchAllData = async () => {
+      setLoading(true);
+      try {
+        const [
+          resProfile,
+          resManagers,
+          resVM,
+          resPrograms,
+          resFacilities,
+          resAchievements,
+          resServicePoints
+        ] = await Promise.all([
+          safeFetch("/api/institution-profile"),
+          safeFetch("/api/public-managers"),
+          safeFetch("/api/vision-mission"),
+          safeFetch("/api/education-programs"),
+          safeFetch("/api/facilities"),
+          safeFetch("/api/achievements"),
+          safeFetch("/api/service-points")
+        ]);
+
+        if (resProfile?.success) setProfile(resProfile.data);
+        if (resManagers?.success) setManagers(resManagers.data);
+        if (resVM?.success) setVisionMission(resVM.data);
+        if (resPrograms?.success) setPrograms(resPrograms.data);
+        if (resFacilities?.success) setFacilities(resFacilities.data);
+        if (resAchievements?.success) setAchievements(resAchievements.data);
+        if (resServicePoints?.success) setServicePoints(resServicePoints.data);
+      } catch (err) {
+        console.error("Gagal mengambil data profil", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
+  }, [isDetailed]);
+
   // If isDetailed is false, render original homepage profile overview:
   if (!isDetailed) {
     const handleReadMore = (e: React.MouseEvent) => {
@@ -178,70 +244,6 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
       </section>
     );
   }
-
-  const [activeTab, setActiveTab] = useState<"identitas" | "pengelola" | "visi-misi" | "program" | "sarana" | "prestasi" | "layanan">("identitas");
-
-  // State data
-  const [profile, setProfile] = useState<InstitutionProfile | null>(null);
-  const [managers, setManagers] = useState<Manager[]>([]);
-  const [visionMission, setVisionMission] = useState<VisionMission | null>(null);
-  const [programs, setPrograms] = useState<EducationProgram[]>([]);
-  const [facilities, setFacilities] = useState<Facility[]>([]);
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
-  const [servicePoints, setServicePoints] = useState<ServicePoint[]>([]);
-
-  // Loading state
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const safeFetch = async (url: string) => {
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        return await res.json();
-      } catch (err) {
-        console.error(`Gagal memuat ${url}:`, err);
-        return { success: false };
-      }
-    };
-
-    const fetchAllData = async () => {
-      setLoading(true);
-      try {
-        const [
-          resProfile,
-          resManagers,
-          resVM,
-          resPrograms,
-          resFacilities,
-          resAchievements,
-          resServicePoints
-        ] = await Promise.all([
-          safeFetch("/api/institution-profile"),
-          safeFetch("/api/public-managers"),
-          safeFetch("/api/vision-mission"),
-          safeFetch("/api/education-programs"),
-          safeFetch("/api/facilities"),
-          safeFetch("/api/achievements"),
-          safeFetch("/api/service-points")
-        ]);
-
-        if (resProfile?.success) setProfile(resProfile.data);
-        if (resManagers?.success) setManagers(resManagers.data);
-        if (resVM?.success) setVisionMission(resVM.data);
-        if (resPrograms?.success) setPrograms(resPrograms.data);
-        if (resFacilities?.success) setFacilities(resFacilities.data);
-        if (resAchievements?.success) setAchievements(resAchievements.data);
-        if (resServicePoints?.success) setServicePoints(resServicePoints.data);
-      } catch (err) {
-        console.error("Gagal mengambil data profil", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAllData();
-  }, []);
 
   const tabs = [
     { id: "identitas", label: "IDENTITAS", icon: <Info className="h-5 w-5" /> },
@@ -410,11 +412,11 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                     {profile?.foto ? (
                       <img 
                         src={profile.foto} 
-                        alt="Gedung PKBM"
-                        className="w-full aspect-[4/3] object-cover"
+                        alt="Logo PKBM"
+                        className="w-full aspect-[4/3] object-contain p-6 bg-white"
                       />
                     ) : (
-                      <div className="w-full aspect-[4/3] flex items-center justify-center text-slate-350">
+                      <div className="w-full aspect-[4/3] flex items-center justify-center text-slate-350 bg-white">
                         <Landmark className="h-20 w-20" />
                       </div>
                     )}

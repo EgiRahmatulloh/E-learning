@@ -36,11 +36,20 @@ function ClockBadge({ isScrolled }: { isScrolled: boolean }) {
   );
 }
 
-export default function Header() {
+interface HeaderProps {
+  currentPath?: string;
+  onNavigate?: (path: string) => void;
+}
+
+export default function Header({ currentPath = "/", onNavigate }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(currentPath === "/profile");
 
   useEffect(() => {
+    if (currentPath === "/profile") {
+      setIsScrolled(true);
+      return;
+    }
     const handleScroll = () => {
       if (window.scrollY > 20) {
         setIsScrolled(true);
@@ -50,7 +59,47 @@ export default function Header() {
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [currentPath]);
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    e.preventDefault();
+    if (targetId === "profil") {
+      if (onNavigate) {
+        onNavigate("/profile");
+      } else {
+        window.history.pushState({}, "", "/profile");
+        window.dispatchEvent(new PopStateEvent("popstate"));
+      }
+      setMobileMenuOpen(false);
+    } else {
+      if (currentPath !== "/") {
+        if (onNavigate) {
+          onNavigate("/");
+        } else {
+          window.history.pushState({}, "", "/");
+          window.dispatchEvent(new PopStateEvent("popstate"));
+        }
+        setTimeout(() => {
+          const el = document.getElementById(targetId);
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }, 150);
+      } else {
+        const el = document.getElementById(targetId);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }
+      setMobileMenuOpen(false);
+    }
+  };
+
+  const handleLogoClick = () => {
+    if (onNavigate) {
+      onNavigate("/");
+    } else {
+      window.history.pushState({}, "", "/");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <header className={`fixed top-0 left-0 z-50 w-full transition-all duration-300 ${
@@ -60,11 +109,11 @@ export default function Header() {
     }`}>
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo & Brand */}
-        <div className="flex items-center gap-3">
+        <div onClick={handleLogoClick} className="flex items-center gap-3 cursor-pointer select-none">
           <img
             src="/images/2c06b6fab7e6a9490c046e362160f2d0.png"
             alt="PKBM Menuju Makmur"
-            className="h-12 w-12"
+            className="h-12 w-12 object-contain"
           />
           <div>
             <span className={`block text-sm font-extrabold tracking-widest transition-colors duration-300 ${
@@ -82,15 +131,15 @@ export default function Header() {
 
         {/* Desktop Nav links */}
         <nav className="hidden lg:flex items-center gap-5 xl:gap-6">
-          <a href="#beranda" className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-[#280f91] hover:text-[#ff6105]" : "text-white hover:text-orange-400"}`}>Beranda</a>
-          <a href="#profil" className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Profil</a>
-          <a href="#agenda" className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Agenda</a>
-          <a href="#berita" className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Berita</a>
-          <a href="#tutor" className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Tutor</a>
-          <a href="#download" className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Download</a>
-          <a href="#produk" className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Produk Warga Belajar</a>
-          <a href="#alumni" className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Alumni</a>
-          <a href="#galeri" className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Galeri</a>
+          <a href="#beranda" onClick={(e) => handleNavClick(e, "beranda")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-[#280f91] hover:text-[#ff6105]" : "text-white hover:text-orange-400"}`}>Beranda</a>
+          <a href="#profil" onClick={(e) => handleNavClick(e, "profil")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? (currentPath === "/profile" ? "text-[#ff6105]" : "text-slate-600 hover:text-[#280f91]") : "text-white/80 hover:text-white"}`}>Profil</a>
+          <a href="#agenda" onClick={(e) => handleNavClick(e, "agenda")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Agenda</a>
+          <a href="#berita" onClick={(e) => handleNavClick(e, "berita")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Berita</a>
+          <a href="#tutor" onClick={(e) => handleNavClick(e, "tutor")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Tutor</a>
+          <a href="#download" onClick={(e) => handleNavClick(e, "download")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Download</a>
+          <a href="#produk" onClick={(e) => handleNavClick(e, "produk")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Produk Warga Belajar</a>
+          <a href="#alumni" onClick={(e) => handleNavClick(e, "alumni")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Alumni</a>
+          <a href="#galeri" onClick={(e) => handleNavClick(e, "galeri")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Galeri</a>
         </nav>
 
         {/* Desktop Date/Time Badge (Isolated Component) */}
@@ -115,15 +164,15 @@ export default function Header() {
       {mobileMenuOpen && (
         <div className="lg:hidden animate-in fade-in slide-in-from-top duration-300 bg-white border-b border-slate-200 px-4 py-6 space-y-4 shadow-xl">
           <nav className="flex flex-col gap-4">
-            <a href="#beranda" onClick={() => setMobileMenuOpen(false)} className="text-base font-bold text-[#280f91]">Beranda</a>
-            <a href="#profil" onClick={() => setMobileMenuOpen(false)} className="text-base font-semibold text-slate-600">Profil</a>
-            <a href="#agenda" onClick={() => setMobileMenuOpen(false)} className="text-base font-semibold text-slate-600">Agenda</a>
-            <a href="#berita" onClick={() => setMobileMenuOpen(false)} className="text-base font-semibold text-slate-600">Berita</a>
-            <a href="#tutor" onClick={() => setMobileMenuOpen(false)} className="text-base font-semibold text-slate-600">Tutor</a>
-            <a href="#download" onClick={() => setMobileMenuOpen(false)} className="text-base font-semibold text-slate-600">Download</a>
-            <a href="#produk" onClick={() => setMobileMenuOpen(false)} className="text-base font-semibold text-slate-600">Produk Warga Belajar</a>
-            <a href="#alumni" onClick={() => setMobileMenuOpen(false)} className="text-base font-semibold text-slate-600">Alumni</a>
-            <a href="#galeri" onClick={() => setMobileMenuOpen(false)} className="text-base font-semibold text-slate-600">Galeri</a>
+            <a href="#beranda" onClick={(e) => handleNavClick(e, "beranda")} className="text-base font-bold text-[#280f91]">Beranda</a>
+            <a href="#profil" onClick={(e) => handleNavClick(e, "profil")} className="text-base font-semibold text-[#280f91]">Profil</a>
+            <a href="#agenda" onClick={(e) => handleNavClick(e, "agenda")} className="text-base font-semibold text-slate-600">Agenda</a>
+            <a href="#berita" onClick={(e) => handleNavClick(e, "berita")} className="text-base font-semibold text-slate-600">Berita</a>
+            <a href="#tutor" onClick={(e) => handleNavClick(e, "tutor")} className="text-base font-semibold text-slate-600">Tutor</a>
+            <a href="#download" onClick={(e) => handleNavClick(e, "download")} className="text-base font-semibold text-slate-600">Download</a>
+            <a href="#produk" onClick={(e) => handleNavClick(e, "produk")} className="text-base font-semibold text-slate-600">Produk Warga Belajar</a>
+            <a href="#alumni" onClick={(e) => handleNavClick(e, "alumni")} className="text-base font-semibold text-slate-600">Alumni</a>
+            <a href="#galeri" onClick={(e) => handleNavClick(e, "galeri")} className="text-base font-semibold text-slate-600">Galeri</a>
           </nav>
         </div>
       )}

@@ -1362,6 +1362,7 @@ const server = Bun.serve({
       "/": html.default,
       "/index.html": html.default,
       "/dashboard": html.default,
+      "/profile": html.default,
     } : {}),
   } as any,
   fetch(req) {
