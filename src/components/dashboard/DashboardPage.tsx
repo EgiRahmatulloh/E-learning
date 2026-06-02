@@ -16,7 +16,7 @@ import ManagerManager from "./admin/ManagerManager";
 import VisiMisiManager from "./admin/VisiMisiManager";
 import EducationProgramManager from "./admin/EducationProgramManager";
 import FacilitiesManager from "./admin/FacilitiesManager";
-import AchievementsManager from "./admin/AchievementsManager";
+import { AchievementsManager } from "./admin/AchievementsManager";
 
 // Dashboard Sub-components
 import DashboardSidebar, { getTabLabel } from "./DashboardSidebar";

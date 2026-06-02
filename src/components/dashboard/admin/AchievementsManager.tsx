@@ -29,7 +29,7 @@ const setSafeItem = (key: string, value: string) => {
   } catch {}
 };
 
-export default function AchievementsManager() {
+export function AchievementsManager() {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   
