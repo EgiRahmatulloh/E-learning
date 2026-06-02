@@ -97,12 +97,18 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
   useEffect(() => {
     if (!isDetailed) return;
 
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     const safeFetch = async (url: string) => {
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, { signal });
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return await res.json();
-      } catch (err) {
+      } catch (err: any) {
+        if (err.name === "AbortError") {
+          return { success: false, aborted: true };
+        }
         console.error(`Gagal memuat ${url}:`, err);
         return { success: false };
       }
@@ -129,6 +135,8 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
           safeFetch("/api/service-points")
         ]);
 
+        if (signal.aborted) return;
+
         if (resProfile?.success) setProfile(resProfile.data);
         if (resManagers?.success) setManagers(resManagers.data);
         if (resVM?.success) setVisionMission(resVM.data);
@@ -139,11 +147,17 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
       } catch (err) {
         console.error("Gagal mengambil data profil", err);
       } finally {
-        setLoading(false);
+        if (!signal.aborted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchAllData();
+
+    return () => {
+      controller.abort();
+    };
   }, [isDetailed]);
 
   // If isDetailed is false, render original homepage profile overview:
