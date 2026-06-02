@@ -212,11 +212,11 @@ export default function FacilitiesManager() {
     }
     const headers = ["NAMA", "KETERANGAN", "FOTO"];
     const rows = facilities.map(f => [
-      `"${f.nama.replace(/"/g, '""')}"`,
-      `"${f.keterangan.replace(/"/g, '""')}"`,
-      `"${f.foto.replace(/"/g, '""')}"`
+      `"${(f.nama || "").replace(/"/g, '""')}"`,
+      `"${(f.keterangan || "").replace(/"/g, '""')}"`,
+      `"${(f.foto || "").replace(/"/g, '""')}"`
     ]);
-    const csvContent = [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -250,9 +250,14 @@ export default function FacilitiesManager() {
         const line = lines[i].trim();
         if (!line) continue;
         
-        // Simple parse CSV row
-        const cols = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(",");
-        const cleanCols = cols.map(c => c.replace(/^"|"$/g, "").trim());
+        // Robust split by comma and strip quotes
+        const cleanCols = line.split(",").map(col => {
+          let c = col.trim();
+          if (c.startsWith('"') && c.endsWith('"')) {
+            c = c.substring(1, c.length - 1).replace(/""/g, '"');
+          }
+          return c;
+        });
         
         if (cleanCols[0]) {
           importedData.push({
