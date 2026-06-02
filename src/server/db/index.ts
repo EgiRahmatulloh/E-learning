@@ -156,4 +156,20 @@ CREATE TABLE IF NOT EXISTS achievements (
 );
 `);
 
+// Inisialisasi tabel service_points otomatis jika belum ada
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS service_points (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nama TEXT NOT NULL DEFAULT '',
+  alamat TEXT NOT NULL DEFAULT '',
+  penjab TEXT NOT NULL DEFAULT '',
+  waktu_pembelajaran TEXT NOT NULL DEFAULT '',
+  jumlah_wb TEXT NOT NULL DEFAULT '',
+  keterangan TEXT NOT NULL DEFAULT '',
+  foto TEXT NOT NULL DEFAULT '',
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+`);
+
 export const db = drizzle(sqlite, { schema });

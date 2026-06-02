@@ -41,6 +41,7 @@ export const TAB_LABELS: Record<string, string> = {
   "aktivitas-belajar": "AKTIVITAS BELAJAR",
   profil: "PROFIL SAYA",
   prestasi: "PRESTASI",
+  "titik-layanan": "TITIK LAYANAN",
 };
 
 export const getTabLabel = (id: string): string => {

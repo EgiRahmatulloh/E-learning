@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements } from "./schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints } from "./schema";
 import { count } from "drizzle-orm";
 
 export async function seedDatabase() {
@@ -258,6 +258,27 @@ export async function seedDatabase() {
       console.log("✅ Seeding achievements berhasil!");
     } else {
       console.log(`ℹ️ Database memiliki ${achievementsCount} achievements, seeding diabaikan.`);
+    }
+
+    // Seed servicePoints if empty
+    const resultServicePoints = await db.select({ value: count() }).from(servicePoints).get();
+    const servicePointsCount = resultServicePoints?.value || 0;
+    if (servicePointsCount === 0) {
+      console.log("🌱 Database service_points kosong, seeding default service points...");
+      await db.insert(servicePoints).values([
+        {
+          nama: "BALE DESA MULYASARI",
+          alamat: "DUSUN SEMBAWA RT. RW DESA",
+          penjab: "NASIHIN",
+          waktuPembelajaran: "JUM'AT S.D MINGGU PUKUL 14.00 S.D SELESAI",
+          jumlahWb: "45 WB",
+          keterangan: "ALHAMDULILLAH KAMI TELAH BEKERJASA MA",
+          foto: "",
+        }
+      ]);
+      console.log("✅ Seeding service points berhasil!");
+    } else {
+      console.log(`ℹ️ Database memiliki ${servicePointsCount} service points, seeding diabaikan.`);
     }
   } catch (error) {
     console.error("❌ Gagal melakukan seeding database:", error);
