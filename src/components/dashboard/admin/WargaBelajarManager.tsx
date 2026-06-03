@@ -25,6 +25,12 @@ interface Student {
   status: string; // 'AKTIF', 'LULUS'
 }
 
+const KELAS_BY_PROGRAM: Record<string, string[]> = {
+  "PAKET A": ["KELAS I (SATU)", "KELAS II (DUA)", "KELAS III (TIGA)", "KELAS IV (EMPAT)", "KELAS V (LIMA)", "KELAS VI (ENAM)"],
+  "PAKET B": ["KELAS VII (TUJUH)", "KELAS VIII (DELAPAN)", "KELAS IX (SEMBILAN)"],
+  "PAKET C": ["KELAS X (SEPULUH)", "KELAS XI (SEBELAS)", "KELAS XII (DUABELAS)"],
+};
+
 export default function WargaBelajarManager() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
@@ -815,7 +821,11 @@ export default function WargaBelajarManager() {
                       <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">PROGRAM</label>
                       <select
                         value={formData.program || "PAKET C"}
-                        onChange={(e) => setFormData(prev => ({ ...prev, program: e.target.value }))}
+                        onChange={(e) => {
+                          const prog = e.target.value;
+                          const kelasList = KELAS_BY_PROGRAM[prog];
+                          setFormData(prev => ({ ...prev, program: prog, kelas: kelasList[0] }));
+                        }}
                         className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
                       >
                         <option value="PAKET A">PAKET A</option>
@@ -827,13 +837,15 @@ export default function WargaBelajarManager() {
                     {/* KELAS */}
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
                       <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">KELAS</label>
-                      <input
-                        type="text"
-                        placeholder="Contoh: KELAS X (SEPULUH) / KELAS VII"
+                      <select
                         value={formData.kelas || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, kelas: e.target.value }))}
-                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                      />
+                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                      >
+                        {(KELAS_BY_PROGRAM[formData.program || "PAKET C"] || []).map((k) => (
+                          <option key={k} value={k}>{k}</option>
+                        ))}
+                      </select>
                     </div>
 
                     {/* NISN */}
@@ -1139,10 +1151,9 @@ export default function WargaBelajarManager() {
                     <select
                       value={newProgram}
                       onChange={(e) => {
-                        setNewProgram(e.target.value);
-                        if (e.target.value === "PAKET C") setNewKelas("KELAS X (SEPULUH)");
-                        else if (e.target.value === "PAKET B") setNewKelas("KELAS VII (TUJUH)");
-                        else setNewKelas("KELAS I (SATU)");
+                        const prog = e.target.value;
+                        setNewProgram(prog);
+                        setNewKelas(KELAS_BY_PROGRAM[prog]?.[0] || "");
                       }}
                       className="w-full h-11 px-4 text-xs border border-transparent rounded-xl focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white text-slate-800 font-bold"
                     >
@@ -1153,14 +1164,16 @@ export default function WargaBelajarManager() {
 
                   <div className="space-y-1">
                     <label className="text-[10px] font-black text-cyan-50 uppercase">KELAS TUJUAN</label>
-                    <input
-                      type="text"
+                    <select
                       required
-                      placeholder="Contoh: KELAS X (SEPULUH)"
                       value={newKelas}
                       onChange={(e) => setNewKelas(e.target.value)}
-                      className="w-full h-11 px-4 text-xs border border-transparent rounded-xl focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white text-slate-800 font-semibold"
-                    />
+                      className="w-full h-11 px-4 text-xs border border-transparent rounded-xl focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white text-slate-800 font-bold"
+                    >
+                      {(KELAS_BY_PROGRAM[newProgram] || []).map((k) => (
+                        <option key={k} value={k}>{k}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 

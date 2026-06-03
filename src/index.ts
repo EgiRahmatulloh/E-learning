@@ -2056,11 +2056,11 @@ app.post("/api/students/:id/promote", async ({ params, headers, jwt, set }) => {
     } else if (currentGrade.includes("EMPAT")) {
       nextGrade = "KELAS V (LIMA)";
     } else if (currentGrade.includes("TIGA")) {
-      nextGrade = "KELAS EMPAT (EMPAT)";
+      nextGrade = "KELAS IV (EMPAT)";
     } else if (currentGrade.includes("DUA")) {
-      nextGrade = "KELAS TIGA (TIGA)";
+      nextGrade = "KELAS III (TIGA)";
     } else if (currentGrade.includes("SATU")) {
-      nextGrade = "KELAS DUA (DUA)";
+      nextGrade = "KELAS II (DUA)";
     }
 
     const updated = await db.update(students)
