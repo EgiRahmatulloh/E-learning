@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, Plus, Trash2, Save, HelpCircle, Download, Image } from "lucide-react";
+import { Upload, Plus, Trash2, Save, HelpCircle, Download, Image, X, Edit3, Filter, RotateCcw } from "lucide-react";
 
 const GALLERY_CATEGORIES = [
   "KEGIATAN PEMBELAJARAN",
@@ -39,6 +39,7 @@ export default function GalleryManager() {
   // Selected / Form state
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   // Form inputs
   const [namaFile, setNamaFile] = useState("");
@@ -66,9 +67,6 @@ export default function GalleryManager() {
       .then((data) => {
         if (data.success && data.data) {
           setGalleryList(data.data);
-          if (data.data.length > 0 && !selectedId && !isAdding) {
-            selectItem(data.data[0]);
-          }
         }
       })
       .catch((err) => console.error("Failed to load gallery:", err))
@@ -83,6 +81,7 @@ export default function GalleryManager() {
     setTanggalPosting(item.tanggalPosting);
     setFoto(item.foto);
     setStatus(item.status);
+    setIsFormOpen(true);
   };
 
   const startAdd = () => {
@@ -93,6 +92,13 @@ export default function GalleryManager() {
     setTanggalPosting(new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }).toUpperCase());
     setFoto("");
     setStatus("PUBLISH");
+    setIsFormOpen(true);
+  };
+
+  const closeForm = () => {
+    setIsFormOpen(false);
+    setSelectedId(null);
+    setIsAdding(false);
   };
 
   const handleImageUpload = async (file: File) => {
@@ -163,7 +169,7 @@ export default function GalleryManager() {
       const data = await res.json();
       if (data.success) {
         alert("Data galeri berhasil disimpan!");
-        setIsAdding(false);
+        closeForm();
         fetchGallery();
       } else {
         alert("Gagal menyimpan: " + (data.message || "Error tidak diketahui"));
@@ -185,10 +191,7 @@ export default function GalleryManager() {
       });
       const data = await res.json();
       if (data.success) {
-        if (selectedId === idToDelete) {
-          setSelectedId(null);
-          startAdd();
-        }
+        closeForm();
         fetchGallery();
       } else {
         alert("Gagal menghapus: " + (data.message || "Error tidak diketahui"));
@@ -291,278 +294,325 @@ export default function GalleryManager() {
   const currentItems = filteredList.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-800 text-left p-2 sm:p-6">
-      {/* Top Banner */}
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6 animate-in fade-in duration-300">
+      {/* HEADER SECTION */}
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
         <div>
-          <h2 className="text-2xl font-black text-cyan-950 uppercase tracking-tight">Manajemen Galeri</h2>
-          <p className="text-slate-500 text-xs font-semibold mt-1">Kelola foto kegiatan PKBM Menuju Makmur berdasarkan kategori</p>
+          <h2 className="text-xl font-black text-cyan-900 tracking-tight flex items-center gap-2">
+            <span>🖼️</span> MANAJEMEN GALERI
+          </h2>
+          <p className="text-xs text-slate-500 font-semibold mt-1">
+            Kelola foto kegiatan PKBM Menuju Makmur berdasarkan kategori.
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Button onClick={startAdd} className="bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-2xl flex items-center gap-2">
-            <Plus size={16} /> Tambah Data
+          <Button
+            onClick={startAdd}
+            className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
+          >
+            <Plus className="h-4 w-4" /> TAMBAH BARU
           </Button>
           <input type="file" ref={importInputRef} className="hidden" accept=".csv" onChange={handleImportCSV} />
-          <Button onClick={() => importInputRef.current?.click()} className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl flex items-center gap-2">
-            <Upload size={16} /> Upload CSV
+          <Button
+            onClick={() => importInputRef.current?.click()}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-blue-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
+          >
+            <Upload className="h-4 w-4" /> UPLOAD CSV
           </Button>
-          <Button onClick={handleExportCSV} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl flex items-center gap-2">
-            <Download size={16} /> Download CSV
+          <Button
+            onClick={handleExportCSV}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-emerald-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
+          >
+            <Download className="h-4 w-4" /> DOWNLOAD CSV
           </Button>
         </div>
       </div>
 
-      {/* Category Notes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div className="bg-[#f28b82] rounded-2xl p-5 text-center text-xs font-black text-white uppercase leading-relaxed shadow-md">
-          <div className="flex justify-start gap-1 mb-3">
-            {[1,2,3,4].map(i => <div key={i} className={`h-3 w-3 rounded-full ${i === 1 ? 'bg-red-700' : i === 2 ? 'bg-yellow-400' : i === 3 ? 'bg-green-400' : 'bg-gray-300'}`} />)}
-          </div>
-          CATATAN : KATEGORI TETAP TIDAK BISA DITAMBAHKAN (KEGIATAN PEMBELAJARAN, KEGIATAN KURSUS DAN PELATIHAN, KEGIATAN LUAR KELAS, KEGIATAN UJIAN, KEGIATAN PENGABDIAN MASYARAKAT DAN LINGKUNGAN, KEGIATAN LEMBAGA, KEGIATAN LOMBA DAN KEGIATAN LAINNYA)
-        </div>
-        <div className="bg-[#f28b82] rounded-2xl p-5 text-center text-xs font-black text-white uppercase leading-relaxed shadow-md">
-          <div className="flex justify-center gap-1.5 mb-3">
-            {[1,2,3,4,5,6,7].map(i => <div key={i} className={`h-2.5 w-2.5 rounded-full ${i <= 3 ? 'bg-white' : 'bg-white/40'}`} />)}
-          </div>
-          CATATAN : APABILA SIMPAN LANGSUNG MASUK KE HALAMAN SESUAI KATEGORI
-        </div>
-      </div>
+      {/* FILTER PANEL */}
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+          <select
+            value={searchFilterKategori}
+            onChange={(e) => setSearchFilterKategori(e.target.value)}
+            className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-cyan-500 font-bold bg-white text-slate-700 shadow-inner"
+          >
+            <option value="">CARI BERDASARKAN KATEGORI (DROP DOWN)</option>
+            {GALLERY_CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
 
-      {/* Filter */}
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 mb-6">
-        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Cari Berdasarkan Kategori (Drop Down)</h3>
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="flex-1 min-w-48">
-            <select
-              className="w-full text-xs font-semibold border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
-              value={searchFilterKategori}
-              onChange={(e) => setSearchFilterKategori(e.target.value)}
+          <div className="flex gap-2">
+            <Button
+              onClick={handleFilter}
+              className="flex-1 h-10 rounded-xl bg-[#00badb] hover:bg-[#009cb9] text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
             >
-              <option value="">Semua Kategori</option>
-              {GALLERY_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
+              <Filter className="h-4 w-4" /> FILTER
+            </Button>
+            <Button
+              onClick={handleReset}
+              className="flex-1 h-10 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
+            >
+              <RotateCcw className="h-4 w-4" /> RESET
+            </Button>
           </div>
-          <Button onClick={handleFilter} className="bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs h-9 px-5">Filter</Button>
-          <Button onClick={handleReset} variant="outline" className="rounded-xl text-xs font-bold text-slate-500 h-9 px-4">Reset</Button>
         </div>
       </div>
 
-      {/* Table + Form Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left: Table */}
-        <div className="lg:col-span-7 bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-4">
-          <div className="flex justify-between items-center pb-4 border-b border-slate-100">
-            <h3 className="font-black text-cyan-950 uppercase text-sm tracking-wide">Daftar Galeri ({totalItems})</h3>
-            <span className="text-xs text-slate-400 font-semibold">Klik untuk edit</span>
-          </div>
+      {/* TABLE CONTAINER */}
+      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <span className="text-xs font-black text-slate-500 uppercase tracking-widest">
+            Daftar Galeri ({totalItems})
+          </span>
+        </div>
 
-          {loading ? (
-            <div className="py-16 flex justify-center items-center gap-3">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600" />
-              <span className="text-slate-500 text-xs font-semibold">Memuat data...</span>
-            </div>
-          ) : totalItems === 0 ? (
-            <div className="py-16 text-center border-2 border-dashed border-slate-100 rounded-2xl">
-              <HelpCircle size={40} className="mx-auto text-slate-300 mb-2" />
-              <p className="text-slate-500 text-xs font-bold">Belum ada data galeri.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto rounded-xl border border-slate-100">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100">
-                    <th className="p-3 text-center w-10">NO</th>
-                    <th className="p-3">NAMA FILE</th>
-                    <th className="p-3">KATEGORI</th>
-                    <th className="p-3">TANGGAL POSTING</th>
-                    <th className="p-3 text-center">FOTO</th>
-                    <th className="p-3 text-center">STATUS</th>
-                    <th className="p-3 text-center">AKSI</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50 text-xs">
-                  {currentItems.map((item, idx) => (
-                    <tr
-                      key={item.id}
-                      className={`hover:bg-slate-50/50 cursor-pointer transition font-medium ${selectedId === item.id ? "bg-purple-50/70" : ""}`}
-                    >
-                      <td className="p-3 text-center text-slate-400">{indexOfFirstItem + idx + 1}</td>
-                      <td className="p-3 font-bold text-[#280f91] max-w-[120px] truncate">{item.namaFile}</td>
-                      <td className="p-3 text-slate-600 text-[10px] max-w-[160px]">{item.kategori}</td>
-                      <td className="p-3 text-slate-500">{item.tanggalPosting}</td>
-                      <td className="p-3 text-center">
-                        {item.foto ? (
-                          <img src={item.foto} alt={item.namaFile} className="h-10 w-10 object-cover rounded-lg border border-slate-200 mx-auto" />
-                        ) : (
-                          <div className="h-10 w-10 bg-slate-100 rounded-lg flex items-center justify-center mx-auto">
-                            <Image size={14} className="text-slate-400" />
-                          </div>
-                        )}
-                      </td>
-                      <td className="p-3 text-center">
-                        <span className={`inline-block text-[9px] font-black px-2 py-0.5 rounded-full uppercase ${item.status === "PUBLISH" ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-600"}`}>
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="p-3 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <button
-                            onClick={() => selectItem(item)}
-                            className="text-[10px] font-black text-blue-600 hover:text-blue-800 px-2 py-0.5 rounded-lg bg-blue-50 hover:bg-blue-100 transition cursor-pointer"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => { handleDelete(item.id); }}
-                            className="text-[10px] font-black text-red-600 hover:text-red-800 px-2 py-0.5 rounded-lg bg-red-50 hover:bg-red-100 transition cursor-pointer"
-                          >
-                            Hapus
-                          </button>
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 space-y-3">
+            <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#9c27b0] border-t-transparent" />
+            <span className="text-xs font-extrabold text-[#9c27b0] uppercase tracking-widest">Memuat galeri...</span>
+          </div>
+        ) : currentItems.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm border-collapse min-w-[700px]">
+              <thead>
+                <tr className="bg-[#00badb] text-white font-black text-sm uppercase">
+                  <th className="py-4 px-6 border-r border-[#009cb9] text-center w-16">NO</th>
+                  <th className="py-4 px-6 border-r border-[#009cb9]">NAMA FILE</th>
+                  <th className="py-4 px-6 border-r border-[#009cb9] w-72">KATEGORI</th>
+                  <th className="py-4 px-6 border-r border-[#009cb9] text-center w-48">TANGGAL POSTING</th>
+                  <th className="py-4 px-6 border-r border-[#009cb9] text-center w-28">FOTO</th>
+                  <th className="py-4 px-6 border-r border-[#009cb9] text-center w-36">STATUS</th>
+                  <th className="py-4 px-6 text-center w-48">AKSI</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                {currentItems.map((item, idx) => (
+                  <tr
+                    key={item.id}
+                    className="border-b border-slate-100 hover:bg-cyan-50/20 font-bold text-slate-700 transition-colors"
+                  >
+                    <td className="py-4 px-6 border-r border-slate-100 text-center text-slate-500 font-mono">
+                      {indexOfFirstItem + idx + 1}
+                    </td>
+                    <td className="py-4 px-6 border-r border-slate-100 font-bold text-slate-800">
+                      {item.namaFile}
+                    </td>
+                    <td className="py-4 px-6 border-r border-slate-100">
+                      <span className="inline-flex items-center rounded-full bg-purple-50 border border-purple-100 px-2.5 py-0.5 text-[10px] font-extrabold text-purple-700 uppercase tracking-wide">
+                        {item.kategori}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 border-r border-slate-100 text-center font-mono text-slate-500">
+                      {item.tanggalPosting}
+                    </td>
+                    <td className="py-4 px-6 border-r border-slate-100 text-center">
+                      {item.foto ? (
+                        <img src={item.foto} alt={item.namaFile} className="h-10 w-10 object-cover rounded-lg border border-slate-200 mx-auto shadow-xs" />
+                      ) : (
+                        <div className="h-10 w-10 bg-slate-100 rounded-lg flex items-center justify-center mx-auto border border-slate-200">
+                          <Image size={14} className="text-slate-400" />
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-              <span className="text-xs text-slate-400 font-semibold">
-                {indexOfFirstItem + 1}–{Math.min(indexOfLastItem, totalItems)} dari {totalItems}
-              </span>
-              <div className="flex items-center gap-1">
-                <Button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} disabled={currentPage === 1} variant="outline" size="sm" className="rounded-lg text-xs">Previous</Button>
-                <span className="text-xs font-black px-2">{currentPage}</span>
-                <Button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} variant="outline" size="sm" className="rounded-lg text-xs">Next</Button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right: Form */}
-        <div className="lg:col-span-5 bg-[#00bcd4] rounded-3xl p-6 shadow-md text-white border border-cyan-400">
-          <div className="pb-4 border-b border-white/20 mb-5">
-            <h3 className="text-base font-black uppercase tracking-wide">
-              {isAdding ? "Tambah Foto Galeri" : "Detail Foto Galeri"}
-            </h3>
-            <p className="text-cyan-100 text-[11px] font-semibold mt-1">Isi informasi dan upload foto kegiatan</p>
-          </div>
-
-          <form onSubmit={handleSave} className="space-y-4 text-slate-800">
-            {/* Nama File */}
-            <div>
-              <label className="block text-[10px] font-black uppercase text-white/95 mb-1">Nama File / Keterangan</label>
-              <input
-                type="text"
-                required
-                className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                placeholder="Contoh: Dokumentasi Ujian CBT 2024"
-                value={namaFile}
-                onChange={(e) => setNamaFile(e.target.value)}
-              />
-            </div>
-
-            {/* Kategori */}
-            <div>
-              <label className="block text-[10px] font-black uppercase text-white/95 mb-1">Kategori Kegiatan</label>
-              <select
-                className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                value={kategori}
-                onChange={(e) => setKategori(e.target.value)}
-              >
-                {GALLERY_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
+                      )}
+                    </td>
+                    <td className="py-4 px-6 border-r border-slate-100 text-center">
+                      <span
+                        className={`inline-flex items-center rounded-lg px-2.5 py-0.5 text-xs font-black uppercase tracking-wider ${
+                          item.status === "PUBLISH"
+                            ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                            : "bg-amber-100 text-amber-800 border border-amber-200"
+                        }`}
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      <div className="flex items-center justify-center gap-3">
+                        <Button
+                          onClick={() => selectItem(item)}
+                          className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 h-9 px-3.5 rounded-lg font-bold text-xs cursor-pointer flex items-center gap-1.5 shadow-xs transition-all"
+                        >
+                          <Edit3 className="h-3.5 w-3.5 text-blue-600" /> Edit
+                        </Button>
+                        <Button
+                          onClick={() => handleDelete(item.id)}
+                          className="bg-white border border-slate-200 hover:bg-rose-50 text-rose-600 h-9 px-3.5 rounded-lg font-bold text-xs cursor-pointer flex items-center gap-1.5 shadow-xs transition-all"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Hapus
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
                 ))}
-              </select>
-            </div>
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 space-y-2 border-t border-slate-100">
+            <HelpCircle size={40} className="text-slate-300" />
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Belum ada data galeri.</p>
+          </div>
+        )}
 
-            {/* Tanggal Posting */}
-            <div>
-              <label className="block text-[10px] font-black uppercase text-white/95 mb-1">Tanggal Posting</label>
-              <input
-                type="text"
-                required
-                className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                placeholder="Contoh: 20 JANUARI 2024"
-                value={tanggalPosting}
-                onChange={(e) => setTanggalPosting(e.target.value)}
-              />
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between p-5 border-t border-slate-100 bg-slate-50/50">
+            <span className="text-xs text-slate-400 font-semibold">
+              Menampilkan {indexOfFirstItem + 1}–{Math.min(indexOfLastItem, totalItems)} dari {totalItems} data
+            </span>
+            <div className="flex items-center gap-1">
+              <Button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} disabled={currentPage === 1} variant="outline" size="sm" className="rounded-lg text-xs font-bold text-slate-500">Previous</Button>
+              <span className="text-xs font-black px-3 py-1 bg-white border border-slate-200 rounded-lg shadow-xs">{currentPage}</span>
+              <Button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} variant="outline" size="sm" className="rounded-lg text-xs font-bold text-slate-500">Next</Button>
             </div>
-
-            {/* Status */}
-            <div>
-              <label className="block text-[10px] font-black uppercase text-white/95 mb-1">Status</label>
-              <select
-                className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-              >
-                <option value="PUBLISH">PUBLISH</option>
-                <option value="DRAFT">DRAFT</option>
-              </select>
-            </div>
-
-            {/* Foto Upload */}
-            <div>
-              <label className="block text-[10px] font-black uppercase text-white/95 mb-1">Foto Kegiatan</label>
-              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])} />
-              <div
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className={`relative w-full rounded-xl border-2 border-dashed cursor-pointer transition flex flex-col items-center justify-center text-center overflow-hidden ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"}`}
-                style={{ minHeight: foto ? "auto" : "110px" }}
-              >
-                {uploading ? (
-                  <div className="py-6 flex flex-col items-center gap-2">
-                    <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-white" />
-                    <span className="text-[10px] font-bold text-white">Mengunggah...</span>
-                  </div>
-                ) : foto ? (
-                  <div className="w-full">
-                    <img src={foto} alt="Preview" className="w-full h-44 object-cover rounded-xl" />
-                    <p className="text-[9px] text-white/70 font-bold py-1.5">Klik untuk ganti foto</p>
-                  </div>
-                ) : (
-                  <div className="py-6 space-y-2">
-                    <Image size={28} className="text-white/60 mx-auto" />
-                    <p className="text-[10px] font-bold text-white/80">Klik atau drag & drop foto di sini</p>
-                    <p className="text-[9px] text-white/50">JPG, PNG, WEBP</p>
-                  </div>
-                )}
-              </div>
-              {foto && (
-                <input
-                  type="text"
-                  className="w-full mt-2 text-[10px] font-mono border border-transparent rounded-lg px-2.5 py-1.5 bg-white focus:outline-none"
-                  value={foto}
-                  onChange={(e) => setFoto(e.target.value)}
-                  placeholder="URL foto"
-                />
-              )}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex items-center gap-3 pt-2">
-              <Button type="submit" className="flex-1 bg-white text-cyan-800 hover:bg-slate-100 font-black rounded-xl flex items-center justify-center gap-2 text-xs cursor-pointer">
-                <Save size={15} /> Simpan
-              </Button>
-              {selectedId && !isAdding && (
-                <Button type="button" onClick={() => handleDelete()} variant="outline" className="bg-red-600 hover:bg-red-700 text-white border-red-600 font-black rounded-xl text-xs flex items-center gap-2 cursor-pointer">
-                  <Trash2 size={15} /> Hapus
-                </Button>
-              )}
-            </div>
-          </form>
-        </div>
+          </div>
+        )}
       </div>
+
+      {/* POPUP / MODAL FORM DIALOG */}
+      {isFormOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={closeForm} />
+
+          {/* Form Container */}
+          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-lg animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
+            {/* Form Column (Cyan Background) */}
+            <div className="bg-[#00badb] p-6 relative text-white">
+              {/* Close Button */}
+              <button
+                onClick={closeForm}
+                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="mb-6">
+                <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                  {isAdding ? "TAMBAH FOTO GALERI" : "EDIT FOTO GALERI"}
+                </span>
+              </div>
+
+              <form onSubmit={handleSave} className="space-y-4 text-left">
+                {/* Nama File */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">Nama File / Keterangan</label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner placeholder-slate-400"
+                    placeholder="Contoh: Dokumentasi Ujian CBT 2024"
+                    value={namaFile}
+                    onChange={(e) => setNamaFile(e.target.value)}
+                  />
+                </div>
+
+                {/* Kategori */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">Kategori Kegiatan</label>
+                  <select
+                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider"
+                    value={kategori}
+                    onChange={(e) => setKategori(e.target.value)}
+                  >
+                    {GALLERY_CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Tanggal Posting */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">Tanggal Posting</label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner placeholder-slate-400 uppercase tracking-wider"
+                    placeholder="Contoh: 20 JANUARI 2024"
+                    value={tanggalPosting}
+                    onChange={(e) => setTanggalPosting(e.target.value)}
+                  />
+                </div>
+
+                {/* Status */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">Status</label>
+                  <select
+                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider"
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                  >
+                    <option value="PUBLISH">PUBLISH</option>
+                    <option value="DRAFT">DRAFT</option>
+                  </select>
+                </div>
+
+                {/* Foto Upload */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">Foto Kegiatan</label>
+                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])} />
+                  <div
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`relative w-full rounded-xl border-2 border-dashed cursor-pointer transition flex flex-col items-center justify-center text-center overflow-hidden min-h-[110px] ${
+                      dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
+                    }`}
+                  >
+                    {uploading ? (
+                      <div className="py-6 flex flex-col items-center gap-2">
+                        <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-white" />
+                        <span className="text-[10px] font-bold text-white">Mengunggah...</span>
+                      </div>
+                    ) : foto ? (
+                      <div className="w-full">
+                        <img src={foto} alt="Preview" className="w-full h-44 object-cover rounded-xl" />
+                        <p className="text-[9px] text-white/70 font-bold py-1.5">Klik untuk ganti foto</p>
+                      </div>
+                    ) : (
+                      <div className="py-6 space-y-2">
+                        <Image size={28} className="text-white/60 mx-auto" />
+                        <p className="text-[10px] font-bold text-white/80">Klik atau drag & drop foto di sini</p>
+                        <p className="text-[9px] text-white/50">JPG, PNG, WEBP</p>
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    className="w-full mt-2 text-[10px] font-mono border border-transparent rounded-lg px-2.5 py-2 bg-white text-slate-800 focus:outline-none"
+                    value={foto}
+                    onChange={(e) => setFoto(e.target.value)}
+                    placeholder="Masukkan URL foto..."
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-3 pt-2 justify-end">
+                  <Button
+                    type="submit"
+                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
+                  >
+                    <Save size={15} /> SIMPAN
+                  </Button>
+                  {selectedId && (
+                    <Button
+                      type="button"
+                      onClick={() => handleDelete()}
+                      className="bg-rose-600 hover:bg-rose-700 text-white border-0 font-extrabold text-sm px-6 h-11 rounded-full cursor-pointer shadow-md shadow-rose-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
+                    >
+                      <Trash2 size={15} /> HAPUS
+                    </Button>
+                  )}
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

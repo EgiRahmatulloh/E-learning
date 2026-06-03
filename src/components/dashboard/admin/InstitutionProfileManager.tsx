@@ -583,6 +583,17 @@ export default function InstitutionProfileManager() {
               </>
             )}
           </div>
+          <div className="w-full mt-4 flex flex-col gap-1 text-left max-w-xs">
+            <label className="text-[10px] font-black uppercase text-slate-500">URL Logo Lembaga</label>
+            <input
+              type="text"
+              disabled={isLocked}
+              placeholder="Masukkan URL foto..."
+              value={profile.foto || ""}
+              onChange={(e) => handleFieldChange("foto", e.target.value)}
+              className="w-full text-xs font-semibold border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-850 focus:outline-none focus:ring-2 focus:ring-[#280f91] disabled:bg-slate-50"
+            />
+          </div>
         </div>
       </div>
 
@@ -661,6 +672,17 @@ export default function InstitutionProfileManager() {
               </span>
             </>
           )}
+        </div>
+        <div className="w-full mt-4 flex flex-col gap-1 text-left max-w-xl">
+          <label className="text-[10px] font-black uppercase text-slate-500">URL Gambar Lembaga</label>
+          <input
+            type="text"
+            disabled={isLocked}
+            placeholder="Masukkan URL gambar..."
+            value={profile.gambar || ""}
+            onChange={(e) => handleFieldChange("gambar", e.target.value)}
+            className="w-full text-xs font-semibold border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-850 focus:outline-none focus:ring-2 focus:ring-[#280f91] disabled:bg-slate-50"
+          />
         </div>
       </div>
 

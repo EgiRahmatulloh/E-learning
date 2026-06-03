@@ -12,6 +12,9 @@ import {
   RotateCcw,
   Download,
   Upload,
+  List,
+  LayoutGrid,
+  ShieldAlert,
 } from "lucide-react";
 
 interface ManagerData {
@@ -77,6 +80,7 @@ const setSafeItem = (key: string, value: string) => {
 export default function ManagerManager() {
   const [managersList, setManagersList] = useState<ManagerData[]>([]);
   const [selectedManager, setSelectedManager] = useState<ManagerData>(DEFAULT_MANAGER);
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [isNew, setIsNew] = useState(false);
   const [isLocked, setIsLocked] = useState(true);
   const [uploadingFoto, setUploadingFoto] = useState(false);
@@ -89,6 +93,7 @@ export default function ManagerManager() {
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
   const toastTimeoutRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const csvInputRef = useRef<HTMLInputElement>(null);
   const [dbManagerIds, setDbManagerIds] = useState<Set<number>>(new Set());
 
   const fetchManagers = async () => {
@@ -452,6 +457,160 @@ export default function ManagerManager() {
     }
   };
 
+  // CSV Export
+  const handleExportCSV = () => {
+    if (managersList.length === 0) {
+      showToast("Tidak ada data untuk diekspor!");
+      return;
+    }
+    const headers = ["NAMA", "NIK", "JABATAN", "NUPTK", "TEMPAT TGL LAHIR", "JENIS KELAMIN", "AGAMA", "PENDIDIKAN", "EMAIL", "TANGGAL MULAI TUGAS", "NOMOR SK PENGANGKATAN", "LEMBAGA PENGANGKAT", "NOMOR SK PENUGASAN", "LEMBAGA PENUGAS", "ALAMAT", "FOTO"];
+    const rows = managersList.map(m => [
+      `"${(m.nama || "").replace(/"/g, '""')}"`,
+      `"${(m.nik || "").replace(/"/g, '""')}"`,
+      `"${(m.jabatan || "").replace(/"/g, '""')}"`,
+      `"${(m.nuptk || "").replace(/"/g, '""')}"`,
+      `"${(m.tempatTglLahir || "").replace(/"/g, '""')}"`,
+      `"${(m.jenisKelamin || "").replace(/"/g, '""')}"`,
+      `"${(m.agama || "").replace(/"/g, '""')}"`,
+      `"${(m.pendidikan || "").replace(/"/g, '""')}"`,
+      `"${(m.email || "").replace(/"/g, '""')}"`,
+      `"${(m.tanggalMulaiTugas || "").replace(/"/g, '""')}"`,
+      `"${(m.nomorSkPengangkatan || "").replace(/"/g, '""')}"`,
+      `"${(m.lembagaPengangkat || "").replace(/"/g, '""')}"`,
+      `"${(m.nomorSkPenugasan || "").replace(/"/g, '""')}"`,
+      `"${(m.lembagaPenugas || "").replace(/"/g, '""')}"`,
+      `"${(m.alamat || "").replace(/"/g, '""')}"`,
+      `"${(m.foto || "").replace(/"/g, '""')}"`
+    ]);
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "data_pengelola.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Berhasil mengunduh CSV!");
+  };
+
+  // CSV Import
+  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      if (!text) return;
+
+      const lines = text.split("\n");
+      const importedData: {
+        nama: string;
+        nik: string;
+        jabatan: string;
+        nuptk: string;
+        tempatTglLahir: string;
+        jenisKelamin: string;
+        agama: string;
+        pendidikan: string;
+        email: string;
+        tanggalMulaiTugas: string;
+        nomorSkPengangkatan: string;
+        lembagaPengangkat: string;
+        nomorSkPenugasan: string;
+        lembagaPenugas: string;
+        alamat: string;
+        foto: string;
+      }[] = [];
+
+      let startIdx = 0;
+      if (lines[0] && (lines[0].toLowerCase().includes("nama") || lines[0].toLowerCase().includes("name"))) {
+        startIdx = 1;
+      }
+
+      const parseCSVLine = (textLine: string): string[] => {
+        const result: string[] = [];
+        let current = "";
+        let inQuotes = false;
+        for (let i = 0; i < textLine.length; i++) {
+          const char = textLine[i];
+          if (char === '"') {
+            if (inQuotes && textLine[i + 1] === '"') {
+              current += '"';
+              i++;
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = "";
+          } else {
+            current += char;
+          }
+        }
+        result.push(current.trim());
+        return result;
+      };
+
+      for (let i = startIdx; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        const cleanCols = parseCSVLine(line);
+
+        if (cleanCols[0]) {
+          importedData.push({
+            nama: cleanCols[0],
+            nik: cleanCols[1] || "",
+            jabatan: cleanCols[2] || "",
+            nuptk: cleanCols[3] || "",
+            tempatTglLahir: cleanCols[4] || "",
+            jenisKelamin: cleanCols[5] || "",
+            agama: cleanCols[6] || "",
+            pendidikan: cleanCols[7] || "",
+            email: cleanCols[8] || "",
+            tanggalMulaiTugas: cleanCols[9] || "",
+            nomorSkPengangkatan: cleanCols[10] || "",
+            lembagaPengangkat: cleanCols[11] || "",
+            nomorSkPenugasan: cleanCols[12] || "",
+            lembagaPenugas: cleanCols[13] || "",
+            alamat: cleanCols[14] || "",
+            foto: cleanCols[15] || "",
+          });
+        }
+      }
+
+      if (importedData.length === 0) {
+        showToast("Format CSV kosong atau tidak valid!");
+        return;
+      }
+
+      const token = getSafeItem("token");
+      try {
+        const res = await fetch("/api/managers/import", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify(importedData),
+        });
+        const resData = await res.json();
+        if (resData.success) {
+          showToast(resData.message || "Berhasil mengimpor data!");
+          fetchManagers();
+        } else {
+          showToast(resData.message || "Gagal mengimpor data");
+        }
+      } catch (err) {
+        showToast("Kesalahan saat mengunggah CSV ke server.");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
   const handleDownloadData = () => {
     try {
       const jsonString = JSON.stringify(managersList, null, 2);
@@ -569,10 +728,18 @@ export default function ManagerManager() {
             Kelola data, NIK, dan peranan struktur pengelola PKBM Menuju Makmur.
           </p>
         </div>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={handleAddNew}
+            className="bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-md uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+          >
+            <UserPlus className="h-4 w-4" /> TAMBAH PENGELOLA
+          </Button>
+        </div>
       </div>
 
-      {/* FILTER & CONTROL BAR (Vibrant design matches mockup) */}
-      <div className="flex flex-wrap items-center gap-3 p-4 bg-slate-100/80 rounded-2xl border border-slate-200/40">
+      {/* FILTER & CONTROL BAR */}
+      <div className="flex flex-wrap items-center gap-3 p-5 bg-white rounded-2xl border border-slate-200/60 shadow-sm">
         
         {/* SYNC DATA OFFLINE */}
         {hasUnsyncedOfflineData && (
@@ -583,14 +750,6 @@ export default function ManagerManager() {
             🔄 SYNC OFFLINE
           </Button>
         )}
-
-        {/* ADD MANAGER BUTTON */}
-        <Button
-          onClick={handleAddNew}
-          className="bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs px-4 h-10 rounded-xl shadow-md uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
-        >
-          <UserPlus className="h-4 w-4" /> TAMBAH PENGELOLA
-        </Button>
 
         {/* SEARCH BY NAME */}
         <div className="relative flex-1 min-w-[200px]">
@@ -642,7 +801,32 @@ export default function ManagerManager() {
           <RotateCcw className="h-4 w-4" /> RESET
         </Button>
 
-        {/* UPLOAD DATA BUTTON */}
+        {/* CSV UPLOAD */}
+        <div className="relative">
+          <input
+            type="file"
+            accept=".csv"
+            ref={csvInputRef}
+            onChange={handleImportCSV}
+            className="hidden"
+          />
+          <Button
+            onClick={() => csvInputRef.current?.click()}
+            className="bg-purple-600 hover:bg-purple-700 text-white h-10 px-4 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
+          >
+            <Upload className="h-4 w-4" /> CSV UPLOAD
+          </Button>
+        </div>
+
+        {/* CSV DOWNLOAD */}
+        <Button
+          onClick={handleExportCSV}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white h-10 px-4 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
+        >
+          <Download className="h-4 w-4" /> CSV DOWNLOAD
+        </Button>
+
+        {/* UPLOAD DATA BUTTON (JSON) */}
         <div className="relative">
           <input
             type="file"
@@ -655,66 +839,143 @@ export default function ManagerManager() {
             onClick={() => document.getElementById("upload-json-data")?.click()}
             className="bg-purple-600 hover:bg-purple-700 text-white h-10 px-4 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
           >
-            <Upload className="h-4 w-4" /> UPLOAD
+            <Upload className="h-4 w-4" /> JSON UPLOAD
           </Button>
         </div>
 
-        {/* DOWNLOAD DATA BUTTON */}
+        {/* DOWNLOAD DATA BUTTON (JSON) */}
         <Button
           onClick={handleDownloadData}
           className="bg-purple-600 hover:bg-purple-700 text-white h-10 px-4 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
         >
-          <Download className="h-4 w-4" /> DOWNLOAD
+          <Download className="h-4 w-4" /> JSON DOWNLOAD
         </Button>
       </div>
 
-      {/* MANAGERS GRID CARDS (Direct design mapping from Canva screenshot) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {filteredList.map((m) => (
-          <div
-            key={m.id || m.nama}
-            onClick={() => handleSelectManager(m)}
-            className={`border-4 rounded-3xl p-3 flex flex-col items-center justify-between text-center relative overflow-hidden transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:shadow-lg ${
-              selectedManager.id === m.id && !isNew
-                ? "border-purple-600 bg-white"
-                : "border-purple-900 bg-[#f8fafc]"
-            }`}
-          >
-            {/* POSITION TAG IN CARD */}
-            <div className="absolute top-2 left-2 bg-purple-600 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md shadow-sm">
-              {m.jabatan || "STAF"}
+      {/* Grid Cards and Layout View */}
+      <div className="space-y-6">
+        {/* Managers List/Grid Card */}
+        <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div className="flex items-center gap-4">
+              <h3 className="font-black text-slate-500 uppercase text-xs tracking-widest">
+                Daftar Pengelola Lembaga ({filteredList.length})
+              </h3>
+              <div className="flex border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
+                <button
+                  onClick={() => setViewMode("cards")}
+                  className={`p-1.5 transition ${viewMode === "cards" ? "bg-white shadow-xs text-purple-650" : "text-slate-400 hover:text-slate-600"}`}
+                  title="Card View"
+                >
+                  <LayoutGrid size={16} />
+                </button>
+                <button
+                  onClick={() => setViewMode("table")}
+                  className={`p-1.5 transition ${viewMode === "table" ? "bg-white shadow-xs text-purple-650" : "text-slate-400 hover:text-slate-600"}`}
+                  title="Table View"
+                >
+                  <List size={16} />
+                </button>
+              </div>
             </div>
-
-            {/* AVATAR / IMAGE */}
-            <div className="w-full aspect-square flex items-center justify-center p-2 mt-4 relative">
-              {m.foto ? (
-                <img
-                  src={m.foto}
-                  alt={m.nama}
-                  className="w-full h-full object-contain rounded-2xl"
-                />
-              ) : (
-                <div className="w-full h-full rounded-2xl bg-cyan-100 flex items-center justify-center text-cyan-600 text-2xl font-black">
-                  {m.nama.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
-
-            {/* NAME IN GREEN VIBRANT TEXT */}
-            <div className="mt-3 w-full">
-              <span className="block text-sm font-black text-[#00bcd4] uppercase tracking-wide truncate max-w-full">
-                {m.nama || "BELUM ADA NAMA"}
-              </span>
-            </div>
-
-            {/* DETAIL PROFIL BUTTON */}
-            <Button
-              className="mt-3 w-full bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase tracking-wider py-1.5 h-8 rounded-xl shadow-inner transition-colors"
-            >
-              DETAIL PROFIL
-            </Button>
           </div>
-        ))}
+
+          <div className="p-6">
+            {filteredList.length > 0 ? (
+              viewMode === "cards" ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+                  {filteredList.map((m) => {
+                    const isActive = selectedManager.id === m.id && !isNew;
+                    return (
+                      <div
+                        key={m.id || m.nama}
+                        onClick={() => handleSelectManager(m)}
+                        className={`bg-white rounded-2xl overflow-hidden border-2 cursor-pointer transition flex flex-col group ${
+                          isActive ? "border-purple-600 shadow-md ring-2 ring-purple-100" : "border-slate-100 hover:border-purple-300"
+                        }`}
+                      >
+                        {/* Photo Frame with Position badge overlay */}
+                        <div className="h-44 bg-slate-50 relative overflow-hidden">
+                          {m.foto ? (
+                            <img
+                              src={m.foto}
+                              alt={m.nama}
+                              className="w-full h-full object-cover group-hover:scale-103 transition duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-400 font-black text-xs bg-slate-100">
+                              FOTO
+                            </div>
+                          )}
+                          {/* Position Tag overlay */}
+                          <div className="absolute top-3 left-3 z-10 max-w-[90%]">
+                            <span className="inline-block bg-purple-600 text-white font-extrabold text-[8px] px-2 py-0.5 rounded-full uppercase shadow-md tracking-wider truncate">
+                              {m.jabatan || "STAF"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Name info */}
+                        <div className="p-4 flex-1 space-y-1 bg-white">
+                          <h4 className="font-black text-[#280f91] text-xs group-hover:text-purple-600 transition truncate uppercase">
+                            {m.nama || "BELUM ADA NAMA"}
+                          </h4>
+                          <p className="text-slate-500 text-[10px] font-semibold uppercase">
+                            NIK: {m.nik || "-"}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Table View */
+                <div className="overflow-x-auto rounded-xl border border-slate-100">
+                  <table className="w-full text-left border-collapse min-w-[700px]">
+                    <thead>
+                      <tr className="bg-[#00badb] text-white font-black text-xs uppercase">
+                        <th className="p-4 w-16 text-center border-r border-[#009cb9]">No</th>
+                        <th className="p-4 border-r border-[#009cb9]">Nama</th>
+                        <th className="p-4 border-r border-[#009cb9] w-48 text-center">Jabatan</th>
+                        <th className="p-4 border-r border-[#009cb9] w-48 text-center">NIK</th>
+                        <th className="p-4 border-r border-[#009cb9] w-36 text-center">Pendidikan</th>
+                        <th className="p-4 text-center">Email</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                      {filteredList.map((m, idx) => (
+                        <tr
+                          key={m.id || m.nama}
+                          onClick={() => handleSelectManager(m)}
+                          className={`hover:bg-cyan-50/20 cursor-pointer transition ${
+                            selectedManager.id === m.id && !isNew ? "bg-purple-50/75 text-purple-900 font-bold" : ""
+                          }`}
+                        >
+                          <td className="p-4 text-center text-slate-500 font-mono border-r border-slate-100">{idx + 1}</td>
+                          <td className="p-4 font-bold text-slate-800 border-r border-slate-100">{m.nama || "-"}</td>
+                          <td className="p-4 text-center border-r border-slate-100 font-bold text-purple-700">{m.jabatan || "-"}</td>
+                          <td className="p-4 text-center border-r border-slate-100 font-mono">{m.nik || "-"}</td>
+                          <td className="p-4 text-center border-r border-slate-100">{m.pendidikan || "-"}</td>
+                          <td className="p-4 text-center text-slate-500 font-mono">{m.email || "-"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            ) : (
+              <div className="max-w-md mx-auto bg-white border border-slate-100 rounded-3xl p-10 text-center space-y-4 shadow-sm">
+                <div className="h-16 w-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto">
+                  <ShieldAlert className="h-8 w-8 text-orange-600" />
+                </div>
+                <h3 className="text-base font-black text-slate-800 uppercase tracking-wider">Pengelola Tidak Ditemukan</h3>
+                <p className="text-slate-500 font-bold text-xs">
+                  Belum ada data pengelola yang sesuai dengan filter pencarian.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* DETAIL PROFILE AND FORM EDIT PANEL POPUP MODAL */}
@@ -722,11 +983,6 @@ export default function ManagerManager() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in duration-300">
           {/* Backdrop Click Closes Popup */}
           <div className="absolute inset-0 cursor-default" onClick={() => { 
-            if (!isLocked) {
-              if (!confirm("Anda sedang mengedit data. Apakah Anda yakin ingin menutup form dan membuang perubahan?")) {
-                return;
-              }
-            }
             setIsFormOpen(false); 
             setIsLocked(true); 
             setIsNew(false); 
@@ -737,11 +993,6 @@ export default function ManagerManager() {
             {/* Elegant Close Button */}
             <button
               onClick={() => { 
-                if (!isLocked) {
-                  if (!confirm("Anda sedang mengedit data. Apakah Anda yakin ingin menutup form dan membuang perubahan?")) {
-                    return;
-                  }
-                }
                 setIsFormOpen(false); 
                 setIsLocked(true); 
                 setIsNew(false); 
@@ -1087,6 +1338,17 @@ export default function ManagerManager() {
                     </span>
                   </>
                 )}
+              </div>
+              <div className="w-full mt-4 flex flex-col gap-1 text-left">
+                <label className="text-[10px] font-black uppercase text-cyan-50">URL Foto Pengelola</label>
+                <input
+                  type="text"
+                  disabled={isLocked}
+                  placeholder="Masukkan URL foto..."
+                  value={selectedManager.foto || ""}
+                  onChange={(e) => handleFieldChange("foto", e.target.value)}
+                  className="w-full text-xs font-semibold border-none rounded-lg px-3 py-2 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#9c27b0] disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
+                />
               </div>
             </div>
           </div>

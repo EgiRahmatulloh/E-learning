@@ -1,20 +1,51 @@
+import { useState, useEffect } from "react";
+
 interface RoleStatsGridProps {
   userRole: string;
 }
 
 export default function RoleStatsGrid({ userRole }: RoleStatsGridProps) {
+  const [stats, setStats] = useState<{
+    tutors: number;
+    students: number;
+    rombel: number;
+    products: number;
+    paketA: number;
+    paketB: number;
+    paketC: number;
+    alumni: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (userRole === "admin") {
+      const token = localStorage.getItem("token");
+      fetch("/api/dashboard-stats", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.data) {
+            setStats(data.data);
+          }
+        })
+        .catch((err) => console.error("Error fetching stats:", err));
+    }
+  }, [userRole]);
+
   // Role-specific stats
   let roleStats: { label: string; value: string; color: string; status?: string }[] = [];
   if (userRole === "admin") {
     roleStats = [
-      { label: "JUMLAH TUTOR", value: "12", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
-      { label: "JUMLAH WARGA BELAJAR", value: "350", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
-      { label: "JUMLAH ROMBEL", value: "9", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
-      { label: "JUMLAH PRODUK WB", value: "24", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
-      { label: "JUMLAH WB PAKET A", value: "85", color: "from-cyan-400 to-teal-500", status: "Siswa" },
-      { label: "JUMLAH WB PAKET B", value: "120", color: "from-cyan-400 to-teal-500", status: "Siswa" },
-      { label: "JUMLAH WB PAKET C", value: "145", color: "from-cyan-400 to-teal-500", status: "Siswa" },
-      { label: "JUMLAH ALUMNI", value: "580", color: "from-cyan-400 to-teal-500", status: "Lulus" },
+      { label: "JUMLAH TUTOR", value: stats ? String(stats.tutors) : "12", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
+      { label: "JUMLAH WARGA BELAJAR", value: stats ? String(stats.students) : "350", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
+      { label: "JUMLAH ROMBEL", value: stats ? String(stats.rombel) : "9", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
+      { label: "JUMLAH PRODUK WB", value: stats ? String(stats.products) : "24", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
+      { label: "JUMLAH WB PAKET A", value: stats ? String(stats.paketA) : "85", color: "from-cyan-400 to-teal-500", status: "Siswa" },
+      { label: "JUMLAH WB PAKET B", value: stats ? String(stats.paketB) : "120", color: "from-cyan-400 to-teal-500", status: "Siswa" },
+      { label: "JUMLAH WB PAKET C", value: stats ? String(stats.paketC) : "145", color: "from-cyan-400 to-teal-500", status: "Siswa" },
+      { label: "JUMLAH ALUMNI", value: stats ? String(stats.alumni) : "580", color: "from-cyan-400 to-teal-500", status: "Lulus" },
       { label: "JUMLAH PENGUNJUNG", value: "1.247", color: "from-cyan-500 to-sky-500", status: "Hari Ini" },
     ];
   } else if (userRole === "tutor") {
@@ -59,18 +90,6 @@ export default function RoleStatsGrid({ userRole }: RoleStatsGridProps) {
           </div>
         </div>
       ))}
-
-      {/* Info / Catatan Card */}
-      <div className="col-span-2 sm:col-span-2 lg:col-span-4 relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200/60 p-6 shadow-xs">
-        <div className="absolute right-4 top-4 text-4xl opacity-30 select-none">📌</div>
-        <div className="space-y-2">
-          <h4 className="text-sm font-black text-amber-800 uppercase tracking-wider">Catatan</h4>
-          <p className="text-sm text-amber-700 font-semibold leading-relaxed">
-            {/* TODO: Ganti data hardcoded dengan fetch dari API */}
-            Data statistik di atas masih menggunakan data placeholder. Integrasi dengan database akan segera tersedia.
-          </p>
-        </div>
-      </div>
     </div>
   );
 }

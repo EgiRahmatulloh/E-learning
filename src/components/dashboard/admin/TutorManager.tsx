@@ -1,13 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { ShieldAlert, Search, Upload, Sparkles, Plus, Trash2, Save, X, Eye, EyeOff } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogClose
-} from "@/components/ui/dialog";
+import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, List, LayoutGrid, Filter, RotateCcw } from "lucide-react";
 
 interface Tutor {
   id: number;
@@ -34,6 +27,8 @@ interface Tutor {
 export default function TutorManager() {
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
   // Search & Filters
   const [searchName, setSearchName] = useState("");
@@ -71,6 +66,7 @@ export default function TutorManager() {
 
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchTutors();
@@ -99,6 +95,162 @@ export default function TutorManager() {
     setSearchNik("");
     setFilterName("");
     setFilterNik("");
+  };
+
+  // CSV Export
+  const handleExportCSV = () => {
+    if (tutors.length === 0) {
+      alert("Tidak ada data untuk diekspor!");
+      return;
+    }
+    const headers = ["NAMA", "TUTOR MAPEL", "PROGRAM", "NUPTK", "TEMPAT TGL LAHIR", "JENIS KELAMIN", "AGAMA", "PENDIDIKAN", "EMAIL", "NIK", "ALAMAT", "FOTO", "TANGGAL MULAI TUGAS", "NOMOR SK PENGANGKATAN", "LEMBAGA PENGANGKAT", "NOMOR SK PENUGASAN", "LEMBAGA PENUGAS"];
+    const rows = tutors.map(t => [
+      `"${(t.nama || "").replace(/"/g, '""')}"`,
+      `"${(t.tutorMapel || "").replace(/"/g, '""')}"`,
+      `"${(t.program || "").replace(/"/g, '""')}"`,
+      `"${(t.nuptk || "").replace(/"/g, '""')}"`,
+      `"${(t.tempatTglLahir || "").replace(/"/g, '""')}"`,
+      `"${(t.jenisKelamin || "").replace(/"/g, '""')}"`,
+      `"${(t.agama || "").replace(/"/g, '""')}"`,
+      `"${(t.pendidikan || "").replace(/"/g, '""')}"`,
+      `"${(t.email || "").replace(/"/g, '""')}"`,
+      `"${(t.nik || "").replace(/"/g, '""')}"`,
+      `"${(t.alamat || "").replace(/"/g, '""')}"`,
+      `"${(t.foto || "").replace(/"/g, '""')}"`,
+      `"${(t.tanggalMulaiTugas || "").replace(/"/g, '""')}"`,
+      `"${(t.nomorSkPengangkatan || "").replace(/"/g, '""')}"`,
+      `"${(t.lembagaPengangkat || "").replace(/"/g, '""')}"`,
+      `"${(t.nomorSkPenugasan || "").replace(/"/g, '""')}"`,
+      `"${(t.lembagaPenugas || "").replace(/"/g, '""')}"`
+    ]);
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "tutor.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // CSV Import
+  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      if (!text) return;
+
+      const lines = text.split("\n");
+      const importedData: {
+        nama: string;
+        tutorMapel: string;
+        program: string;
+        nuptk: string;
+        tempatTglLahir: string;
+        jenisKelamin: string;
+        agama: string;
+        pendidikan: string;
+        email: string;
+        nik: string;
+        alamat: string;
+        foto: string;
+        tanggalMulaiTugas: string;
+        nomorSkPengangkatan: string;
+        lembagaPengangkat: string;
+        nomorSkPenugasan: string;
+        lembagaPenugas: string;
+      }[] = [];
+
+      let startIdx = 0;
+      if (lines[0] && (lines[0].toLowerCase().includes("nama") || lines[0].toLowerCase().includes("name"))) {
+        startIdx = 1;
+      }
+
+      const parseCSVLine = (textLine: string): string[] => {
+        const result: string[] = [];
+        let current = "";
+        let inQuotes = false;
+        for (let i = 0; i < textLine.length; i++) {
+          const char = textLine[i];
+          if (char === '"') {
+            if (inQuotes && textLine[i + 1] === '"') {
+              current += '"';
+              i++;
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = "";
+          } else {
+            current += char;
+          }
+        }
+        result.push(current.trim());
+        return result;
+      };
+
+      for (let i = startIdx; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        const cleanCols = parseCSVLine(line);
+
+        if (cleanCols[0] && cleanCols[1]) {
+          importedData.push({
+            nama: cleanCols[0],
+            tutorMapel: cleanCols[1],
+            program: cleanCols[2] || "",
+            nuptk: cleanCols[3] || "",
+            tempatTglLahir: cleanCols[4] || "",
+            jenisKelamin: cleanCols[5] || "",
+            agama: cleanCols[6] || "",
+            pendidikan: cleanCols[7] || "",
+            email: cleanCols[8] || "",
+            nik: cleanCols[9] || "",
+            alamat: cleanCols[10] || "",
+            foto: cleanCols[11] || "",
+            tanggalMulaiTugas: cleanCols[12] || "",
+            nomorSkPengangkatan: cleanCols[13] || "",
+            lembagaPengangkat: cleanCols[14] || "",
+            nomorSkPenugasan: cleanCols[15] || "",
+            lembagaPenugas: cleanCols[16] || "",
+          });
+        }
+      }
+
+      if (importedData.length === 0) {
+        alert("Format CSV kosong atau tidak valid! Pastikan Nama dan Tutor Mapel tidak kosong.");
+        return;
+      }
+
+      const token = localStorage.getItem("token");
+      try {
+        const res = await fetch("/api/tutors/import", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify(importedData),
+        });
+        const resData = await res.json();
+        if (resData.success) {
+          alert(resData.message || "Berhasil mengimpor data!");
+          fetchTutors();
+        } else {
+          alert(resData.message || "Gagal mengimpor data");
+        }
+      } catch (err) {
+        alert("Kesalahan saat mengunggah CSV ke server.");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
   };
 
   const openAddForm = () => {
@@ -265,448 +417,551 @@ export default function TutorManager() {
   return (
     <div className="space-y-6">
       
-      {/* Top Header Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-xs">
-        <div className="space-y-1 text-left">
-          <h1 className="text-2xl font-black text-[#1a0b70] uppercase flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-[#9c27b0]" /> Manajemen Tutor
-          </h1>
-          <p className="text-slate-500 text-xs font-semibold">
+      {/* HEADER SECTION */}
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
+        <div>
+          <h2 className="text-xl font-black text-cyan-900 tracking-tight flex items-center gap-2">
+            <span>👨‍🏫</span> KELOLA WEBSITE DATA TUTOR
+          </h2>
+          <p className="text-xs text-slate-500 font-semibold mt-1">
             Kelola tenaga pendidik, bidang keahlian, tugas mengajar, NIK, dan kredensial tutor.
           </p>
         </div>
-
-        <div className="flex gap-2">
+        <div className="flex items-center gap-3 flex-wrap">
+          <input
+            type="file"
+            ref={importInputRef}
+            className="hidden"
+            accept=".csv"
+            onChange={handleImportCSV}
+          />
+          <Button
+            onClick={() => importInputRef.current?.click()}
+            className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95"
+          >
+            <Upload className="h-4 w-4" /> UPLOAD CSV
+          </Button>
+          <Button
+            onClick={handleExportCSV}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md flex items-center gap-1.5 transition-all active:scale-95"
+          >
+            <Download className="h-4 w-4" /> DOWNLOAD CSV
+          </Button>
           <Button
             onClick={openAddForm}
-            className="rounded-xl bg-[#9c27b0] hover:bg-[#ff6105] text-white font-extrabold text-xs px-5 h-11 cursor-pointer transition-all shadow-md flex items-center gap-2"
+            className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
           >
             <Plus className="h-4 w-4" /> TAMBAH TUTOR
           </Button>
         </div>
       </div>
 
-      {/* FILTER & SEARCH PANEL (Matches Mockup 2 style buttons) */}
-      <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-xs">
+      {/* FILTER & SEARCH PANEL */}
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-center">
           <div className="relative">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <Search className="h-4 w-4" />
+            </span>
             <input
               type="text"
-              placeholder="CARI BERDASARKAN NAMA"
+              placeholder="CARI NAMA TUTOR"
               value={searchName}
               onChange={(e) => setSearchName(e.target.value)}
-              className="w-full h-11 pl-4 pr-10 text-xs font-bold border border-slate-200 rounded-xl bg-slate-50 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
+              className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner uppercase"
             />
-            <Search className="absolute right-3.5 top-3.5 h-4 w-4 text-slate-400" />
           </div>
 
           <div className="relative">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <Search className="h-4 w-4" />
+            </span>
             <input
               type="text"
-              placeholder="CARI BERDASARKAN NIK"
+              placeholder="CARI NIK"
               value={searchNik}
               onChange={(e) => setSearchNik(e.target.value)}
-              className="w-full h-11 pl-4 pr-10 text-xs font-bold border border-slate-200 rounded-xl bg-slate-50 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
+              className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner"
             />
-            <Search className="absolute right-3.5 top-3.5 h-4 w-4 text-slate-400" />
           </div>
 
           <div className="flex gap-2 col-span-1 sm:col-span-2">
             <Button
               onClick={handleSearch}
-              className="flex-1 h-11 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-black text-xs cursor-pointer tracking-wider"
+              className="flex-1 h-10 rounded-xl bg-[#00badb] hover:bg-[#009cb9] text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
             >
-              FILTER
+              <Filter className="h-4 w-4" /> FILTER
             </Button>
             <Button
               onClick={handleReset}
-              className="flex-1 h-11 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs cursor-pointer tracking-wider"
+              className="flex-1 h-10 rounded-xl bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
             >
-              RESET
+              <RotateCcw className="h-4 w-4" /> RESET
             </Button>
           </div>
         </div>
       </div>
 
-      {/* TUTORS GRID (Mockup 2 layout of tutor cards) */}
-      {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 space-y-3 bg-white rounded-3xl border border-slate-100">
-          <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#9c27b0] border-t-transparent" />
-          <span className="text-xs font-extrabold text-[#9c27b0] uppercase tracking-widest">Memuat data tutor...</span>
-        </div>
-      ) : filteredTutors.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {filteredTutors.map((tutor) => (
-            <div
-              key={tutor.id}
-              className="bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 border border-slate-100 transition-all p-4 flex flex-col justify-between"
-            >
-              {/* Photo Frame with purple subject badge overlay */}
-              <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden bg-slate-100 mb-4 border border-slate-200">
-                {tutor.foto ? (
-                  <img
-                    src={tutor.foto}
-                    alt={tutor.nama}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-slate-50 to-slate-200 text-slate-300">
-                    {/* Default Silhouette icon */}
-                    <svg className="w-24 h-24 mt-4 opacity-50" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                    </svg>
-                  </div>
-                )}
-                {/* Purple Subject Overlay Tag */}
-                <div className="absolute top-3 left-3 z-10 max-w-[90%]">
-                  <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[9px] px-3.5 py-1.5 rounded-full uppercase shadow-md tracking-wider truncate">
-                    {tutor.tutorMapel}
-                  </span>
-                </div>
-              </div>
-
-              {/* Name and Detail Profil button */}
-              <div className="space-y-3.5 text-center">
-                <h3 className="text-sm font-black text-slate-800 leading-tight uppercase line-clamp-1 px-1">
-                  {tutor.nama}
-                </h3>
-                
-                <Button
-                  onClick={() => openEditForm(tutor)}
-                  className="w-full rounded-xl bg-[#9c27b0] hover:bg-[#ff6105] text-white font-extrabold text-[10px] uppercase py-2 h-9 cursor-pointer transition-all shadow-sm"
+      {/* Grid Cards and Layout View */}
+      <div className="space-y-6">
+        {/* Tutor List/Grid Card */}
+        <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div className="flex items-center gap-4">
+              <h3 className="font-black text-slate-500 uppercase text-xs tracking-widest">
+                Daftar Tutor ({filteredTutors.length})
+              </h3>
+              <div className="flex border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
+                <button
+                  onClick={() => setViewMode("cards")}
+                  className={`p-1.5 transition ${viewMode === "cards" ? "bg-white shadow-xs text-[#9c27b0]" : "text-slate-400 hover:text-slate-600"}`}
+                  title="Card View"
                 >
-                  DETAIL PROFIL
-                </Button>
+                  <LayoutGrid size={16} />
+                </button>
+                <button
+                  onClick={() => setViewMode("table")}
+                  className={`p-1.5 transition ${viewMode === "table" ? "bg-white shadow-xs text-[#9c27b0]" : "text-slate-400 hover:text-slate-600"}`}
+                  title="Table View"
+                >
+                  <List size={16} />
+                </button>
               </div>
             </div>
-          ))}
-        </div>
-      ) : (
-        <div className="max-w-md mx-auto bg-white border border-slate-100 rounded-3xl p-10 text-center space-y-4 shadow-sm">
-          <div className="h-16 w-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto">
-            <ShieldAlert className="h-8 w-8 text-orange-600" />
           </div>
-          <h3 className="text-base font-black text-slate-800 uppercase tracking-wider">Tutor Tidak Ditemukan</h3>
-          <p className="text-slate-500 font-bold text-xs">
-            Belum ada data tutor yang sesuai dengan filter pencarian.
-          </p>
+
+          <div className="p-6">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-20 space-y-3">
+                <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#9c27b0] border-t-transparent" />
+                <span className="text-xs font-extrabold text-[#9c27b0] uppercase tracking-widest">Memuat data tutor...</span>
+              </div>
+            ) : filteredTutors.length > 0 ? (
+              viewMode === "cards" ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+                  {filteredTutors.map((tutor) => (
+                    <div
+                      key={tutor.id}
+                      onClick={() => openEditForm(tutor)}
+                      className="bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-purple-300 transition-all flex flex-col group cursor-pointer hover:shadow-md"
+                    >
+                      {/* Photo Frame with Subject badge overlay */}
+                      <div className="h-44 bg-slate-50 relative overflow-hidden">
+                        {tutor.foto ? (
+                          <img
+                            src={tutor.foto}
+                            alt={tutor.nama}
+                            className="w-full h-full object-cover group-hover:scale-103 transition duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-400 font-black text-xs bg-slate-100">
+                            FOTO
+                          </div>
+                        )}
+                        {/* Purple Subject Overlay Tag */}
+                        <div className="absolute top-3 left-3 z-10 max-w-[90%]">
+                          <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[8px] px-2 py-0.5 rounded-full uppercase shadow-md tracking-wider truncate">
+                            {tutor.tutorMapel}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Name info */}
+                      <div className="p-4 flex-1 space-y-1 bg-white">
+                        <h4 className="font-black text-[#280f91] text-xs group-hover:text-[#9c27b0] transition truncate uppercase">
+                          {tutor.nama}
+                        </h4>
+                        <p className="text-slate-500 text-[10px] font-semibold uppercase">
+                          {tutor.nuptk || "NUPTK: -"}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* Table View */
+                <div className="overflow-x-auto rounded-xl border border-slate-100">
+                  <table className="w-full text-left border-collapse min-w-[700px]">
+                    <thead>
+                      <tr className="bg-[#00badb] text-white font-black text-xs uppercase">
+                        <th className="p-4 w-16 text-center border-r border-[#009cb9]">No</th>
+                        <th className="p-4 border-r border-[#009cb9]">Nama</th>
+                        <th className="p-4 border-r border-[#009cb9] w-48 text-center">Mata Pelajaran</th>
+                        <th className="p-4 border-r border-[#009cb9] w-48 text-center">NUPTK</th>
+                        <th className="p-4 border-r border-[#009cb9] w-36 text-center">Pendidikan</th>
+                        <th className="p-4 text-center">Email</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                      {filteredTutors.map((tutor, idx) => (
+                        <tr
+                          key={tutor.id}
+                          onClick={() => openEditForm(tutor)}
+                          className="hover:bg-cyan-50/20 cursor-pointer transition"
+                        >
+                          <td className="p-4 text-center text-slate-500 font-mono border-r border-slate-100">{idx + 1}</td>
+                          <td className="p-4 font-bold text-slate-800 border-r border-slate-100">{tutor.nama}</td>
+                          <td className="p-4 text-center border-r border-slate-100 font-bold text-purple-700">{tutor.tutorMapel}</td>
+                          <td className="p-4 text-center border-r border-slate-100 font-mono">{tutor.nuptk || "-"}</td>
+                          <td className="p-4 text-center border-r border-slate-100">{tutor.pendidikan || "-"}</td>
+                          <td className="p-4 text-center text-slate-500 font-mono">{tutor.email || "-"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            ) : (
+              <div className="max-w-md mx-auto bg-white border border-slate-100 rounded-3xl p-10 text-center space-y-4 shadow-sm">
+                <div className="h-16 w-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto">
+                  <ShieldAlert className="h-8 w-8 text-orange-600" />
+                </div>
+                <h3 className="text-base font-black text-slate-800 uppercase tracking-wider">Tutor Tidak Ditemukan</h3>
+                <p className="text-slate-500 font-bold text-xs">
+                  Belum ada data tutor yang sesuai dengan filter pencarian.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
 
       {/* FORM DIALOG: ADD/EDIT TUTOR & VIEW DETAIL PROFIL (Mockup 2 Tampilan Tambah Tutor) */}
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="sm:max-w-4xl bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl text-left overflow-y-auto max-h-[90vh]">
-          <DialogHeader className="border-b border-slate-100 pb-3">
-            <DialogTitle className="text-lg font-black text-[#1a0b70] uppercase flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-[#9c27b0]" /> 
-              {isAdding ? "Tambah Tutor Baru" : `Detail Profil / Edit Tutor: ${selectedTutor?.nama}`}
-            </DialogTitle>
-          </DialogHeader>
+      {formOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setFormOpen(false)} />
 
-          <form onSubmit={handleSave} className="py-4 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              
-              {/* LEFT & CENTER COLS: inputs list (Matches mockup 2 fields) */}
-              <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider">NAMA</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Masukkan nama lengkap tutor"
-                    value={formData.nama || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, nama: e.target.value }))}
-                    className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 font-semibold"
-                  />
-                </div>
+          {/* Form Container */}
+          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10 max-h-[90vh] flex flex-col">
+            {/* Form Column (Cyan Background) */}
+            <div className="bg-[#00badb] p-6 relative text-white flex-1 overflow-y-auto">
+              {/* Close Button */}
+              <button
+                onClick={() => setFormOpen(false)}
+                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
 
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider">TUTOR MAPEL</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Contoh: Tutor Ekonomi / Tutor PJOK"
-                    value={formData.tutorMapel || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, tutorMapel: e.target.value }))}
-                    className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 font-semibold"
-                  />
-                </div>
-
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider">PROGRAM (TUGAS)</label>
-                  <input
-                    type="text"
-                    placeholder="Contoh: PAKET B / PAKET C"
-                    value={formData.program || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, program: e.target.value }))}
-                    className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 font-semibold"
-                  />
-                </div>
-
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider">NUPTK</label>
-                  <input
-                    type="text"
-                    placeholder="Masukkan 16 digit NUPTK (jika ada)"
-                    value={formData.nuptk || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, nuptk: e.target.value }))}
-                    className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 font-semibold"
-                  />
-                </div>
-
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider">TEMPAT, TGL. LAHIR</label>
-                  <input
-                    type="text"
-                    placeholder="Contoh: Ciamis, 15-08-1988"
-                    value={formData.tempatTglLahir || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, tempatTglLahir: e.target.value }))}
-                    className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 font-semibold"
-                  />
-                </div>
-
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider">JENIS KELAMIN</label>
-                  <select
-                    value={formData.jenisKelamin || "Laki-laki"}
-                    onChange={(e) => setFormData(prev => ({ ...prev, jenisKelamin: e.target.value }))}
-                    className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 font-bold bg-white"
-                  >
-                    <option value="Laki-laki">Laki-laki</option>
-                    <option value="Perempuan">Perempuan</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider">AGAMA</label>
-                  <input
-                    type="text"
-                    placeholder="Masukkan agama"
-                    value={formData.agama || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, agama: e.target.value }))}
-                    className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 font-semibold"
-                  />
-                </div>
-
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider">PENDIDIKAN</label>
-                  <input
-                    type="text"
-                    placeholder="Contoh: S1 Pendidikan Olahraga"
-                    value={formData.pendidikan || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, pendidikan: e.target.value }))}
-                    className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 font-semibold"
-                  />
-                </div>
-
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider">EMAIL</label>
-                  <input
-                    type="email"
-                    placeholder="Masukkan alamat email tutor"
-                    value={formData.email || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 font-semibold"
-                  />
-                </div>
-
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider">NIK</label>
-                  <input
-                    type="text"
-                    placeholder="Masukkan 16 digit NIK tutor"
-                    value={formData.nik || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, nik: e.target.value }))}
-                    className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 font-semibold"
-                  />
-                </div>
-
-                <div className="space-y-1.5 text-left sm:col-span-2">
-                  <label className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider">ALAMAT</label>
-                  <textarea
-                    placeholder="Alamat tempat tinggal lengkap tutor"
-                    value={formData.alamat || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, alamat: e.target.value }))}
-                    className="w-full h-16 p-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 font-semibold"
-                  />
-                </div>
-
-                <div className="space-y-1.5 text-left sm:col-span-2">
-                  <label className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider flex items-center justify-between">
-                    <span>PASSWORD</span>
-                    <span className="text-[9px] text-slate-400 font-normal normal-case">
-                      {!isAdding && "(Kosongkan jika tidak ingin mengubah)"}
-                    </span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      placeholder={isAdding ? "Buat password login tutor" : "Masukkan password baru jika ingin diubah"}
-                      value={formData.password || ""}
-                      onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                      className="w-full h-10 pl-3 pr-10 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 font-semibold"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-
+              <div className="mb-6">
+                <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                  {isAdding ? "TAMBAH TUTOR BARU" : `EDIT TUTOR: ${selectedTutor?.nama}`}
+                </span>
               </div>
 
-              {/* RIGHT COL: Drag & Drop Photo + Additional SK info */}
-              <div className="space-y-5">
-                
-                {/* PHOTO UPLOADER (Mockup 2 area style) */}
-                <div className="space-y-2 text-left">
-                  <label className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider">FOTO TUTOR</label>
-                  <div
-                    onDragEnter={handleDrag}
-                    onDragOver={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDrop={handleDrop}
-                    className={`border-2 border-dashed rounded-2xl p-4 text-center transition-all ${
-                      dragActive ? "border-[#9c27b0] bg-purple-50/50" : "border-slate-200 bg-slate-50"
-                    } h-56 flex flex-col justify-center items-center relative overflow-hidden`}
-                  >
-                    {formData.foto ? (
-                      <div className="w-full h-full relative group">
-                        <img
-                          src={formData.foto}
-                          alt="Tutor Preview"
-                          className="w-full h-full object-cover rounded-xl"
+              <form onSubmit={handleSave} className="space-y-6 text-slate-800">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                  
+                  {/* LEFT 3 COLS: FORM INPUT PANEL */}
+                  <div className="lg:col-span-3 space-y-4">
+                    
+                    {/* NAMA */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">NAMA</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Masukkan nama lengkap tutor"
+                        value={formData.nama || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, nama: e.target.value }))}
+                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                      />
+                    </div>
+
+                    {/* NIK */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">NIK</label>
+                      <input
+                        type="text"
+                        placeholder="Masukkan 16 digit NIK tutor"
+                        value={formData.nik || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, nik: e.target.value }))}
+                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                      />
+                    </div>
+
+                    {/* TUTOR MAPEL */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">TUTOR MAPEL</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Contoh: Tutor Ekonomi / Tutor PJOK"
+                        value={formData.tutorMapel || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, tutorMapel: e.target.value }))}
+                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                      />
+                    </div>
+
+                    {/* PROGRAM (TUGAS) */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">PROGRAM (TUGAS)</label>
+                      <input
+                        type="text"
+                        placeholder="Contoh: PAKET B / PAKET C"
+                        value={formData.program || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, program: e.target.value }))}
+                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                      />
+                    </div>
+
+                    {/* NUPTK */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">NUPTK</label>
+                      <input
+                        type="text"
+                        placeholder="Masukkan 16 digit NUPTK (jika ada)"
+                        value={formData.nuptk || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, nuptk: e.target.value }))}
+                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                      />
+                    </div>
+
+                    {/* TEMPAT, TGL. LAHIR */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">TEMPAT, TGL. LAHIR</label>
+                      <input
+                        type="text"
+                        placeholder="Contoh: Ciamis, 15-08-1988"
+                        value={formData.tempatTglLahir || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, tempatTglLahir: e.target.value }))}
+                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                      />
+                    </div>
+
+                    {/* JENIS KELAMIN */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">JENIS KELAMIN</label>
+                      <select
+                        value={formData.jenisKelamin || "Laki-laki"}
+                        onChange={(e) => setFormData(prev => ({ ...prev, jenisKelamin: e.target.value }))}
+                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                      >
+                        <option value="Laki-laki">Laki-laki</option>
+                        <option value="Perempuan">Perempuan</option>
+                      </select>
+                    </div>
+
+                    {/* AGAMA */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">AGAMA</label>
+                      <input
+                        type="text"
+                        placeholder="Masukkan agama"
+                        value={formData.agama || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, agama: e.target.value }))}
+                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                      />
+                    </div>
+
+                    {/* PENDIDIKAN */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">PENDIDIKAN</label>
+                      <input
+                        type="text"
+                        placeholder="Contoh: S1 Pendidikan Olahraga"
+                        value={formData.pendidikan || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, pendidikan: e.target.value }))}
+                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                      />
+                    </div>
+
+                    {/* EMAIL */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">EMAIL</label>
+                      <input
+                        type="email"
+                        placeholder="Masukkan alamat email tutor"
+                        value={formData.email || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                      />
+                    </div>
+
+                    {/* TGL MULAI TUGAS */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">TGL MULAI TUGAS</label>
+                      <input
+                        type="text"
+                        placeholder="Contoh: 2018-07-15"
+                        value={formData.tanggalMulaiTugas || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, tanggalMulaiTugas: e.target.value }))}
+                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                      />
+                    </div>
+
+                    {/* NOMOR SK PENGANGKATAN */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">NOMOR SK PENGANGKATAN</label>
+                      <input
+                        type="text"
+                        placeholder="Nomor SK Pengangkatan"
+                        value={formData.nomorSkPengangkatan || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, nomorSkPengangkatan: e.target.value }))}
+                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                      />
+                    </div>
+
+                    {/* LEMBAGA PENGANGKAT */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">LEMBAGA PENGANGKAT</label>
+                      <input
+                        type="text"
+                        placeholder="Dinas Pendidikan / Yayasan"
+                        value={formData.lembagaPengangkat || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, lembagaPengangkat: e.target.value }))}
+                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                      />
+                    </div>
+
+                    {/* NOMOR SK PENUGASAN */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">NOMOR SK PENUGASAN</label>
+                      <input
+                        type="text"
+                        placeholder="Nomor SK Penugasan"
+                        value={formData.nomorSkPenugasan || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, nomorSkPenugasan: e.target.value }))}
+                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                      />
+                    </div>
+
+                    {/* LEMBAGA PENUGAS */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">LEMBAGA PENUGAS</label>
+                      <input
+                        type="text"
+                        placeholder="Lembaga Penugas"
+                        value={formData.lembagaPenugas || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, lembagaPenugas: e.target.value }))}
+                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                      />
+                    </div>
+
+                    {/* ALAMAT */}
+                    <div className="flex flex-col md:flex-row md:items-start gap-3">
+                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0 md:pt-2">ALAMAT</label>
+                      <textarea
+                        placeholder="Alamat tempat tinggal lengkap tutor"
+                        value={formData.alamat || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, alamat: e.target.value }))}
+                        className="flex-1 p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
+                        rows={2}
+                      />
+                    </div>
+
+                    {/* PASSWORD */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">
+                        PASSWORD {!isAdding && "(KOSONGKAN JIKA TIDAK INGIN MENGUBAH)"}
+                      </label>
+                      <div className="flex-1 relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          placeholder={isAdding ? "Buat password login tutor" : "Masukkan password baru jika ingin diubah"}
+                          value={formData.password || ""}
+                          onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                          className="w-full h-9 pl-3 pr-10 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         />
                         <button
                           type="button"
-                          onClick={() => setFormData((prev) => ({ ...prev, foto: "" }))}
-                          className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 shadow-md opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                         >
-                          <X className="h-3 w-3" />
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
-                    ) : (
-                      <>
-                        <Upload className="h-8 w-8 text-slate-400 mb-2" />
-                        <p className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider">DRAG AND DROP A FILE</p>
-                        <p className="text-[9px] text-slate-400 font-semibold uppercase mt-0.5">HERE OR CLICK</p>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileInput}
-                          className="absolute inset-0 opacity-0 cursor-pointer"
-                          disabled={uploading}
-                        />
-                      </>
-                    )}
-                    {uploading && (
-                      <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#9c27b0] border-t-transparent" />
+                    </div>
+
+                  </div>
+
+                  {/* RIGHT 1 COL: Drag & Drop Photo + Additional SK info */}
+                  <div className="lg:col-span-1 flex flex-col items-center gap-6">
+                    
+                    {/* PHOTO UPLOADER (Mockup 2 area style) */}
+                    <div className="space-y-2 text-left">
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wider block">FOTO TUTOR</label>
+                      <div
+                        onDragEnter={handleDrag}
+                        onDragOver={handleDrag}
+                        onDragLeave={handleDrag}
+                        onDrop={handleDrop}
+                        className={`border-2 border-dashed rounded-2xl p-4 text-center transition-all ${
+                          dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
+                        } h-56 flex flex-col justify-center items-center relative overflow-hidden`}
+                      >
+                        {formData.foto ? (
+                          <div className="w-full h-full relative group">
+                            <img
+                              src={formData.foto}
+                              alt="Tutor Preview"
+                              className="w-full h-full object-cover rounded-xl"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setFormData((prev) => ({ ...prev, foto: "" }))}
+                              className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 shadow-md opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <Upload className="h-8 w-8 text-white/60 mb-2" />
+                            <p className="text-[10px] font-black text-white uppercase tracking-wider">DRAG AND DROP A FILE</p>
+                            <p className="text-[9px] text-white/70 font-semibold uppercase mt-0.5">HERE OR CLICK</p>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleFileInput}
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                              disabled={uploading}
+                            />
+                          </>
+                        )}
+                        {uploading && (
+                          <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#9c27b0] border-t-transparent" />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </div>
+                      <input
+                        type="text"
+                        placeholder="Masukkan URL foto..."
+                        value={formData.foto || ""}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, foto: e.target.value }))}
+                        className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white text-slate-800 mt-2"
+                      />
+                    </div>
 
-                {/* Additional metadata info matching schema (Tanggal mulai tugas, SK Pengangkatan, SK Penugasan) */}
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3.5 text-left">
-                  <span className="block text-[10px] font-black text-[#9c27b0] tracking-wider uppercase border-b border-slate-200/60 pb-1.5">Info SK & Penugasan</span>
-                  
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-slate-500 uppercase">TGL MULAI TUGAS</label>
-                    <input
-                      type="text"
-                      placeholder="Contoh: 2018-07-15"
-                      value={formData.tanggalMulaiTugas || ""}
-                      onChange={(e) => setFormData(prev => ({ ...prev, tanggalMulaiTugas: e.target.value }))}
-                      className="w-full h-8 px-2 text-[11px] border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-400 font-semibold bg-white"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-slate-500 uppercase">NOMOR SK PENGANGKATAN</label>
-                    <input
-                      type="text"
-                      placeholder="Nomor SK Pengangkatan"
-                      value={formData.nomorSkPengangkatan || ""}
-                      onChange={(e) => setFormData(prev => ({ ...prev, nomorSkPengangkatan: e.target.value }))}
-                      className="w-full h-8 px-2 text-[11px] border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-400 font-semibold bg-white"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-slate-500 uppercase">LEMBAGA PENGANGKAT</label>
-                    <input
-                      type="text"
-                      placeholder="Dinas Pendidikan / Yayasan"
-                      value={formData.lembagaPengangkat || ""}
-                      onChange={(e) => setFormData(prev => ({ ...prev, lembagaPengangkat: e.target.value }))}
-                      className="w-full h-8 px-2 text-[11px] border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-400 font-semibold bg-white"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-slate-500 uppercase">NOMOR SK PENUGASAN</label>
-                    <input
-                      type="text"
-                      placeholder="Nomor SK Penugasan"
-                      value={formData.nomorSkPenugasan || ""}
-                      onChange={(e) => setFormData(prev => ({ ...prev, nomorSkPenugasan: e.target.value }))}
-                      className="w-full h-8 px-2 text-[11px] border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-400 font-semibold bg-white"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-slate-500 uppercase">LEMBAGA PENUGAS</label>
-                    <input
-                      type="text"
-                      placeholder="Lembaga Penugas"
-                      value={formData.lembagaPenugas || ""}
-                      onChange={(e) => setFormData(prev => ({ ...prev, lembagaPenugas: e.target.value }))}
-                      className="w-full h-8 px-2 text-[11px] border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-400 font-semibold bg-white"
-                    />
                   </div>
 
                 </div>
 
-              </div>
-
-            </div>
-
-            {/* Dialog Footer with Action Buttons (Hapus, Edit, Simpan) */}
-            <div className="border-t border-slate-100 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div>
-                {!isAdding && selectedTutor && (
+                {/* Footer with Action Buttons */}
+                <div className="border-t border-white/20 pt-4 flex items-center justify-end gap-3">
+                  {selectedTutor && (
+                    <Button
+                      type="button"
+                      onClick={() => handleDelete(selectedTutor.id)}
+                      className="bg-rose-600 hover:bg-rose-700 text-white border-0 font-extrabold text-sm px-6 h-11 rounded-full cursor-pointer shadow-md shadow-rose-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
+                    >
+                      <Trash2 className="h-4 w-4" /> HAPUS
+                    </Button>
+                  )}
                   <Button
-                    type="button"
-                    onClick={() => handleDelete(selectedTutor.id)}
-                    className="rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold h-11 px-5 cursor-pointer shadow-md flex items-center gap-2"
+                    type="submit"
+                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
                   >
-                    <Trash2 className="h-4 w-4" /> HAPUS
+                    <Save className="h-4 w-4" /> SIMPAN
                   </Button>
-                )}
-              </div>
-
-              <div className="flex gap-2 w-full sm:w-auto">
-                <DialogClose asChild>
-                  <Button type="button" variant="outline" className="flex-1 sm:flex-none rounded-xl h-11 px-6 font-bold cursor-pointer">
-                    Batal
-                  </Button>
-                </DialogClose>
-                <Button
-                  type="submit"
-                  className="flex-1 sm:flex-none rounded-xl bg-[#9c27b0] hover:bg-[#ff6105] text-white font-bold h-11 px-7 cursor-pointer shadow-md flex items-center justify-center gap-2"
-                >
-                  <Save className="h-4 w-4" /> SIMPAN
-                </Button>
-              </div>
+                </div>
+              </form>
             </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      )}
 
     </div>
   );

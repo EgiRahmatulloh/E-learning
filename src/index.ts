@@ -45,6 +45,40 @@ app.get("/api/hello", () => ({
   status: "Connected",
 }));
 
+app.get("/api/dashboard-stats", async ({ set }) => {
+  try {
+    const tutorsList = await db.select().from(tutors).all();
+    const studentsList = await db.select().from(students).all();
+    const productsList = await db.select().from(products).all();
+    const alumniList = await db.select().from(alumni).all();
+
+    const activeStudents = studentsList.filter(s => s.status === 'AKTIF');
+    const classes = new Set(activeStudents.map(s => s.kelas).filter(Boolean));
+    const activeProducts = productsList.filter(p => p.status === 'AKTIF');
+
+    const paketA = activeStudents.filter(s => s.program && s.program.toLowerCase().includes('paket a')).length;
+    const paketB = activeStudents.filter(s => s.program && s.program.toLowerCase().includes('paket b')).length;
+    const paketC = activeStudents.filter(s => s.program && s.program.toLowerCase().includes('paket c')).length;
+
+    return {
+      success: true,
+      data: {
+        tutors: tutorsList.length,
+        students: activeStudents.length,
+        rombel: classes.size || 0,
+        products: activeProducts.length,
+        paketA,
+        paketB,
+        paketC,
+        alumni: alumniList.length,
+      }
+    };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data statistik dashboard" };
+  }
+});
+
 // Rute Login API
 app.post("/api/auth/login", async ({ body, jwt, set }) => {
   const { username, password } = body;
@@ -1706,6 +1740,86 @@ app.delete("/api/tutors/:id", async ({ params, headers, jwt, set }) => {
   }
 });
 
+// Import data tutor via CSV (bulk)
+app.post("/api/tutors/import", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const list = body;
+  if (!Array.isArray(list)) {
+    set.status = 400;
+    return { success: false, message: "Format data tidak valid, harus berupa array" };
+  }
+
+  try {
+    const validItems = list.filter(item => 
+      item && 
+      typeof item === 'object' && 
+      typeof item.nama === 'string' && item.nama.trim().length > 0 &&
+      typeof item.tutorMapel === 'string' && item.tutorMapel.trim().length > 0
+    );
+
+    if (validItems.length === 0) {
+      set.status = 400;
+      return { success: false, message: "Tidak ada data valid untuk diimpor" };
+    }
+
+    const defaultPassword = await Bun.password.hash("password123");
+    const insertValues = validItems.map(item => ({
+      nama: item.nama,
+      tutorMapel: item.tutorMapel,
+      program: typeof item.program === 'string' ? item.program : '',
+      nuptk: typeof item.nuptk === 'string' ? item.nuptk : '',
+      tempatTglLahir: typeof item.tempatTglLahir === 'string' ? item.tempatTglLahir : '',
+      jenisKelamin: typeof item.jenisKelamin === 'string' ? item.jenisKelamin : '',
+      agama: typeof item.agama === 'string' ? item.agama : '',
+      pendidikan: typeof item.pendidikan === 'string' ? item.pendidikan : '',
+      email: typeof item.email === 'string' ? item.email : '',
+      nik: typeof item.nik === 'string' ? item.nik : '',
+      alamat: typeof item.alamat === 'string' ? item.alamat : '',
+      password: defaultPassword,
+      foto: typeof item.foto === 'string' ? item.foto : '',
+      tanggalMulaiTugas: typeof item.tanggalMulaiTugas === 'string' ? item.tanggalMulaiTugas : '',
+      nomorSkPengangkatan: typeof item.nomorSkPengangkatan === 'string' ? item.nomorSkPengangkatan : '',
+      lembagaPengangkat: typeof item.lembagaPengangkat === 'string' ? item.lembagaPengangkat : '',
+      nomorSkPenugasan: typeof item.nomorSkPenugasan === 'string' ? item.nomorSkPenugasan : '',
+      lembagaPenugas: typeof item.lembagaPenugas === 'string' ? item.lembagaPenugas : '',
+    }));
+
+    const chunkSize = 100;
+    await db.transaction(async (tx) => {
+      for (let i = 0; i < insertValues.length; i += chunkSize) {
+        const chunk = insertValues.slice(i, i + chunkSize);
+        await tx.insert(tutors).values(chunk).run();
+      }
+    });
+    return { success: true, message: `Berhasil mengimpor ${insertValues.length} data tutor` };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengimpor data tutor" };
+  }
+}, {
+  body: t.Array(t.Object({
+    nama: t.String({ minLength: 1 }),
+    tutorMapel: t.String({ minLength: 1 }),
+    program: t.Optional(t.String()),
+    nuptk: t.Optional(t.String()),
+    tempatTglLahir: t.Optional(t.String()),
+    jenisKelamin: t.Optional(t.String()),
+    agama: t.Optional(t.String()),
+    pendidikan: t.Optional(t.String()),
+    email: t.Optional(t.String()),
+    nik: t.Optional(t.String()),
+    alamat: t.Optional(t.String()),
+    foto: t.Optional(t.String()),
+    tanggalMulaiTugas: t.Optional(t.String()),
+    nomorSkPengangkatan: t.Optional(t.String()),
+    lembagaPengangkat: t.Optional(t.String()),
+    nomorSkPenugasan: t.Optional(t.String()),
+    lembagaPenugas: t.Optional(t.String()),
+  }))
+});
+
 // --- API STUDENTS (WARGA BELAJAR) ROUTES ---
 // Ambil semua warga belajar
 app.get("/api/students", async ({ set }) => {
@@ -2033,6 +2147,85 @@ app.delete("/api/students/:id", async ({ params, headers, jwt, set }) => {
     set.status = 500;
     return { success: false, message: "Gagal menghapus warga belajar" };
   }
+});
+
+// Import data warga belajar via CSV (bulk)
+app.post("/api/students/import", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const list = body;
+  if (!Array.isArray(list)) {
+    set.status = 400;
+    return { success: false, message: "Format data tidak valid, harus berupa array" };
+  }
+
+  try {
+    const validItems = list.filter(item => 
+      item && 
+      typeof item === 'object' && 
+      typeof item.nama === 'string' && item.nama.trim().length > 0
+    );
+
+    if (validItems.length === 0) {
+      set.status = 400;
+      return { success: false, message: "Tidak ada data valid untuk diimpor" };
+    }
+
+    const defaultPassword = await Bun.password.hash("password123");
+    const insertValues = validItems.map(item => ({
+      nama: item.nama,
+      nik: typeof item.nik === 'string' ? item.nik : '',
+      program: typeof item.program === 'string' ? item.program : '',
+      kelas: typeof item.kelas === 'string' ? item.kelas : '',
+      nisn: typeof item.nisn === 'string' ? item.nisn : '',
+      nis: typeof item.nis === 'string' ? item.nis : '',
+      tempatTglLahir: typeof item.tempatTglLahir === 'string' ? item.tempatTglLahir : '',
+      titikLayanan: typeof item.titikLayanan === 'string' ? item.titikLayanan : '',
+      jenisKelamin: typeof item.jenisKelamin === 'string' ? item.jenisKelamin : '',
+      noHp: typeof item.noHp === 'string' ? item.noHp : '',
+      agama: typeof item.agama === 'string' ? item.agama : '',
+      namaAyah: typeof item.namaAyah === 'string' ? item.namaAyah : '',
+      email: typeof item.email === 'string' ? item.email : '',
+      namaIbu: typeof item.namaIbu === 'string' ? item.namaIbu : '',
+      alamat: typeof item.alamat === 'string' ? item.alamat : '',
+      password: defaultPassword,
+      foto: typeof item.foto === 'string' ? item.foto : '',
+      status: typeof item.status === 'string' ? item.status : 'AKTIF',
+    }));
+
+    const chunkSize = 100;
+    await db.transaction(async (tx) => {
+      for (let i = 0; i < insertValues.length; i += chunkSize) {
+        const chunk = insertValues.slice(i, i + chunkSize);
+        await tx.insert(students).values(chunk).run();
+      }
+    });
+    return { success: true, message: `Berhasil mengimpor ${insertValues.length} data warga belajar` };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengimpor data warga belajar" };
+  }
+}, {
+  body: t.Array(t.Object({
+    nama: t.String({ minLength: 1 }),
+    nik: t.Optional(t.String()),
+    program: t.Optional(t.String()),
+    kelas: t.Optional(t.String()),
+    nisn: t.Optional(t.String()),
+    nis: t.Optional(t.String()),
+    tempatTglLahir: t.Optional(t.String()),
+    titikLayanan: t.Optional(t.String()),
+    jenisKelamin: t.Optional(t.String()),
+    noHp: t.Optional(t.String()),
+    agama: t.Optional(t.String()),
+    namaAyah: t.Optional(t.String()),
+    email: t.Optional(t.String()),
+    namaIbu: t.Optional(t.String()),
+    alamat: t.Optional(t.String()),
+    foto: t.Optional(t.String()),
+    status: t.Optional(t.String()),
+  }))
 });
 
 // --- API DOWNLOADS ROUTES ---
@@ -2849,6 +3042,82 @@ app.delete("/api/managers/:id", async ({ params, headers, jwt, set }) => {
   }
 });
 
+// Import data pengelola via CSV (bulk)
+app.post("/api/managers/import", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const list = body;
+  if (!Array.isArray(list)) {
+    set.status = 400;
+    return { success: false, message: "Format data tidak valid, harus berupa array" };
+  }
+
+  try {
+    const validItems = list.filter(item => 
+      item && 
+      typeof item === 'object' && 
+      typeof item.nama === 'string' && item.nama.trim().length > 0
+    );
+
+    if (validItems.length === 0) {
+      set.status = 400;
+      return { success: false, message: "Tidak ada data valid untuk diimpor" };
+    }
+
+    const defaultPassword = await Bun.password.hash("password123");
+    const insertValues = validItems.map(item => ({
+      nama: item.nama,
+      nik: typeof item.nik === 'string' ? item.nik : '',
+      jabatan: typeof item.jabatan === 'string' ? item.jabatan : '',
+      nuptk: typeof item.nuptk === 'string' ? item.nuptk : '',
+      tempatTglLahir: typeof item.tempatTglLahir === 'string' ? item.tempatTglLahir : '',
+      jenisKelamin: typeof item.jenisKelamin === 'string' ? item.jenisKelamin : '',
+      agama: typeof item.agama === 'string' ? item.agama : '',
+      pendidikan: typeof item.pendidikan === 'string' ? item.pendidikan : '',
+      email: typeof item.email === 'string' ? item.email : '',
+      tanggalMulaiTugas: typeof item.tanggalMulaiTugas === 'string' ? item.tanggalMulaiTugas : '',
+      nomorSkPengangkatan: typeof item.nomorSkPengangkatan === 'string' ? item.nomorSkPengangkatan : '',
+      lembagaPengangkat: typeof item.lembagaPengangkat === 'string' ? item.lembagaPengangkat : '',
+      nomorSkPenugasan: typeof item.nomorSkPenugasan === 'string' ? item.nomorSkPenugasan : '',
+      lembagaPenugas: typeof item.lembagaPenugas === 'string' ? item.lembagaPenugas : '',
+      alamat: typeof item.alamat === 'string' ? item.alamat : '',
+      password: defaultPassword,
+      foto: typeof item.foto === 'string' ? item.foto : '',
+    }));
+
+    const chunkSize = 100;
+    await db.transaction(async (tx) => {
+      for (let i = 0; i < insertValues.length; i += chunkSize) {
+        const chunk = insertValues.slice(i, i + chunkSize);
+        await tx.insert(managers).values(chunk).run();
+      }
+    });
+    return { success: true, message: `Berhasil mengimpor ${insertValues.length} data pengelola` };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengimpor data pengelola" };
+  }
+}, {
+  body: t.Array(t.Object({
+    nama: t.String({ minLength: 1 }),
+    nik: t.Optional(t.String()),
+    jabatan: t.Optional(t.String()),
+    nuptk: t.Optional(t.String()),
+    tempatTglLahir: t.Optional(t.String()),
+    jenisKelamin: t.Optional(t.String()),
+    agama: t.Optional(t.String()),
+    pendidikan: t.Optional(t.String()),
+    email: t.Optional(t.String()),
+    tanggalMulaiTugas: t.Optional(t.String()),
+    nomorSkPengangkatan: t.Optional(t.String()),
+    lembagaPengangkat: t.Optional(t.String()),
+    nomorSkPenugasan: t.Optional(t.String()),
+    lembagaPenugas: t.Optional(t.String()),
+    alamat: t.Optional(t.String()),
+    foto: t.Optional(t.String()),
+  }))
+});
 
 // Endpoint untuk Unggah Berkas Gambar Fisik (Aman & Efisien)
 app.post("/api/upload", async ({ body, headers, jwt, set }) => {

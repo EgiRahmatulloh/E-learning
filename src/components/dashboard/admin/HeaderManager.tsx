@@ -594,7 +594,7 @@ export function HeaderManager() {
                   </label>
                   <input
                     type="text"
-                    placeholder="https://example.com/image.jpg"
+                    placeholder="Masukkan URL gambar..."
                     value={formImage.startsWith("data:") ? "" : formImage}
                     onChange={(e) => setFormImage(e.target.value)}
                     className="w-full h-9 px-3 text-xs border-0 rounded-lg bg-white/90 font-medium text-slate-800 focus:outline-none focus:bg-white transition-all shadow-inner"

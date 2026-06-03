@@ -224,11 +224,10 @@ function App() {
             <Testimonials />
             
             <Gallery />
-            
-            <Contact />
           </>
         )}
         
+        <Contact />
         <Footer />
 
         <LoginModal
