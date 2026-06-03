@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { parseCSV, downloadCSV } from "@/lib/utils";
 import { Upload, Plus, Trash2, Save, HelpCircle, Download, LayoutGrid, List, Search, X } from "lucide-react";
 
 interface AlumniItem {
@@ -293,37 +294,24 @@ export default function AlumniManager() {
   const handleExportCSV = () => {
     if (alumniList.length === 0) return;
     const headers = ["Nama", "NIK", "Program", "Tahun Lulus", "NISN", "NIS", "Tempat Tgl Lahir", "No HP", "Nama Ayah", "Nama Ibu", "Jenis Kelamin", "Agama", "Email", "Alamat", "Cerita Sukses"];
-    const csvContent = [
-      headers.join(","),
-      ...alumniList.map((item) =>
-        [
-          `"${item.nama.replace(/"/g, '""')}"`,
-          `"${item.nik}"`,
-          `"${item.program}"`,
-          `"${item.tahunLulus}"`,
-          `"${item.nisn}"`,
-          `"${item.nis}"`,
-          `"${item.tempatTglLahir.replace(/"/g, '""')}"`,
-          `"${item.noHp}"`,
-          `"${item.namaAyah.replace(/"/g, '""')}"`,
-          `"${item.namaIbu.replace(/"/g, '""')}"`,
-          `"${item.jenisKelamin}"`,
-          `"${item.agama}"`,
-          `"${item.email}"`,
-          `"${item.alamat.replace(/"/g, '""')}"`,
-          `"${item.cerita.replace(/"/g, '""')}"`
-        ].join(",")
-      )
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `data-alumni-${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const rows = alumniList.map((item) => [
+      `"${item.nama.replace(/"/g, '""')}"`,
+      `"${item.nik}"`,
+      `"${item.program}"`,
+      `"${item.tahunLulus}"`,
+      `"${item.nisn}"`,
+      `"${item.nis}"`,
+      `"${item.tempatTglLahir.replace(/"/g, '""')}"`,
+      `"${item.noHp}"`,
+      `"${item.namaAyah.replace(/"/g, '""')}"`,
+      `"${item.namaIbu.replace(/"/g, '""')}"`,
+      `"${item.jenisKelamin}"`,
+      `"${item.agama}"`,
+      `"${item.email}"`,
+      `"${item.alamat.replace(/"/g, '""')}"`,
+      `"${item.cerita.replace(/"/g, '""')}"`
+    ]);
+    downloadCSV(headers, rows, `data-alumni-${Date.now()}.csv`);
   };
 
   // CSV Import
@@ -333,32 +321,32 @@ export default function AlumniManager() {
       const reader = new FileReader();
       reader.onload = async (event) => {
         const text = event.target?.result as string;
-        const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-        if (lines.length <= 1) return;
+        const rows = parseCSV(text);
+        if (rows.length <= 1) return;
 
         const token = localStorage.getItem("token");
         const imports = [];
 
-        for (let i = 1; i < lines.length; i++) {
-          const columns = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(col => col.replace(/^"|"$/g, "").trim());
-          if (columns.length < 4) continue;
+        for (let i = 1; i < rows.length; i++) {
+          const cols = rows[i];
+          if (cols.length < 4) continue;
 
           imports.push({
-            nama: columns[0] || "",
-            nik: columns[1] || "",
-            program: columns[2] || "PAKET C",
-            tahunLulus: columns[3] || "",
-            nisn: columns[4] || "",
-            nis: columns[5] || "",
-            tempatTglLahir: columns[6] || "",
-            noHp: columns[7] || "",
-            namaAyah: columns[8] || "",
-            namaIbu: columns[9] || "",
-            jenisKelamin: columns[10] || "Laki-laki",
-            agama: columns[11] || "Islam",
-            email: columns[12] || "",
-            alamat: columns[13] || "",
-            cerita: columns[14] || "",
+            nama: cols[0] || "",
+            nik: cols[1] || "",
+            program: cols[2] || "PAKET C",
+            tahunLulus: cols[3] || "",
+            nisn: cols[4] || "",
+            nis: cols[5] || "",
+            tempatTglLahir: cols[6] || "",
+            noHp: cols[7] || "",
+            namaAyah: cols[8] || "",
+            namaIbu: cols[9] || "",
+            jenisKelamin: cols[10] || "Laki-laki",
+            agama: cols[11] || "Islam",
+            email: cols[12] || "",
+            alamat: cols[13] || "",
+            cerita: cols[14] || "",
             foto: ""
           });
         }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { parseCSV, downloadCSV } from "@/lib/utils";
 import { Upload, Plus, Trash2, Save, HelpCircle, Download, Image, X, Edit3, Filter, RotateCcw } from "lucide-react";
 
 const GALLERY_CATEGORIES = [
@@ -204,26 +205,14 @@ export default function GalleryManager() {
   const handleExportCSV = () => {
     if (galleryList.length === 0) return;
     const headers = ["Nama File", "Kategori", "Tanggal Posting", "Foto", "Status"];
-    const csvContent = [
-      headers.join(","),
-      ...galleryList.map((item) =>
-        [
-          `"${item.namaFile.replace(/"/g, '""')}"`,
-          `"${item.kategori}"`,
-          `"${item.tanggalPosting}"`,
-          `"${item.foto}"`,
-          `"${item.status}"`,
-        ].join(",")
-      ),
-    ].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `data-galeri-${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const rows = galleryList.map((item) => [
+      `"${item.namaFile.replace(/"/g, '""')}"`,
+      `"${item.kategori}"`,
+      `"${item.tanggalPosting}"`,
+      `"${item.foto}"`,
+      `"${item.status}"`,
+    ]);
+    downloadCSV(headers, rows, `data-galeri-${Date.now()}.csv`);
   };
 
   const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -232,12 +221,12 @@ export default function GalleryManager() {
       const reader = new FileReader();
       reader.onload = async (event) => {
         const text = event.target?.result as string;
-        const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
-        if (lines.length <= 1) return;
+        const rows = parseCSV(text);
+        if (rows.length <= 1) return;
         
         const importedList = [];
-        for (let i = 1; i < lines.length; i++) {
-          const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map((c) => c.replace(/^"|"$/g, "").trim());
+        for (let i = 1; i < rows.length; i++) {
+          const cols = rows[i];
           if (cols.length < 2) continue;
           importedList.push({
             namaFile: cols[0] || "",

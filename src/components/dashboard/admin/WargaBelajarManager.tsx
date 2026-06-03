@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { parseCSV, downloadCSV } from "@/lib/utils";
 import { ShieldAlert, Search, Upload, Download, Sparkles, Plus, Trash2, Save, X, Eye, EyeOff, GraduationCap, ArrowUpCircle, RefreshCw, List, LayoutGrid, Filter, RotateCcw } from "lucide-react";
 
 interface Student {
@@ -139,15 +140,7 @@ export default function WargaBelajarManager() {
       `"${(s.foto || "").replace(/"/g, '""')}"`,
       `"${(s.status || "").replace(/"/g, '""')}"`
     ]);
-    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "warga_belajar.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadCSV(headers, rows, "warga_belajar.csv");
   };
 
   // CSV Import
@@ -160,7 +153,7 @@ export default function WargaBelajarManager() {
       const text = event.target?.result as string;
       if (!text) return;
 
-      const lines = text.split("\n");
+      const rows = parseCSV(text);
       const importedData: {
         nama: string;
         nik: string;
@@ -182,59 +175,31 @@ export default function WargaBelajarManager() {
       }[] = [];
 
       let startIdx = 0;
-      if (lines[0] && (lines[0].toLowerCase().includes("nama") || lines[0].toLowerCase().includes("name"))) {
+      if (rows[0] && (rows[0][0]?.toLowerCase().includes("nama") || rows[0][0]?.toLowerCase().includes("name"))) {
         startIdx = 1;
       }
 
-      const parseCSVLine = (textLine: string): string[] => {
-        const result: string[] = [];
-        let current = "";
-        let inQuotes = false;
-        for (let i = 0; i < textLine.length; i++) {
-          const char = textLine[i];
-          if (char === '"') {
-            if (inQuotes && textLine[i + 1] === '"') {
-              current += '"';
-              i++;
-            } else {
-              inQuotes = !inQuotes;
-            }
-          } else if (char === ',' && !inQuotes) {
-            result.push(current.trim());
-            current = "";
-          } else {
-            current += char;
-          }
-        }
-        result.push(current.trim());
-        return result;
-      };
-
-      for (let i = startIdx; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-
-        const cleanCols = parseCSVLine(line);
-
-        if (cleanCols[0]) {
+      for (let i = startIdx; i < rows.length; i++) {
+        const cols = rows[i];
+        if (cols[0]) {
           importedData.push({
-            nama: cleanCols[0],
-            nik: cleanCols[1] || "",
-            program: cleanCols[2] || "",
-            kelas: cleanCols[3] || "",
-            nisn: cleanCols[4] || "",
-            nis: cleanCols[5] || "",
-            tempatTglLahir: cleanCols[6] || "",
-            titikLayanan: cleanCols[7] || "",
-            jenisKelamin: cleanCols[8] || "",
-            noHp: cleanCols[9] || "",
-            agama: cleanCols[10] || "",
-            namaAyah: cleanCols[11] || "",
-            email: cleanCols[12] || "",
-            namaIbu: cleanCols[13] || "",
-            alamat: cleanCols[14] || "",
-            foto: cleanCols[15] || "",
-            status: cleanCols[16] || "AKTIF",
+            nama: cols[0],
+            nik: cols[1] || "",
+            program: cols[2] || "",
+            kelas: cols[3] || "",
+            nisn: cols[4] || "",
+            nis: cols[5] || "",
+            tempatTglLahir: cols[6] || "",
+            titikLayanan: cols[7] || "",
+            jenisKelamin: cols[8] || "",
+            noHp: cols[9] || "",
+            agama: cols[10] || "",
+            namaAyah: cols[11] || "",
+            email: cols[12] || "",
+            namaIbu: cols[13] || "",
+            alamat: cols[14] || "",
+            foto: cols[15] || "",
+            status: cols[16] || "AKTIF",
           });
         }
       }

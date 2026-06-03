@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { parseCSV, downloadCSV } from "@/lib/utils";
 import {
   CheckCircle2,
   Edit3,
@@ -482,15 +483,7 @@ export default function ManagerManager() {
       `"${(m.alamat || "").replace(/"/g, '""')}"`,
       `"${(m.foto || "").replace(/"/g, '""')}"`
     ]);
-    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "data_pengelola.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadCSV(headers, rows, "data_pengelola.csv");
     showToast("Berhasil mengunduh CSV!");
   };
 
@@ -504,7 +497,7 @@ export default function ManagerManager() {
       const text = event.target?.result as string;
       if (!text) return;
 
-      const lines = text.split("\n");
+      const rows = parseCSV(text);
       const importedData: {
         nama: string;
         nik: string;
@@ -525,58 +518,30 @@ export default function ManagerManager() {
       }[] = [];
 
       let startIdx = 0;
-      if (lines[0] && (lines[0].toLowerCase().includes("nama") || lines[0].toLowerCase().includes("name"))) {
+      if (rows[0] && (rows[0][0]?.toLowerCase().includes("nama") || rows[0][0]?.toLowerCase().includes("name"))) {
         startIdx = 1;
       }
 
-      const parseCSVLine = (textLine: string): string[] => {
-        const result: string[] = [];
-        let current = "";
-        let inQuotes = false;
-        for (let i = 0; i < textLine.length; i++) {
-          const char = textLine[i];
-          if (char === '"') {
-            if (inQuotes && textLine[i + 1] === '"') {
-              current += '"';
-              i++;
-            } else {
-              inQuotes = !inQuotes;
-            }
-          } else if (char === ',' && !inQuotes) {
-            result.push(current.trim());
-            current = "";
-          } else {
-            current += char;
-          }
-        }
-        result.push(current.trim());
-        return result;
-      };
-
-      for (let i = startIdx; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-
-        const cleanCols = parseCSVLine(line);
-
-        if (cleanCols[0]) {
+      for (let i = startIdx; i < rows.length; i++) {
+        const cols = rows[i];
+        if (cols[0]) {
           importedData.push({
-            nama: cleanCols[0],
-            nik: cleanCols[1] || "",
-            jabatan: cleanCols[2] || "",
-            nuptk: cleanCols[3] || "",
-            tempatTglLahir: cleanCols[4] || "",
-            jenisKelamin: cleanCols[5] || "",
-            agama: cleanCols[6] || "",
-            pendidikan: cleanCols[7] || "",
-            email: cleanCols[8] || "",
-            tanggalMulaiTugas: cleanCols[9] || "",
-            nomorSkPengangkatan: cleanCols[10] || "",
-            lembagaPengangkat: cleanCols[11] || "",
-            nomorSkPenugasan: cleanCols[12] || "",
-            lembagaPenugas: cleanCols[13] || "",
-            alamat: cleanCols[14] || "",
-            foto: cleanCols[15] || "",
+            nama: cols[0],
+            nik: cols[1] || "",
+            jabatan: cols[2] || "",
+            nuptk: cols[3] || "",
+            tempatTglLahir: cols[4] || "",
+            jenisKelamin: cols[5] || "",
+            agama: cols[6] || "",
+            pendidikan: cols[7] || "",
+            email: cols[8] || "",
+            tanggalMulaiTugas: cols[9] || "",
+            nomorSkPengangkatan: cols[10] || "",
+            lembagaPengangkat: cols[11] || "",
+            nomorSkPenugasan: cols[12] || "",
+            lembagaPenugas: cols[13] || "",
+            alamat: cols[14] || "",
+            foto: cols[15] || "",
           });
         }
       }

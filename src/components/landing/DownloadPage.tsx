@@ -21,7 +21,7 @@ const STATIC_CATEGORIES = [
   { name: "ADMINISTRASI KURIKULUM", key: "ADMINISTRASI KURIKULUM" },
   { name: "ADMINISTRASI TUTOR", key: "ADMINISTRASI TUTOR" },
   { name: "ADMINISTRASI WB", key: "ADMINISTRASI WB" },
-  { name: "ADMINISTRASI KELEGAAN", key: "ADMINISTRASI KELEMBAGAAN" }
+  { name: "ADMINISTRASI KELEMBAGAAN", key: "ADMINISTRASI KELEMBAGAAN" }
 ];
 
 export default function DownloadPage({ onNavigate }: DownloadPageProps) {

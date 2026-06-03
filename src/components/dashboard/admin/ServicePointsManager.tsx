@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { parseCSV, downloadCSV } from "@/lib/utils";
 import { CheckCircle2, Edit3, Trash2, Search, UploadCloud, Plus, Save, X, Upload, Download } from "lucide-react";
 
 interface ServicePoint {
@@ -279,15 +280,7 @@ export function ServicePointsManager() {
       `"${(s.keterangan || "").replace(/"/g, '""')}"`,
       `"${(s.foto || "").replace(/"/g, '""')}"`
     ]);
-    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "titik_layanan.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadCSV(headers, rows, "titik_layanan.csv");
     showToast("Berhasil mengunduh CSV!");
   };
 
@@ -301,7 +294,7 @@ export function ServicePointsManager() {
       const text = event.target?.result as string;
       if (!text) return;
       
-      const lines = text.split("\n");
+      const rows = parseCSV(text);
       const importedData: {
         nama: string;
         alamat: string;
@@ -313,49 +306,21 @@ export function ServicePointsManager() {
       }[] = [];
       
       let startIdx = 0;
-      if (lines[0] && (lines[0].toLowerCase().includes("nama") || lines[0].toLowerCase().includes("name"))) {
+      if (rows[0] && (rows[0][0]?.toLowerCase().includes("nama") || rows[0][0]?.toLowerCase().includes("name"))) {
         startIdx = 1;
       }
-      
-      const parseCSVLine = (textLine: string): string[] => {
-        const result: string[] = [];
-        let current = "";
-        let inQuotes = false;
-        for (let i = 0; i < textLine.length; i++) {
-          const char = textLine[i];
-          if (char === '"') {
-            if (inQuotes && textLine[i + 1] === '"') {
-              current += '"';
-              i++;
-            } else {
-              inQuotes = !inQuotes;
-            }
-          } else if (char === ',' && !inQuotes) {
-            result.push(current.trim());
-            current = "";
-          } else {
-            current += char;
-          }
-        }
-        result.push(current.trim());
-        return result;
-      };
 
-      for (let i = startIdx; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-        
-        const cleanCols = parseCSVLine(line);
-        
-        if (cleanCols[0] && cleanCols[1] && cleanCols[2]) {
+      for (let i = startIdx; i < rows.length; i++) {
+        const cols = rows[i];
+        if (cols[0] && cols[1] && cols[2]) {
           importedData.push({
-            nama: cleanCols[0],
-            alamat: cleanCols[1],
-            penjab: cleanCols[2],
-            waktuPembelajaran: cleanCols[3] || "",
-            jumlahWb: cleanCols[4] || "",
-            keterangan: cleanCols[5] || "",
-            foto: cleanCols[6] || "",
+            nama: cols[0],
+            alamat: cols[1],
+            penjab: cols[2],
+            waktuPembelajaran: cols[3] || "",
+            jumlahWb: cols[4] || "",
+            keterangan: cols[5] || "",
+            foto: cols[6] || "",
           });
         }
       }

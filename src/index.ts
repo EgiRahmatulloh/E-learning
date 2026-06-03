@@ -45,7 +45,10 @@ app.get("/api/hello", () => ({
   status: "Connected",
 }));
 
-app.get("/api/dashboard-stats", async ({ set }) => {
+app.get("/api/dashboard-stats", async ({ headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
   try {
     const tutorsList = await db.select().from(tutors).all();
     const studentsList = await db.select().from(students).all();
