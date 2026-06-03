@@ -374,8 +374,8 @@ export default function DownloadsManager() {
                     <td className="py-3.5 px-6 text-center">
                       <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
                         item.status === 'PUBLISH'
-                          ? "bg-emerald-50 border border-emerald-250 text-emerald-700"
-                          : "bg-amber-50 border border-amber-250 text-amber-700"
+                          ? "bg-emerald-50 border border-emerald-200 text-emerald-700"
+                          : "bg-amber-50 border border-amber-200 text-amber-700"
                       }`}>
                         {item.status}
                       </span>

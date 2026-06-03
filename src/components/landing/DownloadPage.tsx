@@ -53,24 +53,7 @@ export default function DownloadPage({ onNavigate }: DownloadPageProps) {
     setCurrentPage(1);
   }, [searchTerm, selectedCategoryFilter, itemsPerPage]);
 
-  const handleDownloadClick = async (item: DownloadItem) => {
-    try {
-      // Increment hit count asynchronously in the background
-      fetch(`/api/downloads/${item.id}/hit`, { method: "POST" })
-        .then(() => {
-          // Update local state hits
-          setDownloadsList((prevList) =>
-            prevList.map((d) => (d.id === item.id ? { ...d, hits: d.hits + 1 } : d))
-          );
-        })
-        .catch((e) => console.error("Failed to increment hit:", e));
-      
-      // Direct file opening/downloading in new window
-      window.open(item.fileUrl, "_blank");
-    } catch (e) {
-      console.error(e);
-    }
-  };
+
 
   // Filter downloads
   const filteredDownloads = downloadsList.filter((item) => {
@@ -265,12 +248,24 @@ export default function DownloadPage({ onNavigate }: DownloadPageProps) {
                         </span>
                       </td>
                       <td className="py-4 px-6 text-center">
-                        <Button
-                          onClick={() => handleDownloadClick(item)}
-                          className="rounded-xl bg-amber-400 hover:bg-amber-500 hover:scale-103 active:scale-97 text-slate-900 font-black text-[10px] tracking-wider uppercase h-9 px-4 cursor-pointer transition-all shadow-sm flex items-center gap-1.5 mx-auto"
+                        <a
+                          href={item.fileUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={() => {
+                            // Increment hit count asynchronously in the background
+                            fetch(`/api/downloads/${item.id}/hit`, { method: "POST" })
+                              .then(() => {
+                                setDownloadsList((prevList) =>
+                                  prevList.map((d) => (d.id === item.id ? { ...d, hits: d.hits + 1 } : d))
+                                );
+                              })
+                              .catch((e) => console.error("Failed to increment hit:", e));
+                          }}
+                          className="rounded-xl bg-amber-400 hover:bg-amber-500 hover:scale-103 active:scale-97 text-slate-900 font-black text-[10px] tracking-wider uppercase h-9 px-4 cursor-pointer transition-all shadow-sm flex items-center justify-center gap-1.5 mx-auto w-fit"
                         >
                           <Download className="h-3.5 w-3.5" /> Download
-                        </Button>
+                        </a>
                       </td>
                     </tr>
                   ))}

@@ -3,7 +3,7 @@ import { jwt } from "@elysia/jwt";
 import { staticPlugin } from "@elysia/static";
 import { db } from "./server/db";
 import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students, downloads } from "./server/db/schema";
-import { eq, or } from "drizzle-orm";
+import { eq, or, sql } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
 import fs from "fs";
 
@@ -2147,20 +2147,19 @@ app.post("/api/downloads/:id/hit", async ({ params, set }) => {
   }
 
   try {
-    const existing = await db.select().from(downloads).where(eq(downloads.id, id)).get();
-    if (!existing) {
-      set.status = 404;
-      return { success: false, message: "Data download tidak ditemukan" };
-    }
-
     const updated = await db.update(downloads)
       .set({
-        hits: existing.hits + 1,
+        hits: sql`${downloads.hits} + 1`,
         updatedAt: new Date().toISOString(),
       })
       .where(eq(downloads.id, id))
       .returning()
       .get();
+
+    if (!updated) {
+      set.status = 404;
+      return { success: false, message: "Data download tidak ditemukan" };
+    }
 
     return { success: true, data: updated };
   } catch (e) {
@@ -2354,18 +2353,31 @@ app.post("/api/upload", async ({ body, headers, jwt, set }) => {
     return { success: false, message: "Berkas tidak valid" };
   }
 
-  // Validasi Ekstensi Berkas (Hanya Gambar yang Aman)
-  const allowedExtensions = ["jpg", "jpeg", "png", "webp", "gif", "svg"];
+  // Validasi Ekstensi Berkas (Gambar & Dokumen yang Aman)
+  const allowedExtensions = ["jpg", "jpeg", "png", "webp", "gif", "svg", "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "zip", "rar", "txt"];
   const fileExt = file.name.split(".").pop()?.toLowerCase();
   if (!fileExt || !allowedExtensions.includes(fileExt)) {
     set.status = 400;
-    return { success: false, message: "Hanya ekstensi gambar (.jpg, .jpeg, .png, .webp, .gif, .svg) yang diperbolehkan" };
+    return { success: false, message: "Ekstensi berkas tidak diperbolehkan" };
   }
 
-  // Validasi Mime-Type (Hanya Gambar)
-  if (!file.type.startsWith("image/")) {
+  // Validasi Mime-Type (Gambar & Dokumen)
+  const allowedMimeTypes = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "application/zip",
+    "application/x-zip-compressed",
+    "application/x-rar-compressed",
+    "text/plain"
+  ];
+  if (!file.type.startsWith("image/") && !allowedMimeTypes.includes(file.type)) {
     set.status = 400;
-    return { success: false, message: "Hanya berkas gambar yang diperbolehkan" };
+    return { success: false, message: "Hanya berkas gambar atau dokumen yang diperbolehkan" };
   }
 
   // Validasi Ukuran Berkas (Maksimal 5MB)

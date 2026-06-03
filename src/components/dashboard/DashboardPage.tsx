@@ -255,7 +255,7 @@ export default function DashboardPage({ user, handleLogout }: DashboardPageProps
     if (activeTab === "warga-belajar") {
       if (user.role !== "admin") {
         return (
-          <div className="rounded-2xl border border-red-250 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
             🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka data Warga Belajar.
           </div>
         );
