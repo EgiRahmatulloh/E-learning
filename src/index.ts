@@ -1902,6 +1902,11 @@ app.post("/api/students/:id/promote", async ({ params, headers, jwt, set }) => {
   if (authError) return authError;
 
   const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
   try {
     const existing = await db.select().from(students).where(eq(students.id, id)).get();
     if (!existing) {
@@ -1912,15 +1917,34 @@ app.post("/api/students/:id/promote", async ({ params, headers, jwt, set }) => {
     // Naikkan kelas logic (misal Kelas V -> Kelas VI, Kelas VII -> Kelas VIII, dll)
     let currentGrade = existing.kelas.toUpperCase();
     let nextGrade = currentGrade;
-    if (currentGrade.includes("SEPULUH")) nextGrade = "KELAS XI (SEBELAS)";
-    else if (currentGrade.includes("SEBELAS")) nextGrade = "KELAS XII (DUABELAS)";
-    else if (currentGrade.includes("DELAPAN")) nextGrade = "KELAS IX (SEMBILAN)";
-    else if (currentGrade.includes("TUJUH")) nextGrade = "KELAS VIII (DELAPAN)";
-    else if (currentGrade.includes("LIMA")) nextGrade = "KELAS VI (ENAM)";
-    else if (currentGrade.includes("EMPAT")) nextGrade = "KELAS V (LIMA)";
-    else if (currentGrade.includes("TIGA")) nextGrade = "KELAS EMPAT (EMPAT)";
-    else if (currentGrade.includes("DUA")) nextGrade = "KELAS TIGA (TIGA)";
-    else if (currentGrade.includes("SATU")) nextGrade = "KELAS DUA (DUA)";
+    if (currentGrade.includes("DUABELAS")) {
+      set.status = 400;
+      return { success: false, message: "Warga belajar sudah berada di kelas tertinggi (Kelas XII)" };
+    } else if (currentGrade.includes("SEBELAS")) {
+      nextGrade = "KELAS XII (DUABELAS)";
+    } else if (currentGrade.includes("SEPULUH")) {
+      nextGrade = "KELAS XI (SEBELAS)";
+    } else if (currentGrade.includes("SEMBILAN")) {
+      set.status = 400;
+      return { success: false, message: "Warga belajar sudah berada di kelas tertinggi untuk Paket B (Kelas IX)" };
+    } else if (currentGrade.includes("DELAPAN")) {
+      nextGrade = "KELAS IX (SEMBILAN)";
+    } else if (currentGrade.includes("TUJUH")) {
+      nextGrade = "KELAS VIII (DELAPAN)";
+    } else if (currentGrade.includes("ENAM")) {
+      set.status = 400;
+      return { success: false, message: "Warga belajar sudah berada di kelas tertinggi untuk Paket A (Kelas VI)" };
+    } else if (currentGrade.includes("LIMA")) {
+      nextGrade = "KELAS VI (ENAM)";
+    } else if (currentGrade.includes("EMPAT")) {
+      nextGrade = "KELAS V (LIMA)";
+    } else if (currentGrade.includes("TIGA")) {
+      nextGrade = "KELAS EMPAT (EMPAT)";
+    } else if (currentGrade.includes("DUA")) {
+      nextGrade = "KELAS TIGA (TIGA)";
+    } else if (currentGrade.includes("SATU")) {
+      nextGrade = "KELAS DUA (DUA)";
+    }
 
     const updated = await db.update(students)
       .set({ kelas: nextGrade, updatedAt: new Date().toISOString() })
@@ -1940,6 +1964,11 @@ app.post("/api/students/:id/graduate", async ({ params, headers, jwt, set }) => 
   if (authError) return authError;
 
   const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
   try {
     const updated = await db.update(students)
       .set({ status: "LULUS", updatedAt: new Date().toISOString() })
@@ -1958,6 +1987,11 @@ app.post("/api/students/:id/continue", async ({ params, body, headers, jwt, set 
   if (authError) return authError;
 
   const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
   const { program, kelas } = body;
   try {
     const updated = await db.update(students)

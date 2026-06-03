@@ -288,6 +288,7 @@ export default function WargaBelajarManager() {
       }
     } catch (e) {
       console.error(e);
+      alert("Terjadi kesalahan sistem atau koneksi saat memproses kenaikan kelas.");
     }
   };
 
@@ -313,6 +314,7 @@ export default function WargaBelajarManager() {
       }
     } catch (e) {
       console.error(e);
+      alert("Terjadi kesalahan sistem atau koneksi saat meluluskan warga belajar.");
     }
   };
 
@@ -341,10 +343,11 @@ export default function WargaBelajarManager() {
         setFormOpen(false);
         fetchStudents();
       } else {
-        alert("Gagal memproses kelanjutan program");
+        alert("Gagal memproses kelanjutan program: " + (data.message || ""));
       }
     } catch (e) {
       console.error(e);
+      alert("Terjadi kesalahan sistem atau koneksi saat memproses kelanjutan program.");
     }
   };
 
