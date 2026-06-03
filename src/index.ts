@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { staticPlugin } from "@elysia/static";
 import { db } from "./server/db";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news } from "./server/db/schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors } from "./server/db/schema";
 import { eq, or } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
 import fs from "fs";
@@ -1493,6 +1493,216 @@ app.delete("/api/news/:id", async ({ params, headers, jwt, set }) => {
   } catch (e) {
     set.status = 500;
     return { success: false, message: "Gagal menghapus berita" };
+  }
+});
+
+// --- API TUTORS ROUTES ---
+// Ambil semua tutor
+app.get("/api/tutors", async ({ set }) => {
+  try {
+    const list = await db.select().from(tutors).all();
+    const sanitized = list.map(({ password, ...rest }) => ({ ...rest, password: "" }));
+    return { success: true, data: sanitized };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data tutor" };
+  }
+});
+
+// Tambah tutor baru
+app.post("/api/tutors", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const {
+    nama,
+    tutorMapel,
+    program,
+    nuptk,
+    tempatTglLahir,
+    jenisKelamin,
+    agama,
+    pendidikan,
+    email,
+    nik,
+    alamat,
+    password,
+    foto,
+    tanggalMulaiTugas,
+    nomorSkPengangkatan,
+    lembagaPengangkat,
+    nomorSkPenugasan,
+    lembagaPenugas,
+  } = body;
+
+  try {
+    const hashedPassword = await Bun.password.hash(password || "password123");
+    const inserted = await db.insert(tutors).values({
+      nama,
+      tutorMapel,
+      program: program || '',
+      nuptk: nuptk || '',
+      tempatTglLahir: tempatTglLahir || '',
+      jenisKelamin: jenisKelamin || '',
+      agama: agama || '',
+      pendidikan: pendidikan || '',
+      email: email || '',
+      nik: nik || '',
+      alamat: alamat || '',
+      password: hashedPassword,
+      foto: foto || '',
+      tanggalMulaiTugas: tanggalMulaiTugas || '',
+      nomorSkPengangkatan: nomorSkPengangkatan || '',
+      lembagaPengangkat: lembagaPengangkat || '',
+      nomorSkPenugasan: nomorSkPenugasan || '',
+      lembagaPenugas: lembagaPenugas || '',
+    }).returning().get();
+    
+    const { password: _, ...sanitized } = inserted;
+    return { success: true, data: sanitized };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menambahkan data tutor" };
+  }
+}, {
+  body: t.Object({
+    nama: t.String({ minLength: 1 }),
+    tutorMapel: t.String({ minLength: 1 }),
+    program: t.Optional(t.String()),
+    nuptk: t.Optional(t.String()),
+    tempatTglLahir: t.Optional(t.String()),
+    jenisKelamin: t.Optional(t.String()),
+    agama: t.Optional(t.String()),
+    pendidikan: t.Optional(t.String()),
+    email: t.Optional(t.String()),
+    nik: t.Optional(t.String()),
+    alamat: t.Optional(t.String()),
+    password: t.Optional(t.String()),
+    foto: t.Optional(t.String()),
+    tanggalMulaiTugas: t.Optional(t.String()),
+    nomorSkPengangkatan: t.Optional(t.String()),
+    lembagaPengangkat: t.Optional(t.String()),
+    nomorSkPenugasan: t.Optional(t.String()),
+    lembagaPenugas: t.Optional(t.String()),
+  })
+});
+
+// Update tutor
+app.put("/api/tutors/:id", async ({ params, body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  const {
+    nama,
+    tutorMapel,
+    program,
+    nuptk,
+    tempatTglLahir,
+    jenisKelamin,
+    agama,
+    pendidikan,
+    email,
+    nik,
+    alamat,
+    password,
+    foto,
+    tanggalMulaiTugas,
+    nomorSkPengangkatan,
+    lembagaPengangkat,
+    nomorSkPenugasan,
+    lembagaPenugas,
+  } = body;
+
+  try {
+    const existing = await db.select().from(tutors).where(eq(tutors.id, id)).get();
+    if (!existing) {
+      set.status = 404;
+      return { success: false, message: "Data tutor tidak ditemukan" };
+    }
+
+    let finalPassword = existing.password;
+    if (password) {
+      finalPassword = await Bun.password.hash(password);
+    }
+
+    const updated = await db.update(tutors)
+      .set({
+        nama,
+        tutorMapel,
+        program: program ?? existing.program,
+        nuptk: nuptk ?? existing.nuptk,
+        tempatTglLahir: tempatTglLahir ?? existing.tempatTglLahir,
+        jenisKelamin: jenisKelamin ?? existing.jenisKelamin,
+        agama: agama ?? existing.agama,
+        pendidikan: pendidikan ?? existing.pendidikan,
+        email: email ?? existing.email,
+        nik: nik ?? existing.nik,
+        alamat: alamat ?? existing.alamat,
+        password: finalPassword,
+        foto: foto ?? existing.foto,
+        tanggalMulaiTugas: tanggalMulaiTugas ?? existing.tanggalMulaiTugas,
+        nomorSkPengangkatan: nomorSkPengangkatan ?? existing.nomorSkPengangkatan,
+        lembagaPengangkat: lembagaPengangkat ?? existing.lembagaPengangkat,
+        nomorSkPenugasan: nomorSkPenugasan ?? existing.nomorSkPenugasan,
+        lembagaPenugas: lembagaPenugas ?? existing.lembagaPenugas,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(tutors.id, id))
+      .returning()
+      .get();
+
+    const { password: _, ...sanitized } = updated;
+    return { success: true, data: sanitized };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal memperbarui data tutor" };
+  }
+}, {
+  body: t.Object({
+    nama: t.String({ minLength: 1 }),
+    tutorMapel: t.String({ minLength: 1 }),
+    program: t.Optional(t.String()),
+    nuptk: t.Optional(t.String()),
+    tempatTglLahir: t.Optional(t.String()),
+    jenisKelamin: t.Optional(t.String()),
+    agama: t.Optional(t.String()),
+    pendidikan: t.Optional(t.String()),
+    email: t.Optional(t.String()),
+    nik: t.Optional(t.String()),
+    alamat: t.Optional(t.String()),
+    password: t.Optional(t.String()),
+    foto: t.Optional(t.String()),
+    tanggalMulaiTugas: t.Optional(t.String()),
+    nomorSkPengangkatan: t.Optional(t.String()),
+    lembagaPengangkat: t.Optional(t.String()),
+    nomorSkPenugasan: t.Optional(t.String()),
+    lembagaPenugas: t.Optional(t.String()),
+  })
+});
+
+// Hapus tutor
+app.delete("/api/tutors/:id", async ({ params, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    await db.delete(tutors).where(eq(tutors.id, id)).run();
+    return { success: true, message: "Data tutor berhasil dihapus" };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menghapus data tutor" };
   }
 });
 

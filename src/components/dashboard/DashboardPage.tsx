@@ -20,6 +20,7 @@ import { AchievementsManager } from "./admin/AchievementsManager";
 import { ServicePointsManager } from "./admin/ServicePointsManager";
 import AgendaManager from "./admin/AgendaManager";
 import NewsManager from "./admin/NewsManager";
+import TutorManager from "./admin/TutorManager";
 
 // Dashboard Sub-components
 import DashboardSidebar, { getTabLabel } from "./DashboardSidebar";
@@ -232,6 +233,20 @@ export default function DashboardPage({ user, handleLogout }: DashboardPageProps
       return (
         <div className="animate-in fade-in duration-300">
           <NewsManager />
+        </div>
+      );
+    }
+    if (activeTab === "tutor") {
+      if (user.role !== "admin") {
+        return (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
+            🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka data Tutor.
+          </div>
+        );
+      }
+      return (
+        <div className="animate-in fade-in duration-300">
+          <TutorManager />
         </div>
       );
     }

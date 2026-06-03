@@ -217,4 +217,31 @@ CREATE TABLE IF NOT EXISTS news (
 );
 `);
 
+// Inisialisasi tabel tutors otomatis jika belum ada
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS tutors (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nama TEXT NOT NULL DEFAULT '',
+  tutor_mapel TEXT NOT NULL DEFAULT '',
+  program TEXT NOT NULL DEFAULT '',
+  nuptk TEXT NOT NULL DEFAULT '',
+  tempat_tgl_lahir TEXT NOT NULL DEFAULT '',
+  jenis_kelamin TEXT NOT NULL DEFAULT '',
+  agama TEXT NOT NULL DEFAULT '',
+  pendidikan TEXT NOT NULL DEFAULT '',
+  email TEXT NOT NULL DEFAULT '',
+  nik TEXT NOT NULL DEFAULT '',
+  alamat TEXT NOT NULL DEFAULT '',
+  password TEXT NOT NULL DEFAULT '',
+  foto TEXT NOT NULL DEFAULT '',
+  tanggal_mulai_tugas TEXT NOT NULL DEFAULT '',
+  nomor_sk_pengangkatan TEXT NOT NULL DEFAULT '',
+  lembaga_pengangkat TEXT NOT NULL DEFAULT '',
+  nomor_sk_penugasan TEXT NOT NULL DEFAULT '',
+  lembaga_penugas TEXT NOT NULL DEFAULT '',
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+`);
+
 export const db = drizzle(sqlite, { schema });

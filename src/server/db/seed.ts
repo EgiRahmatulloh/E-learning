@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news } from "./schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors } from "./schema";
 import { count } from "drizzle-orm";
 
 export async function seedDatabase() {
@@ -402,6 +402,82 @@ export async function seedDatabase() {
     } else {
       console.log(`ℹ️ Database memiliki ${newsCount} news, seeding diabaikan.`);
     }
+
+    // Seed tutors if empty
+    const resultTutors = await db.select({ value: count() }).from(tutors).get();
+    const tutorsCount = resultTutors?.value || 0;
+    if (tutorsCount === 0) {
+      console.log("🌱 Database tutors kosong, seeding default tutors...");
+      
+      const hashDefaultTutor = await Bun.password.hash("password123");
+
+      await db.insert(tutors).values([
+        {
+          nama: "ACENG LS SUHENDI",
+          tutorMapel: "Tutor PJOK",
+          program: "PAKET C",
+          nuptk: "1234567890123401",
+          tempatTglLahir: "Ciamis, 15-08-1988",
+          jenisKelamin: "Laki-laki",
+          agama: "Islam",
+          pendidikan: "S1 Pendidikan Olahraga",
+          email: "acengsuhendi@pkbmmakmur.org",
+          nik: "3207123456789101",
+          alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
+          password: hashDefaultTutor,
+          foto: "/images/633df6f47c394ce2b67bd54e4808301b.jpg",
+          tanggalMulaiTugas: "2018-07-15",
+          nomorSkPengangkatan: "421.9/301-Disdik/2018",
+          lembagaPengangkat: "Dinas Pendidikan Kabupaten Ciamis",
+          nomorSkPenugasan: "503/601-Operasional/Disdik",
+          lembagaPenugas: "PKBM Menuju Makmur"
+        },
+        {
+          nama: "H. MAMAN SUPARMAN, S.Pd.",
+          tutorMapel: "Tutor Bahasa Indonesia",
+          program: "PAKET B",
+          nuptk: "1234567890123456",
+          tempatTglLahir: "Ciamis, 12-05-1970",
+          jenisKelamin: "Laki-laki",
+          agama: "Islam",
+          pendidikan: "S1 Pendidikan Bahasa Indonesia",
+          email: "mamansuparman@pkbmmakmur.org",
+          nik: "3207123456789001",
+          alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
+          password: hashDefaultTutor,
+          foto: "/images/7ccf08e706410fd4d0cde0c04b95b108.png",
+          tanggalMulaiTugas: "2015-06-01",
+          nomorSkPengangkatan: "421.9/123-Disdik/2015",
+          lembagaPengangkat: "Dinas Pendidikan Kabupaten Ciamis",
+          nomorSkPenugasan: "503/456-Operasional/Disdik",
+          lembagaPenugas: "PKBM Menuju Makmur"
+        },
+        {
+          nama: "DEDEK KURNIAWAN, S.Si.",
+          tutorMapel: "Tutor Matematika & IPA",
+          program: "PAKET C",
+          nuptk: "1234567890123402",
+          tempatTglLahir: "Ciamis, 20-10-1990",
+          jenisKelamin: "Laki-laki",
+          agama: "Islam",
+          pendidikan: "S1 Fisika",
+          email: "dedekkurniawan@pkbmmakmur.org",
+          nik: "3207123456789102",
+          alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
+          password: hashDefaultTutor,
+          foto: "/images/b8600352865365e6216298c1b2bcb4ce.png",
+          tanggalMulaiTugas: "2019-01-10",
+          nomorSkPengangkatan: "421.9/302-Disdik/2019",
+          lembagaPengangkat: "Dinas Pendidikan Kabupaten Ciamis",
+          nomorSkPenugasan: "503/602-Operasional/Disdik",
+          lembagaPenugas: "PKBM Menuju Makmur"
+        }
+      ]);
+      console.log("✅ Seeding tutors berhasil!");
+    } else {
+      console.log(`ℹ️ Database memiliki ${tutorsCount} tutors, seeding diabaikan.`);
+    }
+
   } catch (error) {
     console.error("❌ Gagal melakukan seeding database:", error);
   }
