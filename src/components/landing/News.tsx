@@ -82,13 +82,8 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
       setNewsList(prev => prev.map(n => n.id === id ? { ...n, hits: newHits } : n));
       
       // Send to server in background (silent update)
-      fetch(`/api/news/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...existingItem,
-          hits: newHits
-        })
+      fetch(`/api/news/${id}/hit`, {
+        method: "POST"
       });
     } catch (e) {
       console.error(e);

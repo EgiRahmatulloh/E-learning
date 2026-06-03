@@ -1394,6 +1394,37 @@ app.post("/api/news", async ({ body, headers, jwt, set }) => {
   })
 });
 
+// Increment hits berita (Public)
+app.post("/api/news/:id/hit", async ({ params, set }) => {
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    const existing = await db.select().from(news).where(eq(news.id, id)).get();
+    if (!existing) {
+      set.status = 404;
+      return { success: false, message: "Berita tidak ditemukan" };
+    }
+
+    const updated = await db.update(news)
+      .set({
+        hits: (existing.hits || 0) + 1,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(news.id, id))
+      .returning()
+      .get();
+    
+    return { success: true, data: updated };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal memperbarui hits berita" };
+  }
+});
+
 // Update berita
 app.put("/api/news/:id", async ({ params, body, headers, jwt, set }) => {
   const authError = await verifyAdmin(headers, jwt, set);
