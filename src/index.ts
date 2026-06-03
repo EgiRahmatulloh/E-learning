@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { staticPlugin } from "@elysia/static";
 import { db } from "./server/db";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors } from "./server/db/schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students } from "./server/db/schema";
 import { eq, or } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
 import fs from "fs";
@@ -1703,6 +1703,335 @@ app.delete("/api/tutors/:id", async ({ params, headers, jwt, set }) => {
   } catch (e) {
     set.status = 500;
     return { success: false, message: "Gagal menghapus data tutor" };
+  }
+});
+
+// --- API STUDENTS (WARGA BELAJAR) ROUTES ---
+// Ambil semua warga belajar
+app.get("/api/students", async ({ set }) => {
+  try {
+    const list = await db.select().from(students).all();
+    const sanitized = list.map(({ password, ...rest }) => ({ ...rest, password: "" }));
+    return { success: true, data: sanitized };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data warga belajar" };
+  }
+});
+
+// Tambah warga belajar baru
+app.post("/api/students", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const {
+    nama,
+    nik,
+    program,
+    kelas,
+    nisn,
+    nis,
+    tempatTglLahir,
+    titikLayanan,
+    jenisKelamin,
+    noHp,
+    agama,
+    namaAyah,
+    email,
+    namaIbu,
+    alamat,
+    password,
+    foto,
+    status,
+  } = body;
+
+  try {
+    const hashedPassword = await Bun.password.hash(password || "password123");
+    const inserted = await db.insert(students).values({
+      nama,
+      nik: nik || '',
+      program: program || '',
+      kelas: kelas || '',
+      nisn: nisn || '',
+      nis: nis || '',
+      tempatTglLahir: tempatTglLahir || '',
+      titikLayanan: titikLayanan || '',
+      jenisKelamin: jenisKelamin || '',
+      noHp: noHp || '',
+      agama: agama || '',
+      namaAyah: namaAyah || '',
+      email: email || '',
+      namaIbu: namaIbu || '',
+      alamat: alamat || '',
+      password: hashedPassword,
+      foto: foto || '',
+      status: status || 'AKTIF',
+    }).returning().get();
+
+    const { password: _, ...sanitized } = inserted;
+    return { success: true, data: sanitized };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menambahkan data warga belajar" };
+  }
+}, {
+  body: t.Object({
+    nama: t.String({ minLength: 1 }),
+    nik: t.Optional(t.String()),
+    program: t.Optional(t.String()),
+    kelas: t.Optional(t.String()),
+    nisn: t.Optional(t.String()),
+    nis: t.Optional(t.String()),
+    tempatTglLahir: t.Optional(t.String()),
+    titikLayanan: t.Optional(t.String()),
+    jenisKelamin: t.Optional(t.String()),
+    noHp: t.Optional(t.String()),
+    agama: t.Optional(t.String()),
+    namaAyah: t.Optional(t.String()),
+    email: t.Optional(t.String()),
+    namaIbu: t.Optional(t.String()),
+    alamat: t.Optional(t.String()),
+    password: t.Optional(t.String()),
+    foto: t.Optional(t.String()),
+    status: t.Optional(t.String()),
+  })
+});
+
+// Update warga belajar
+app.put("/api/students/:id", async ({ params, body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  const {
+    nama,
+    nik,
+    program,
+    kelas,
+    nisn,
+    nis,
+    tempatTglLahir,
+    titikLayanan,
+    jenisKelamin,
+    noHp,
+    agama,
+    namaAyah,
+    email,
+    namaIbu,
+    alamat,
+    password,
+    foto,
+    status,
+  } = body;
+
+  try {
+    const existing = await db.select().from(students).where(eq(students.id, id)).get();
+    if (!existing) {
+      set.status = 404;
+      return { success: false, message: "Data warga belajar tidak ditemukan" };
+    }
+
+    let finalPassword = existing.password;
+    if (password) {
+      finalPassword = await Bun.password.hash(password);
+    }
+
+    const updated = await db.update(students)
+      .set({
+        nama,
+        nik: nik ?? existing.nik,
+        program: program ?? existing.program,
+        kelas: kelas ?? existing.kelas,
+        nisn: nisn ?? existing.nisn,
+        nis: nis ?? existing.nis,
+        tempatTglLahir: tempatTglLahir ?? existing.tempatTglLahir,
+        titikLayanan: titikLayanan ?? existing.titikLayanan,
+        jenisKelamin: jenisKelamin ?? existing.jenisKelamin,
+        noHp: noHp ?? existing.noHp,
+        agama: agama ?? existing.agama,
+        namaAyah: namaAyah ?? existing.namaAyah,
+        email: email ?? existing.email,
+        namaIbu: namaIbu ?? existing.namaIbu,
+        alamat: alamat ?? existing.alamat,
+        password: finalPassword,
+        foto: foto ?? existing.foto,
+        status: status ?? existing.status,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(students.id, id))
+      .returning()
+      .get();
+
+    const { password: _, ...sanitized } = updated;
+    return { success: true, data: sanitized };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal memperbarui data warga belajar" };
+  }
+}, {
+  body: t.Object({
+    nama: t.String({ minLength: 1 }),
+    nik: t.Optional(t.String()),
+    program: t.Optional(t.String()),
+    kelas: t.Optional(t.String()),
+    nisn: t.Optional(t.String()),
+    nis: t.Optional(t.String()),
+    tempatTglLahir: t.Optional(t.String()),
+    titikLayanan: t.Optional(t.String()),
+    jenisKelamin: t.Optional(t.String()),
+    noHp: t.Optional(t.String()),
+    agama: t.Optional(t.String()),
+    namaAyah: t.Optional(t.String()),
+    email: t.Optional(t.String()),
+    namaIbu: t.Optional(t.String()),
+    alamat: t.Optional(t.String()),
+    password: t.Optional(t.String()),
+    foto: t.Optional(t.String()),
+    status: t.Optional(t.String()),
+  })
+});
+
+// Naikkan kelas warga belajar
+app.post("/api/students/:id/promote", async ({ params, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    const existing = await db.select().from(students).where(eq(students.id, id)).get();
+    if (!existing) {
+      set.status = 404;
+      return { success: false, message: "Data warga belajar tidak ditemukan" };
+    }
+
+    // Naikkan kelas logic (misal Kelas V -> Kelas VI, Kelas VII -> Kelas VIII, dll)
+    let currentGrade = existing.kelas.toUpperCase();
+    let nextGrade = currentGrade;
+    if (currentGrade.includes("DUABELAS")) {
+      set.status = 400;
+      return { success: false, message: "Warga belajar sudah berada di kelas tertinggi (Kelas XII)" };
+    } else if (currentGrade.includes("SEBELAS")) {
+      nextGrade = "KELAS XII (DUABELAS)";
+    } else if (currentGrade.includes("SEPULUH")) {
+      nextGrade = "KELAS XI (SEBELAS)";
+    } else if (currentGrade.includes("SEMBILAN")) {
+      set.status = 400;
+      return { success: false, message: "Warga belajar sudah berada di kelas tertinggi untuk Paket B (Kelas IX)" };
+    } else if (currentGrade.includes("DELAPAN")) {
+      nextGrade = "KELAS IX (SEMBILAN)";
+    } else if (currentGrade.includes("TUJUH")) {
+      nextGrade = "KELAS VIII (DELAPAN)";
+    } else if (currentGrade.includes("ENAM")) {
+      set.status = 400;
+      return { success: false, message: "Warga belajar sudah berada di kelas tertinggi untuk Paket A (Kelas VI)" };
+    } else if (currentGrade.includes("LIMA")) {
+      nextGrade = "KELAS VI (ENAM)";
+    } else if (currentGrade.includes("EMPAT")) {
+      nextGrade = "KELAS V (LIMA)";
+    } else if (currentGrade.includes("TIGA")) {
+      nextGrade = "KELAS EMPAT (EMPAT)";
+    } else if (currentGrade.includes("DUA")) {
+      nextGrade = "KELAS TIGA (TIGA)";
+    } else if (currentGrade.includes("SATU")) {
+      nextGrade = "KELAS DUA (DUA)";
+    }
+
+    const updated = await db.update(students)
+      .set({ kelas: nextGrade, updatedAt: new Date().toISOString() })
+      .where(eq(students.id, id))
+      .returning().get();
+
+    return { success: true, data: updated };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menaikkan kelas" };
+  }
+});
+
+// Luluskan warga belajar (Otomatis status LULUS)
+app.post("/api/students/:id/graduate", async ({ params, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    const updated = await db.update(students)
+      .set({ status: "LULUS", updatedAt: new Date().toISOString() })
+      .where(eq(students.id, id))
+      .returning().get();
+    return { success: true, data: updated };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal meluluskan warga belajar" };
+  }
+});
+
+// Melanjutkan program (Ubah program Paket A/B/C dan reset kelas)
+app.post("/api/students/:id/continue", async ({ params, body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  const { program, kelas } = body;
+  try {
+    const updated = await db.update(students)
+      .set({
+        program,
+        kelas,
+        status: "AKTIF",
+        updatedAt: new Date().toISOString()
+      })
+      .where(eq(students.id, id))
+      .returning().get();
+    return { success: true, data: updated };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal memproses kelanjutan program" };
+  }
+}, {
+  body: t.Object({
+    program: t.String(),
+    kelas: t.String(),
+  })
+});
+
+// Hapus warga belajar
+app.delete("/api/students/:id", async ({ params, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    await db.delete(students).where(eq(students.id, id)).run();
+    return { success: true, message: "Warga belajar berhasil dihapus" };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menghapus warga belajar" };
   }
 });
 
