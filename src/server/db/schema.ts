@@ -327,6 +327,33 @@ export const products = sqliteTable('products', {
 export type ProductType = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
 
+export const alumni = sqliteTable('alumni', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  nama: text('nama').notNull().default(''),
+  nik: text('nik').notNull().default(''),
+  program: text('program').notNull().default(''),
+  tahunLulus: text('tahun_lulus').notNull().default(''),
+  nisn: text('nisn').notNull().default(''),
+  nis: text('nis').notNull().default(''),
+  tempatTglLahir: text('tempat_tgl_lahir').notNull().default(''),
+  noHp: text('no_hp').notNull().default(''),
+  namaAyah: text('nama_ayah').notNull().default(''),
+  namaIbu: text('nama_ibu').notNull().default(''),
+  jenisKelamin: text('jenis_kelamin').notNull().default(''),
+  agama: text('agama').notNull().default(''),
+  email: text('email').notNull().default(''),
+  alamat: text('alamat').notNull().default(''),
+  cerita: text('cerita').notNull().default(''),
+  foto: text('foto').notNull().default(''),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at')
+    .$defaultFn(() => new Date().toISOString())
+    .$onUpdate(() => new Date().toISOString()),
+});
+
+export type AlumniType = typeof alumni.$inferSelect;
+export type NewAlumni = typeof alumni.$inferInsert;
+
 
 
 
