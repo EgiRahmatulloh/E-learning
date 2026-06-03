@@ -303,4 +303,29 @@ CREATE TABLE IF NOT EXISTS products (
 );
 `);
 
+// Inisialisasi tabel alumni otomatis jika belum ada
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS alumni (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nama TEXT NOT NULL DEFAULT '',
+  nik TEXT NOT NULL DEFAULT '',
+  program TEXT NOT NULL DEFAULT '',
+  tahun_lulus TEXT NOT NULL DEFAULT '',
+  nisn TEXT NOT NULL DEFAULT '',
+  nis TEXT NOT NULL DEFAULT '',
+  tempat_tgl_lahir TEXT NOT NULL DEFAULT '',
+  no_hp TEXT NOT NULL DEFAULT '',
+  nama_ayah TEXT NOT NULL DEFAULT '',
+  nama_ibu TEXT NOT NULL DEFAULT '',
+  jenis_kelamin TEXT NOT NULL DEFAULT '',
+  agama TEXT NOT NULL DEFAULT '',
+  email TEXT NOT NULL DEFAULT '',
+  alamat TEXT NOT NULL DEFAULT '',
+  cerita TEXT NOT NULL DEFAULT '',
+  foto TEXT NOT NULL DEFAULT '',
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+`);
+
 export const db = drizzle(sqlite, { schema });

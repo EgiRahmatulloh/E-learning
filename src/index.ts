@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { staticPlugin } from "@elysia/static";
 import { db } from "./server/db";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students, downloads, products } from "./server/db/schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students, downloads, products, alumni } from "./server/db/schema";
 import { eq, or, sql } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
 import fs from "fs";
@@ -2329,6 +2329,168 @@ app.delete("/api/products/:id", async ({ params, headers, jwt, set }) => {
   } catch (e) {
     set.status = 500;
     return { success: false, message: "Gagal menghapus data produk" };
+  }
+});
+
+// --- API ALUMNI ROUTES ---
+// Ambil daftar alumni untuk publik (tanpa data sensitif NIK & No HP)
+app.get("/api/alumni", async ({ set }) => {
+  try {
+    const list = await db.select({
+      id: alumni.id,
+      nama: alumni.nama,
+      program: alumni.program,
+      tahunLulus: alumni.tahunLulus,
+      nisn: alumni.nisn,
+      nis: alumni.nis,
+      tempatTglLahir: alumni.tempatTglLahir,
+      jenisKelamin: alumni.jenisKelamin,
+      agama: alumni.agama,
+      email: alumni.email,
+      alamat: alumni.alamat,
+      cerita: alumni.cerita,
+      foto: alumni.foto,
+      createdAt: alumni.createdAt,
+      updatedAt: alumni.updatedAt,
+    }).from(alumni).all();
+    return { success: true, data: list };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data alumni" };
+  }
+});
+
+// Ambil semua data alumni untuk admin (termasuk NIK & No HP)
+app.get("/api/alumni/admin", async ({ headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  try {
+    const list = await db.select().from(alumni).all();
+    return { success: true, data: list };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data alumni" };
+  }
+});
+
+// Tambah alumni baru
+app.post("/api/alumni", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const {
+    nama, nik, program, tahunLulus, nisn, nis, tempatTglLahir,
+    noHp, namaAyah, namaIbu, jenisKelamin, agama, email, alamat, cerita, foto
+  } = body;
+
+  try {
+    const inserted = await db.insert(alumni).values({
+      nama, nik, program, tahunLulus, nisn, nis, tempatTglLahir,
+      noHp, namaAyah, namaIbu, jenisKelamin, agama, email, alamat, cerita, foto
+    }).returning().get();
+
+    return { success: true, data: inserted };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menambahkan data alumni" };
+  }
+}, {
+  body: t.Object({
+    nama: t.String(),
+    nik: t.String(),
+    program: t.String(),
+    tahunLulus: t.String(),
+    nisn: t.String(),
+    nis: t.String(),
+    tempatTglLahir: t.String(),
+    noHp: t.String(),
+    namaAyah: t.String(),
+    namaIbu: t.String(),
+    jenisKelamin: t.String(),
+    agama: t.String(),
+    email: t.String(),
+    alamat: t.String(),
+    cerita: t.String(),
+    foto: t.String(),
+  })
+});
+
+// Update data alumni
+app.put("/api/alumni/:id", async ({ params, body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  const {
+    nama, nik, program, tahunLulus, nisn, nis, tempatTglLahir,
+    noHp, namaAyah, namaIbu, jenisKelamin, agama, email, alamat, cerita, foto
+  } = body;
+
+  try {
+    const updated = await db.update(alumni)
+      .set({
+        nama, nik, program, tahunLulus, nisn, nis, tempatTglLahir,
+        noHp, namaAyah, namaIbu, jenisKelamin, agama, email, alamat, cerita, foto,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(alumni.id, id))
+      .returning()
+      .get();
+
+    if (!updated) {
+      set.status = 404;
+      return { success: false, message: "Data alumni tidak ditemukan" };
+    }
+
+    return { success: true, data: updated };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal memperbarui data alumni" };
+  }
+}, {
+  body: t.Object({
+    nama: t.String(),
+    nik: t.String(),
+    program: t.String(),
+    tahunLulus: t.String(),
+    nisn: t.String(),
+    nis: t.String(),
+    tempatTglLahir: t.String(),
+    noHp: t.String(),
+    namaAyah: t.String(),
+    namaIbu: t.String(),
+    jenisKelamin: t.String(),
+    agama: t.String(),
+    email: t.String(),
+    alamat: t.String(),
+    cerita: t.String(),
+    foto: t.String(),
+  })
+});
+
+// Hapus alumni
+app.delete("/api/alumni/:id", async ({ params, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    await db.delete(alumni).where(eq(alumni.id, id)).run();
+    return { success: true, message: "Data alumni berhasil dihapus" };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menghapus data alumni" };
   }
 });
 

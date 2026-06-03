@@ -15,6 +15,7 @@ import Tutors from "./components/landing/Tutors";
 import WargaBelajar from "./components/landing/WargaBelajar";
 import DownloadPage from "./components/landing/DownloadPage";
 import ProductsPage from "./components/landing/ProductsPage";
+import AlumniPage from "./components/landing/AlumniPage";
 import Products from "./components/landing/Products";
 import Testimonials from "./components/landing/Testimonials";
 import Gallery from "./components/landing/Gallery";
@@ -188,6 +189,10 @@ function App() {
         ) : currentPath === "/produk-wb" ? (
           <div className="pt-20">
             <ProductsPage onNavigate={navigate} />
+          </div>
+        ) : currentPath === "/alumni" ? (
+          <div className="pt-20">
+            <AlumniPage onNavigate={navigate} />
           </div>
         ) : (
           <>

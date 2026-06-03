@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students, downloads, products } from "./schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students, downloads, products, alumni } from "./schema";
 import { count } from "drizzle-orm";
 
 export async function seedDatabase() {
@@ -645,6 +645,72 @@ export async function seedDatabase() {
       console.log("✅ Seeding products berhasil!");
     } else {
       console.log(`ℹ️ Database memiliki ${productsCount} products, seeding diabaikan.`);
+    }
+
+    // Seed alumni if empty
+    const resultAlumni = await db.select({ value: count() }).from(alumni).get();
+    const alumniCount = resultAlumni?.value || 0;
+    if (alumniCount === 0) {
+      console.log("🌱 Database alumni kosong, seeding default alumni...");
+      await db.insert(alumni).values([
+        {
+          nama: "Aceng LS Suhendi",
+          nik: "3207123456789401",
+          program: "PAKET C",
+          tahunLulus: "2020",
+          nisn: "0081234901",
+          nis: "20171001",
+          tempatTglLahir: "Ciamis, 15-08-2002",
+          noHp: "082128594025",
+          namaAyah: "Suparman",
+          namaIbu: "Aminah",
+          jenisKelamin: "Laki-laki",
+          agama: "Islam",
+          email: "aceng.suhendi@gmail.com",
+          alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
+          cerita: "Belajar di PKBM Menuju Makmur memberikan saya fleksibilitas untuk bekerja sambil menempuh pendidikan Paket C resmi. Ijazah ini sangat membantu saya melanjutkan karir.",
+          foto: "/images/633df6f47c394ce2b67bd54e4808301b.jpg"
+        },
+        {
+          nama: "Bella Putri",
+          nik: "3207123456789402",
+          program: "PAKET B",
+          tahunLulus: "2022",
+          nisn: "0091234902",
+          nis: "20192001",
+          tempatTglLahir: "Ciamis, 12-09-2007",
+          noHp: "081234567891",
+          namaAyah: "Nasihin",
+          namaIbu: "Siti",
+          jenisKelamin: "Perempuan",
+          agama: "Islam",
+          email: "bella.putri@gmail.com",
+          alamat: "Dusun Sembawa, Mulyasari, Jatinagara, Ciamis",
+          cerita: "Pengalaman luar biasa di PKBM, para tutor sangat sabar mengajar materi kesetaraan. Sekarang saya bisa melanjutkan sekolah ke jenjang berikutnya dengan percaya diri.",
+          foto: "/images/7ccf08e706410fd4d0cde0c04b95b108.png"
+        },
+        {
+          nama: "Chandra Wijaya",
+          nik: "3207123456789403",
+          program: "PAKET A",
+          tahunLulus: "2021",
+          nisn: "0101234903",
+          nis: "20183001",
+          tempatTglLahir: "Ciamis, 24-04-2009",
+          noHp: "081234567892",
+          namaAyah: "Kurniawan",
+          namaIbu: "Dewi",
+          jenisKelamin: "Laki-laki",
+          agama: "Islam",
+          email: "chandra.wijaya@gmail.com",
+          alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
+          cerita: "PKBM Menuju Makmur sangat membantu anak-anak putus sekolah seperti saya untuk mendapatkan hak belajar kembali secara layak dan nyaman.",
+          foto: "/images/b8600352865365e6216298c1b2bcb4ce.png"
+        }
+      ]);
+      console.log("✅ Seeding alumni berhasil!");
+    } else {
+      console.log(`ℹ️ Database memiliki ${alumniCount} alumni, seeding diabaikan.`);
     }
 
   } catch (error) {
