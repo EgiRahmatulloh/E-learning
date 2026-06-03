@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { staticPlugin } from "@elysia/static";
 import { db } from "./server/db";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students, downloads } from "./server/db/schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students, downloads, products } from "./server/db/schema";
 import { eq, or, sql } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
 import fs from "fs";
@@ -2185,6 +2185,150 @@ app.delete("/api/downloads/:id", async ({ params, headers, jwt, set }) => {
   } catch (e) {
     set.status = 500;
     return { success: false, message: "Gagal menghapus data download" };
+  }
+});
+
+// --- API PRODUCTS (PRODUK WARGA BELAJAR) ROUTES ---
+// Ambil semua produk aktif untuk publik
+app.get("/api/products", async ({ set }) => {
+  try {
+    const list = await db.select().from(products).where(eq(products.status, 'AKTIF')).all();
+    return { success: true, data: list };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data produk warga belajar" };
+  }
+});
+
+// Ambil semua produk untuk admin
+app.get("/api/products/admin", async ({ headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  try {
+    const list = await db.select().from(products).all();
+    return { success: true, data: list };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data produk warga belajar" };
+  }
+});
+
+// Tambah produk baru
+app.post("/api/products", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const { namaProduk, deskripsi, noHp, penjual, satuan, harga, status, gambar } = body;
+  if (harga < 0) {
+    set.status = 400;
+    return { success: false, message: "Harga tidak boleh bernilai negatif" };
+  }
+
+  try {
+    const inserted = await db.insert(products).values({
+      namaProduk,
+      deskripsi,
+      noHp,
+      penjual,
+      satuan,
+      harga,
+      status: status || "AKTIF",
+      gambar: gambar || "",
+    }).returning().get();
+
+    return { success: true, data: inserted };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menambahkan data produk baru" };
+  }
+}, {
+  body: t.Object({
+    namaProduk: t.String(),
+    deskripsi: t.String(),
+    noHp: t.String(),
+    penjual: t.String(),
+    satuan: t.String(),
+    harga: t.Numeric({ minimum: 0 }),
+    status: t.Optional(t.String()),
+    gambar: t.Optional(t.String()),
+  })
+});
+
+// Update produk
+app.put("/api/products/:id", async ({ params, body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  const { namaProduk, deskripsi, noHp, penjual, satuan, harga, status, gambar } = body;
+  if (harga < 0) {
+    set.status = 400;
+    return { success: false, message: "Harga tidak boleh bernilai negatif" };
+  }
+
+  try {
+    const updated = await db.update(products)
+      .set({
+        namaProduk,
+        deskripsi,
+        noHp,
+        penjual,
+        satuan,
+        harga,
+        status,
+        gambar,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(products.id, id))
+      .returning()
+      .get();
+
+    if (!updated) {
+      set.status = 404;
+      return { success: false, message: "Data produk tidak ditemukan" };
+    }
+
+    return { success: true, data: updated };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal memperbarui data produk" };
+  }
+}, {
+  body: t.Object({
+    namaProduk: t.String(),
+    deskripsi: t.String(),
+    noHp: t.String(),
+    penjual: t.String(),
+    satuan: t.String(),
+    harga: t.Numeric({ minimum: 0 }),
+    status: t.String(),
+    gambar: t.String(),
+  })
+});
+
+// Hapus produk
+app.delete("/api/products/:id", async ({ params, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    await db.delete(products).where(eq(products.id, id)).run();
+    return { success: true, message: "Data produk berhasil dihapus" };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menghapus data produk" };
   }
 });
 

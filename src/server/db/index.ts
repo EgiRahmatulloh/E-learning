@@ -286,4 +286,21 @@ CREATE TABLE IF NOT EXISTS downloads (
 );
 `);
 
+// Inisialisasi tabel products otomatis jika belum ada
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS products (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nama_produk TEXT NOT NULL DEFAULT '',
+  deskripsi TEXT NOT NULL DEFAULT '',
+  no_hp TEXT NOT NULL DEFAULT '',
+  penjual TEXT NOT NULL DEFAULT '',
+  satuan TEXT NOT NULL DEFAULT '',
+  harga INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'AKTIF',
+  gambar TEXT NOT NULL DEFAULT '',
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+`);
+
 export const db = drizzle(sqlite, { schema });

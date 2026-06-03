@@ -308,6 +308,25 @@ export const downloads = sqliteTable('downloads', {
 export type DownloadType = typeof downloads.$inferSelect;
 export type NewDownload = typeof downloads.$inferInsert;
 
+export const products = sqliteTable('products', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  namaProduk: text('nama_produk').notNull().default(''),
+  deskripsi: text('deskripsi').notNull().default(''),
+  noHp: text('no_hp').notNull().default(''),
+  penjual: text('penjual').notNull().default(''),
+  satuan: text('satuan').notNull().default(''),
+  harga: integer('harga').notNull().default(0),
+  status: text('status').notNull().default('AKTIF'), // 'AKTIF', 'NON AKTIF'
+  gambar: text('gambar').notNull().default(''),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at')
+    .$defaultFn(() => new Date().toISOString())
+    .$onUpdate(() => new Date().toISOString()),
+});
+
+export type ProductType = typeof products.$inferSelect;
+export type NewProduct = typeof products.$inferInsert;
+
 
 
 
