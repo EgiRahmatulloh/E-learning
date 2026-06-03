@@ -170,6 +170,10 @@ function App() {
           <div className="pt-20">
             <News isDetailed={true} onNavigate={navigate} />
           </div>
+        ) : currentPath === "/tutor" ? (
+          <div className="pt-20">
+            <Tutors isDetailed={true} onNavigate={navigate} />
+          </div>
         ) : (
           <>
             <Hero onServiceClick={(service) => setActiveServiceDialog(service)} />
@@ -188,7 +192,7 @@ function App() {
             
             <News isDetailed={false} onNavigate={navigate} />
             
-            <Tutors />
+            <Tutors isDetailed={false} onNavigate={navigate} />
             
             <Products />
             
