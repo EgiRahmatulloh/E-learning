@@ -14,6 +14,7 @@ import News from "./components/landing/News";
 import Tutors from "./components/landing/Tutors";
 import WargaBelajar from "./components/landing/WargaBelajar";
 import DownloadPage from "./components/landing/DownloadPage";
+import ProductsPage from "./components/landing/ProductsPage";
 import Products from "./components/landing/Products";
 import Testimonials from "./components/landing/Testimonials";
 import Gallery from "./components/landing/Gallery";
@@ -183,6 +184,10 @@ function App() {
         ) : currentPath === "/download" ? (
           <div className="pt-20">
             <DownloadPage onNavigate={navigate} />
+          </div>
+        ) : currentPath === "/produk-wb" ? (
+          <div className="pt-20">
+            <ProductsPage onNavigate={navigate} />
           </div>
         ) : (
           <>

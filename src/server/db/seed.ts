@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students, downloads } from "./schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students, downloads, products } from "./schema";
 import { count } from "drizzle-orm";
 
 export async function seedDatabase() {
@@ -395,7 +395,7 @@ export async function seedDatabase() {
           hits: 210,
           status: "PUBLISH",
           foto: "/images/0fa045f1f00267c7c35442f158ab8ef8.jpg",
-          konten: "PKBM Menuju Makmur menyelenggarakan Ujian Pendidikan Kesetaraan Paket B dengan antusiasme yang tinggi dari para tutor dan peserta."
+          konten: "PKBM Menuju Makmur menyelenggarakan Ujian Pendidikan Kesetaraan Paket B dengan antusiasme yang tinggi dari para tutor and peserta."
         }
       ]);
       console.log("✅ Seeding news berhasil!");
@@ -603,6 +603,48 @@ export async function seedDatabase() {
       console.log("✅ Seeding downloads berhasil!");
     } else {
       console.log(`ℹ️ Database memiliki ${downloadsCount} downloads, seeding diabaikan.`);
+    }
+
+    // Seed products if empty
+    const resultProducts = await db.select({ value: count() }).from(products).get();
+    const productsCount = resultProducts?.value || 0;
+    if (productsCount === 0) {
+      console.log("🌱 Database products kosong, seeding default products...");
+      await db.insert(products).values([
+        {
+          namaProduk: "Piring Lidi",
+          harga: 10000,
+          penjual: "Aceng",
+          satuan: "Buah",
+          status: "AKTIF",
+          deskripsi: "Piring cantik dan ramah lingkungan berbahan dasar lidi kelapa pilihan.",
+          noHp: "081234567890",
+          gambar: "/images/73129d8e548b4795ba15eaafa5d0e39c.jpg", // Menggunakan default image placeholder yang valid
+        },
+        {
+          namaProduk: "Kue Pengantin",
+          harga: 250000,
+          penjual: "Siti",
+          satuan: "Buah",
+          status: "AKTIF",
+          deskripsi: "Kue pernikahan lezat dengan desain elegan hasil karya warga belajar.",
+          noHp: "081234567891",
+          gambar: "/images/73129d8e548b4795ba15eaafa5d0e39c.jpg",
+        },
+        {
+          namaProduk: "Keset Rajut",
+          harga: 15000,
+          penjual: "Dedek",
+          satuan: "Buah",
+          status: "AKTIF",
+          deskripsi: "Keset rajutan tebal, menyerap air dengan sangat baik, awet dan beraneka warna.",
+          noHp: "081234567892",
+          gambar: "/images/73129d8e548b4795ba15eaafa5d0e39c.jpg",
+        }
+      ]);
+      console.log("✅ Seeding products berhasil!");
+    } else {
+      console.log(`ℹ️ Database memiliki ${productsCount} products, seeding diabaikan.`);
     }
 
   } catch (error) {
