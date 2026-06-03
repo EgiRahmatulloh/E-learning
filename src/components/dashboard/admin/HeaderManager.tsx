@@ -52,7 +52,7 @@ export function HeaderManager() {
       if (data.success && Array.isArray(data.data)) {
         const mapped = data.data.map((item: any) => ({
           id: String(item.id),
-          creator: item.creator || "ADMIN",
+          creator: item.creator || "-",
           title: item.title || "",
           status: item.status || "AKTIF",
           image: item.image || "",
@@ -183,7 +183,7 @@ export function HeaderManager() {
       } else {
         const newSlide: SlideData = {
           id: "local-" + Date.now().toString(),
-          creator: "ADMIN",
+          creator: "-",
           title: formTitle,
           status: formStatus,
           image: formImage,

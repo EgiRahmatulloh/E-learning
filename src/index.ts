@@ -254,6 +254,14 @@ const verifyAdmin = async (headers: Record<string, string | undefined>, jwt: any
   return null; // Valid
 };
 
+// Helper untuk mengambil payload admin
+const getAdminPayload = async (headers: Record<string, string | undefined>, jwt: any) => {
+  const authHeader = headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+  const token = authHeader.split(' ')[1];
+  return await jwt.verify(token);
+};
+
 // --- API SLIDER ROUTES ---
 // Ambil semua slider
 app.get("/api/sliders", async ({ set }) => {
@@ -272,12 +280,13 @@ app.post("/api/sliders", async ({ body, headers, jwt, set }) => {
   if (authError) return authError;
 
   const { title, image, status } = body;
+  const adminPayload = await getAdminPayload(headers, jwt);
   try {
     const inserted = await db.insert(sliders).values({
       title,
       image,
       status: status || "AKTIF",
-      creator: "ADMIN",
+      creator: adminPayload?.name || '-',
     }).returning().get();
     
     return { success: true, data: inserted };
@@ -373,12 +382,13 @@ app.post("/api/announcements", async ({ body, headers, jwt, set }) => {
   if (authError) return authError;
 
   const { text, date, status } = body;
+  const adminPayload = await getAdminPayload(headers, jwt);
   try {
     const inserted = await db.insert(announcements).values({
       text,
       date,
       status: status || "AKTIF",
-      creator: "ADMIN",
+      creator: adminPayload?.name || '-',
     }).returning().get();
     
     return { success: true, data: inserted };
@@ -1454,12 +1464,13 @@ app.post("/api/news", async ({ body, headers, jwt, set }) => {
   const authError = await verifyAdmin(headers, jwt, set);
   if (authError) return authError;
 
-  const { judul, kategori, pembuat, tanggalPosting, status, foto, konten } = body;
+  const { judul, kategori, tanggalPosting, status, foto, konten } = body;
+  const adminPayload = await getAdminPayload(headers, jwt);
   try {
     const inserted = await db.insert(news).values({
       judul,
       kategori,
-      pembuat: pembuat || 'ADMIN',
+      pembuat: adminPayload?.name || '-',
       tanggalPosting,
       hits: 0,
       status: status || 'PUBLISH',
@@ -1525,7 +1536,7 @@ app.put("/api/news/:id", async ({ params, body, headers, jwt, set }) => {
     return { success: false, message: "ID parameter tidak valid" };
   }
 
-  const { judul, kategori, pembuat, tanggalPosting, status, foto, konten } = body;
+  const { judul, kategori, tanggalPosting, status, foto, konten } = body;
   try {
     const existing = await db.select().from(news).where(eq(news.id, id)).get();
     if (!existing) {
@@ -1537,7 +1548,7 @@ app.put("/api/news/:id", async ({ params, body, headers, jwt, set }) => {
       .set({
         judul,
         kategori,
-        pembuat: pembuat ?? existing.pembuat,
+        pembuat: existing.pembuat,
         tanggalPosting,
         status: status ?? existing.status,
         foto: foto ?? existing.foto,

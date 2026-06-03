@@ -59,7 +59,6 @@ export default function NewsManager() {
   const [editId, setEditId] = useState<number | null>(null);
   const [judul, setJudul] = useState("");
   const [kategori, setKategori] = useState("");
-  const [pembuat, setPembuat] = useState("ADMIN");
   const [tanggalPosting, setTanggalPosting] = useState("");
   const [status, setStatus] = useState("PUBLISH");
   const [foto, setFoto] = useState("");
@@ -149,7 +148,6 @@ export default function NewsManager() {
   const resetNewsForm = () => {
     setJudul("");
     setKategori("");
-    setPembuat("ADMIN");
     setTanggalPosting(getIndonesianDate());
     setStatus("PUBLISH");
     setFoto("");
@@ -162,7 +160,6 @@ export default function NewsManager() {
     setEditId(item.id);
     setJudul(item.judul);
     setKategori(item.kategori);
-    setPembuat(item.pembuat);
     setTanggalPosting(item.tanggalPosting);
     setStatus(item.status);
     setFoto(item.foto);
@@ -247,7 +244,6 @@ export default function NewsManager() {
     const bodyData = {
       judul,
       kategori,
-      pembuat,
       tanggalPosting,
       status,
       foto,
@@ -600,31 +596,17 @@ export default function NewsManager() {
                   </div>
                 </div>
 
-                {/* PEMBUAT & TANGGAL POSTING (Row) */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
-                      PEMBUAT
-                    </label>
-                    <input
-                      type="text"
-                      value={pembuat}
-                      onChange={(e) => setPembuat(e.target.value)}
-                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
-                      TANGGAL POSTING
-                    </label>
-                    <input
-                      type="text"
-                      value={tanggalPosting}
-                      onChange={(e) => setTanggalPosting(e.target.value)}
-                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
-                    />
-                  </div>
+                {/* TANGGAL POSTING */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                    TANGGAL POSTING
+                  </label>
+                  <input
+                    type="text"
+                    value={tanggalPosting}
+                    onChange={(e) => setTanggalPosting(e.target.value)}
+                    className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                  />
                 </div>
 
                 {/* KONTEN */}

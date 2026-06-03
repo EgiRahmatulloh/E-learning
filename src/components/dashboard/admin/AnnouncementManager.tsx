@@ -42,7 +42,7 @@ export default function AnnouncementManager() {
       if (data.success && Array.isArray(data.data)) {
         const serverMapped: AnnouncementData[] = data.data.map((item: any) => ({
           id: String(item.id),
-          creator: item.creator || "ADMIN",
+          creator: item.creator || "-",
           text: item.text || "",
           date: item.date || "",
           status: item.status || "AKTIF",
