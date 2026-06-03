@@ -17,9 +17,11 @@ export default function RoleStatsGrid({ userRole }: RoleStatsGridProps) {
   } | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     if (userRole === "admin") {
       const token = localStorage.getItem("token");
       fetch("/api/dashboard-stats", {
+        signal: controller.signal,
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -30,8 +32,11 @@ export default function RoleStatsGrid({ userRole }: RoleStatsGridProps) {
             setStats(data.data);
           }
         })
-        .catch((err) => console.error("Error fetching stats:", err));
+        .catch((err) => {
+          if (err.name !== "AbortError") console.error("Error fetching stats:", err);
+        });
     }
+    return () => controller.abort();
   }, [userRole]);
 
   // Role-specific stats

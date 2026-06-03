@@ -89,6 +89,7 @@ export default function ManagerManager() {
   const [searchNik, setSearchNik] = useState("");
   const [activeFilter, setActiveFilter] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isFormDirty, setIsFormDirty] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [hasUnsyncedOfflineData, setHasUnsyncedOfflineData] = useState(false);
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
@@ -232,7 +233,16 @@ export default function ManagerManager() {
     }, 3000);
   };
 
+  const handleCloseForm = () => {
+    if (isFormDirty && !confirm("Ada perubahan yang belum disimpan. Yakin ingin menutup?")) return;
+    setIsFormOpen(false);
+    setIsLocked(true);
+    setIsNew(false);
+    setIsFormDirty(false);
+  };
+
   const handleFieldChange = (field: keyof ManagerData, value: string) => {
+    if (!isLocked) setIsFormDirty(true);
     setSelectedManager((prev) => ({
       ...prev,
       [field]: value,
@@ -241,6 +251,7 @@ export default function ManagerManager() {
 
   const handleSelectManager = (manager: ManagerData) => {
     setSelectedManager(manager);
+    setIsFormDirty(false);
     setIsNew(false);
     setIsLocked(true);
     setIsFormOpen(true);
@@ -248,6 +259,7 @@ export default function ManagerManager() {
 
   const handleAddNew = () => {
     setSelectedManager({ ...DEFAULT_MANAGER });
+    setIsFormDirty(false);
     setIsNew(true);
     setIsLocked(false);
     setIsFormOpen(true);
@@ -280,6 +292,7 @@ export default function ManagerManager() {
       const data = await res.json();
       if (data.success) {
         showToast(isNew ? "Pengelola baru berhasil ditambahkan!" : "Profil pengelola berhasil disimpan!");
+        setIsFormDirty(false);
         setIsLocked(true);
         setIsNew(false);
         fetchManagers();
@@ -315,6 +328,7 @@ export default function ManagerManager() {
         setSafeItem(STORAGE_KEY, JSON.stringify(updatedList));
         setManagersList(updatedList);
         setHasUnsyncedOfflineData(true);
+        setIsFormDirty(false);
         showToast("Disimpan secara lokal (Offline)!");
         setIsLocked(true);
         setIsNew(false);
@@ -326,12 +340,13 @@ export default function ManagerManager() {
 
   const handleDelete = async () => {
     if (isNew) {
-      // Cancel add new
+      if (isFormDirty && !confirm("Ada perubahan yang belum disimpan. Yakin ingin menutup?")) return;
       if (managersList.length > 0) {
         setSelectedManager(managersList[0]);
       } else {
         setSelectedManager(DEFAULT_MANAGER);
       }
+      setIsFormDirty(false);
       setIsNew(false);
       setIsLocked(true);
       setIsFormOpen(false);
@@ -947,21 +962,13 @@ export default function ManagerManager() {
       {isFormOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in duration-300">
           {/* Backdrop Click Closes Popup */}
-          <div className="absolute inset-0 cursor-default" onClick={() => { 
-            setIsFormOpen(false); 
-            setIsLocked(true); 
-            setIsNew(false); 
-          }} />
+          <div className="absolute inset-0 cursor-default" onClick={handleCloseForm} />
           
           <div className="bg-[#00bcd4] w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 sm:p-8 rounded-3xl border-4 border-white shadow-2xl relative animate-in slide-in-from-bottom-8 duration-300 text-white select-text">
             
             {/* Elegant Close Button */}
             <button
-              onClick={() => { 
-                setIsFormOpen(false); 
-                setIsLocked(true); 
-                setIsNew(false); 
-              }}
+              onClick={handleCloseForm}
               className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-white/20 text-white hover:bg-white/30 flex items-center justify-center transition-colors cursor-pointer text-sm font-black shadow-inner"
             >
               ✕
@@ -1346,6 +1353,7 @@ export default function ManagerManager() {
                 <Button
                   type="button"
                   onClick={() => {
+                    if (isFormDirty && !confirm("Ada perubahan yang belum disimpan. Yakin ingin menutup?")) return;
                     if (isNew) {
                       if (managersList.length > 0) {
                         setSelectedManager(managersList[0]);
@@ -1356,6 +1364,7 @@ export default function ManagerManager() {
                     }
                     setIsLocked(true);
                     setIsFormOpen(false);
+                    setIsFormDirty(false);
                   }}
                   className="bg-slate-200 hover:bg-slate-350 text-slate-700 font-extrabold text-xs px-6 h-10 rounded-xl cursor-pointer uppercase tracking-wider transition-all"
                 >
