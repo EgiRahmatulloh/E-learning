@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas } from "./schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news } from "./schema";
 import { count } from "drizzle-orm";
 
 export async function seedDatabase() {
@@ -313,6 +313,94 @@ export async function seedDatabase() {
       console.log("✅ Seeding agendas berhasil!");
     } else {
       console.log(`ℹ️ Database memiliki ${agendasCount} agendas, seeding diabaikan.`);
+    }
+
+    // Seed newsCategories if empty
+    const resultCategories = await db.select({ value: count() }).from(newsCategories).get();
+    const categoriesCount = resultCategories?.value || 0;
+    if (categoriesCount === 0) {
+      console.log("🌱 Database newsCategories kosong, seeding default categories...");
+      await db.insert(newsCategories).values([
+        { nama: "UJIAN PAKET C" },
+        { nama: "SEKOLAH" },
+        { nama: "AKTIVITAS" },
+        { nama: "PRESTASI" }
+      ]);
+      console.log("✅ Seeding newsCategories berhasil!");
+    } else {
+      console.log(`ℹ️ Database memiliki ${categoriesCount} newsCategories, seeding diabaikan.`);
+    }
+
+    // Seed news if empty
+    const resultNews = await db.select({ value: count() }).from(news).get();
+    const newsCount = resultNews?.value || 0;
+    if (newsCount === 0) {
+      console.log("🌱 Database news kosong, seeding default news...");
+      await db.insert(news).values([
+        {
+          judul: "KEGIATAN UPK PAKET B",
+          kategori: "UJIAN PAKET C",
+          pembuat: "ADMIN",
+          tanggalPosting: "20 JANUARI 2026",
+          hits: 189,
+          status: "PUBLISH",
+          foto: "/images/19b2925ff9dc56c67af6213fc71a0037.jpg",
+          konten: "PKBM Menuju Makmur menyelenggarakan Ujian Pendidikan Kesetaraan Paket B yang diikuti oleh seluruh warga belajar tingkat menengah pertama. Kegiatan ini merupakan bagian penting dalam mengukur ketercapaian kompetensi pembelajaran peserta didik."
+        },
+        {
+          judul: "KEGIATAN UPK PAKET B",
+          kategori: "SEKOLAH",
+          pembuat: "ADMIN",
+          tanggalPosting: "22 JANUARI 2026",
+          hits: 95,
+          status: "PUBLISH",
+          foto: "/images/73a999addd2b8ea3aed6da538ea5db3a.jpg",
+          konten: "PKBM Menuju Makmur menyelenggarakan Ujian Pendidikan Kesetaraan Paket B untuk menguji kompetensi akademis warga belajar."
+        },
+        {
+          judul: "KEGIATAN UPK PAKET B",
+          kategori: "AKTIVITAS",
+          pembuat: "ADMIN",
+          tanggalPosting: "24 JANUARI 2026",
+          hits: 112,
+          status: "PUBLISH",
+          foto: "/images/0fa045f1f00267c7c35442f158ab8ef8.jpg",
+          konten: "PKBM Menuju Makmur menyelenggarakan Ujian Pendidikan Kesetaraan Paket B dengan sukses dan tertib."
+        },
+        {
+          judul: "KEGIATAN UPK PAKET B",
+          kategori: "PRESTASI",
+          pembuat: "ADMIN",
+          tanggalPosting: "26 JANUARI 2026",
+          hits: 154,
+          status: "PUBLISH",
+          foto: "/images/19b2925ff9dc56c67af6213fc71a0037.jpg",
+          konten: "PKBM Menuju Makmur menyelenggarakan Ujian Pendidikan Kesetaraan Paket B dengan hasil yang sangat membanggakan."
+        },
+        {
+          judul: "KEGIATAN UPK PAKET B",
+          kategori: "SEKOLAH",
+          pembuat: "ADMIN",
+          tanggalPosting: "28 JANUARI 2026",
+          hits: 89,
+          status: "PUBLISH",
+          foto: "/images/73a999addd2b8ea3aed6da538ea5db3a.jpg",
+          konten: "PKBM Menuju Makmur menyelenggarakan Ujian Pendidikan Kesetaraan Paket B untuk menunjang pencapaian standar kurikulum."
+        },
+        {
+          judul: "KEGIATAN UPK PAKET B",
+          kategori: "PRESTASI",
+          pembuat: "ADMIN",
+          tanggalPosting: "30 JANUARI 2026",
+          hits: 210,
+          status: "PUBLISH",
+          foto: "/images/0fa045f1f00267c7c35442f158ab8ef8.jpg",
+          konten: "PKBM Menuju Makmur menyelenggarakan Ujian Pendidikan Kesetaraan Paket B dengan antusiasme yang tinggi dari para tutor dan peserta."
+        }
+      ]);
+      console.log("✅ Seeding news berhasil!");
+    } else {
+      console.log(`ℹ️ Database memiliki ${newsCount} news, seeding diabaikan.`);
     }
   } catch (error) {
     console.error("❌ Gagal melakukan seeding database:", error);

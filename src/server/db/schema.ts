@@ -202,3 +202,35 @@ export const agendas = sqliteTable('agendas', {
 export type Agenda = typeof agendas.$inferSelect;
 export type NewAgenda = typeof agendas.$inferInsert;
 
+export const newsCategories = sqliteTable('news_categories', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  nama: text('nama').notNull().default(''),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at')
+    .$defaultFn(() => new Date().toISOString())
+    .$onUpdate(() => new Date().toISOString()),
+});
+
+export type NewsCategory = typeof newsCategories.$inferSelect;
+export type NewNewsCategory = typeof newsCategories.$inferInsert;
+
+export const news = sqliteTable('news', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  judul: text('judul').notNull().default(''),
+  kategori: text('kategori').notNull().default(''),
+  pembuat: text('pembuat').notNull().default('ADMIN'),
+  tanggalPosting: text('tanggal_posting').notNull().default(''),
+  hits: integer('hits').notNull().default(0),
+  status: text('status').notNull().default('PUBLISH'), // 'PUBLISH' or 'DRAFT'
+  foto: text('foto').notNull().default(''),
+  konten: text('konten').notNull().default(''),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at')
+    .$defaultFn(() => new Date().toISOString())
+    .$onUpdate(() => new Date().toISOString()),
+});
+
+export type News = typeof news.$inferSelect;
+export type NewNews = typeof news.$inferInsert;
+
+

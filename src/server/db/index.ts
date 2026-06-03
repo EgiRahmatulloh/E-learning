@@ -190,4 +190,31 @@ CREATE TABLE IF NOT EXISTS agendas (
 );
 `);
 
+// Inisialisasi tabel news_categories otomatis jika belum ada
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS news_categories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nama TEXT NOT NULL DEFAULT '',
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+`);
+
+// Inisialisasi tabel news otomatis jika belum ada
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS news (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  judul TEXT NOT NULL DEFAULT '',
+  kategori TEXT NOT NULL DEFAULT '',
+  pembuat TEXT NOT NULL DEFAULT 'ADMIN',
+  tanggal_posting TEXT NOT NULL DEFAULT '',
+  hits INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'PUBLISH',
+  foto TEXT NOT NULL DEFAULT '',
+  konten TEXT NOT NULL DEFAULT '',
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+`);
+
 export const db = drizzle(sqlite, { schema });
