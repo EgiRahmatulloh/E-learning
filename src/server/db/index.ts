@@ -172,4 +172,22 @@ CREATE TABLE IF NOT EXISTS service_points (
 );
 `);
 
+// Inisialisasi tabel agendas otomatis jika belum ada
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS agendas (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nama TEXT NOT NULL DEFAULT '',
+  pelaksanaan TEXT NOT NULL DEFAULT '',
+  waktu TEXT NOT NULL DEFAULT '',
+  peserta TEXT NOT NULL DEFAULT '',
+  lokasi TEXT NOT NULL DEFAULT '',
+  penyelenggara TEXT NOT NULL DEFAULT '',
+  penanggungjawab TEXT NOT NULL DEFAULT '',
+  keterangan TEXT NOT NULL DEFAULT '',
+  foto TEXT NOT NULL DEFAULT '',
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+`);
+
 export const db = drizzle(sqlite, { schema });

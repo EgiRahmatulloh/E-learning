@@ -162,6 +162,10 @@ function App() {
           <div className="pt-20">
             <Profile isDetailed={true} onNavigate={navigate} />
           </div>
+        ) : currentPath === "/agenda" ? (
+          <div className="pt-20">
+            <Agenda isDetailed={true} onNavigate={navigate} />
+          </div>
         ) : (
           <>
             <Hero onServiceClick={(service) => setActiveServiceDialog(service)} />
@@ -174,7 +178,7 @@ function App() {
             
             <Ticker />
             
-            <Agenda />
+            <Agenda isDetailed={false} onNavigate={navigate} />
             
             <Profile isDetailed={false} onNavigate={navigate} />
             
