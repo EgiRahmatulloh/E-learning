@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { staticPlugin } from "@elysia/static";
 import { db } from "./server/db";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students, downloads, products, alumni } from "./server/db/schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students, downloads, products, alumni, gallery } from "./server/db/schema";
 import { eq, or, sql } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
 import fs from "fs";
@@ -2538,6 +2538,164 @@ app.delete("/api/alumni/:id", async ({ params, headers, jwt, set }) => {
   }
 });
 
+// --- API GALERI ROUTES ---
+// Ambil galeri untuk publik (hanya yang berstatus PUBLISH)
+app.get("/api/gallery", async ({ set }) => {
+  try {
+    const list = await db.select().from(gallery).where(eq(gallery.status, 'PUBLISH')).all();
+    return { success: true, data: list };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data galeri" };
+  }
+});
+
+// Ambil semua galeri untuk admin
+app.get("/api/gallery/admin", async ({ headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  try {
+    const list = await db.select().from(gallery).all();
+    return { success: true, data: list };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data galeri" };
+  }
+});
+
+// Tambah item galeri baru
+app.post("/api/gallery", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const { namaFile, kategori, tanggalPosting, foto, status } = body;
+
+  try {
+    const inserted = await db.insert(gallery).values({
+      namaFile, kategori, tanggalPosting, foto, status
+    }).returning().get();
+    return { success: true, data: inserted };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menambahkan data galeri" };
+  }
+}, {
+  body: t.Object({
+    namaFile: t.String(),
+    kategori: t.String(),
+    tanggalPosting: t.String(),
+    foto: t.String(),
+    status: t.String(),
+  })
+});
+
+// Update item galeri
+app.put("/api/gallery/:id", async ({ params, body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID tidak valid" };
+  }
+
+  const { namaFile, kategori, tanggalPosting, foto, status } = body;
+
+  try {
+    const updated = await db.update(gallery).set({
+      namaFile, kategori, tanggalPosting, foto, status,
+      updatedAt: new Date().toISOString(),
+    }).where(eq(gallery.id, id)).returning().get();
+
+    if (!updated) {
+      set.status = 404;
+      return { success: false, message: "Data galeri tidak ditemukan" };
+    }
+    return { success: true, data: updated };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal memperbarui data galeri" };
+  }
+}, {
+  body: t.Object({
+    namaFile: t.String(),
+    kategori: t.String(),
+    tanggalPosting: t.String(),
+    foto: t.String(),
+    status: t.String(),
+  })
+});
+
+// Hapus item galeri
+app.delete("/api/gallery/:id", async ({ params, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID tidak valid" };
+  }
+
+  try {
+    await db.delete(gallery).where(eq(gallery.id, id)).run();
+    return { success: true, message: "Data galeri berhasil dihapus" };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menghapus data galeri" };
+  }
+});
+
+// Impor galeri secara masal
+app.post("/api/gallery/import", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const list = body;
+  if (!Array.isArray(list)) {
+    set.status = 400;
+    return { success: false, message: "Format data tidak valid, harus berupa array" };
+  }
+
+  try {
+    const validItems = list.filter(item => item && typeof item === 'object' && typeof item.namaFile === 'string' && item.namaFile.trim().length > 0);
+    if (validItems.length === 0) {
+      set.status = 400;
+      return { success: false, message: "Tidak ada data valid untuk diimpor" };
+    }
+
+    const insertValues = validItems.map(item => ({
+      namaFile: item.namaFile,
+      kategori: typeof item.kategori === 'string' ? item.kategori : 'KEGIATAN PEMBELAJARAN',
+      tanggalPosting: typeof item.tanggalPosting === 'string' ? item.tanggalPosting : '',
+      foto: typeof item.foto === 'string' ? item.foto : '',
+      status: typeof item.status === 'string' ? item.status : 'PUBLISH',
+    }));
+
+    const chunkSize = 100;
+    await db.transaction(async (tx) => {
+      for (let i = 0; i < insertValues.length; i += chunkSize) {
+        const chunk = insertValues.slice(i, i + chunkSize);
+        await tx.insert(gallery).values(chunk).run();
+      }
+    });
+    return { success: true, message: `Berhasil mengimpor ${insertValues.length} data galeri` };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengimpor data galeri" };
+  }
+}, {
+  body: t.Array(t.Object({
+    namaFile: t.String({ minLength: 1 }),
+    kategori: t.Optional(t.String()),
+    tanggalPosting: t.Optional(t.String()),
+    foto: t.Optional(t.String()),
+    status: t.Optional(t.String()),
+  }))
+});
+
 // --- API MANAGERS ROUTES ---
 // Ambil semua pengelola
 app.get("/api/managers", async ({ headers, jwt, set }) => {
@@ -2817,6 +2975,7 @@ const server = Bun.serve({
       "/download": html.default,
       "/produk-wb": html.default,
       "/alumni": html.default,
+      "/galeri": html.default,
     } : {}),
   } as any,
   fetch(req) {

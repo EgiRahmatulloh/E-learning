@@ -354,6 +354,19 @@ export const alumni = sqliteTable('alumni', {
 export type AlumniType = typeof alumni.$inferSelect;
 export type NewAlumni = typeof alumni.$inferInsert;
 
+// Tabel Galeri Kegiatan
+export const gallery = sqliteTable('gallery', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  namaFile: text('nama_file').notNull().default(''),
+  kategori: text('kategori').notNull().default('KEGIATAN PEMBELAJARAN'),
+  tanggalPosting: text('tanggal_posting').notNull().default(''),
+  foto: text('foto').notNull().default(''),
+  status: text('status').notNull().default('PUBLISH'), // 'PUBLISH' or 'DRAFT'
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at')
+    .$defaultFn(() => new Date().toISOString())
+    .$onUpdate(() => new Date().toISOString()),
+});
 
-
-
+export type GalleryItemType = typeof gallery.$inferSelect;
+export type NewGalleryItem = typeof gallery.$inferInsert;

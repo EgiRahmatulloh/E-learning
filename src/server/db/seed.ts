@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students, downloads, products, alumni } from "./schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students, downloads, products, alumni, gallery } from "./schema";
 import { count } from "drizzle-orm";
 
 export async function seedDatabase() {
@@ -711,6 +711,39 @@ export async function seedDatabase() {
       console.log("✅ Seeding alumni berhasil!");
     } else {
       console.log(`ℹ️ Database memiliki ${alumniCount} alumni, seeding diabaikan.`);
+    }
+
+    // Seed gallery table if empty
+    const resultGallery = await db.select({ value: count() }).from(gallery).get();
+    const galleryCount = resultGallery?.value || 0;
+    if (galleryCount === 0) {
+      console.log("🌱 Database gallery kosong, seeding default gallery...");
+      await db.insert(gallery).values([
+        {
+          namaFile: "Kegiatan Pembelajaran Kelas Paket C",
+          kategori: "KEGIATAN PEMBELAJARAN",
+          tanggalPosting: "2026-06-01",
+          foto: "/images/8c928d7128a4a86625e224dd9d3fa78b.png",
+          status: "PUBLISH",
+        },
+        {
+          namaFile: "Ujian Kesetaraan Paket B",
+          kategori: "KEGIATAN UJIAN",
+          tanggalPosting: "2026-05-15",
+          foto: "/images/73129d8e548b4795ba15eaafa5d0e39c.jpg",
+          status: "PUBLISH",
+        },
+        {
+          namaFile: "Pelatihan Keterampilan Komputer Warga Belajar",
+          kategori: "KEGIATAN KURSUS DAN PELATIHAN",
+          tanggalPosting: "2026-05-20",
+          foto: "/images/0e985c33b3e1f88efc234765edf73af2.jpg",
+          status: "PUBLISH",
+        }
+      ]);
+      console.log("✅ Seeding gallery berhasil!");
+    } else {
+      console.log(`ℹ️ Database memiliki ${galleryCount} gallery items, seeding diabaikan.`);
     }
 
   } catch (error) {
