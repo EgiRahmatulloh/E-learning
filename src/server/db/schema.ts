@@ -262,5 +262,35 @@ export const tutors = sqliteTable('tutors', {
 export type TutorType = typeof tutors.$inferSelect;
 export type NewTutor = typeof tutors.$inferInsert;
 
+export const students = sqliteTable('students', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  nama: text('nama').notNull().default(''),
+  nik: text('nik').notNull().default(''),
+  program: text('program').notNull().default(''),
+  kelas: text('kelas').notNull().default(''),
+  nisn: text('nisn').notNull().default(''),
+  nis: text('nis').notNull().default(''),
+  tempatTglLahir: text('tempat_tgl_lahir').notNull().default(''),
+  titikLayanan: text('titik_layanan').notNull().default(''),
+  jenisKelamin: text('jenis_kelamin').notNull().default(''),
+  noHp: text('no_hp').notNull().default(''),
+  agama: text('agama').notNull().default(''),
+  namaAyah: text('nama_ayah').notNull().default(''),
+  email: text('email').notNull().default(''),
+  namaIbu: text('nama_ibu').notNull().default(''),
+  alamat: text('alamat').notNull().default(''),
+  password: text('password').notNull().default(''),
+  foto: text('foto').notNull().default(''),
+  status: text('status').notNull().default('AKTIF'), // 'AKTIF', 'LULUS'
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at')
+    .$defaultFn(() => new Date().toISOString())
+    .$onUpdate(() => new Date().toISOString()),
+});
+
+export type StudentType = typeof students.$inferSelect;
+export type NewStudent = typeof students.$inferInsert;
+
+
 
 

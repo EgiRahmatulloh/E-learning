@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors } from "./schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students } from "./schema";
 import { count } from "drizzle-orm";
 
 export async function seedDatabase() {
@@ -476,6 +476,81 @@ export async function seedDatabase() {
       console.log("✅ Seeding tutors berhasil!");
     } else {
       console.log(`ℹ️ Database memiliki ${tutorsCount} tutors, seeding diabaikan.`);
+    }
+
+    // Seed students if empty
+    const resultStudents = await db.select({ value: count() }).from(students).get();
+    const studentsCount = resultStudents?.value || 0;
+    if (studentsCount === 0) {
+      console.log("🌱 Database students kosong, seeding default students...");
+      
+      const hashDefaultStudent = await Bun.password.hash("password123");
+
+      await db.insert(students).values([
+        {
+          nama: "ADITYA NUGRAHA",
+          nik: "3207123456789201",
+          program: "PAKET C",
+          kelas: "KELAS X (SEPULUH)",
+          nisn: "0081234561",
+          nis: "20261001",
+          tempatTglLahir: "Ciamis, 05-02-2008",
+          titikLayanan: "PKBM MENUJU MAKMUR",
+          jenisKelamin: "Laki-laki",
+          noHp: "081234567891",
+          agama: "Islam",
+          namaAyah: "Suparman",
+          email: "aditya@elearning.org",
+          namaIbu: "Aminah",
+          alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
+          password: hashDefaultStudent,
+          foto: "/images/633df6f47c394ce2b67bd54e4808301b.jpg",
+          status: "AKTIF"
+        },
+        {
+          nama: "BELLA PUTRI",
+          nik: "3207123456789202",
+          program: "PAKET B",
+          kelas: "KELAS VIII (DELAPAN)",
+          nisn: "0091234562",
+          nis: "20262001",
+          tempatTglLahir: "Ciamis, 12-09-2009",
+          titikLayanan: "BALE DESA MULYASARI",
+          jenisKelamin: "Perempuan",
+          noHp: "081234567892",
+          agama: "Islam",
+          namaAyah: "Nasihin",
+          email: "bella@elearning.org",
+          namaIbu: "Siti",
+          alamat: "Dusun Sembawa, Mulyasari, Jatinagara, Ciamis",
+          password: hashDefaultStudent,
+          foto: "/images/7ccf08e706410fd4d0cde0c04b95b108.png",
+          status: "AKTIF"
+        },
+        {
+          nama: "CHANDRA WIJAYA",
+          nik: "3207123456789203",
+          program: "PAKET A",
+          kelas: "KELAS V (LIMA)",
+          nisn: "0101234563",
+          nis: "20263001",
+          tempatTglLahir: "Ciamis, 24-04-2010",
+          titikLayanan: "PKBM MENUJU MAKMUR",
+          jenisKelamin: "Laki-laki",
+          noHp: "081234567893",
+          agama: "Islam",
+          namaAyah: "Kurniawan",
+          email: "chandra@elearning.org",
+          namaIbu: "Dewi",
+          alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
+          password: hashDefaultStudent,
+          foto: "/images/b8600352865365e6216298c1b2bcb4ce.png",
+          status: "AKTIF"
+        }
+      ]);
+      console.log("✅ Seeding students berhasil!");
+    } else {
+      console.log(`ℹ️ Database memiliki ${studentsCount} students, seeding diabaikan.`);
     }
 
   } catch (error) {
