@@ -2542,9 +2542,8 @@ app.delete("/api/alumni/:id", async ({ params, headers, jwt, set }) => {
 // Ambil galeri untuk publik (hanya yang berstatus PUBLISH)
 app.get("/api/gallery", async ({ set }) => {
   try {
-    const list = await db.select().from(gallery).all();
-    const published = list.filter(item => item.status === 'PUBLISH');
-    return { success: true, data: published };
+    const list = await db.select().from(gallery).where(eq(gallery.status, 'PUBLISH')).all();
+    return { success: true, data: list };
   } catch (e) {
     set.status = 500;
     return { success: false, message: "Gagal mengambil data galeri" };
@@ -2647,6 +2646,54 @@ app.delete("/api/gallery/:id", async ({ params, headers, jwt, set }) => {
     set.status = 500;
     return { success: false, message: "Gagal menghapus data galeri" };
   }
+});
+
+// Impor galeri secara masal
+app.post("/api/gallery/import", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const list = body;
+  if (!Array.isArray(list)) {
+    set.status = 400;
+    return { success: false, message: "Format data tidak valid, harus berupa array" };
+  }
+
+  try {
+    const validItems = list.filter(item => item && typeof item === 'object' && typeof item.namaFile === 'string' && item.namaFile.trim().length > 0);
+    if (validItems.length === 0) {
+      set.status = 400;
+      return { success: false, message: "Tidak ada data valid untuk diimpor" };
+    }
+
+    const insertValues = validItems.map(item => ({
+      namaFile: item.namaFile,
+      kategori: typeof item.kategori === 'string' ? item.kategori : 'KEGIATAN PEMBELAJARAN',
+      tanggalPosting: typeof item.tanggalPosting === 'string' ? item.tanggalPosting : '',
+      foto: typeof item.foto === 'string' ? item.foto : '',
+      status: typeof item.status === 'string' ? item.status : 'PUBLISH',
+    }));
+
+    const chunkSize = 100;
+    await db.transaction(async (tx) => {
+      for (let i = 0; i < insertValues.length; i += chunkSize) {
+        const chunk = insertValues.slice(i, i + chunkSize);
+        await tx.insert(gallery).values(chunk).run();
+      }
+    });
+    return { success: true, message: `Berhasil mengimpor ${insertValues.length} data galeri` };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengimpor data galeri" };
+  }
+}, {
+  body: t.Array(t.Object({
+    namaFile: t.String({ minLength: 1 }),
+    kategori: t.Optional(t.String()),
+    tanggalPosting: t.Optional(t.String()),
+    foto: t.Optional(t.String()),
+    status: t.Optional(t.String()),
+  }))
 });
 
 // --- API MANAGERS ROUTES ---

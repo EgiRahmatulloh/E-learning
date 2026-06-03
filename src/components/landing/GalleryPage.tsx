@@ -369,7 +369,12 @@ export default function GalleryPage({ onNavigate }: GalleryPageProps) {
           </div>
 
           {/* Map Skeleton */}
-          <div className="aspect-[4/3] rounded-2xl overflow-hidden border border-slate-200 relative bg-slate-50 flex items-center justify-center group shadow-md">
+          <a
+            href="https://www.google.com/maps/search/?api=1&query=PKBM+MENUJU+MAKMUR+Jatinagara"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="aspect-[4/3] rounded-2xl overflow-hidden border border-slate-200 relative bg-slate-50 flex items-center justify-center group shadow-md"
+          >
             <svg className="w-full h-full text-slate-200 bg-cyan-50/50" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect width="400" height="300" fill="#E2F0F9"/>
               <path d="M0 80C100 80 120 180 220 180C320 180 340 50 400 50" stroke="#CBDCE7" strokeWidth="24" strokeLinecap="round"/>
@@ -386,7 +391,7 @@ export default function GalleryPage({ onNavigate }: GalleryPageProps) {
                 Klik Untuk Petunjuk Arah
               </span>
             </div>
-          </div>
+          </a>
         </div>
       </div>
     </section>

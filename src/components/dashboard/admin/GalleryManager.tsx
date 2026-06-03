@@ -173,19 +173,22 @@ export default function GalleryManager() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!selectedId) return;
+  const handleDelete = async (itemId?: number) => {
+    const idToDelete = itemId || selectedId;
+    if (!idToDelete) return;
     if (!confirm("Apakah Anda yakin ingin menghapus foto galeri ini?")) return;
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`/api/gallery/${selectedId}`, {
+      const res = await fetch(`/api/gallery/${idToDelete}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       if (data.success) {
-        setSelectedId(null);
-        startAdd();
+        if (selectedId === idToDelete) {
+          setSelectedId(null);
+          startAdd();
+        }
         fetchGallery();
       } else {
         alert("Gagal menghapus: " + (data.message || "Error tidak diketahui"));
@@ -228,29 +231,39 @@ export default function GalleryManager() {
         const text = event.target?.result as string;
         const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
         if (lines.length <= 1) return;
-        const token = localStorage.getItem("token");
-        let successCount = 0;
+        
+        const importedList = [];
         for (let i = 1; i < lines.length; i++) {
           const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map((c) => c.replace(/^"|"$/g, "").trim());
           if (cols.length < 2) continue;
-          try {
-            const res = await fetch("/api/gallery", {
-              method: "POST",
-              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-              body: JSON.stringify({
-                namaFile: cols[0] || "",
-                kategori: cols[1] || GALLERY_CATEGORIES[0],
-                tanggalPosting: cols[2] || "",
-                foto: cols[3] || "",
-                status: cols[4] || "PUBLISH",
-              }),
-            });
-            const data = await res.json();
-            if (data.success) successCount++;
-          } catch {}
+          importedList.push({
+            namaFile: cols[0] || "",
+            kategori: cols[1] || GALLERY_CATEGORIES[0],
+            tanggalPosting: cols[2] || "",
+            foto: cols[3] || "",
+            status: cols[4] || "PUBLISH",
+          });
         }
-        alert(`Berhasil mengimpor ${successCount} data galeri!`);
-        fetchGallery();
+
+        if (importedList.length === 0) return;
+
+        const token = localStorage.getItem("token");
+        try {
+          const res = await fetch("/api/gallery/import", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify(importedList),
+          });
+          const data = await res.json();
+          if (data.success) {
+            alert(data.message || `Berhasil mengimpor data galeri!`);
+            fetchGallery();
+          } else {
+            alert("Gagal mengimpor: " + (data.message || "Error tidak diketahui"));
+          }
+        } catch (e) {
+          alert("Terjadi kesalahan saat mengimpor data galeri");
+        }
       };
       reader.readAsText(file);
     }
@@ -402,7 +415,7 @@ export default function GalleryManager() {
                             Edit
                           </button>
                           <button
-                            onClick={() => { selectItem(item); setTimeout(() => handleDelete(), 50); }}
+                            onClick={() => { handleDelete(item.id); }}
                             className="text-[10px] font-black text-red-600 hover:text-red-800 px-2 py-0.5 rounded-lg bg-red-50 hover:bg-red-100 transition cursor-pointer"
                           >
                             Hapus
@@ -542,7 +555,7 @@ export default function GalleryManager() {
                 <Save size={15} /> Simpan
               </Button>
               {selectedId && !isAdding && (
-                <Button type="button" onClick={handleDelete} variant="outline" className="bg-red-600 hover:bg-red-700 text-white border-red-600 font-black rounded-xl text-xs flex items-center gap-2 cursor-pointer">
+                <Button type="button" onClick={() => handleDelete()} variant="outline" className="bg-red-600 hover:bg-red-700 text-white border-red-600 font-black rounded-xl text-xs flex items-center gap-2 cursor-pointer">
                   <Trash2 size={15} /> Hapus
                 </Button>
               )}
