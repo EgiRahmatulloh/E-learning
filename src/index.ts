@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { staticPlugin } from "@elysia/static";
 import { db } from "./server/db";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas } from "./server/db/schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news } from "./server/db/schema";
 import { eq, or } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
 import fs from "fs";
@@ -1295,6 +1295,174 @@ app.post("/api/agendas/import", async ({ body, headers, jwt, set }) => {
     keterangan: t.Optional(t.String()),
     foto: t.Optional(t.String()),
   }))
+});
+
+// --- API NEWS CATEGORIES ROUTES ---
+// Ambil semua kategori berita
+app.get("/api/news-categories", async ({ set }) => {
+  try {
+    const list = await db.select().from(newsCategories).all();
+    return { success: true, data: list };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil kategori berita" };
+  }
+});
+
+// Tambah kategori berita baru
+app.post("/api/news-categories", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const { nama } = body;
+  try {
+    const inserted = await db.insert(newsCategories).values({ nama }).returning().get();
+    return { success: true, data: inserted };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menambahkan kategori berita" };
+  }
+}, {
+  body: t.Object({
+    nama: t.String({ minLength: 1 }),
+  })
+});
+
+// Hapus kategori berita
+app.delete("/api/news-categories/:id", async ({ params, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    await db.delete(newsCategories).where(eq(newsCategories.id, id)).run();
+    return { success: true, message: "Kategori berita berhasil dihapus" };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menghapus kategori berita" };
+  }
+});
+
+// --- API NEWS ROUTES ---
+// Ambil semua berita
+app.get("/api/news", async ({ set }) => {
+  try {
+    const list = await db.select().from(news).all();
+    return { success: true, data: list };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data berita" };
+  }
+});
+
+// Tambah berita baru
+app.post("/api/news", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const { judul, kategori, pembuat, tanggalPosting, status, foto, konten } = body;
+  try {
+    const inserted = await db.insert(news).values({
+      judul,
+      kategori,
+      pembuat: pembuat || 'ADMIN',
+      tanggalPosting,
+      hits: 0,
+      status: status || 'PUBLISH',
+      foto: foto || '',
+      konten: konten || '',
+    }).returning().get();
+    return { success: true, data: inserted };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menambahkan berita" };
+  }
+}, {
+  body: t.Object({
+    judul: t.String({ minLength: 1 }),
+    kategori: t.String({ minLength: 1 }),
+    pembuat: t.Optional(t.String()),
+    tanggalPosting: t.String({ minLength: 1 }),
+    status: t.Optional(t.String()),
+    foto: t.Optional(t.String()),
+    konten: t.Optional(t.String()),
+  })
+});
+
+// Update berita
+app.put("/api/news/:id", async ({ params, body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  const { judul, kategori, pembuat, tanggalPosting, status, foto, konten } = body;
+  try {
+    const existing = await db.select().from(news).where(eq(news.id, id)).get();
+    if (!existing) {
+      set.status = 404;
+      return { success: false, message: "Berita tidak ditemukan" };
+    }
+
+    const updated = await db.update(news)
+      .set({
+        judul,
+        kategori,
+        pembuat: pembuat ?? existing.pembuat,
+        tanggalPosting,
+        status: status ?? existing.status,
+        foto: foto ?? existing.foto,
+        konten: konten ?? existing.konten,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(news.id, id))
+      .returning()
+      .get();
+    
+    return { success: true, data: updated };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal memperbarui berita" };
+  }
+}, {
+  body: t.Object({
+    judul: t.String({ minLength: 1 }),
+    kategori: t.String({ minLength: 1 }),
+    pembuat: t.Optional(t.String()),
+    tanggalPosting: t.String({ minLength: 1 }),
+    status: t.Optional(t.String()),
+    foto: t.Optional(t.String()),
+    konten: t.Optional(t.String()),
+  })
+});
+
+// Hapus berita
+app.delete("/api/news/:id", async ({ params, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    await db.delete(news).where(eq(news.id, id)).run();
+    return { success: true, message: "Berita berhasil dihapus" };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menghapus berita" };
+  }
 });
 
 // --- API MANAGERS ROUTES ---

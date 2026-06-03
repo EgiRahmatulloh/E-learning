@@ -1,0 +1,785 @@
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2, Search, UploadCloud, Plus, Save, Edit3, Trash2, X, ChevronLeft, ChevronRight } from "lucide-react";
+
+interface News {
+  id: number;
+  judul: string;
+  kategori: string;
+  pembuat: string;
+  tanggalPosting: string;
+  hits: number;
+  status: string;
+  foto: string;
+  konten: string;
+}
+
+interface NewsCategory {
+  id: number;
+  nama: string;
+}
+
+const STORAGE_KEY_NEWS = "pkbm_news_list";
+const STORAGE_KEY_CATEGORIES = "pkbm_news_categories";
+
+const getSafeItem = (key: string): string | null => {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+const setSafeItem = (key: string, value: string) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch {}
+};
+
+// Date Formatter in Indonesian uppercase
+const getIndonesianDate = () => {
+  const months = [
+    "JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", 
+    "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"
+  ];
+  const d = new Date();
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+};
+
+export default function NewsManager() {
+  const [newsList, setNewsList] = useState<News[]>([]);
+  const [categories, setCategories] = useState<NewsCategory[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Modals Visibility
+  const [newsModalVisible, setNewsModalVisible] = useState(false);
+  const [categoryModalVisible, setCategoryModalVisible] = useState(false);
+  
+  // News Form States
+  const [editId, setEditId] = useState<number | null>(null);
+  const [judul, setJudul] = useState("");
+  const [kategori, setKategori] = useState("");
+  const [pembuat, setPembuat] = useState("ADMIN");
+  const [tanggalPosting, setTanggalPosting] = useState("");
+  const [status, setStatus] = useState("PUBLISH");
+  const [foto, setFoto] = useState("");
+  const [konten, setKonten] = useState("");
+  const [uploading, setUploading] = useState(false);
+
+  // Category Form States
+  const [newCategoryName, setNewCategoryName] = useState("");
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = (message: string) => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+    setToast({ message, show: true });
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast({ message: "", show: false });
+      toastTimeoutRef.current = null;
+    }, 3000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const fetchNews = useCallback(async () => {
+    try {
+      const res = await fetch("/api/news");
+      if (!res.ok) throw new Error("Gagal mengambil data dari server");
+      const resData = await res.json();
+      if (resData.success && resData.data) {
+        setNewsList(resData.data);
+        setSafeItem(STORAGE_KEY_NEWS, JSON.stringify(resData.data));
+      } else {
+        throw new Error(resData.message || "Gagal mengambil data berita");
+      }
+    } catch (err) {
+      const saved = getSafeItem(STORAGE_KEY_NEWS);
+      if (saved) {
+        try {
+          setNewsList(JSON.parse(saved));
+        } catch {
+          setNewsList([]);
+        }
+      }
+    }
+  }, []);
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      const res = await fetch("/api/news-categories");
+      if (!res.ok) throw new Error("Gagal mengambil data kategori");
+      const resData = await res.json();
+      if (resData.success && resData.data) {
+        setCategories(resData.data);
+        setSafeItem(STORAGE_KEY_CATEGORIES, JSON.stringify(resData.data));
+      } else {
+        throw new Error(resData.message || "Gagal mengambil kategori");
+      }
+    } catch (err) {
+      const saved = getSafeItem(STORAGE_KEY_CATEGORIES);
+      if (saved) {
+        try {
+          setCategories(JSON.parse(saved));
+        } catch {
+          setCategories([]);
+        }
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchNews();
+    fetchCategories();
+  }, [fetchNews, fetchCategories]);
+
+  const resetNewsForm = () => {
+    setJudul("");
+    setKategori("");
+    setPembuat("ADMIN");
+    setTanggalPosting(getIndonesianDate());
+    setStatus("PUBLISH");
+    setFoto("");
+    setKonten("");
+    setEditId(null);
+    setNewsModalVisible(false);
+  };
+
+  const handleEditClick = (item: News) => {
+    setEditId(item.id);
+    setJudul(item.judul);
+    setKategori(item.kategori);
+    setPembuat(item.pembuat);
+    setTanggalPosting(item.tanggalPosting);
+    setStatus(item.status);
+    setFoto(item.foto);
+    setKonten(item.konten);
+    setNewsModalVisible(true);
+  };
+
+  const handleDeleteNewsClick = async (id: number) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus berita ini?")) return;
+    const token = getSafeItem("token");
+    try {
+      const res = await fetch(`/api/news/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        }
+      });
+      const resData = await res.json();
+      if (resData.success) {
+        showToast("Berita berhasil dihapus!");
+        fetchNews();
+      } else {
+        showToast(resData.message || "Gagal menghapus berita");
+      }
+    } catch (err) {
+      showToast("Terjadi kesalahan koneksi atau sistem.");
+    }
+  };
+
+  const processUpload = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      showToast("Hanya berkas gambar yang diperbolehkan!");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("Ukuran gambar melebihi batas 5MB!");
+      return;
+    }
+
+    setUploading(true);
+    const token = getSafeItem("token");
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        setFoto(data.url);
+        showToast("Foto berita berhasil diunggah!");
+      } else {
+        throw new Error(data.message || "Gagal mengunggah gambar");
+      }
+    } catch (err: any) {
+      showToast(err.message || "Gagal mengunggah gambar.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSaveNews = async () => {
+    if (!judul.trim()) {
+      showToast("Judul berita tidak boleh kosong!");
+      return;
+    }
+    if (!kategori.trim()) {
+      showToast("Pilih kategori berita terlebih dahulu!");
+      return;
+    }
+    if (!tanggalPosting.trim()) {
+      showToast("Tanggal posting tidak boleh kosong!");
+      return;
+    }
+
+    const token = getSafeItem("token");
+    const bodyData = {
+      judul,
+      kategori,
+      pembuat,
+      tanggalPosting,
+      status,
+      foto,
+      konten
+    };
+
+    try {
+      let res;
+      if (editId !== null) {
+        res = await fetch(`/api/news/${editId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify(bodyData),
+        });
+      } else {
+        res = await fetch("/api/news", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify(bodyData),
+        });
+      }
+
+      const resData = await res.json();
+      if (resData.success) {
+        showToast(editId !== null ? "Berita berhasil diperbarui!" : "Berita baru berhasil ditambahkan!");
+        resetNewsForm();
+        fetchNews();
+      } else {
+        showToast(resData.message || "Gagal menyimpan berita.");
+      }
+    } catch (err) {
+      showToast("Gagal menyimpan berita ke server.");
+    }
+  };
+
+  // Add Category Handler
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) {
+      showToast("Nama kategori tidak boleh kosong!");
+      return;
+    }
+
+    const token = getSafeItem("token");
+    try {
+      const res = await fetch("/api/news-categories", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ nama: newCategoryName.trim().toUpperCase() }),
+      });
+      const resData = await res.json();
+      if (resData.success) {
+        showToast("Kategori baru berhasil ditambahkan!");
+        setNewCategoryName("");
+        fetchCategories();
+      } else {
+        showToast(resData.message || "Gagal menambahkan kategori.");
+      }
+    } catch (err) {
+      showToast("Terjadi kesalahan koneksi.");
+    }
+  };
+
+  // Delete Category Handler
+  const handleDeleteCategory = async (id: number) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus kategori ini?")) return;
+    const token = getSafeItem("token");
+    try {
+      const res = await fetch(`/api/news-categories/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        }
+      });
+      const resData = await res.json();
+      if (resData.success) {
+        showToast("Kategori berhasil dihapus!");
+        fetchCategories();
+      } else {
+        showToast(resData.message || "Gagal menghapus kategori.");
+      }
+    } catch (err) {
+      showToast("Terjadi kesalahan koneksi.");
+    }
+  };
+
+  // Search and Filter News
+  const filteredNews = newsList.filter((n) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      (n.judul || "").toLowerCase().includes(q) ||
+      (n.kategori || "").toLowerCase().includes(q) ||
+      (n.pembuat || "").toLowerCase().includes(q) ||
+      (n.konten || "").toLowerCase().includes(q)
+    );
+  });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredNews.length / itemsPerPage) || 1;
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentNewsPage = filteredNews.slice(indexOfFirstItem, indexOfLastItem);
+
+  return (
+    <div className="space-y-6 relative pb-16 animate-in fade-in duration-300">
+      
+      {/* TOP CONTROLS SECTION */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => {
+              resetNewsForm();
+              setNewsModalVisible(true);
+            }}
+            className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-6 h-10 rounded-lg cursor-pointer uppercase tracking-widest shadow-md shadow-purple-200/50 flex items-center gap-1.5 transition-all"
+          >
+            <Plus className="h-4 w-4" /> TAMBAH BERITA
+          </Button>
+
+          <Button
+            onClick={() => setCategoryModalVisible(true)}
+            className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-6 h-10 rounded-lg cursor-pointer uppercase tracking-widest shadow-md shadow-purple-200/50 flex items-center gap-1.5 transition-all"
+          >
+            <Plus className="h-4 w-4" /> TAMBAH KATEGORI
+          </Button>
+        </div>
+
+        {/* SEARCH BOX */}
+        <div className="relative w-60 max-w-xs">
+          <input
+            type="text"
+            placeholder="cari"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full h-10 pl-4 pr-10 text-xs font-semibold border-none rounded-full bg-[#fdeee4] text-[#8c5b3f] placeholder-[#c49f88] focus:outline-none focus:ring-2 focus:ring-orange-200/60 shadow-inner"
+          />
+          <Search className="absolute right-3.5 top-3 h-4 w-4 text-[#8c5b3f]/70" />
+        </div>
+      </div>
+
+      {/* TABLE SECTION */}
+      <div className="overflow-x-auto rounded-2xl border border-cyan-200/80 bg-white shadow-sm">
+        <table className="w-full text-left border-collapse min-w-[1000px]">
+          <thead>
+            <tr className="bg-cyan-400 text-cyan-950 font-black text-xs uppercase tracking-wider border-b border-cyan-200">
+              <th className="py-4 px-4 text-center w-16">NO</th>
+              <th className="py-4 px-6 w-72">JUDUL</th>
+              <th className="py-4 px-4 w-36">KATEGORI</th>
+              <th className="py-4 px-4 w-28">PEMBUAT</th>
+              <th className="py-4 px-6 w-36">TANGGAL POSTING</th>
+              <th className="py-4 px-4 text-center w-20">HITS</th>
+              <th className="py-4 px-4 w-28">STATUS</th>
+              <th className="py-4 px-6 w-36 text-center">FOTO</th>
+              <th className="py-4 px-6 w-32 text-center">AKSI</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+            {currentNewsPage.length > 0 ? (
+              currentNewsPage.map((item, idx) => (
+                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="py-4 px-4 text-center font-bold text-slate-400">
+                    {indexOfFirstItem + idx + 1}
+                  </td>
+                  <td className="py-4 px-6 font-extrabold text-slate-900 leading-relaxed max-w-sm">
+                    {item.judul}
+                  </td>
+                  <td className="py-4 px-4 font-bold text-slate-800">{item.kategori}</td>
+                  <td className="py-4 px-4 font-bold text-slate-650">{item.pembuat}</td>
+                  <td className="py-4 px-6 text-slate-750 font-bold">{item.tanggalPosting}</td>
+                  <td className="py-4 px-4 text-center font-extrabold text-slate-800">{item.hits}</td>
+                  <td className="py-4 px-4">
+                    <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${
+                      item.status === 'PUBLISH' 
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-250' 
+                        : 'bg-amber-50 text-amber-700 border border-amber-250'
+                    }`}>
+                      {item.status}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6 text-center">
+                    {item.foto ? (
+                      <img
+                        src={item.foto}
+                        alt={item.judul}
+                        className="h-14 w-24 object-cover rounded-lg mx-auto shadow-xs border border-slate-200"
+                      />
+                    ) : (
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">TIDAK ADA FOTO</span>
+                    )}
+                  </td>
+                  <td className="py-4 px-6 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <button
+                        onClick={() => handleEditClick(item)}
+                        className="inline-flex items-center gap-1 text-[10px] font-black text-slate-600 hover:text-cyan-600 cursor-pointer uppercase transition-colors"
+                      >
+                        <Edit3 className="h-3 w-3" /> Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteNewsClick(item.id)}
+                        className="inline-flex items-center gap-1 text-[10px] font-black text-red-500 hover:text-red-700 cursor-pointer uppercase transition-colors"
+                      >
+                        <Trash2 className="h-3 w-3" /> Hapus
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={9} className="py-8 text-center text-slate-400 font-bold uppercase">
+                  Tidak ada data berita ditemukan
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* PAGINATION CONTROLS (Yellow pill capsule styling) */}
+      {totalPages > 1 && (
+        <div className="flex justify-end items-center gap-2.5 mt-4">
+          <Button
+            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+            disabled={currentPage === 1}
+            className="bg-[#ffb300] hover:bg-[#ffa000] text-black font-extrabold text-xs h-9 px-4 rounded-xl cursor-pointer disabled:opacity-50 transition-all"
+          >
+            <ChevronLeft className="h-4 w-4 mr-0.5" /> Previous
+          </Button>
+
+          <span className="h-9 w-9 flex items-center justify-center bg-[#ffb300] text-black font-black text-sm rounded-xl">
+            {currentPage}
+          </span>
+
+          <Button
+            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="bg-[#ffb300] hover:bg-[#ffa000] text-black font-extrabold text-xs h-9 px-4 rounded-xl cursor-pointer disabled:opacity-50 transition-all"
+          >
+            Next <ChevronRight className="h-4 w-4 ml-0.5" />
+          </Button>
+        </div>
+      )}
+
+      {/* POPUP / MODAL FORM DIALOG: TAMBAH/EDIT BERITA */}
+      {newsModalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={resetNewsForm} />
+
+          <div className="relative bg-[#00badb] rounded-3xl overflow-hidden shadow-2xl w-full max-w-3xl border-4 border-cyan-400 animate-in zoom-in-95 duration-200 p-6 sm:p-8 text-white max-h-[90vh] overflow-y-auto">
+            
+            <button
+              onClick={resetNewsForm}
+              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="mb-6 text-left">
+              <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                {editId !== null ? "TAMPILAN EDIT DATA" : "TAMPILAN TAMBAH BARU"}
+              </span>
+            </div>
+
+            <form className="grid grid-cols-1 md:grid-cols-4 gap-6 text-left" onSubmit={(e) => e.preventDefault()}>
+              <div className="md:col-span-3 space-y-4">
+                
+                {/* JUDUL */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                    JUDUL BERITA
+                  </label>
+                  <input
+                    type="text"
+                    value={judul}
+                    onChange={(e) => setJudul(e.target.value)}
+                    placeholder="Masukkan judul berita"
+                    className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                  />
+                </div>
+
+                {/* KATEGORI & STATUS (Row) */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                      KATEGORI
+                    </label>
+                    <select
+                      value={kategori}
+                      onChange={(e) => setKategori(e.target.value)}
+                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                    >
+                      <option value="">-- PILIH KATEGORI --</option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.nama}>
+                          {cat.nama}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                      STATUS PUBLIKASI
+                    </label>
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                    >
+                      <option value="PUBLISH">PUBLISH</option>
+                      <option value="DRAFT">DRAFT</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* PEMBUAT & TANGGAL POSTING (Row) */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                      PEMBUAT
+                    </label>
+                    <input
+                      type="text"
+                      value={pembuat}
+                      onChange={(e) => setPembuat(e.target.value)}
+                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                      TANGGAL POSTING
+                    </label>
+                    <input
+                      type="text"
+                      value={tanggalPosting}
+                      onChange={(e) => setTanggalPosting(e.target.value)}
+                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                    />
+                  </div>
+                </div>
+
+                {/* KONTEN */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                    ISI KONTEN BERITA
+                  </label>
+                  <textarea
+                    rows={5}
+                    value={konten}
+                    onChange={(e) => setKonten(e.target.value)}
+                    placeholder="Tuliskan berita lengkap..."
+                    className="w-full p-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner resize-none leading-relaxed"
+                  />
+                </div>
+              </div>
+
+              {/* FOTO COLUMN (Right) */}
+              <div className="md:col-span-1 flex flex-col items-center justify-start pt-2">
+                <h4 className="text-xs font-black text-cyan-50 uppercase tracking-wider mb-2">
+                  FOTO
+                </h4>
+
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) processUpload(file);
+                  }}
+                  onClick={() => document.getElementById("news-file-upload")?.click()}
+                  className="w-full aspect-square border-4 border-dashed border-white/60 hover:border-white rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden transition-all text-center bg-cyan-300/40 hover:bg-cyan-350/50 cursor-pointer"
+                >
+                  <input
+                    id="news-file-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        processUpload(file);
+                        e.target.value = "";
+                      }
+                    }}
+                    className="hidden"
+                  />
+
+                  {uploading ? (
+                    <div className="flex flex-col items-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-4 border-white/30 border-t-purple-600 mb-2" />
+                      <span className="text-[10px] font-black text-purple-950 uppercase tracking-wide">MENGUNGGAH...</span>
+                    </div>
+                  ) : foto ? (
+                    <div className="w-full h-full relative group">
+                      <img
+                        src={foto}
+                        alt="Pratinjau Berita"
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                      <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-lg">
+                        <span className="text-white text-[10px] font-black uppercase tracking-wider">UBAH FOTO</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center">
+                      <UploadCloud className="h-10 w-10 text-white mb-2" />
+                      <span className="text-[9px] font-black text-purple-950 uppercase block tracking-wider leading-relaxed">
+                        DRAG & DROP
+                      </span>
+                      <span className="text-[9px] font-black text-purple-950 block mt-0.5 uppercase tracking-wide">
+                        OR CLICK
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* ACTION BUTTONS */}
+              <div className="col-span-1 md:col-span-4 pt-4 border-t border-white/10 flex items-center justify-end gap-3">
+                <Button
+                  type="button"
+                  onClick={resetNewsForm}
+                  className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                >
+                  BATAL
+                </Button>
+                
+                <Button
+                  type="button"
+                  onClick={handleSaveNews}
+                  className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                >
+                  <Save className="h-4 w-4" /> SIMPAN
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* POPUP / MODAL FORM DIALOG: KELOLA KATEGORI */}
+      {categoryModalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setCategoryModalVisible(false)} />
+
+          <div className="relative bg-[#00badb] rounded-3xl overflow-hidden shadow-2xl w-full max-w-md border-4 border-cyan-400 animate-in zoom-in-95 duration-200 p-6 text-white">
+            
+            <button
+              onClick={() => setCategoryModalVisible(false)}
+              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="mb-4 text-left">
+              <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                KELOLA KATEGORI BERITA
+              </span>
+            </div>
+
+            {/* Add input row */}
+            <div className="flex gap-2 mb-6">
+              <input
+                type="text"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="NAMA KATEGORI BARU"
+                className="flex-1 h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner uppercase placeholder-slate-400"
+              />
+              <Button
+                onClick={handleAddCategory}
+                className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-5 h-10 rounded-lg cursor-pointer shadow-sm transition-all"
+              >
+                TAMBAH
+              </Button>
+            </div>
+
+            {/* List of categories with delete */}
+            <div className="space-y-2 max-h-60 overflow-y-auto mb-6 text-left pr-1">
+              <label className="text-[10px] font-black text-cyan-50 uppercase tracking-widest block mb-2.5">
+                Daftar Kategori Terdaftar
+              </label>
+              {categories.length > 0 ? (
+                categories.map((cat) => (
+                  <div key={cat.id} className="flex items-center justify-between bg-cyan-950/20 border border-white/10 rounded-lg px-4 py-2 text-sm font-extrabold">
+                    <span>{cat.nama}</span>
+                    <button
+                      onClick={() => handleDeleteCategory(cat.id)}
+                      className="text-red-200 hover:text-red-400 p-1 cursor-pointer transition-colors"
+                      title="Hapus Kategori"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-cyan-100 text-xs font-bold uppercase">
+                  Tidak ada kategori terdaftar
+                </div>
+              )}
+            </div>
+
+            {/* Close button */}
+            <div className="flex justify-end pt-4 border-t border-white/10">
+              <Button
+                onClick={() => setCategoryModalVisible(false)}
+                className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-10 rounded-lg cursor-pointer uppercase tracking-widest transition-all"
+              >
+                TUTUP
+              </Button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Floating Toast notification */}
+      {toast.show && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-slate-900/95 backdrop-blur-md text-white px-5 py-4 rounded-2xl shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-6 duration-300">
+          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+          <span className="text-sm font-bold tracking-tight">{toast.message}</span>
+        </div>
+      )}
+    </div>
+  );
+}
