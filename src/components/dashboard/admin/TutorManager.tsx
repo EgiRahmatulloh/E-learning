@@ -163,8 +163,8 @@ export default function TutorManager() {
         body,
       });
       const data = await res.json();
-      if (data.success && data.filePath) {
-        setFormData((prev) => ({ ...prev, foto: data.filePath }));
+      if (data.success && data.url) {
+        setFormData((prev) => ({ ...prev, foto: data.url }));
       } else {
         alert("Upload gagal: " + (data.message || "Error tidak diketahui"));
       }
@@ -320,7 +320,7 @@ export default function TutorManager() {
             </Button>
             <Button
               onClick={handleReset}
-              className="flex-1 h-11 rounded-xl bg-purple-650 hover:bg-purple-700 text-white font-black text-xs cursor-pointer tracking-wider"
+              className="flex-1 h-11 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs cursor-pointer tracking-wider"
             >
               RESET
             </Button>
@@ -342,7 +342,7 @@ export default function TutorManager() {
               className="bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 border border-slate-100 transition-all p-4 flex flex-col justify-between"
             >
               {/* Photo Frame with purple subject badge overlay */}
-              <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden bg-slate-100 mb-4 border border-slate-150">
+              <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden bg-slate-100 mb-4 border border-slate-200">
                 {tutor.foto ? (
                   <img
                     src={tutor.foto}
@@ -591,9 +591,9 @@ export default function TutorManager() {
                       </div>
                     ) : (
                       <>
-                        <Upload className="h-8 w-8 text-slate-450 mb-2" />
+                        <Upload className="h-8 w-8 text-slate-400 mb-2" />
                         <p className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider">DRAG AND DROP A FILE</p>
-                        <p className="text-[9px] text-slate-450 font-semibold uppercase mt-0.5">HERE OR CLICK</p>
+                        <p className="text-[9px] text-slate-400 font-semibold uppercase mt-0.5">HERE OR CLICK</p>
                         <input
                           type="file"
                           accept="image/*"
@@ -612,7 +612,7 @@ export default function TutorManager() {
                 </div>
 
                 {/* Additional metadata info matching schema (Tanggal mulai tugas, SK Pengangkatan, SK Penugasan) */}
-                <div className="bg-slate-55 p-4 rounded-2xl border border-slate-100 space-y-3.5 text-left">
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3.5 text-left">
                   <span className="block text-[10px] font-black text-[#9c27b0] tracking-wider uppercase border-b border-slate-200/60 pb-1.5">Info SK & Penugasan</span>
                   
                   <div className="space-y-1">

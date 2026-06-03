@@ -72,7 +72,7 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                   window.dispatchEvent(new PopStateEvent("popstate"));
                 }
               }}
-              className="inline-flex items-center gap-2 text-xs font-black text-purple-750 hover:text-orange-600 transition-colors uppercase tracking-widest cursor-pointer bg-white/80 hover:bg-white px-5 py-2.5 rounded-full shadow-xs border border-purple-100"
+              className="inline-flex items-center gap-2 text-xs font-black text-purple-700 hover:text-orange-600 transition-colors uppercase tracking-widest cursor-pointer bg-white/80 hover:bg-white px-5 py-2.5 rounded-full shadow-xs border border-purple-100"
             >
               <ArrowLeft className="h-4 w-4" /> Kembali ke Beranda
             </button>
@@ -189,22 +189,22 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
 
                           <div className="space-y-1">
                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Tempat, Tgl Lahir</span>
-                            <span className="text-slate-850 font-bold">{tutor.tempatTglLahir || "-"}</span>
+                            <span className="text-slate-800 font-bold">{tutor.tempatTglLahir || "-"}</span>
                           </div>
 
                           <div className="space-y-1">
                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Jenis Kelamin</span>
-                            <span className="text-slate-850 font-bold">{tutor.jenisKelamin || "-"}</span>
+                            <span className="text-slate-800 font-bold">{tutor.jenisKelamin || "-"}</span>
                           </div>
 
                           <div className="space-y-1">
                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Agama</span>
-                            <span className="text-slate-850 font-bold">{tutor.agama || "-"}</span>
+                            <span className="text-slate-800 font-bold">{tutor.agama || "-"}</span>
                           </div>
 
                           <div className="space-y-1">
                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Pendidikan</span>
-                            <span className="text-slate-850 font-bold">{tutor.pendidikan || "-"}</span>
+                            <span className="text-slate-800 font-bold">{tutor.pendidikan || "-"}</span>
                           </div>
 
                           <div className="space-y-1 sm:col-span-2">
@@ -223,7 +223,7 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                         </div>
 
                         {/* SK Details */}
-                        <div className="bg-[#cdeff6]/40 border border-[#a6e5f3] p-3.5 rounded-2xl space-y-2.5 text-xs text-slate-850">
+                        <div className="bg-[#cdeff6]/40 border border-[#a6e5f3] p-3.5 rounded-2xl space-y-2.5 text-xs text-slate-800">
                           <span className="block text-[9px] font-black text-[#280f91] uppercase tracking-wider border-b border-[#a6e5f3] pb-1">Keterangan SK SK Pengangkatan / Penugasan</span>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-bold">
                             <div>
@@ -408,22 +408,22 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
 
                         <div className="space-y-1">
                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Tempat, Tgl Lahir</span>
-                          <span className="text-slate-850 font-bold">{tutor.tempatTglLahir || "-"}</span>
+                          <span className="text-slate-800 font-bold">{tutor.tempatTglLahir || "-"}</span>
                         </div>
 
                         <div className="space-y-1">
                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Jenis Kelamin</span>
-                          <span className="text-slate-850 font-bold">{tutor.jenisKelamin || "-"}</span>
+                          <span className="text-slate-800 font-bold">{tutor.jenisKelamin || "-"}</span>
                         </div>
 
                         <div className="space-y-1">
                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Agama</span>
-                          <span className="text-slate-850 font-bold">{tutor.agama || "-"}</span>
+                          <span className="text-slate-800 font-bold">{tutor.agama || "-"}</span>
                         </div>
 
                         <div className="space-y-1">
                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Pendidikan</span>
-                          <span className="text-slate-850 font-bold">{tutor.pendidikan || "-"}</span>
+                          <span className="text-slate-800 font-bold">{tutor.pendidikan || "-"}</span>
                         </div>
 
                         <div className="space-y-1 sm:col-span-2">
@@ -442,7 +442,7 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                       </div>
 
                       {/* SK Details */}
-                      <div className="bg-[#cdeff6]/40 border border-[#a6e5f3] p-3.5 rounded-2xl space-y-2.5 text-xs text-slate-850">
+                      <div className="bg-[#cdeff6]/40 border border-[#a6e5f3] p-3.5 rounded-2xl space-y-2.5 text-xs text-slate-800">
                         <span className="block text-[9px] font-black text-[#280f91] uppercase tracking-wider border-b border-[#a6e5f3] pb-1">Keterangan SK Pengangkatan / Penugasan</span>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-bold">
                           <div>
