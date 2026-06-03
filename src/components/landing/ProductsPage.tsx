@@ -8,8 +8,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose,
-  DialogTrigger
+  DialogClose
 } from "@/components/ui/dialog";
 
 interface ProductItem {
@@ -32,6 +31,7 @@ export default function ProductsPage({ onNavigate }: ProductsPageProps) {
   const [productsList, setProductsList] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
 
   useEffect(() => {
     fetch("/api/products")
@@ -50,17 +50,21 @@ export default function ProductsPage({ onNavigate }: ProductsPageProps) {
   );
 
   const formatWaNumber = (num: string) => {
+    if (!num) return "";
     let clean = num.replace(/\D/g, "");
+    if (clean.length < 9) return "";
     if (clean.startsWith("0")) {
       clean = "62" + clean.slice(1);
     }
     return clean;
   };
 
-  const getWaLink = (item: ProductItem) => {
+  const getWaLink = (item: ProductItem | null) => {
+    if (!item || !item.noHp) return "#";
     const cleanNoHp = formatWaNumber(item.noHp);
+    if (!cleanNoHp) return "#";
     const text = encodeURIComponent(
-      `Halo ${item.penjual}, saya tertarik membeli ${item.namaProduk} karya Anda.`
+      `Halo ${item.penjual || "Penjual"}, saya tertarik membeli ${item.namaProduk || "produk"} karya Anda.`
     );
     return `https://wa.me/${cleanNoHp}?text=${text}`;
   };
@@ -134,143 +138,146 @@ export default function ProductsPage({ onNavigate }: ProductsPageProps) {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {filteredProducts.map((product) => (
-              <Dialog key={product.id}>
-                <div className="bg-white rounded-3xl overflow-hidden border border-cyan-100 hover:border-emerald-500/50 hover:shadow-2xl transition-all duration-300 flex flex-col shadow-lg group">
+              <div key={product.id} className="bg-white rounded-3xl overflow-hidden border border-cyan-100 hover:border-emerald-500/50 hover:shadow-2xl transition-all duration-300 flex flex-col shadow-lg group">
+                
+                {/* Image Container with Hover glow */}
+                <div className="h-52 w-full relative overflow-hidden bg-slate-50 border-b border-slate-100">
+                  {product.gambar ? (
+                    <img 
+                      src={product.gambar} 
+                      alt={product.namaProduk}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-100/50">
+                      <ShoppingBag className="h-10 w-10 mb-1" />
+                      <span className="text-xs font-semibold">Foto Produk</span>
+                    </div>
+                  )}
                   
-                  {/* Image Container with Hover glow */}
-                  <div className="h-52 w-full relative overflow-hidden bg-slate-50 border-b border-slate-100">
-                    {product.gambar ? (
-                      <img 
-                        src={product.gambar} 
-                        alt={product.namaProduk}
-                        loading="lazy"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                      />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-100/50">
-                        <ShoppingBag className="h-10 w-10 mb-1" />
-                        <span className="text-xs font-semibold">Foto Produk</span>
-                      </div>
-                    )}
-                    
-                    {/* Floating Price Tag */}
-                    <span className="absolute bottom-4 right-4 inline-flex items-center rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-black text-white shadow-md">
-                      Rp. {product.harga.toLocaleString("id-ID")},-
-                    </span>
-                  </div>
-
-                  {/* Card Body */}
-                  <div className="p-6 flex-1 flex flex-col justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">
-                          Karya: {product.penjual}
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-semibold uppercase">
-                          Per {product.satuan}
-                        </span>
-                      </div>
-                      <h3 className="text-lg font-black text-[#280f91] group-hover:text-emerald-600 transition-colors leading-tight truncate">
-                        {product.namaProduk}
-                      </h3>
-                      <p className="text-slate-600 text-xs font-medium leading-relaxed line-clamp-3">
-                        {product.deskripsi}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2 mt-6 pt-4 border-t border-slate-100">
-                      {/* Detail Trigger */}
-                      <DialogTrigger asChild>
-                        <Button variant="outline" className="flex-1 rounded-xl font-bold text-xs h-10 cursor-pointer">
-                          Detail
-                        </Button>
-                      </DialogTrigger>
-
-                      {/* Purchase WA link */}
-                      <a 
-                        href={getWaLink(product)} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex-1"
-                      >
-                        <Button className="w-full rounded-xl bg-[#00e676] hover:bg-emerald-600 text-emerald-950 hover:text-white font-bold text-xs h-10 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-                          <MessageCircle className="h-4 w-4 fill-current" />
-                          Pesan
-                        </Button>
-                      </a>
-                    </div>
-                  </div>
+                  {/* Floating Price Tag */}
+                  <span className="absolute bottom-4 right-4 inline-flex items-center rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-black text-white shadow-md">
+                    Rp. {product.harga.toLocaleString("id-ID")},-
+                  </span>
                 </div>
 
-                {/* Details Popup Modal */}
-                <DialogContent className="sm:max-w-md bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl">
-                  <DialogHeader>
-                    <DialogTitle className="text-2xl font-black text-[#280f91]">{product.namaProduk}</DialogTitle>
-                    <DialogDescription className="text-sm font-bold text-emerald-600 mt-1">
-                      Rp. {product.harga.toLocaleString("id-ID")},- / {product.satuan}
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  <div className="space-y-4 py-4">
-                    <div className="h-56 w-full rounded-2xl relative overflow-hidden border border-slate-200 bg-slate-50">
-                      {product.gambar ? (
-                        <img 
-                          src={product.gambar} 
-                          alt={product.namaProduk}
-                          className="w-full h-full object-cover" 
-                        />
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-100">
-                          <ShoppingBag className="h-12 w-12 mb-2" />
-                          <span className="text-xs font-semibold">Foto Produk Belum Tersedia</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Deskripsi Karya</h4>
-                      <p className="text-slate-600 text-xs sm:text-sm font-semibold leading-relaxed whitespace-pre-line">
-                        {product.deskripsi}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 bg-slate-50 p-3 rounded-2xl border border-slate-100 text-xs">
-                      <div>
-                        <span className="text-[10px] text-slate-400 font-bold block uppercase">Warga Belajar / Penjual</span>
-                        <span className="font-bold text-[#280f91]">{product.penjual}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 font-bold block uppercase">No. HP / WA Penjual</span>
-                        <span className="font-mono font-bold text-slate-600">{product.noHp}</span>
-                      </div>
-                    </div>
-
-                    <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100 flex items-start gap-2.5">
-                      <Sparkles className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                      <span className="text-[11px] font-bold text-emerald-800 leading-normal">
-                        Produk ini dibuat langsung oleh kelompok wirausaha mandiri warga belajar PKBM Menuju Makmur sebagai karya kecakapan hidup (life skills).
+                {/* Card Body */}
+                <div className="p-6 flex-1 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">
+                        Karya: {product.penjual}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-semibold uppercase">
+                        Per {product.satuan}
                       </span>
                     </div>
+                    <h3 className="text-lg font-black text-[#280f91] group-hover:text-emerald-600 transition-colors leading-tight truncate">
+                      {product.namaProduk}
+                    </h3>
+                    <p className="text-slate-600 text-xs font-medium leading-relaxed line-clamp-3">
+                      {product.deskripsi}
+                    </p>
                   </div>
 
-                  <DialogFooter className="flex sm:justify-between items-center gap-2 border-t border-slate-100 pt-4 mt-2">
-                    <DialogClose asChild>
-                      <Button variant="outline" className="rounded-xl font-bold cursor-pointer text-xs">Tutup</Button>
-                    </DialogClose>
-                    <a href={getWaLink(product)} target="_blank" rel="noopener noreferrer">
-                      <Button className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 px-5 flex items-center gap-1.5 cursor-pointer text-xs">
-                        <MessageCircle className="h-4 w-4" />
-                        Pesan Sekarang
+                  <div className="flex items-center gap-2 mt-6 pt-4 border-t border-slate-100">
+                    <Button 
+                      onClick={() => setSelectedProduct(product)}
+                      variant="outline" 
+                      className="flex-1 rounded-xl font-bold text-xs h-10 cursor-pointer"
+                    >
+                      Detail
+                    </Button>
+
+                    {/* Purchase WA link */}
+                    <a 
+                      href={getWaLink(product)} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex-1"
+                    >
+                      <Button className="w-full rounded-xl bg-[#00e676] hover:bg-emerald-600 text-emerald-950 hover:text-white font-bold text-xs h-10 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                        <MessageCircle className="h-4 w-4 fill-current" />
+                        Pesan
                       </Button>
                     </a>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         )}
 
-        {/* DATANG & KUNJUNGI INFO SECTIONS AT THE BOTTOM OF THE PAGE */}
+        {/* Global Details Popup Modal */}
+        <Dialog open={selectedProduct !== null} onOpenChange={(open) => { if (!open) setSelectedProduct(null); }}>
+          <DialogContent className="sm:max-w-md bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl">
+            {selectedProduct && (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-black text-[#280f91]">{selectedProduct.namaProduk}</DialogTitle>
+                  <DialogDescription className="text-sm font-bold text-emerald-600 mt-1">
+                    Rp. {selectedProduct.harga.toLocaleString("id-ID")},- / {selectedProduct.satuan}
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4 py-4">
+                  <div className="h-56 w-full rounded-2xl relative overflow-hidden border border-slate-200 bg-slate-50">
+                    {selectedProduct.gambar ? (
+                      <img 
+                        src={selectedProduct.gambar} 
+                        alt={selectedProduct.namaProduk}
+                        className="w-full h-full object-cover" 
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-100">
+                        <ShoppingBag className="h-12 w-12 mb-2" />
+                        <span className="text-xs font-semibold">Foto Produk Belum Tersedia</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Deskripsi Karya</h4>
+                    <p className="text-slate-600 text-xs sm:text-sm font-semibold leading-relaxed whitespace-pre-line">
+                      {selectedProduct.deskripsi}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 bg-slate-50 p-3 rounded-2xl border border-slate-100 text-xs">
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-bold block uppercase">Warga Belajar / Penjual</span>
+                      <span className="font-bold text-[#280f91]">{selectedProduct.penjual}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-bold block uppercase">No. HP / WA Penjual</span>
+                      <span className="font-mono font-bold text-slate-600">{selectedProduct.noHp}</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100 flex items-start gap-2.5">
+                    <Sparkles className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <span className="text-[11px] font-bold text-emerald-800 leading-normal">
+                      Produk ini dibuat langsung oleh kelompok wirausaha mandiri warga belajar PKBM Menuju Makmur sebagai karya kecakapan hidup (life skills).
+                    </span>
+                  </div>
+                </div>
+
+                <DialogFooter className="flex sm:justify-between items-center gap-2 border-t border-slate-100 pt-4 mt-2">
+                  <DialogClose asChild>
+                    <Button variant="outline" className="rounded-xl font-bold cursor-pointer text-xs">Tutup</Button>
+                  </DialogClose>
+                  <a href={getWaLink(selectedProduct)} target="_blank" rel="noopener noreferrer">
+                    <Button className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 px-5 flex items-center gap-1.5 cursor-pointer text-xs">
+                      <MessageCircle className="h-4 w-4" />
+                      Pesan Sekarang
+                    </Button>
+                  </a>
+                </DialogFooter>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>{/* DATANG & KUNJUNGI INFO SECTIONS AT THE BOTTOM OF THE PAGE */}
         <div className="max-w-5xl mx-auto mt-20 grid grid-cols-1 md:grid-cols-2 gap-10 items-center bg-white/80 p-8 rounded-3xl border border-slate-200/50 shadow-lg text-slate-700 font-semibold">
           <div className="space-y-6">
             <div className="space-y-2">

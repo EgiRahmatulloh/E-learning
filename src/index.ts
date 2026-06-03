@@ -2220,6 +2220,11 @@ app.post("/api/products", async ({ body, headers, jwt, set }) => {
   if (authError) return authError;
 
   const { namaProduk, deskripsi, noHp, penjual, satuan, harga, status, gambar } = body;
+  if (harga < 0) {
+    set.status = 400;
+    return { success: false, message: "Harga tidak boleh bernilai negatif" };
+  }
+
   try {
     const inserted = await db.insert(products).values({
       namaProduk,
@@ -2244,7 +2249,7 @@ app.post("/api/products", async ({ body, headers, jwt, set }) => {
     noHp: t.String(),
     penjual: t.String(),
     satuan: t.String(),
-    harga: t.Numeric(),
+    harga: t.Numeric({ minimum: 0 }),
     status: t.Optional(t.String()),
     gambar: t.Optional(t.String()),
   })
@@ -2262,6 +2267,11 @@ app.put("/api/products/:id", async ({ params, body, headers, jwt, set }) => {
   }
 
   const { namaProduk, deskripsi, noHp, penjual, satuan, harga, status, gambar } = body;
+  if (harga < 0) {
+    set.status = 400;
+    return { success: false, message: "Harga tidak boleh bernilai negatif" };
+  }
+
   try {
     const updated = await db.update(products)
       .set({
@@ -2296,7 +2306,7 @@ app.put("/api/products/:id", async ({ params, body, headers, jwt, set }) => {
     noHp: t.String(),
     penjual: t.String(),
     satuan: t.String(),
-    harga: t.Numeric(),
+    harga: t.Numeric({ minimum: 0 }),
     status: t.String(),
     gambar: t.String(),
   })

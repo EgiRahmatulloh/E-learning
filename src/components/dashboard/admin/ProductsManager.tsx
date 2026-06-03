@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, Plus, Trash2, Edit, Save, HelpCircle } from "lucide-react";
 import {
@@ -22,6 +22,7 @@ interface ProductItem {
 }
 
 export default function ProductsManager() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -546,7 +547,7 @@ export default function ProductsManager() {
               onDrop={handleDrop}
             >
               <input
-                id="image-file-input"
+                ref={fileInputRef}
                 type="file"
                 className="hidden"
                 accept="image/*"
@@ -564,7 +565,7 @@ export default function ProductsManager() {
               <Button
                 type="button"
                 disabled={uploading}
-                onClick={() => document.getElementById("image-file-input")?.click()}
+                onClick={() => fileInputRef.current?.click()}
                 className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs px-3 py-1.5 h-auto"
               >
                 {uploading ? "Mengunggah..." : "Pilih File Gambar"}
