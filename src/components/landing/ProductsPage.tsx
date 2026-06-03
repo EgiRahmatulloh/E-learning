@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Search, MessageCircle, Sparkles, ShoppingBag } from "lucide-react";
+import { Search, MessageCircle, Sparkles, ShoppingBag } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -77,22 +77,7 @@ export default function ProductsPage({ onNavigate }: ProductsPageProps) {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         
-        {/* Back Button */}
-        <div className="mb-8 text-left max-w-5xl mx-auto">
-          <button
-            onClick={() => {
-              if (onNavigate) {
-                onNavigate("/");
-              } else {
-                window.history.pushState({}, "", "/");
-                window.dispatchEvent(new PopStateEvent("popstate"));
-              }
-            }}
-            className="inline-flex items-center gap-2 text-xs font-black text-[#280f91] hover:text-[#ff6105] transition-colors uppercase tracking-widest cursor-pointer bg-white/90 hover:bg-white px-5 py-2.5 rounded-full shadow-sm border border-cyan-100"
-          >
-            <ArrowLeft className="h-4 w-4" /> Kembali ke Beranda
-          </button>
-        </div>
+
 
         {/* Centered Title */}
         <div className="text-center max-w-4xl mx-auto space-y-4 mb-12">

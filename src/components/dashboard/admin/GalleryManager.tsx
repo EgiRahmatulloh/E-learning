@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { parseCSV, downloadCSV } from "@/lib/utils";
-import { Upload, Plus, Trash2, Save, HelpCircle, Download, Image, X, Edit3, Filter, RotateCcw } from "lucide-react";
+import { Plus, Trash2, Save, HelpCircle, Image, X, Edit3, Filter, RotateCcw } from "lucide-react";
 
 const GALLERY_CATEGORIES = [
   "KEGIATAN PEMBELAJARAN",
@@ -52,7 +51,6 @@ export default function GalleryManager() {
   const [dragActive, setDragActive] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const importInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchGallery();
@@ -202,65 +200,6 @@ export default function GalleryManager() {
     }
   };
 
-  const handleExportCSV = () => {
-    if (galleryList.length === 0) return;
-    const headers = ["Nama File", "Kategori", "Tanggal Posting", "Foto", "Status"];
-    const rows = galleryList.map((item) => [
-      `"${item.namaFile.replace(/"/g, '""')}"`,
-      `"${item.kategori}"`,
-      `"${item.tanggalPosting}"`,
-      `"${item.foto}"`,
-      `"${item.status}"`,
-    ]);
-    downloadCSV(headers, rows, `data-galeri-${Date.now()}.csv`);
-  };
-
-  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const text = event.target?.result as string;
-        const rows = parseCSV(text);
-        if (rows.length <= 1) return;
-        
-        const importedList = [];
-        for (let i = 1; i < rows.length; i++) {
-          const cols = rows[i];
-          if (cols.length < 2) continue;
-          importedList.push({
-            namaFile: cols[0] || "",
-            kategori: cols[1] || GALLERY_CATEGORIES[0],
-            tanggalPosting: cols[2] || "",
-            foto: cols[3] || "",
-            status: cols[4] || "PUBLISH",
-          });
-        }
-
-        if (importedList.length === 0) return;
-
-        const token = localStorage.getItem("token");
-        try {
-          const res = await fetch("/api/gallery/import", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-            body: JSON.stringify(importedList),
-          });
-          const data = await res.json();
-          if (data.success) {
-            alert(data.message || `Berhasil mengimpor data galeri!`);
-            fetchGallery();
-          } else {
-            alert("Gagal mengimpor: " + (data.message || "Error tidak diketahui"));
-          }
-        } catch (e) {
-          alert("Terjadi kesalahan saat mengimpor data galeri");
-        }
-      };
-      reader.readAsText(file);
-    }
-  };
-
   const handleFilter = () => {
     setFilterKategori(searchFilterKategori);
     setCurrentPage(1);
@@ -301,19 +240,7 @@ export default function GalleryManager() {
           >
             <Plus className="h-4 w-4" /> TAMBAH BARU
           </Button>
-          <input type="file" ref={importInputRef} className="hidden" accept=".csv" onChange={handleImportCSV} />
-          <Button
-            onClick={() => importInputRef.current?.click()}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-blue-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
-          >
-            <Upload className="h-4 w-4" /> UPLOAD CSV
-          </Button>
-          <Button
-            onClick={handleExportCSV}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-emerald-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
-          >
-            <Download className="h-4 w-4" /> DOWNLOAD CSV
-          </Button>
+
         </div>
       </div>
 

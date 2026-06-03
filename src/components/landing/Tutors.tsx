@@ -9,7 +9,7 @@ import {
   DialogFooter,
   DialogClose
 } from "@/components/ui/dialog";
-import { ArrowLeft, ArrowRight, ShieldAlert, Award, Mail } from "lucide-react";
+import { ArrowRight, ShieldAlert, Award, Mail } from "lucide-react";
 
 interface Tutor {
   id: number;
@@ -61,22 +61,7 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
       <section id="tutor" className="py-20 bg-[#cdeff6] border-y border-slate-300 relative overflow-hidden min-h-[85vh]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
           
-          {/* Back Button */}
-          <div className="mb-8 text-left max-w-5xl mx-auto">
-            <button
-              onClick={() => {
-                if (onNavigate) {
-                  onNavigate("/");
-                } else {
-                  window.history.pushState({}, "", "/");
-                  window.dispatchEvent(new PopStateEvent("popstate"));
-                }
-              }}
-              className="inline-flex items-center gap-2 text-xs font-black text-purple-700 hover:text-orange-600 transition-colors uppercase tracking-widest cursor-pointer bg-white/80 hover:bg-white px-5 py-2.5 rounded-full shadow-xs border border-purple-100"
-            >
-              <ArrowLeft className="h-4 w-4" /> Kembali ke Beranda
-            </button>
-          </div>
+
 
           {/* Centered Title */}
           <div className="text-center max-w-4xl mx-auto space-y-4 mb-14">

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { ArrowLeft, Search, ChevronLeft } from "lucide-react";
+import { Search, ChevronLeft } from "lucide-react";
 
 const GALLERY_CATEGORIES = [
   { id: "KEGIATAN PEMBELAJARAN", label: "KEGIATAN PEMBELAJARAN", color: "from-purple-900 to-indigo-900" },
@@ -131,23 +131,7 @@ export default function GalleryPage({ onNavigate }: GalleryPageProps) {
     <section id="galeri-landing" className="py-20 bg-[#b2ebf2] border-y border-slate-300 relative overflow-hidden min-h-[85vh] text-left">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
 
-        {/* Back to Home Button */}
-        <div className="mb-8 text-left max-w-5xl mx-auto">
-          <button
-            onClick={() => {
-              if (viewMode === "photos") {
-                handleBackToCategories();
-              } else {
-                if (onNavigate) onNavigate("/");
-                else { window.history.pushState({}, "", "/"); window.dispatchEvent(new PopStateEvent("popstate")); }
-              }
-            }}
-            className="inline-flex items-center gap-2 text-xs font-black text-purple-700 hover:text-orange-600 transition-colors uppercase tracking-widest cursor-pointer bg-white/80 hover:bg-white px-5 py-2.5 rounded-full shadow-sm border border-purple-100"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            {viewMode === "photos" ? "Kembali ke Kategori" : "Kembali ke Beranda"}
-          </button>
-        </div>
+
 
         {/* Title */}
         <div className="text-center max-w-4xl mx-auto space-y-4 mb-12">
