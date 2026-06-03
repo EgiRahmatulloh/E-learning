@@ -23,7 +23,7 @@ interface AlumniPageProps {
   onNavigate?: (path: string) => void;
 }
 
-export default function AlumniPage({ onNavigate }: AlumniPageProps) {
+export default function AlumniPage(_props: AlumniPageProps) {
   const [alumniList, setAlumniList] = useState<AlumniItem[]>([]);
   const [loading, setLoading] = useState(true);
 

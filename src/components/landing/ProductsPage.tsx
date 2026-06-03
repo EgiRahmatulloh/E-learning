@@ -27,7 +27,7 @@ interface ProductsPageProps {
   onNavigate?: (path: string) => void;
 }
 
-export default function ProductsPage({ onNavigate }: ProductsPageProps) {
+export default function ProductsPage(_props: ProductsPageProps) {
   const [productsList, setProductsList] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");

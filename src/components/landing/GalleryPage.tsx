@@ -54,7 +54,7 @@ function PlaceholderImage({ label, colorClass }: { label: string; colorClass: st
   );
 }
 
-export default function GalleryPage({ onNavigate }: GalleryPageProps) {
+export default function GalleryPage(_props: GalleryPageProps) {
   const [galleryList, setGalleryList] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -116,13 +116,6 @@ export default function GalleryPage({ onNavigate }: GalleryPageProps) {
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategory(categoryId);
     setViewMode("photos");
-    setSearchTerm("");
-    setCurrentPage(1);
-  };
-
-  const handleBackToCategories = () => {
-    setViewMode("categories");
-    setSelectedCategory("");
     setSearchTerm("");
     setCurrentPage(1);
   };

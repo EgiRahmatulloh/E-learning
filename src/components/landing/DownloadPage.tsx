@@ -24,7 +24,7 @@ const STATIC_CATEGORIES = [
   { name: "ADMINISTRASI KELEMBAGAAN", key: "ADMINISTRASI KELEMBAGAAN" }
 ];
 
-export default function DownloadPage({ onNavigate }: DownloadPageProps) {
+export default function DownloadPage(_props: DownloadPageProps) {
   const [downloadsList, setDownloadsList] = useState<DownloadItem[]>([]);
   const [loading, setLoading] = useState(true);
 

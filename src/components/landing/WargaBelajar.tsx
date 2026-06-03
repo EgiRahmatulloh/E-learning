@@ -34,7 +34,7 @@ interface WargaBelajarProps {
   onNavigate?: (path: string) => void;
 }
 
-export default function WargaBelajar({ onNavigate }: WargaBelajarProps) {
+export default function WargaBelajar(_props: WargaBelajarProps) {
   const [studentsList, setStudentsList] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
 
