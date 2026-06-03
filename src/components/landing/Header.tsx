@@ -43,10 +43,10 @@ interface HeaderProps {
 
 export default function Header({ currentPath = "/", onNavigate }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(currentPath === "/profile" || currentPath === "/agenda" || currentPath === "/news" || currentPath === "/tutor" || currentPath === "/warga-belajar");
+  const [isScrolled, setIsScrolled] = useState(currentPath === "/profile" || currentPath === "/agenda" || currentPath === "/news" || currentPath === "/tutor" || currentPath === "/warga-belajar" || currentPath === "/download");
 
   useEffect(() => {
-    if (currentPath === "/profile" || currentPath === "/agenda" || currentPath === "/news" || currentPath === "/tutor" || currentPath === "/warga-belajar") {
+    if (currentPath === "/profile" || currentPath === "/agenda" || currentPath === "/news" || currentPath === "/tutor" || currentPath === "/warga-belajar" || currentPath === "/download") {
       setIsScrolled(true);
       return;
     }
@@ -63,8 +63,8 @@ export default function Header({ currentPath = "/", onNavigate }: HeaderProps) {
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault();
-    if (targetId === "profil" || targetId === "agenda" || targetId === "berita" || targetId === "tutor" || targetId === "warga-belajar") {
-      const path = targetId === "profil" ? "/profile" : targetId === "agenda" ? "/agenda" : targetId === "berita" ? "/news" : targetId === "tutor" ? "/tutor" : "/warga-belajar";
+    if (targetId === "profil" || targetId === "agenda" || targetId === "berita" || targetId === "tutor" || targetId === "warga-belajar" || targetId === "download") {
+      const path = targetId === "profil" ? "/profile" : targetId === "agenda" ? "/agenda" : targetId === "berita" ? "/news" : targetId === "tutor" ? "/tutor" : targetId === "warga-belajar" ? "/warga-belajar" : "/download";
       if (onNavigate) {
         onNavigate(path);
       } else {
@@ -138,7 +138,7 @@ export default function Header({ currentPath = "/", onNavigate }: HeaderProps) {
           <a href="#berita" onClick={(e) => handleNavClick(e, "berita")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? (currentPath === "/news" ? "text-[#ff6105]" : "text-slate-600 hover:text-[#280f91]") : "text-white/80 hover:text-white"}`}>Berita</a>
           <a href="#tutor" onClick={(e) => handleNavClick(e, "tutor")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? (currentPath === "/tutor" ? "text-[#ff6105]" : "text-slate-600 hover:text-[#280f91]") : "text-white/80 hover:text-white"}`}>Tutor</a>
           <a href="#warga-belajar" onClick={(e) => handleNavClick(e, "warga-belajar")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? (currentPath === "/warga-belajar" ? "text-[#ff6105]" : "text-slate-600 hover:text-[#280f91]") : "text-white/80 hover:text-white"}`}>Warga Belajar</a>
-          <a href="#download" onClick={(e) => handleNavClick(e, "download")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Download</a>
+          <a href="#download" onClick={(e) => handleNavClick(e, "download")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? (currentPath === "/download" ? "text-[#ff6105]" : "text-slate-600 hover:text-[#280f91]") : "text-white/80 hover:text-white"}`}>Download</a>
           <a href="#produk" onClick={(e) => handleNavClick(e, "produk")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Produk Warga Belajar</a>
           <a href="#alumni" onClick={(e) => handleNavClick(e, "alumni")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Alumni</a>
           <a href="#galeri" onClick={(e) => handleNavClick(e, "galeri")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Galeri</a>

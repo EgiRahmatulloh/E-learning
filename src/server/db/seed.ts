@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students } from "./schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students, downloads } from "./schema";
 import { count } from "drizzle-orm";
 
 export async function seedDatabase() {
@@ -551,6 +551,58 @@ export async function seedDatabase() {
       console.log("✅ Seeding students berhasil!");
     } else {
       console.log(`ℹ️ Database memiliki ${studentsCount} students, seeding diabaikan.`);
+    }
+
+    // Seed downloads if empty
+    const resultDownloads = await db.select({ value: count() }).from(downloads).get();
+    const downloadsCount = resultDownloads?.value || 0;
+    if (downloadsCount === 0) {
+      console.log("🌱 Database downloads kosong, seeding default downloads...");
+      await db.insert(downloads).values([
+        {
+          namaFile: "MODUL MATEMATIKA PAKET C",
+          kategori: "MODUL PEMBELAJARAN",
+          fileUrl: "/uploads/modul_matematika_paket_c.pdf",
+          hits: 189,
+          status: "PUBLISH",
+          tanggalUpload: "20 Januari 2020",
+        },
+        {
+          namaFile: "ADMINISTRASI KURIKULUM 2013 REVISI",
+          kategori: "ADMINISTRASI KURIKULUM",
+          fileUrl: "/uploads/kurikulum_2013.pdf",
+          hits: 45,
+          status: "PUBLISH",
+          tanggalUpload: "15 Maret 2021",
+        },
+        {
+          namaFile: "SK PENGANGKATAN TUTOR 2026",
+          kategori: "ADMINISTRASI TUTOR",
+          fileUrl: "/uploads/sk_tutor_2026.pdf",
+          hits: 12,
+          status: "PUBLISH",
+          tanggalUpload: "02 Januari 2026",
+        },
+        {
+          namaFile: "DATA INDUK WARGA BELAJAR",
+          kategori: "ADMINISTRASI WB",
+          fileUrl: "/uploads/data_induk_wb.pdf",
+          hits: 78,
+          status: "PUBLISH",
+          tanggalUpload: "10 Februari 2026",
+        },
+        {
+          namaFile: "PROFIL LEMBAGA PKBM 2026",
+          kategori: "ADMINISTRASI KELEMBAGAAN",
+          fileUrl: "/uploads/profil_lembaga_2026.pdf",
+          hits: 105,
+          status: "PUBLISH",
+          tanggalUpload: "14 Januari 2026",
+        }
+      ]);
+      console.log("✅ Seeding downloads berhasil!");
+    } else {
+      console.log(`ℹ️ Database memiliki ${downloadsCount} downloads, seeding diabaikan.`);
     }
 
   } catch (error) {

@@ -429,8 +429,8 @@ export default function NewsManager() {
                   <td className="py-4 px-4">
                     <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${
                       item.status === 'PUBLISH' 
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-250' 
-                        : 'bg-amber-50 text-amber-700 border border-amber-250'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                        : 'bg-amber-50 text-amber-700 border border-amber-200'
                     }`}>
                       {item.status}
                     </span>

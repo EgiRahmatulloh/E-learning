@@ -291,6 +291,23 @@ export const students = sqliteTable('students', {
 export type StudentType = typeof students.$inferSelect;
 export type NewStudent = typeof students.$inferInsert;
 
+export const downloads = sqliteTable('downloads', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  namaFile: text('nama_file').notNull().default(''),
+  kategori: text('kategori').notNull().default(''),
+  fileUrl: text('file_url').notNull().default(''),
+  hits: integer('hits').notNull().default(0),
+  status: text('status').notNull().default('PUBLISH'), // 'PUBLISH', 'DRAFT'
+  tanggalUpload: text('tanggal_upload').notNull().default(''),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at')
+    .$defaultFn(() => new Date().toISOString())
+    .$onUpdate(() => new Date().toISOString()),
+});
+
+export type DownloadType = typeof downloads.$inferSelect;
+export type NewDownload = typeof downloads.$inferInsert;
+
 
 
 

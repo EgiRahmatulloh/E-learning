@@ -271,4 +271,19 @@ CREATE TABLE IF NOT EXISTS students (
 );
 `);
 
+// Inisialisasi tabel downloads otomatis jika belum ada
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS downloads (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nama_file TEXT NOT NULL DEFAULT '',
+  kategori TEXT NOT NULL DEFAULT '',
+  file_url TEXT NOT NULL DEFAULT '',
+  hits INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'PUBLISH',
+  tanggal_upload TEXT NOT NULL DEFAULT '',
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+`);
+
 export const db = drizzle(sqlite, { schema });
