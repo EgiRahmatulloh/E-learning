@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { staticPlugin } from "@elysia/static";
 import { db } from "./server/db";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints } from "./server/db/schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas } from "./server/db/schema";
 import { eq, or } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
 import fs from "fs";
@@ -1099,6 +1099,199 @@ app.post("/api/service-points/import", async ({ body, headers, jwt, set }) => {
     penjab: t.String({ minLength: 1 }),
     waktuPembelajaran: t.Optional(t.String()),
     jumlahWb: t.Optional(t.String()),
+    keterangan: t.Optional(t.String()),
+    foto: t.Optional(t.String()),
+  }))
+});
+
+// --- API AGENDAS ROUTES ---
+// Ambil semua agenda
+app.get("/api/agendas", async ({ set }) => {
+  try {
+    const list = await db.select().from(agendas).all();
+    return { success: true, data: list };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data agenda" };
+  }
+});
+
+// Tambah agenda baru
+app.post("/api/agendas", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const { nama, pelaksanaan, waktu, peserta, lokasi, penyelenggara, penanggungjawab, keterangan, foto } = body;
+  try {
+    const inserted = await db.insert(agendas).values({
+      nama,
+      pelaksanaan,
+      waktu,
+      peserta,
+      lokasi,
+      penyelenggara,
+      penanggungjawab,
+      keterangan,
+      foto,
+    }).returning().get();
+    return { success: true, data: inserted };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menambahkan data agenda" };
+  }
+}, {
+  body: t.Object({
+    nama: t.String({ minLength: 1 }),
+    pelaksanaan: t.String({ minLength: 1 }),
+    waktu: t.String({ minLength: 1 }),
+    peserta: t.String(),
+    lokasi: t.String(),
+    penyelenggara: t.String(),
+    penanggungjawab: t.String(),
+    keterangan: t.String(),
+    foto: t.String(),
+  })
+});
+
+// Update agenda
+app.put("/api/agendas/:id", async ({ params, body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  const { nama, pelaksanaan, waktu, peserta, lokasi, penyelenggara, penanggungjawab, keterangan, foto } = body;
+  try {
+    const existing = await db.select().from(agendas).where(eq(agendas.id, id)).get();
+    if (!existing) {
+      set.status = 404;
+      return { success: false, message: "Data agenda tidak ditemukan" };
+    }
+
+    const updated = await db.update(agendas)
+      .set({
+        nama,
+        pelaksanaan,
+        waktu,
+        peserta,
+        lokasi,
+        penyelenggara,
+        penanggungjawab,
+        keterangan,
+        foto,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(agendas.id, id))
+      .returning()
+      .get();
+    
+    return { success: true, data: updated };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal memperbarui data agenda" };
+  }
+}, {
+  body: t.Object({
+    nama: t.String({ minLength: 1 }),
+    pelaksanaan: t.String({ minLength: 1 }),
+    waktu: t.String({ minLength: 1 }),
+    peserta: t.String(),
+    lokasi: t.String(),
+    penyelenggara: t.String(),
+    penanggungjawab: t.String(),
+    keterangan: t.String(),
+    foto: t.String(),
+  })
+});
+
+// Hapus agenda
+app.delete("/api/agendas/:id", async ({ params, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    const existing = await db.select().from(agendas).where(eq(agendas.id, id)).get();
+    if (!existing) {
+      set.status = 404;
+      return { success: false, message: "Data agenda tidak ditemukan" };
+    }
+
+    await db.delete(agendas).where(eq(agendas.id, id)).run();
+    return { success: true, message: "Data agenda berhasil dihapus" };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menghapus data agenda" };
+  }
+});
+
+// Impor agenda secara masal
+app.post("/api/agendas/import", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const list = body;
+  if (!Array.isArray(list)) {
+    set.status = 400;
+    return { success: false, message: "Format data tidak valid, harus berupa array" };
+  }
+
+  try {
+    const validItems = list.filter(item => 
+      item && 
+      typeof item === 'object' && 
+      typeof item.nama === 'string' && item.nama.trim().length > 0 &&
+      typeof item.pelaksanaan === 'string' && item.pelaksanaan.trim().length > 0 &&
+      typeof item.waktu === 'string' && item.waktu.trim().length > 0
+    );
+
+    if (validItems.length === 0) {
+      set.status = 400;
+      return { success: false, message: "Tidak ada data valid untuk diimpor" };
+    }
+
+    const insertValues = validItems.map(item => ({
+      nama: item.nama,
+      pelaksanaan: item.pelaksanaan,
+      waktu: item.waktu,
+      peserta: typeof item.peserta === 'string' ? item.peserta : '',
+      lokasi: typeof item.lokasi === 'string' ? item.lokasi : '',
+      penyelenggara: typeof item.penyelenggara === 'string' ? item.penyelenggara : '',
+      penanggungjawab: typeof item.penanggungjawab === 'string' ? item.penanggungjawab : '',
+      keterangan: typeof item.keterangan === 'string' ? item.keterangan : '',
+      foto: typeof item.foto === 'string' ? item.foto : '',
+    }));
+
+    const chunkSize = 100;
+    await db.transaction(async (tx) => {
+      for (let i = 0; i < insertValues.length; i += chunkSize) {
+        const chunk = insertValues.slice(i, i + chunkSize);
+        await tx.insert(agendas).values(chunk).run();
+      }
+    });
+    return { success: true, message: `Berhasil mengimpor ${insertValues.length} data agenda` };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengimpor data agenda" };
+  }
+}, {
+  body: t.Array(t.Object({
+    nama: t.String({ minLength: 1 }),
+    pelaksanaan: t.String({ minLength: 1 }),
+    waktu: t.String({ minLength: 1 }),
+    peserta: t.Optional(t.String()),
+    lokasi: t.Optional(t.String()),
+    penyelenggara: t.Optional(t.String()),
+    penanggungjawab: t.Optional(t.String()),
     keterangan: t.Optional(t.String()),
     foto: t.Optional(t.String()),
   }))

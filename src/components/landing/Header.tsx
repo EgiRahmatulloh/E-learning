@@ -43,10 +43,10 @@ interface HeaderProps {
 
 export default function Header({ currentPath = "/", onNavigate }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(currentPath === "/profile");
+  const [isScrolled, setIsScrolled] = useState(currentPath === "/profile" || currentPath === "/agenda");
 
   useEffect(() => {
-    if (currentPath === "/profile") {
+    if (currentPath === "/profile" || currentPath === "/agenda") {
       setIsScrolled(true);
       return;
     }
@@ -63,11 +63,12 @@ export default function Header({ currentPath = "/", onNavigate }: HeaderProps) {
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault();
-    if (targetId === "profil") {
+    if (targetId === "profil" || targetId === "agenda") {
+      const path = targetId === "profil" ? "/profile" : "/agenda";
       if (onNavigate) {
-        onNavigate("/profile");
+        onNavigate(path);
       } else {
-        window.history.pushState({}, "", "/profile");
+        window.history.pushState({}, "", path);
         window.dispatchEvent(new PopStateEvent("popstate"));
       }
       setMobileMenuOpen(false);
@@ -133,7 +134,7 @@ export default function Header({ currentPath = "/", onNavigate }: HeaderProps) {
         <nav className="hidden lg:flex items-center gap-5 xl:gap-6">
           <a href="#beranda" onClick={(e) => handleNavClick(e, "beranda")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-[#280f91] hover:text-[#ff6105]" : "text-white hover:text-orange-400"}`}>Beranda</a>
           <a href="#profil" onClick={(e) => handleNavClick(e, "profil")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? (currentPath === "/profile" ? "text-[#ff6105]" : "text-slate-600 hover:text-[#280f91]") : "text-white/80 hover:text-white"}`}>Profil</a>
-          <a href="#agenda" onClick={(e) => handleNavClick(e, "agenda")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Agenda</a>
+          <a href="#agenda" onClick={(e) => handleNavClick(e, "agenda")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? (currentPath === "/agenda" ? "text-[#ff6105]" : "text-slate-600 hover:text-[#280f91]") : "text-white/80 hover:text-white"}`}>Agenda</a>
           <a href="#berita" onClick={(e) => handleNavClick(e, "berita")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Berita</a>
           <a href="#tutor" onClick={(e) => handleNavClick(e, "tutor")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Tutor</a>
           <a href="#download" onClick={(e) => handleNavClick(e, "download")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-slate-600 hover:text-[#280f91]" : "text-white/80 hover:text-white"}`}>Download</a>

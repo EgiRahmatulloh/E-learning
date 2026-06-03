@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints } from "./schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas } from "./schema";
 import { count } from "drizzle-orm";
 
 export async function seedDatabase() {
@@ -279,6 +279,40 @@ export async function seedDatabase() {
       console.log("✅ Seeding service points berhasil!");
     } else {
       console.log(`ℹ️ Database memiliki ${servicePointsCount} service points, seeding diabaikan.`);
+    }
+
+    // Seed agendas if empty
+    const resultAgendas = await db.select({ value: count() }).from(agendas).get();
+    const agendasCount = resultAgendas?.value || 0;
+    if (agendasCount === 0) {
+      console.log("🌱 Database agendas kosong, seeding default agendas...");
+      await db.insert(agendas).values([
+        {
+          nama: "UPK PAKET C",
+          pelaksanaan: "JUM'AT, 12 DESEMBER 2025",
+          waktu: "07.00 WIB S.D SELESAI",
+          peserta: "WB KELAS XII",
+          lokasi: "PKBM MENUJU MAKMUR",
+          penyelenggara: "PANITIA UPK",
+          penanggungjawab: "ACENG G",
+          keterangan: "Ujian Pendidikan Kesetaraan tingkat Paket C untuk mengukur pencapaian standar kompetensi lulusan warga belajar.",
+          foto: "/images/8c928d7128a4a86625e224dd9d3fa78b.png",
+        },
+        {
+          nama: "WORKSHOP KREATIVITAS MAHASISWA & WARGA BELAJAR",
+          pelaksanaan: "SABTU, 20 DESEMBER 2025",
+          waktu: "09.00 WIB S.D 15.00 WIB",
+          peserta: "SEMUA WARGA BELAJAR",
+          lokasi: "AULA SERBAGUNA PKBM",
+          penyelenggara: "BIDANG KETERAMPILAN",
+          penanggungjawab: "SITI AMINAH, S.E.",
+          keterangan: "Pelatihan pembuatan kerajinan tangan dan produk wirausaha mandiri hasil karya kreatif warga belajar.",
+          foto: "/images/73129d8e548b4795ba15eaafa5d0e39c.jpg",
+        }
+      ]);
+      console.log("✅ Seeding agendas berhasil!");
+    } else {
+      console.log(`ℹ️ Database memiliki ${agendasCount} agendas, seeding diabaikan.`);
     }
   } catch (error) {
     console.error("❌ Gagal melakukan seeding database:", error);

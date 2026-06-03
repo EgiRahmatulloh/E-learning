@@ -181,3 +181,24 @@ export const servicePoints = sqliteTable('service_points', {
 
 export type ServicePoint = typeof servicePoints.$inferSelect;
 export type NewServicePoint = typeof servicePoints.$inferInsert;
+
+export const agendas = sqliteTable('agendas', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  nama: text('nama').notNull().default(''),
+  pelaksanaan: text('pelaksanaan').notNull().default(''),
+  waktu: text('waktu').notNull().default(''),
+  peserta: text('peserta').notNull().default(''),
+  lokasi: text('lokasi').notNull().default(''),
+  penyelenggara: text('penyelenggara').notNull().default(''),
+  penanggungjawab: text('penanggungjawab').notNull().default(''),
+  keterangan: text('keterangan').notNull().default(''),
+  foto: text('foto').notNull().default(''),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at')
+    .$defaultFn(() => new Date().toISOString())
+    .$onUpdate(() => new Date().toISOString()),
+});
+
+export type Agenda = typeof agendas.$inferSelect;
+export type NewAgenda = typeof agendas.$inferInsert;
+
