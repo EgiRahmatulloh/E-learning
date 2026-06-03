@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { staticPlugin } from "@elysia/static";
 import { db } from "./server/db";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students } from "./server/db/schema";
+import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students, downloads } from "./server/db/schema";
 import { eq, or } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
 import fs from "fs";
@@ -2032,6 +2032,160 @@ app.delete("/api/students/:id", async ({ params, headers, jwt, set }) => {
   } catch (e) {
     set.status = 500;
     return { success: false, message: "Gagal menghapus warga belajar" };
+  }
+});
+
+// --- API DOWNLOADS ROUTES ---
+// Ambil semua download (Public, hanya PUBLISH)
+app.get("/api/downloads", async ({ set }) => {
+  try {
+    const list = await db.select().from(downloads).where(eq(downloads.status, 'PUBLISH')).all();
+    return { success: true, data: list };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data download" };
+  }
+});
+
+// Ambil semua download (Admin)
+app.get("/api/downloads/admin", async ({ headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  try {
+    const list = await db.select().from(downloads).all();
+    return { success: true, data: list };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengambil data download" };
+  }
+});
+
+// Tambah download baru
+app.post("/api/downloads", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const { namaFile, kategori, fileUrl, status, tanggalUpload } = body;
+  try {
+    const inserted = await db.insert(downloads).values({
+      namaFile,
+      kategori,
+      fileUrl,
+      status: status || 'PUBLISH',
+      tanggalUpload: tanggalUpload || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+      hits: 0,
+    }).returning().get();
+
+    return { success: true, data: inserted };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menambahkan data download" };
+  }
+}, {
+  body: t.Object({
+    namaFile: t.String({ minLength: 1 }),
+    kategori: t.String({ minLength: 1 }),
+    fileUrl: t.String({ minLength: 1 }),
+    status: t.Optional(t.String()),
+    tanggalUpload: t.Optional(t.String()),
+  })
+});
+
+// Update download
+app.put("/api/downloads/:id", async ({ params, body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  const { namaFile, kategori, fileUrl, status, tanggalUpload } = body;
+  try {
+    const updated = await db.update(downloads)
+      .set({
+        namaFile,
+        kategori,
+        fileUrl,
+        status,
+        tanggalUpload,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(downloads.id, id))
+      .returning()
+      .get();
+
+    if (!updated) {
+      set.status = 404;
+      return { success: false, message: "Data download tidak ditemukan" };
+    }
+
+    return { success: true, data: updated };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal memperbarui data download" };
+  }
+}, {
+  body: t.Object({
+    namaFile: t.String({ minLength: 1 }),
+    kategori: t.String({ minLength: 1 }),
+    fileUrl: t.String({ minLength: 1 }),
+    status: t.String(),
+    tanggalUpload: t.String(),
+  })
+});
+
+// Increment hit count
+app.post("/api/downloads/:id/hit", async ({ params, set }) => {
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    const existing = await db.select().from(downloads).where(eq(downloads.id, id)).get();
+    if (!existing) {
+      set.status = 404;
+      return { success: false, message: "Data download tidak ditemukan" };
+    }
+
+    const updated = await db.update(downloads)
+      .set({
+        hits: existing.hits + 1,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(downloads.id, id))
+      .returning()
+      .get();
+
+    return { success: true, data: updated };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal memperbarui jumlah unduhan" };
+  }
+});
+
+// Hapus download
+app.delete("/api/downloads/:id", async ({ params, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    set.status = 400;
+    return { success: false, message: "ID parameter tidak valid" };
+  }
+
+  try {
+    await db.delete(downloads).where(eq(downloads.id, id)).run();
+    return { success: true, message: "Data download berhasil dihapus" };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal menghapus data download" };
   }
 });
 
