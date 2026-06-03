@@ -1127,12 +1127,12 @@ app.post("/api/agendas", async ({ body, headers, jwt, set }) => {
       nama,
       pelaksanaan,
       waktu,
-      peserta,
-      lokasi,
-      penyelenggara,
-      penanggungjawab,
-      keterangan,
-      foto,
+      peserta: peserta || '',
+      lokasi: lokasi || '',
+      penyelenggara: penyelenggara || '',
+      penanggungjawab: penanggungjawab || '',
+      keterangan: keterangan || '',
+      foto: foto || '',
     }).returning().get();
     return { success: true, data: inserted };
   } catch (e) {
@@ -1144,12 +1144,12 @@ app.post("/api/agendas", async ({ body, headers, jwt, set }) => {
     nama: t.String({ minLength: 1 }),
     pelaksanaan: t.String({ minLength: 1 }),
     waktu: t.String({ minLength: 1 }),
-    peserta: t.String(),
-    lokasi: t.String(),
-    penyelenggara: t.String(),
-    penanggungjawab: t.String(),
-    keterangan: t.String(),
-    foto: t.String(),
+    peserta: t.Optional(t.String()),
+    lokasi: t.Optional(t.String()),
+    penyelenggara: t.Optional(t.String()),
+    penanggungjawab: t.Optional(t.String()),
+    keterangan: t.Optional(t.String()),
+    foto: t.Optional(t.String()),
   })
 });
 
@@ -1177,12 +1177,12 @@ app.put("/api/agendas/:id", async ({ params, body, headers, jwt, set }) => {
         nama,
         pelaksanaan,
         waktu,
-        peserta,
-        lokasi,
-        penyelenggara,
-        penanggungjawab,
-        keterangan,
-        foto,
+        peserta: peserta ?? existing.peserta,
+        lokasi: lokasi ?? existing.lokasi,
+        penyelenggara: penyelenggara ?? existing.penyelenggara,
+        penanggungjawab: penanggungjawab ?? existing.penanggungjawab,
+        keterangan: keterangan ?? existing.keterangan,
+        foto: foto ?? existing.foto,
         updatedAt: new Date().toISOString(),
       })
       .where(eq(agendas.id, id))
@@ -1199,12 +1199,12 @@ app.put("/api/agendas/:id", async ({ params, body, headers, jwt, set }) => {
     nama: t.String({ minLength: 1 }),
     pelaksanaan: t.String({ minLength: 1 }),
     waktu: t.String({ minLength: 1 }),
-    peserta: t.String(),
-    lokasi: t.String(),
-    penyelenggara: t.String(),
-    penanggungjawab: t.String(),
-    keterangan: t.String(),
-    foto: t.String(),
+    peserta: t.Optional(t.String()),
+    lokasi: t.Optional(t.String()),
+    penyelenggara: t.Optional(t.String()),
+    penanggungjawab: t.Optional(t.String()),
+    keterangan: t.Optional(t.String()),
+    foto: t.Optional(t.String()),
   })
 });
 

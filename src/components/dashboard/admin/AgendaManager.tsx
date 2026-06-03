@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Search, UploadCloud, Plus, Save, Edit3, Trash2 } from "lucide-react";
+import { CheckCircle2, Search, UploadCloud, Plus, Save, Edit3, Trash2, X } from "lucide-react";
 
 interface Agenda {
   id: number;
@@ -36,6 +36,7 @@ export default function AgendaManager() {
   const [searchQuery, setSearchQuery] = useState("");
   
   // Form states
+  const [formVisible, setFormVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [nama, setNama] = useState("");
   const [pelaksanaan, setPelaksanaan] = useState("");
@@ -78,6 +79,8 @@ export default function AgendaManager() {
       if (resData.success && resData.data) {
         setAgendas(resData.data);
         setSafeItem(STORAGE_KEY_AGENDAS, JSON.stringify(resData.data));
+      } else {
+        throw new Error(resData.message || "Gagal mengambil data dari server");
       }
     } catch (err) {
       const saved = getSafeItem(STORAGE_KEY_AGENDAS);
@@ -106,6 +109,7 @@ export default function AgendaManager() {
     setKeterangan("");
     setFoto("");
     setEditId(null);
+    setFormVisible(false);
   };
 
   const handleEditClick = (item: Agenda) => {
@@ -119,12 +123,7 @@ export default function AgendaManager() {
     setPenanggungjawab(item.penanggungjawab);
     setKeterangan(item.keterangan);
     setFoto(item.foto);
-    
-    // Scroll to form smoothly
-    const formElement = document.getElementById("agenda-form-container");
-    if (formElement) {
-      formElement.scrollIntoView({ behavior: "smooth" });
-    }
+    setFormVisible(true);
   };
 
   const handleDeleteClick = async (id: number) => {
@@ -270,10 +269,7 @@ export default function AgendaManager() {
         <Button
           onClick={() => {
             resetForm();
-            const formElement = document.getElementById("agenda-form-container");
-            if (formElement) {
-              formElement.scrollIntoView({ behavior: "smooth" });
-            }
+            setFormVisible(true);
           }}
           className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-6 h-10 rounded-lg cursor-pointer uppercase tracking-widest shadow-md shadow-purple-200/50 flex items-center gap-1.5 transition-all"
         >
@@ -364,218 +360,231 @@ export default function AgendaManager() {
         </table>
       </div>
 
-      {/* INLINE FORM SECTION (bg-[#00badb]) */}
-      <div 
-        id="agenda-form-container"
-        className="bg-[#00badb] rounded-3xl overflow-hidden shadow-2xl border-4 border-cyan-400 p-6 sm:p-8 text-white relative animate-in zoom-in-95 duration-200 mt-8"
-      >
-        
-        {/* Form Title Badge */}
-        <div className="mb-6 text-left">
-          <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-            {editId !== null ? "TAMPILAN EDIT DATA" : "TAMPILAN TAMBAH BARU"}
-          </span>
-        </div>
+      {/* POPUP / MODAL FORM DIALOG */}
+      {formVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          {/* Backdrop overlay */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={resetForm} />
 
-        <form className="grid grid-cols-1 md:grid-cols-4 gap-6 text-left" onSubmit={(e) => e.preventDefault()}>
-          {/* Inputs Column */}
-          <div className="md:col-span-3 space-y-4">
+          {/* Form Container */}
+          <div className="relative bg-[#00badb] rounded-3xl overflow-hidden shadow-2xl w-full max-w-3xl border-4 border-cyan-400 animate-in zoom-in-95 duration-200 p-6 sm:p-8 text-white">
             
-            {/* NAMA AGENDA */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
-                NAMA AGENDA
-              </label>
-              <input
-                type="text"
-                value={nama}
-                onChange={(e) => setNama(e.target.value)}
-                placeholder="Masukkan nama agenda"
-                className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner animate-all"
-              />
-            </div>
-
-            {/* PELAKSANAAN */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
-                PELAKSANAAN
-              </label>
-              <input
-                type="text"
-                value={pelaksanaan}
-                onChange={(e) => setPelaksanaan(e.target.value)}
-                placeholder="Contoh: JUM'AT, 12 DESEMBER 2025"
-                className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
-              />
-            </div>
-
-            {/* WAKTU & PESERTA (Row) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
-                  WAKTU
-                </label>
-                <input
-                  type="text"
-                  value={waktu}
-                  onChange={(e) => setWaktu(e.target.value)}
-                  placeholder="Contoh: 07.00 WIB S.D SELESAI"
-                  className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
-                  PESERTA
-                </label>
-                <input
-                  type="text"
-                  value={peserta}
-                  onChange={(e) => setPeserta(e.target.value)}
-                  placeholder="Contoh: WB KELAS X"
-                  className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
-                />
-              </div>
-            </div>
-
-            {/* LOKASI & PENYELENGGARA (Row) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
-                  LOKASI
-                </label>
-                <input
-                  type="text"
-                  value={lokasi}
-                  onChange={(e) => setLokasi(e.target.value)}
-                  placeholder="Contoh: PKBM MENUJU MAKMUR"
-                  className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
-                  PENYELENGGARA
-                </label>
-                <input
-                  type="text"
-                  value={penyelenggara}
-                  onChange={(e) => setPenyelenggara(e.target.value)}
-                  placeholder="Contoh: PANITIA UPK"
-                  className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
-                />
-              </div>
-            </div>
-
-            {/* PENANGGUNGJAWAB */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
-                PENANGGUNGJAWAB
-              </label>
-              <input
-                type="text"
-                value={penanggungjawab}
-                onChange={(e) => setPenanggungjawab(e.target.value)}
-                placeholder="Contoh: ACENG G"
-                className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
-              />
-            </div>
-
-            {/* KAETERANGAN */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
-                KAETERANGAN
-              </label>
-              <textarea
-                rows={4}
-                value={keterangan}
-                onChange={(e) => setKeterangan(e.target.value)}
-                placeholder="Masukkan keterangan lengkap agenda..."
-                className="w-full p-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner resize-none leading-relaxed"
-              />
-            </div>
-          </div>
-
-          {/* FOTO COLUMN (Right) */}
-          <div className="md:col-span-1 flex flex-col items-center justify-start pt-2">
-            <h4 className="text-xs font-black text-cyan-50 uppercase tracking-wider mb-2">
-              FOTO
-            </h4>
-
-            <div
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => {
-                e.preventDefault();
-                const file = e.dataTransfer.files?.[0];
-                if (file) processUpload(file);
-              }}
-              onClick={() => document.getElementById("agenda-file-upload")?.click()}
-              className="w-full aspect-square border-4 border-dashed border-white/60 hover:border-white rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden transition-all text-center bg-cyan-300/40 hover:bg-cyan-350/50 cursor-pointer"
+            {/* Close button */}
+            <button
+              onClick={resetForm}
+              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
             >
-              <input
-                id="agenda-file-upload"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    processUpload(file);
-                    e.target.value = "";
-                  }
-                }}
-                className="hidden"
-              />
+              <X className="h-5 w-5" />
+            </button>
 
-              {uploading ? (
-                <div className="flex flex-col items-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-4 border-white/30 border-t-purple-600 mb-2" />
-                  <span className="text-[10px] font-black text-purple-950 uppercase tracking-wide">MENGUNGGAH...</span>
-                </div>
-              ) : foto ? (
-                <div className="w-full h-full relative group">
-                  <img
-                    src={foto}
-                    alt="Pratinjau Agenda"
-                    className="w-full h-full object-cover rounded-lg"
+            {/* Modal Form Title */}
+            <div className="mb-6 text-left">
+              <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                {editId !== null ? "TAMPILAN EDIT DATA" : "TAMPILAN TAMBAH BARU"}
+              </span>
+            </div>
+
+            <form className="grid grid-cols-1 md:grid-cols-4 gap-6 text-left" onSubmit={(e) => e.preventDefault()}>
+              {/* Inputs Column */}
+              <div className="md:col-span-3 space-y-4">
+                
+                {/* NAMA AGENDA */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                    NAMA AGENDA
+                  </label>
+                  <input
+                    type="text"
+                    value={nama}
+                    onChange={(e) => setNama(e.target.value)}
+                    placeholder="Masukkan nama agenda"
+                    className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
                   />
-                  <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-lg">
-                    <span className="text-white text-[10px] font-black uppercase tracking-wider">UBAH FOTO</span>
+                </div>
+
+                {/* PELAKSANAAN */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                    PELAKSANAAN
+                  </label>
+                  <input
+                    type="text"
+                    value={pelaksanaan}
+                    onChange={(e) => setPelaksanaan(e.target.value)}
+                    placeholder="Contoh: JUM'AT, 12 DESEMBER 2025"
+                    className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                  />
+                </div>
+
+                {/* WAKTU & PESERTA (Row) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                      WAKTU
+                    </label>
+                    <input
+                      type="text"
+                      value={waktu}
+                      onChange={(e) => setWaktu(e.target.value)}
+                      placeholder="Contoh: 07.00 WIB S.D SELESAI"
+                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                      PESERTA
+                    </label>
+                    <input
+                      type="text"
+                      value={peserta}
+                      onChange={(e) => setPeserta(e.target.value)}
+                      placeholder="Contoh: WB KELAS X"
+                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                    />
                   </div>
                 </div>
-              ) : (
-                <div className="flex flex-col items-center">
-                  <UploadCloud className="h-10 w-10 text-white mb-2" />
-                  <span className="text-[9px] font-black text-purple-950 uppercase block tracking-wider leading-relaxed">
-                    DRAG AND DROP A FILE
-                  </span>
-                  <span className="text-[9px] font-black text-purple-950 block mt-0.5 uppercase tracking-wide">
-                    HERE OR CLICK
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
 
-          {/* ACTION BUTTONS (EDIT, SIMPAN) */}
-          <div className="col-span-1 md:col-span-4 pt-4 border-t border-white/10 flex items-center justify-end gap-3">
-            <Button
-              type="button"
-              onClick={resetForm}
-              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
-            >
-              EDIT
-            </Button>
-            
-            <Button
-              type="button"
-              onClick={handleSave}
-              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
-            >
-              <Save className="h-4 w-4" /> SIMPAN
-            </Button>
+                {/* LOKASI & PENYELENGGARA (Row) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                      LOKASI
+                    </label>
+                    <input
+                      type="text"
+                      value={lokasi}
+                      onChange={(e) => setLokasi(e.target.value)}
+                      placeholder="Contoh: PKBM MENUJU MAKMUR"
+                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                      PENYELENGGARA
+                    </label>
+                    <input
+                      type="text"
+                      value={penyelenggara}
+                      onChange={(e) => setPenyelenggara(e.target.value)}
+                      placeholder="Contoh: PANITIA UPK"
+                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                    />
+                  </div>
+                </div>
+
+                {/* PENANGGUNGJAWAB */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                    PENANGGUNGJAWAB
+                  </label>
+                  <input
+                    type="text"
+                    value={penanggungjawab}
+                    onChange={(e) => setPenanggungjawab(e.target.value)}
+                    placeholder="Contoh: ACENG G"
+                    className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                  />
+                </div>
+
+                {/* KAETERANGAN */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                    KAETERANGAN
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={keterangan}
+                    onChange={(e) => setKeterangan(e.target.value)}
+                    placeholder="Masukkan keterangan lengkap agenda..."
+                    className="w-full p-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner resize-none leading-relaxed"
+                  />
+                </div>
+              </div>
+
+              {/* FOTO COLUMN (Right) */}
+              <div className="md:col-span-1 flex flex-col items-center justify-start pt-2">
+                <h4 className="text-xs font-black text-cyan-50 uppercase tracking-wider mb-2">
+                  FOTO
+                </h4>
+
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) processUpload(file);
+                  }}
+                  onClick={() => document.getElementById("agenda-file-upload")?.click()}
+                  className="w-full aspect-square border-4 border-dashed border-white/60 hover:border-white rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden transition-all text-center bg-cyan-300/40 hover:bg-cyan-350/50 cursor-pointer"
+                >
+                  <input
+                    id="agenda-file-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        processUpload(file);
+                        e.target.value = "";
+                      }
+                    }}
+                    className="hidden"
+                  />
+
+                  {uploading ? (
+                    <div className="flex flex-col items-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-4 border-white/30 border-t-purple-600 mb-2" />
+                      <span className="text-[10px] font-black text-purple-950 uppercase tracking-wide">MENGUNGGAH...</span>
+                    </div>
+                  ) : foto ? (
+                    <div className="w-full h-full relative group">
+                      <img
+                        src={foto}
+                        alt="Pratinjau Agenda"
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                      <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-lg">
+                        <span className="text-white text-[10px] font-black uppercase tracking-wider">UBAH FOTO</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center">
+                      <UploadCloud className="h-10 w-10 text-white mb-2" />
+                      <span className="text-[9px] font-black text-purple-950 uppercase block tracking-wider leading-relaxed">
+                        DRAG AND DROP A FILE
+                      </span>
+                      <span className="text-[9px] font-black text-purple-950 block mt-0.5 uppercase tracking-wide">
+                        HERE OR CLICK
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* ACTION BUTTONS (BATAL, SIMPAN) */}
+              <div className="col-span-1 md:col-span-4 pt-4 border-t border-white/10 flex items-center justify-end gap-3">
+                <Button
+                  type="button"
+                  onClick={resetForm}
+                  className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                >
+                  BATAL
+                </Button>
+                
+                <Button
+                  type="button"
+                  onClick={handleSave}
+                  className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                >
+                  <Save className="h-4 w-4" /> SIMPAN
+                </Button>
+              </div>
+            </form>
           </div>
-        </form>
-      </div>
+        </div>
+      )}
 
       {/* Floating Toast notification */}
       {toast.show && (
