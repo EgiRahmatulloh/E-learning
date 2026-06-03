@@ -2810,6 +2810,13 @@ const server = Bun.serve({
       "/index.html": html.default,
       "/dashboard": html.default,
       "/profile": html.default,
+      "/agenda": html.default,
+      "/news": html.default,
+      "/tutor": html.default,
+      "/warga-belajar": html.default,
+      "/download": html.default,
+      "/produk-wb": html.default,
+      "/alumni": html.default,
     } : {}),
   } as any,
   fetch(req) {
