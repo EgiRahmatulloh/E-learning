@@ -1,50 +1,9 @@
 import { db } from "./index";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students, downloads, products, alumni, gallery } from "./schema";
+import { sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students, downloads, products, alumni, gallery } from "./schema";
 import { count } from "drizzle-orm";
 
 export async function seedDatabase() {
   try {
-    // Periksa jumlah pengguna saat ini
-    const result = await db.select({ value: count() }).from(users).get();
-    const userCount = result?.value || 0;
-
-    if (userCount === 0) {
-      console.log("🌱 Database users kosong, menjalankan database seeding...");
-
-      // Hash password default bawaan Bun (sangat cepat & aman)
-      const hashAdmin = await Bun.password.hash("admin123");
-      const hashTutor = await Bun.password.hash("tutor123");
-      const hashSiswa = await Bun.password.hash("siswa123");
-
-      await db.insert(users).values([
-        {
-          name: "Administrator PKBM",
-          email: "admin@pkbmmakmur.org",
-          username: "admin",
-          password: hashAdmin,
-          role: "admin",
-        },
-        {
-          name: "Aceng LS Suhendi (Tutor)",
-          email: "tutor@pkbmmakmur.org",
-          username: "tutor",
-          password: hashTutor,
-          role: "tutor",
-        },
-        {
-          name: "Kaka Al Fatih (Siswa)",
-          email: "siswa@pkbmmakmur.org",
-          username: "siswa",
-          password: hashSiswa,
-          role: "siswa",
-        }
-      ]);
-
-      console.log("✅ Seeding berhasil! 3 akun role telah terbuat.");
-    } else {
-      console.log(`ℹ️ Database memiliki ${userCount} users, seeding diabaikan.`);
-    }
-
     // Seed sliders table if empty
     const resultSliders = await db.select({ value: count() }).from(sliders).get();
     const sliderCount = resultSliders?.value || 0;
@@ -191,8 +150,6 @@ export async function seedDatabase() {
     const managerCount = resultManagers?.value || 0;
     if (managerCount === 0) {
       console.log("🌱 Database managers kosong, seeding default managers...");
-      
-      const hashDefaultManager = await Bun.password.hash("password123");
 
       await db.insert(managers).values([
         {
@@ -204,14 +161,14 @@ export async function seedDatabase() {
           jenisKelamin: "Laki-laki",
           agama: "Islam",
           pendidikan: "S1 Pendidikan Kesetaraan",
-          email: "mamansuparman@pkbmmakmur.org",
+          email: "admin@pkbmmakmur.org",
           tanggalMulaiTugas: "2015-06-01",
           nomorSkPengangkatan: "421.9/123-Disdik/2015",
           lembagaPengangkat: "Dinas Pendidikan Kabupaten Ciamis",
           nomorSkPenugasan: "503/456-Operasional/Disdik",
           lembagaPenugas: "PKBM Menuju Makmur",
           alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
-          password: hashDefaultManager,
+          password: await Bun.password.hash("admin123"),
           foto: "/images/2c06b6fab7e6a9490c046e362160f2d0.png",
         },
         {
@@ -230,7 +187,7 @@ export async function seedDatabase() {
           nomorSkPenugasan: "503/457-Operasional/Disdik",
           lembagaPenugas: "PKBM Menuju Makmur",
           alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
-          password: hashDefaultManager,
+          password: await Bun.password.hash("password123"),
           foto: "/images/2c06b6fab7e6a9490c046e362160f2d0.png",
         }
       ]);
@@ -408,8 +365,6 @@ export async function seedDatabase() {
     const tutorsCount = resultTutors?.value || 0;
     if (tutorsCount === 0) {
       console.log("🌱 Database tutors kosong, seeding default tutors...");
-      
-      const hashDefaultTutor = await Bun.password.hash("password123");
 
       await db.insert(tutors).values([
         {
@@ -421,10 +376,10 @@ export async function seedDatabase() {
           jenisKelamin: "Laki-laki",
           agama: "Islam",
           pendidikan: "S1 Pendidikan Olahraga",
-          email: "acengsuhendi@pkbmmakmur.org",
+          email: "tutor@pkbmmakmur.org",
           nik: "3207123456789101",
           alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
-          password: hashDefaultTutor,
+          password: await Bun.password.hash("tutor123"),
           foto: "/images/633df6f47c394ce2b67bd54e4808301b.jpg",
           tanggalMulaiTugas: "2018-07-15",
           nomorSkPengangkatan: "421.9/301-Disdik/2018",
@@ -444,7 +399,7 @@ export async function seedDatabase() {
           email: "mamansuparman@pkbmmakmur.org",
           nik: "3207123456789001",
           alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
-          password: hashDefaultTutor,
+          password: await Bun.password.hash("password123"),
           foto: "/images/7ccf08e706410fd4d0cde0c04b95b108.png",
           tanggalMulaiTugas: "2015-06-01",
           nomorSkPengangkatan: "421.9/123-Disdik/2015",
@@ -464,7 +419,7 @@ export async function seedDatabase() {
           email: "dedekkurniawan@pkbmmakmur.org",
           nik: "3207123456789102",
           alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
-          password: hashDefaultTutor,
+          password: await Bun.password.hash("password123"),
           foto: "/images/b8600352865365e6216298c1b2bcb4ce.png",
           tanggalMulaiTugas: "2019-01-10",
           nomorSkPengangkatan: "421.9/302-Disdik/2019",
@@ -483,8 +438,6 @@ export async function seedDatabase() {
     const studentsCount = resultStudents?.value || 0;
     if (studentsCount === 0) {
       console.log("🌱 Database students kosong, seeding default students...");
-      
-      const hashDefaultStudent = await Bun.password.hash("password123");
 
       await db.insert(students).values([
         {
@@ -500,10 +453,10 @@ export async function seedDatabase() {
           noHp: "081234567891",
           agama: "Islam",
           namaAyah: "Suparman",
-          email: "aditya@elearning.org",
+          email: "siswa@elearning.org",
           namaIbu: "Aminah",
           alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
-          password: hashDefaultStudent,
+          password: await Bun.password.hash("siswa123"),
           foto: "/images/633df6f47c394ce2b67bd54e4808301b.jpg",
           status: "AKTIF"
         },
@@ -523,7 +476,7 @@ export async function seedDatabase() {
           email: "bella@elearning.org",
           namaIbu: "Siti",
           alamat: "Dusun Sembawa, Mulyasari, Jatinagara, Ciamis",
-          password: hashDefaultStudent,
+          password: await Bun.password.hash("password123"),
           foto: "/images/7ccf08e706410fd4d0cde0c04b95b108.png",
           status: "AKTIF"
         },
@@ -543,7 +496,7 @@ export async function seedDatabase() {
           email: "chandra@elearning.org",
           namaIbu: "Dewi",
           alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
-          password: hashDefaultStudent,
+          password: await Bun.password.hash("password123"),
           foto: "/images/b8600352865365e6216298c1b2bcb4ce.png",
           status: "AKTIF"
         }

@@ -2,8 +2,8 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { staticPlugin } from "@elysia/static";
 import { db } from "./server/db";
-import { users, sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students, downloads, products, alumni, gallery } from "./server/db/schema";
-import { eq, or, sql } from "drizzle-orm";
+import { sliders, announcements, institutionProfile, managers, visionMission, educationPrograms, facilities, achievements, servicePoints, agendas, newsCategories, news, tutors, students, downloads, products, alumni, gallery } from "./server/db/schema";
+import { eq, sql } from "drizzle-orm";
 import { seedDatabase } from "./server/db/seed";
 import fs from "fs";
 
@@ -35,6 +35,8 @@ const app = new Elysia()
         id: t.Numeric(),
         username: t.String(),
         role: t.String(),
+        name: t.String(),
+        email: t.String(),
       }),
     })
   );
@@ -86,45 +88,71 @@ app.get("/api/dashboard-stats", async ({ headers, jwt, set }) => {
 app.post("/api/auth/login", async ({ body, jwt, set }) => {
   const { username, password } = body;
   try {
-    // Cari user berdasarkan username atau email
-    const user = await db
-      .select()
-      .from(users)
-      .where(or(eq(users.username, username), eq(users.email, username)))
-      .get();
-
-    // Mencegah timing attack dengan memverifikasi dummy hash jika user tidak ditemukan
-    const hashToVerify = user ? user.password : DUMMY_HASH;
-    const isPasswordValid = await Bun.password.verify(password, hashToVerify);
-
-    if (!user || !isPasswordValid) {
-      set.status = 401;
-      return { message: "Username/Email atau Password salah" };
-    }
-
-    // Cek apakah akun aktif
-    if (!user.isActive) {
-      set.status = 403;
-      return { message: "Akun Anda telah dinonaktifkan. Silakan hubungi administrator." };
-    }
-
-    // Terbitkan JWT token
-    const token = await jwt.sign({
-      id: user.id,
-      username: user.username,
-      role: user.role,
-    });
-
-    return {
-      success: true,
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        username: user.username,
-        role: user.role,
+    // 1. Cari di tabel managers (role: admin)
+    const manager = await db.select().from(managers).where(eq(managers.email, username)).get();
+    if (manager) {
+      const isValid = await Bun.password.verify(password, manager.password);
+      if (isValid) {
+        const token = await jwt.sign({
+          id: manager.id,
+          username: manager.email,
+          role: 'admin',
+          name: manager.nama,
+          email: manager.email,
+        });
+        return {
+          success: true, token,
+          user: { id: manager.id, name: manager.nama, username: manager.email, role: 'admin', email: manager.email }
+        };
       }
-    };
+    }
+
+    // 2. Cari di tabel tutors (role: tutor)
+    const tutor = await db.select().from(tutors).where(eq(tutors.email, username)).get();
+    if (tutor) {
+      const isValid = await Bun.password.verify(password, tutor.password);
+      if (isValid) {
+        const token = await jwt.sign({
+          id: tutor.id,
+          username: tutor.email,
+          role: 'tutor',
+          name: tutor.nama,
+          email: tutor.email,
+        });
+        return {
+          success: true, token,
+          user: { id: tutor.id, name: tutor.nama, username: tutor.email, role: 'tutor', email: tutor.email }
+        };
+      }
+    }
+
+    // 3. Cari di tabel students (role: siswa)
+    const student = await db.select().from(students).where(eq(students.email, username)).get();
+    if (student) {
+      const isValid = await Bun.password.verify(password, student.password);
+      if (isValid) {
+        if (student.status !== 'AKTIF') {
+          set.status = 403;
+          return { message: "Akun Warga Belajar tidak aktif. Silakan hubungi administrator." };
+        }
+        const token = await jwt.sign({
+          id: student.id,
+          username: student.email,
+          role: 'siswa',
+          name: student.nama,
+          email: student.email,
+        });
+        return {
+          success: true, token,
+          user: { id: student.id, name: student.nama, username: student.email, role: 'siswa', email: student.email }
+        };
+      }
+    }
+
+    // Timing attack mitigation
+    await Bun.password.verify(password, DUMMY_HASH);
+    set.status = 401;
+    return { message: "Email atau Password salah" };
   } catch (e) {
     set.status = 500;
     return { message: "Gagal memproses masuk ke akun" };
@@ -151,32 +179,56 @@ app.get("/api/auth/me", async ({ headers, jwt, set }) => {
     return { message: "Sesi Anda telah kedaluwarsa" };
   }
 
-  const user = await db
-    .select({
-      id: users.id,
-      name: users.name,
-      email: users.email,
-      username: users.username,
-      role: users.role,
-      isActive: users.isActive,
-    })
-    .from(users)
-    .where(eq(users.id, Number(payload.id)))
-    .get();
+  const role = payload.role as string;
+  const id = Number(payload.id);
 
-  if (!user) {
-    set.status = 404;
-    return { message: "User tidak ditemukan" };
-  }
+  try {
+    if (role === 'admin') {
+      const manager = await db.select().from(managers).where(eq(managers.id, id)).get();
+      if (!manager) {
+        set.status = 404;
+        return { message: "Akun tidak ditemukan" };
+      }
+      return {
+        success: true,
+        user: { id: manager.id, name: manager.nama, email: manager.email, username: manager.email, role: 'admin' }
+      };
+    }
 
-  // Cek apakah akun aktif
-  if (!user.isActive) {
+    if (role === 'tutor') {
+      const tutor = await db.select().from(tutors).where(eq(tutors.id, id)).get();
+      if (!tutor) {
+        set.status = 404;
+        return { message: "Akun tidak ditemukan" };
+      }
+      return {
+        success: true,
+        user: { id: tutor.id, name: tutor.nama, email: tutor.email, username: tutor.email, role: 'tutor' }
+      };
+    }
+
+    if (role === 'siswa') {
+      const student = await db.select().from(students).where(eq(students.id, id)).get();
+      if (!student) {
+        set.status = 404;
+        return { message: "Akun tidak ditemukan" };
+      }
+      if (student.status !== 'AKTIF') {
+        set.status = 403;
+        return { message: "Akun Warga Belajar tidak aktif" };
+      }
+      return {
+        success: true,
+        user: { id: student.id, name: student.nama, email: student.email, username: student.email, role: 'siswa' }
+      };
+    }
+
     set.status = 403;
-    return { message: "Akun Anda telah dinonaktifkan" };
+    return { message: "Role tidak dikenal" };
+  } catch (e) {
+    set.status = 500;
+    return { message: "Gagal memuat data profil" };
   }
-
-  const { isActive, ...cleanUser } = user;
-  return { success: true, user: cleanUser };
 });
 
 // Helper untuk validasi Admin secara aman
