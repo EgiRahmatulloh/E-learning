@@ -328,4 +328,18 @@ CREATE TABLE IF NOT EXISTS alumni (
 );
 `);
 
+// Inisialisasi tabel gallery otomatis jika belum ada
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS gallery (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nama_file TEXT NOT NULL DEFAULT '',
+  kategori TEXT NOT NULL DEFAULT 'KEGIATAN PEMBELAJARAN',
+  tanggal_posting TEXT NOT NULL DEFAULT '',
+  foto TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'PUBLISH',
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+`);
+
 export const db = drizzle(sqlite, { schema });
