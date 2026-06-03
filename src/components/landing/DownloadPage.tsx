@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Search, Download, ShieldAlert, Home, MapPin, Mail } from "lucide-react";
+import { ArrowLeft, Search, Download, ShieldAlert, Home } from "lucide-react";
 
 interface DownloadItem {
   id: number;
@@ -52,8 +52,6 @@ export default function DownloadPage({ onNavigate }: DownloadPageProps) {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedCategoryFilter, itemsPerPage]);
-
-
 
   // Filter downloads
   const filteredDownloads = downloadsList.filter((item) => {
@@ -130,51 +128,6 @@ export default function DownloadPage({ onNavigate }: DownloadPageProps) {
               </button>
             );
           })}
-        </div>
-
-        {/* PINK NOTEBOOK CARDS ROW */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-10 items-stretch">
-          
-          {/* Note Card 1 */}
-          <div className="bg-[#ffb3c1] rounded-3xl shadow-lg border border-[#ffa3b6] relative p-5 flex flex-col justify-center overflow-hidden min-h-[100px]">
-            {/* Binder holes */}
-            <div className="flex justify-center gap-5 -mt-3.5 mb-2.5">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="flex flex-col items-center">
-                  <div className="h-2.5 w-2.5 rounded-full bg-slate-800 border border-white"></div>
-                  <div className="h-2 w-1 bg-slate-400/40 -mt-0.5 rounded-b-md"></div>
-                </div>
-              ))}
-            </div>
-            <div className="space-y-1 text-center text-[#7d0022]">
-              <p className="text-[10px] font-black tracking-wider uppercase">
-                Catatan : di klik otomatis short kategori dokumen
-              </p>
-              <p className="text-[9px] font-bold opacity-80">
-                jenis statis tidak bisa ditambah kategori
-              </p>
-            </div>
-          </div>
-
-          {/* Spacer / Invisible element for center */}
-          <div className="hidden md:block"></div>
-
-          {/* Note Card 2 */}
-          <div className="bg-[#ffb3c1] rounded-3xl shadow-lg border border-[#ffa3b6] relative p-5 flex flex-col justify-center overflow-hidden min-h-[100px]">
-            {/* Binder holes */}
-            <div className="flex justify-center gap-5 -mt-3.5 mb-2.5">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="flex flex-col items-center">
-                  <div className="h-2.5 w-2.5 rounded-full bg-slate-800 border border-white"></div>
-                  <div className="h-2 w-1 bg-slate-400/40 -mt-0.5 rounded-b-md"></div>
-                </div>
-              ))}
-            </div>
-            <div className="text-center text-[#7d0022] text-[10px] font-black tracking-wider uppercase">
-              Catatan : banyaknya menyesuaikan
-            </div>
-          </div>
-
         </div>
 
         {/* DATA TABLE WRAPPER */}
@@ -325,70 +278,6 @@ export default function DownloadPage({ onNavigate }: DownloadPageProps) {
             </div>
           )}
 
-        </div>
-
-        {/* DATANG & KUNJUNGI INFO SECTIONS AT THE BOTTOM OF THE PAGE */}
-        <div className="max-w-5xl mx-auto mt-16 grid grid-cols-1 md:grid-cols-2 gap-10 items-center bg-white/80 p-8 rounded-3xl border border-slate-200/50 shadow-lg text-slate-700 font-semibold">
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <h3 className="text-2xl font-black text-[#280f91]">Datang & Kunjungi</h3>
-              <h2 className="text-3xl font-black text-[#00c800] uppercase tracking-tight">PKBM MENUJU MAKMUR</h2>
-              <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mt-2.5 font-bold">
-                Kami siap memberikan informasi dan pelayanan kepada siswa, orang tua, serta masyarakat pada jam kerja. Silakan hubungi kami melalui kontak di bawah ini.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-start gap-4">
-                <div className="h-11 w-11 shrink-0 rounded-2xl bg-pink-100 flex items-center justify-center text-pink-600">
-                  <MapPin className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-black text-[#280f91] uppercase">Alamat Lengkap</h4>
-                  <p className="text-[11px] font-bold text-slate-600 mt-0.5 leading-normal">
-                    Dusun Pangrumasan Rt. 004 Rw. 001 Desa Cintanagara Kecamatan Jatinagara Kab. Ciamis Prov. Jawa Barat
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="h-11 w-11 shrink-0 rounded-2xl bg-blue-100 flex items-center justify-center text-blue-600">
-                  <Mail className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-black text-[#280f91] uppercase">Kontak Resmi</h4>
-                  <a href="mailto:admin@pkbmmenujumakmur.sch.id" className="text-[11px] font-bold text-[#ff6105] hover:underline block mt-0.5">
-                    admin@pkbmmenujumakmur.sch.id
-                  </a>
-                  <span className="text-[11px] font-bold text-slate-600 block mt-0.5">
-                    0821 2859 4025
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Modern Visual Map Skeleton Layout */}
-          <div className="aspect-[4/3] rounded-2xl overflow-hidden border border-slate-200 relative bg-slate-50 flex items-center justify-center group shadow-md">
-            <svg className="w-full h-full text-slate-200 bg-cyan-50/50" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="400" height="300" fill="#E2F0F9"/>
-              <path d="M0 80C100 80 120 180 220 180C320 180 340 50 400 50" stroke="#CBDCE7" strokeWidth="24" strokeLinecap="round"/>
-              <path d="M120 0C120 100 240 120 240 220C240 320 380 300 400 300" stroke="#CBDCE7" strokeWidth="16" strokeLinecap="round"/>
-              <path d="M0 240C150 240 200 150 400 150" stroke="#CBDCE7" strokeWidth="20" strokeLinecap="round"/>
-              
-              <path d="M0 80C100 80 120 180 220 180C320 180 340 50 400 50" stroke="#FFF" strokeWidth="2" strokeDasharray="6 6"/>
-              <path d="M120 0C120 100 240 120 240 220C240 320 380 300 400 300" stroke="#FFF" strokeWidth="2" strokeDasharray="6 6"/>
-              <path d="M0 240C150 240 200 150 400 150" stroke="#FFF" strokeWidth="2" strokeDasharray="6 6"/>
-              
-              <circle cx="220" cy="180" r="10" fill="#FF5252" stroke="#FFF" strokeWidth="2"/>
-              <circle cx="220" cy="180" r="18" fill="#FF5252" fillOpacity="0.2" className="animate-ping"/>
-            </svg>
-            <div className="absolute inset-0 bg-slate-900/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <span className="bg-slate-900 text-white font-black text-[10px] px-3.5 py-1.5 rounded-full uppercase tracking-wider shadow-md">
-                Klik Untuk Petunjuk Arah
-              </span>
-            </div>
-          </div>
         </div>
 
       </div>

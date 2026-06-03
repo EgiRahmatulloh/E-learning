@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, Plus, Trash2, Save, HelpCircle, Download, LayoutGrid, List } from "lucide-react";
+import { parseCSV, downloadCSV } from "@/lib/utils";
+import { Upload, Plus, Trash2, Save, HelpCircle, Download, LayoutGrid, List, Search, X } from "lucide-react";
 
 interface AlumniItem {
   id: number;
@@ -43,6 +44,7 @@ export default function AlumniManager() {
   // Selected alumnus / Form state
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   // Form inputs
   const [nama, setNama] = useState("");
@@ -88,10 +90,6 @@ export default function AlumniManager() {
       .then((data) => {
         if (data.success && data.data) {
           setAlumniList(data.data);
-          // Auto select first if exists
-          if (data.data.length > 0 && !selectedId && !isAdding) {
-            selectAlumni(data.data[0]);
-          }
         }
       })
       .catch((err) => console.error("Failed to load alumni:", err))
@@ -137,6 +135,7 @@ export default function AlumniManager() {
     setAlamat(item.alamat);
     setCerita(item.cerita);
     setFoto(item.foto);
+    setIsFormOpen(true);
   };
 
   const startAddAlumni = () => {
@@ -158,6 +157,13 @@ export default function AlumniManager() {
     setAlamat("");
     setCerita("");
     setFoto("");
+    setIsFormOpen(true);
+  };
+
+  const closeForm = () => {
+    setIsFormOpen(false);
+    setSelectedId(null);
+    setIsAdding(false);
   };
 
   const handleImageUpload = async (file: File) => {
@@ -247,7 +253,7 @@ export default function AlumniManager() {
       const data = await res.json();
       if (data.success) {
         alert("Data alumni berhasil disimpan!");
-        setIsAdding(false);
+        closeForm();
         fetchAlumni();
       } else {
         alert("Gagal menyimpan data: " + (data.message || "Error tidak diketahui"));
@@ -273,8 +279,7 @@ export default function AlumniManager() {
       });
       const data = await res.json();
       if (data.success) {
-        setSelectedId(null);
-        startAddAlumni();
+        closeForm();
         fetchAlumni();
       } else {
         alert("Gagal menghapus alumni: " + (data.message || "Error tidak diketahui"));
@@ -289,37 +294,24 @@ export default function AlumniManager() {
   const handleExportCSV = () => {
     if (alumniList.length === 0) return;
     const headers = ["Nama", "NIK", "Program", "Tahun Lulus", "NISN", "NIS", "Tempat Tgl Lahir", "No HP", "Nama Ayah", "Nama Ibu", "Jenis Kelamin", "Agama", "Email", "Alamat", "Cerita Sukses"];
-    const csvContent = [
-      headers.join(","),
-      ...alumniList.map((item) =>
-        [
-          `"${item.nama.replace(/"/g, '""')}"`,
-          `"${item.nik}"`,
-          `"${item.program}"`,
-          `"${item.tahunLulus}"`,
-          `"${item.nisn}"`,
-          `"${item.nis}"`,
-          `"${item.tempatTglLahir.replace(/"/g, '""')}"`,
-          `"${item.noHp}"`,
-          `"${item.namaAyah.replace(/"/g, '""')}"`,
-          `"${item.namaIbu.replace(/"/g, '""')}"`,
-          `"${item.jenisKelamin}"`,
-          `"${item.agama}"`,
-          `"${item.email}"`,
-          `"${item.alamat.replace(/"/g, '""')}"`,
-          `"${item.cerita.replace(/"/g, '""')}"`
-        ].join(",")
-      )
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `data-alumni-${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const rows = alumniList.map((item) => [
+      `"${item.nama.replace(/"/g, '""')}"`,
+      `"${item.nik}"`,
+      `"${item.program}"`,
+      `"${item.tahunLulus}"`,
+      `"${item.nisn}"`,
+      `"${item.nis}"`,
+      `"${item.tempatTglLahir.replace(/"/g, '""')}"`,
+      `"${item.noHp}"`,
+      `"${item.namaAyah.replace(/"/g, '""')}"`,
+      `"${item.namaIbu.replace(/"/g, '""')}"`,
+      `"${item.jenisKelamin}"`,
+      `"${item.agama}"`,
+      `"${item.email}"`,
+      `"${item.alamat.replace(/"/g, '""')}"`,
+      `"${item.cerita.replace(/"/g, '""')}"`
+    ]);
+    downloadCSV(headers, rows, `data-alumni-${Date.now()}.csv`);
   };
 
   // CSV Import
@@ -329,32 +321,32 @@ export default function AlumniManager() {
       const reader = new FileReader();
       reader.onload = async (event) => {
         const text = event.target?.result as string;
-        const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-        if (lines.length <= 1) return;
+        const rows = parseCSV(text);
+        if (rows.length <= 1) return;
 
         const token = localStorage.getItem("token");
         const imports = [];
 
-        for (let i = 1; i < lines.length; i++) {
-          const columns = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(col => col.replace(/^"|"$/g, "").trim());
-          if (columns.length < 4) continue;
+        for (let i = 1; i < rows.length; i++) {
+          const cols = rows[i];
+          if (cols.length < 4) continue;
 
           imports.push({
-            nama: columns[0] || "",
-            nik: columns[1] || "",
-            program: columns[2] || "PAKET C",
-            tahunLulus: columns[3] || "",
-            nisn: columns[4] || "",
-            nis: columns[5] || "",
-            tempatTglLahir: columns[6] || "",
-            noHp: columns[7] || "",
-            namaAyah: columns[8] || "",
-            namaIbu: columns[9] || "",
-            jenisKelamin: columns[10] || "Laki-laki",
-            agama: columns[11] || "Islam",
-            email: columns[12] || "",
-            alamat: columns[13] || "",
-            cerita: columns[14] || "",
+            nama: cols[0] || "",
+            nik: cols[1] || "",
+            program: cols[2] || "PAKET C",
+            tahunLulus: cols[3] || "",
+            nisn: cols[4] || "",
+            nis: cols[5] || "",
+            tempatTglLahir: cols[6] || "",
+            noHp: cols[7] || "",
+            namaAyah: cols[8] || "",
+            namaIbu: cols[9] || "",
+            jenisKelamin: cols[10] || "Laki-laki",
+            agama: cols[11] || "Islam",
+            email: cols[12] || "",
+            alamat: cols[13] || "",
+            cerita: cols[14] || "",
             foto: ""
           });
         }
@@ -406,19 +398,19 @@ export default function AlumniManager() {
   const currentItems = filteredAlumni.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-800 text-left p-2 sm:p-6">
-      {/* Top Banner Control */}
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6 relative pb-16 animate-in fade-in duration-300 text-left">
+      
+      {/* HEADER SECTION */}
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
         <div>
-          <h2 className="text-2xl font-black text-cyan-950 uppercase tracking-tight">Manajemen Alumni</h2>
-          <p className="text-slate-500 text-xs font-semibold mt-1">Kelola data lulusan pendidikan kesetaraan PKBM Menuju Makmur</p>
+          <h2 className="text-xl font-black text-cyan-900 tracking-tight flex items-center gap-2">
+            <span>🎓</span> KELOLA WEBSITE ALUMNI
+          </h2>
+          <p className="text-xs text-slate-500 font-semibold mt-1">
+            Kelola data lulusan pendidikan kesetaraan PKBM Menuju Makmur.
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Button onClick={startAddAlumni} className="bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-2xl flex items-center gap-2">
-            <Plus size={16} />
-            Tambah Alumni
-          </Button>
-
           <input
             type="file"
             ref={importInputRef}
@@ -426,73 +418,61 @@ export default function AlumniManager() {
             accept=".csv"
             onChange={handleImportCSV}
           />
-          <Button onClick={() => importInputRef.current?.click()} className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl flex items-center gap-2">
-            <Upload size={16} />
-            Upload CSV
+          <Button onClick={() => importInputRef.current?.click()} className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 py-2.5 rounded-xl cursor-pointer tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md shadow-purple-200 uppercase">
+            <Upload size={16} /> Upload CSV
           </Button>
-          <Button onClick={handleExportCSV} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl flex items-center gap-2">
-            <Download size={16} />
-            Download CSV
+          <Button onClick={handleExportCSV} className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl cursor-pointer tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md shadow-emerald-200 uppercase">
+            <Download size={16} /> Download CSV
           </Button>
-          <div className="border-l border-slate-200 pl-3 flex gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              className={`rounded-xl h-9 w-9 p-0 ${viewMode === "cards" ? "bg-cyan-50 border-cyan-200 text-cyan-700" : ""}`}
-              onClick={() => setViewMode("cards")}
-            >
-              <LayoutGrid size={16} />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className={`rounded-xl h-9 w-9 p-0 ${viewMode === "table" ? "bg-cyan-50 border-cyan-200 text-cyan-700" : ""}`}
-              onClick={() => setViewMode("table")}
-            >
-              <List size={16} />
-            </Button>
-          </div>
+          <Button onClick={startAddAlumni} className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md shadow-purple-200 uppercase">
+            <Plus className="h-4 w-4" /> TAMBAH DATA
+          </Button>
         </div>
       </div>
 
-      {/* Advanced Filters */}
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 mb-6">
+      {/* FILTER PANEL */}
+      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5">
         <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Filter Pencarian Alumni</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Cari Berdasarkan Nama</label>
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <Search className="h-4 w-4" />
+            </span>
             <input
               type="text"
-              className="w-full text-xs font-semibold border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
-              placeholder="Ketik nama alumni..."
+              placeholder="CARI NAMA ALUMNI"
               value={searchName}
               onChange={(e) => setSearchName(e.target.value)}
+              className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner uppercase"
             />
           </div>
-          <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Cari Berdasarkan NIK</label>
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <Search className="h-4 w-4" />
+            </span>
             <input
               type="text"
-              className="w-full text-xs font-semibold border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
-              placeholder="Masukkan NIK alumni..."
+              placeholder="CARI NIK"
               value={searchNik}
               onChange={(e) => setSearchNik(e.target.value)}
+              className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner"
             />
           </div>
-          <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Cari Berdasarkan Tahun</label>
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <Search className="h-4 w-4" />
+            </span>
             <input
               type="text"
-              className="w-full text-xs font-semibold border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
-              placeholder="Contoh: 2020"
+              placeholder="CARI TAHUN LULUS"
               value={searchTahun}
               onChange={(e) => setSearchTahun(e.target.value)}
+              className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner"
             />
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Cari Berdasarkan Program</label>
             <select
-              className="w-full text-xs font-semibold border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
+              className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-cyan-500 font-bold bg-white text-slate-700 shadow-inner"
               value={searchProgram}
               onChange={(e) => setSearchProgram(e.target.value)}
             >
@@ -503,432 +483,459 @@ export default function AlumniManager() {
             </select>
           </div>
         </div>
-        <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-slate-50">
-          <Button onClick={handleReset} variant="outline" className="rounded-xl text-xs font-bold text-slate-500 h-9 px-4">
+        <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-slate-100">
+          <Button onClick={handleReset} className="bg-slate-500 hover:bg-slate-650 text-white text-xs font-bold rounded-xl h-10 px-6 active:scale-95 transition-all">
             Reset
           </Button>
-          <Button onClick={handleFilter} className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl h-9 px-5">
+          <Button onClick={handleFilter} className="bg-[#00badb] hover:bg-[#009cb9] text-white text-xs font-bold rounded-xl h-10 px-6 active:scale-95 transition-all">
             Filter
           </Button>
         </div>
       </div>
 
       {/* Grid Cards and Layout View */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Side: Alumni List/Grid */}
-        <div className="lg:col-span-7 bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-6">
-          <div className="flex justify-between items-center pb-4 border-b border-slate-100">
-            <h3 className="font-black text-cyan-950 uppercase text-sm tracking-wide">
-              Daftar Alumni ({totalItems})
-            </h3>
+      <div className="space-y-6">
+        {/* Alumni List/Grid Card */}
+        <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div className="flex items-center gap-4">
+              <h3 className="font-black text-slate-500 uppercase text-xs tracking-widest">
+                Daftar Alumni ({totalItems})
+              </h3>
+              <div className="flex border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
+                <button
+                  onClick={() => setViewMode("cards")}
+                  className={`p-1.5 transition ${viewMode === "cards" ? "bg-white shadow-xs text-purple-600" : "text-slate-400 hover:text-slate-600"}`}
+                  title="Card View"
+                >
+                  <LayoutGrid size={16} />
+                </button>
+                <button
+                  onClick={() => setViewMode("table")}
+                  className={`p-1.5 transition ${viewMode === "table" ? "bg-white shadow-xs text-purple-600" : "text-slate-400 hover:text-slate-600"}`}
+                  title="Table View"
+                >
+                  <List size={16} />
+                </button>
+              </div>
+            </div>
             <span className="text-xs text-slate-400 font-semibold">Klik salah satu untuk melihat detail & edit</span>
           </div>
 
-          {loading ? (
-            <div className="py-20 flex justify-center items-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-              <span className="ml-3 text-slate-500 text-xs font-semibold">Memuat data alumni...</span>
-            </div>
-          ) : totalItems === 0 ? (
-            <div className="py-16 text-center border-2 border-dashed border-slate-100 rounded-2xl">
-              <HelpCircle size={40} className="mx-auto text-slate-300 mb-2" />
-              <p className="text-slate-500 text-xs font-bold">Tidak ada alumni yang sesuai filter.</p>
-            </div>
-          ) : viewMode === "cards" ? (
-            /* Cards View */
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {currentItems.map((item) => {
-                const isActive = selectedId === item.id;
-                return (
-                  <div
-                    key={item.id}
-                    onClick={() => selectAlumni(item)}
-                    className={`rounded-2xl overflow-hidden border-2 cursor-pointer transition flex flex-col group ${
-                      isActive ? "border-purple-600 shadow-md ring-2 ring-purple-100" : "border-slate-100 hover:border-purple-300"
-                    }`}
-                  >
-                    <div className="h-44 bg-slate-50 relative overflow-hidden">
-                      {item.foto ? (
-                        <img src={item.foto} alt={item.nama} className="w-full h-full object-cover group-hover:scale-103 transition duration-300" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-slate-400 font-black text-xs bg-slate-100">
-                          FOTO
-                        </div>
-                      )}
-                      <span className={`absolute top-3 left-3 text-[9px] font-black uppercase px-2 py-0.5 rounded-full text-white ${
-                        item.program === "PAKET A" ? "bg-green-600" : item.program === "PAKET B" ? "bg-blue-600" : "bg-orange-500"
-                      }`}>
-                        {item.program}
-                      </span>
-                    </div>
-                    <div className="p-4 flex-1 space-y-1 bg-white">
-                      <h4 className="font-black text-[#280f91] text-sm group-hover:text-purple-600 transition truncate">{item.nama}</h4>
-                      <p className="text-slate-500 text-[11px] font-bold">Lulus Tahun {item.tahunLulus}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            /* Table View */
-            <div className="overflow-x-auto rounded-xl border border-slate-100">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100">
-                    <th className="p-3 w-10 text-center">No</th>
-                    <th className="p-3">Nama</th>
-                    <th className="p-3">NIK</th>
-                    <th className="p-3">Program</th>
-                    <th className="p-3">Tahun Lulus</th>
-                    <th className="p-3">No. HP</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50 text-xs">
-                  {currentItems.map((item, idx) => (
-                    <tr
+          <div className="p-6">
+            {loading ? (
+              <div className="py-20 flex justify-center items-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                <span className="ml-3 text-slate-500 text-xs font-semibold">Memuat data alumni...</span>
+              </div>
+            ) : totalItems === 0 ? (
+              <div className="py-16 text-center border-2 border-dashed border-slate-100 rounded-2xl">
+                <HelpCircle size={40} className="mx-auto text-slate-300 mb-2" />
+                <p className="text-slate-500 text-xs font-bold">Tidak ada alumni yang sesuai filter.</p>
+              </div>
+            ) : viewMode === "cards" ? (
+              /* Cards View */
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+                {currentItems.map((item) => {
+                  const isActive = selectedId === item.id;
+                  return (
+                    <div
                       key={item.id}
                       onClick={() => selectAlumni(item)}
-                      className={`hover:bg-slate-50/50 cursor-pointer transition font-medium ${
-                        selectedId === item.id ? "bg-purple-50/70 font-semibold" : ""
+                      className={`rounded-2xl overflow-hidden border-2 cursor-pointer transition flex flex-col group ${
+                        isActive ? "border-purple-600 shadow-md ring-2 ring-purple-100" : "border-slate-100 hover:border-purple-300"
                       }`}
                     >
-                      <td className="p-3 text-center text-slate-400">{indexOfFirstItem + idx + 1}</td>
-                      <td className="p-3 font-bold text-[#280f91]">{item.nama}</td>
-                      <td className="p-3 font-mono text-slate-500">{item.nik}</td>
-                      <td className="p-3">{item.program}</td>
-                      <td className="p-3 text-emerald-600 font-bold">{item.tahunLulus}</td>
-                      <td className="p-3 font-mono text-slate-500">{item.noHp}</td>
+                      <div className="h-44 bg-slate-50 relative overflow-hidden">
+                        {item.foto ? (
+                          <img src={item.foto} alt={item.nama} className="w-full h-full object-cover group-hover:scale-103 transition duration-300" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-400 font-black text-xs bg-slate-100">
+                            FOTO
+                          </div>
+                        )}
+                        <span className={`absolute top-3 left-3 text-[9px] font-black uppercase px-2 py-0.5 rounded-full text-white ${
+                          item.program === "PAKET A" ? "bg-green-600" : item.program === "PAKET B" ? "bg-blue-600" : "bg-orange-500"
+                        }`}>
+                          {item.program}
+                        </span>
+                      </div>
+                      <div className="p-4 flex-1 space-y-1 bg-white">
+                        <h4 className="font-black text-[#280f91] text-xs group-hover:text-purple-600 transition truncate">{item.nama}</h4>
+                        <p className="text-slate-500 text-[10px] font-semibold uppercase">TAHUN LULUS: {item.tahunLulus || "-"}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              /* Table View */
+              <div className="overflow-x-auto rounded-xl border border-slate-100">
+                <table className="w-full text-left border-collapse min-w-[700px]">
+                  <thead>
+                    <tr className="bg-[#00badb] text-white font-black text-xs uppercase">
+                      <th className="p-4 w-16 text-center border-r border-[#009cb9]">No</th>
+                      <th className="p-4 border-r border-[#009cb9]">Nama</th>
+                      <th className="p-4 border-r border-[#009cb9] w-48 text-center">Tahun Lulus</th>
+                      <th className="p-4 border-r border-[#009cb9] w-48 text-center">Program</th>
+                      <th className="p-4 border-r border-[#009cb9] w-36 text-center">NISN</th>
+                      <th className="p-4 text-center">Email</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                    {currentItems.map((item, idx) => (
+                      <tr
+                        key={item.id}
+                        onClick={() => selectAlumni(item)}
+                        className={`hover:bg-cyan-50/20 cursor-pointer transition ${
+                          selectedId === item.id ? "bg-purple-50/75 text-purple-900 font-bold" : ""
+                        }`}
+                      >
+                        <td className="p-4 text-center text-slate-500 font-mono border-r border-slate-100">{indexOfFirstItem + idx + 1}</td>
+                        <td className="p-4 font-bold text-slate-800 border-r border-slate-100">{item.nama}</td>
+                        <td className="p-4 text-center border-r border-slate-100 font-bold text-purple-700">{item.tahunLulus}</td>
+                        <td className="p-4 text-center border-r border-slate-100 font-mono">{item.program || "-"}</td>
+                        <td className="p-4 text-center border-r border-slate-100 font-mono">{item.nisn || "-"}</td>
+                        <td className="p-4 text-center text-slate-500 font-mono">{item.email || "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-              <span className="text-xs text-slate-400 font-semibold">
-                Menampilkan <strong>{indexOfFirstItem + 1}</strong> - <strong>{Math.min(indexOfLastItem, totalItems)}</strong> dari <strong>{totalItems}</strong> alumni
-              </span>
-              <div className="flex items-center gap-1">
-                <Button
-                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                  disabled={currentPage === 1}
-                  variant="outline"
-                  size="sm"
-                  className="rounded-lg text-xs"
-                >
-                  Prev
-                </Button>
-                {Array.from({ length: totalPages }).map((_, pIdx) => (
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="p-4 border-t border-slate-50 flex items-center justify-between mt-4">
+                <span className="text-xs text-slate-400 font-bold uppercase">
+                  Halaman {currentPage} dari {totalPages}
+                </span>
+
+                <div className="flex gap-1">
                   <Button
-                    key={pIdx}
-                    onClick={() => setCurrentPage(pIdx + 1)}
-                    variant={currentPage === pIdx + 1 ? "default" : "outline"}
+                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                    disabled={currentPage === 1}
+                    variant="outline"
                     size="sm"
-                    className={`rounded-lg text-xs h-7 w-7 p-0 ${
-                      currentPage === pIdx + 1 ? "bg-purple-600 text-white" : ""
-                    }`}
+                    className="rounded-lg text-xs"
                   >
-                    {pIdx + 1}
+                    Previous
                   </Button>
-                ))}
-                <Button
-                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                  variant="outline"
-                  size="sm"
-                  className="rounded-lg text-xs"
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right Side: Detail Form */}
-        <div className="lg:col-span-5 bg-[#00bcd4] rounded-3xl p-6 shadow-md text-white border border-cyan-400">
-          <div className="pb-4 border-b border-white/20 mb-5">
-            <h3 className="text-base font-black uppercase tracking-wide">
-              {isAdding ? "Tambah Alumni Baru" : "Detail Profil Alumni"}
-            </h3>
-            <p className="text-cyan-100 text-[11px] font-semibold mt-1">Masukkan kredensial alumni secara lengkap dan valid</p>
-          </div>
-
-          <form onSubmit={handleSave} className="space-y-4 text-slate-800">
-            {/* Row 1: Nama & NIK */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[10px] font-black uppercase text-white/95 mb-1">Nama Lengkap</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                  placeholder="Contoh: Ageng LS Suhendi"
-                  value={nama}
-                  onChange={(e) => setNama(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase text-white/95 mb-1">NIK (16 Digit)</label>
-                <input
-                  type="text"
-                  required
-                  maxLength={16}
-                  className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                  placeholder="Contoh: 320712..."
-                  value={nik}
-                  onChange={(e) => setNik(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Row 2: Program & Tahun Lulus */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[10px] font-black uppercase text-white/95 mb-1">Program Pendidikan</label>
-                <select
-                  className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                  value={program}
-                  onChange={(e) => setProgram(e.target.value)}
-                >
-                  <option value="PAKET A">PAKET A (Setara SD)</option>
-                  <option value="PAKET B">PAKET B (Setara SMP)</option>
-                  <option value="PAKET C">PAKET C (Setara SMA)</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase text-white/95 mb-1">Tahun Lulus</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                  placeholder="Contoh: 2020"
-                  value={tahunLulus}
-                  onChange={(e) => setTahunLulus(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Row 3: NISN, NIS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[10px] font-black uppercase text-white/95 mb-1">NISN</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                  placeholder="Masukkan NISN..."
-                  value={nisn}
-                  onChange={(e) => setNisn(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase text-white/95 mb-1">NIS</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                  placeholder="Masukkan NIS..."
-                  value={nis}
-                  onChange={(e) => setNis(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Row 4: Tempat, Tgl. Lahir & Jenis Kelamin */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[10px] font-black uppercase text-white/95 mb-1">Tempat, Tgl. Lahir</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                  placeholder="Contoh: Ciamis, 15-08-2002"
-                  value={tempatTglLahir}
-                  onChange={(e) => setTempatTglLahir(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase text-white/95 mb-1">Jenis Kelamin</label>
-                <select
-                  className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                  value={jenisKelamin}
-                  onChange={(e) => setJenisKelamin(e.target.value)}
-                >
-                  <option value="Laki-laki">Laki-laki</option>
-                  <option value="Perempuan">Perempuan</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Row 5: No HP, Email, Agama */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-[10px] font-black uppercase text-white/95 mb-1">No. HP / WA</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                  placeholder="Contoh: 0821..."
-                  value={noHp}
-                  onChange={(e) => setNoHp(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase text-white/95 mb-1">Agama</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                  placeholder="Contoh: Islam"
-                  value={agama}
-                  onChange={(e) => setAgama(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase text-white/95 mb-1">Email</label>
-                <input
-                  type="email"
-                  required
-                  className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                  placeholder="Contoh: aceng@mail.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Row 6: Nama Ayah & Nama Ibu */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[10px] font-black uppercase text-white/95 mb-1">Nama Ayah</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                  placeholder="Nama ayah kandung..."
-                  value={namaAyah}
-                  onChange={(e) => setNamaAyah(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase text-white/95 mb-1">Nama Ibu</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                  placeholder="Nama ibu kandung..."
-                  value={namaIbu}
-                  onChange={(e) => setNamaIbu(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Row 7: Alamat */}
-            <div>
-              <label className="block text-[10px] font-black uppercase text-white/95 mb-1">Alamat Lengkap</label>
-              <textarea
-                required
-                rows={2}
-                className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white resize-none"
-                placeholder="Tulis alamat rumah lengkap alumni..."
-                value={alamat}
-                onChange={(e) => setAlamat(e.target.value)}
-              />
-            </div>
-
-            {/* Row 8: Cerita Sukses */}
-            <div>
-              <label className="block text-[10px] font-black uppercase text-white/95 mb-1">Cerita Sukses Alumni</label>
-              <textarea
-                required
-                rows={3}
-                className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white resize-none"
-                placeholder="Bagikan cerita sukses, kesan pesan, atau kutipan motivasi dari alumni..."
-                value={cerita}
-                onChange={(e) => setCerita(e.target.value)}
-              />
-            </div>
-
-            {/* Row 9: Foto Upload & URL */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-              <div>
-                <label className="block text-[10px] font-black uppercase text-white/95 mb-1">URL Foto Alumni</label>
-                <input
-                  type="text"
-                  className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-slate-50 text-slate-500"
-                  placeholder="URL Foto..."
-                  value={foto}
-                  onChange={(e) => setFoto(e.target.value)}
-                  readOnly
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-black uppercase text-white/95 mb-1">Unggah Foto Fisik</label>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  accept="image/*"
-                  onChange={async (e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      await handleImageUpload(e.target.files[0]);
-                    }
-                  }}
-                />
-                <div
-                  className={`border-2 border-dashed rounded-xl p-3 text-center transition cursor-pointer text-xs ${
-                    dragActive ? "border-purple-600 bg-white/20" : "border-white/40 hover:border-white hover:bg-white/10"
-                  }`}
-                  onDragEnter={handleDrag}
-                  onDragOver={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <span className="font-bold text-white block">
-                    {uploading ? "Mengunggah..." : "Tarik Foto / Klik di sini"}
-                  </span>
-                  <span className="text-[10px] text-cyan-100 block mt-0.5">Mendukung format JPG, PNG, WEBP</span>
+                  {Array.from({ length: totalPages }, (_, pIdx) => (
+                    <Button
+                      key={pIdx}
+                      onClick={() => setCurrentPage(pIdx + 1)}
+                      variant={currentPage === pIdx + 1 ? "default" : "outline"}
+                      size="sm"
+                      className="rounded-lg text-xs"
+                    >
+                      {pIdx + 1}
+                    </Button>
+                  ))}
+                  <Button
+                    onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    variant="outline"
+                    size="sm"
+                    className="rounded-lg text-xs"
+                  >
+                    Next
+                  </Button>
                 </div>
               </div>
-            </div>
-
-            {/* Buttons Footer Form */}
-            <div className="flex items-center justify-between pt-4 border-t border-white/20">
-              <Button
-                type="button"
-                disabled={isAdding || !selectedId}
-                onClick={handleDelete}
-                className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs h-9 px-4 flex items-center gap-1.5 cursor-pointer"
-              >
-                <Trash2 size={14} />
-                Hapus
-              </Button>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  onClick={startAddAlumni}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-bold rounded-xl text-xs h-9 px-4 cursor-pointer"
-                >
-                  Tambah Baru
-                </Button>
-                <Button
-                  type="submit"
-                  className="bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs h-9 px-5 flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Save size={14} />
-                  Simpan
-                </Button>
-              </div>
-            </div>
-          </form>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* POPUP / MODAL FORM DIALOG */}
+      {isFormOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={closeForm} />
+
+          {/* Form Container */}
+          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-2xl animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10 max-h-[90vh] flex flex-col">
+            {/* Form Column (Cyan Background) */}
+            <div className="bg-[#00badb] p-6 relative text-white flex-1 overflow-y-auto">
+              {/* Close Button */}
+              <button
+                onClick={closeForm}
+                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="mb-6">
+                <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                  {isAdding ? "TAMBAH ALUMNI BARU" : "EDIT PROFIL ALUMNI"}
+                </span>
+              </div>
+
+              <form onSubmit={handleSave} className="space-y-4 text-slate-800">
+                {/* Row 1: Nama & NIK */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Nama Lengkap</label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
+                      placeholder="Contoh: Ageng LS Suhendi"
+                      value={nama}
+                      onChange={(e) => setNama(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">NIK (16 Digit)</label>
+                    <input
+                      type="text"
+                      required
+                      maxLength={16}
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
+                      placeholder="Contoh: 320712..."
+                      value={nik}
+                      onChange={(e) => setNik(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Row 2: Program & Tahun Lulus */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Program Pendidikan</label>
+                    <select
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
+                      value={program}
+                      onChange={(e) => setProgram(e.target.value)}
+                    >
+                      <option value="PAKET A">PAKET A (Setara SD)</option>
+                      <option value="PAKET B">PAKET B (Setara SMP)</option>
+                      <option value="PAKET C">PAKET C (Setara SMA)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Tahun Lulus</label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
+                      placeholder="Contoh: 2020"
+                      value={tahunLulus}
+                      onChange={(e) => setTahunLulus(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Row 3: NISN, NIS */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">NISN</label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
+                      placeholder="Masukkan NISN..."
+                      value={nisn}
+                      onChange={(e) => setNisn(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">NIS</label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
+                      placeholder="Masukkan NIS..."
+                      value={nis}
+                      onChange={(e) => setNis(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Row 4: Tempat, Tgl. Lahir & Jenis Kelamin */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Tempat, Tgl. Lahir</label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
+                      placeholder="Contoh: Ciamis, 15-08-2002"
+                      value={tempatTglLahir}
+                      onChange={(e) => setTempatTglLahir(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Jenis Kelamin</label>
+                    <select
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
+                      value={jenisKelamin}
+                      onChange={(e) => setJenisKelamin(e.target.value)}
+                    >
+                      <option value="Laki-laki">Laki-laki</option>
+                      <option value="Perempuan">Perempuan</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Row 5: No HP, Email, Agama */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">No. HP / WA</label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
+                      placeholder="Contoh: 0821..."
+                      value={noHp}
+                      onChange={(e) => setNoHp(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Agama</label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
+                      placeholder="Contoh: Islam"
+                      value={agama}
+                      onChange={(e) => setAgama(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Email</label>
+                    <input
+                      type="email"
+                      required
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
+                      placeholder="Contoh: aceng@mail.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Row 6: Nama Ayah & Nama Ibu */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Nama Ayah</label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
+                      placeholder="Nama ayah kandung..."
+                      value={namaAyah}
+                      onChange={(e) => setNamaAyah(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Nama Ibu</label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
+                      placeholder="Nama ibu kandung..."
+                      value={namaIbu}
+                      onChange={(e) => setNamaIbu(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Row 7: Alamat */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Alamat Lengkap</label>
+                  <textarea
+                    required
+                    rows={2}
+                    className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white resize-none"
+                    placeholder="Tulis alamat rumah lengkap alumni..."
+                    value={alamat}
+                    onChange={(e) => setAlamat(e.target.value)}
+                  />
+                </div>
+
+                {/* Row 8: Cerita Sukses */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Cerita Sukses Alumni</label>
+                  <textarea
+                    required
+                    rows={3}
+                    className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white resize-none"
+                    placeholder="Bagikan cerita sukses, kesan pesan, atau kutipan motivasi dari alumni..."
+                    value={cerita}
+                    onChange={(e) => setCerita(e.target.value)}
+                  />
+                </div>
+
+                {/* Row 9: Foto Upload & URL */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">URL Foto Alumni</label>
+                    <input
+                      type="text"
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-slate-50 text-slate-500"
+                      placeholder="URL Foto..."
+                      value={foto}
+                      onChange={(e) => setFoto(e.target.value)}
+                      readOnly
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Unggah Foto Fisik</label>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          await handleImageUpload(e.target.files[0]);
+                        }
+                      }}
+                    />
+                    <div
+                      className={`border-2 border-dashed rounded-xl p-3 text-center transition cursor-pointer text-xs ${
+                        dragActive ? "border-purple-600 bg-white/20" : "border-white/40 hover:border-white hover:bg-white/10"
+                      }`}
+                      onDragEnter={handleDrag}
+                      onDragOver={handleDrag}
+                      onDragLeave={handleDrag}
+                      onDrop={handleDrop}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <span className="font-bold text-white block">
+                        {uploading ? "Mengunggah..." : "Tarik Foto / Klik di sini"}
+                      </span>
+                      <span className="text-[10px] text-cyan-100 block mt-0.5">Mendukung format JPG, PNG, WEBP</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Buttons Footer Form */}
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/20">
+                  <Button
+                    type="submit"
+                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
+                  >
+                    <Save size={15} /> SIMPAN
+                  </Button>
+                  {selectedId && (
+                    <Button
+                      type="button"
+                      onClick={handleDelete}
+                      className="bg-rose-600 hover:bg-rose-700 text-white border-0 font-extrabold text-sm px-6 h-11 rounded-full cursor-pointer shadow-md shadow-rose-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
+                    >
+                      <Trash2 size={15} /> HAPUS
+                    </Button>
+                  )}
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

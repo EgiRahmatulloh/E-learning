@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { ArrowLeft, Search, MapPin, Mail, ChevronLeft } from "lucide-react";
+import { ArrowLeft, Search, ChevronLeft } from "lucide-react";
 
 const GALLERY_CATEGORIES = [
   { id: "KEGIATAN PEMBELAJARAN", label: "KEGIATAN PEMBELAJARAN", color: "from-purple-900 to-indigo-900" },
@@ -330,69 +330,6 @@ export default function GalleryPage({ onNavigate }: GalleryPageProps) {
             )}
           </DialogContent>
         </Dialog>
-
-        {/* DATANG & KUNJUNGI */}
-        <div className="max-w-5xl mx-auto mt-16 grid grid-cols-1 md:grid-cols-2 gap-10 items-center bg-white/80 p-8 rounded-3xl border border-slate-200/50 shadow-lg text-slate-700 font-semibold">
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <h3 className="text-2xl font-black text-[#280f91]">Datang &amp; Kunjungi</h3>
-              <h2 className="text-3xl font-black text-emerald-600 uppercase tracking-tight">PKBM MENUJU MAKMUR</h2>
-              <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mt-2.5 font-bold">
-                Kami siap memberikan informasi dan pelayanan kepada siswa, orang tua, serta masyarakat pada jam kerja. Silakan hubungi kami melalui kontak di bawah ini.
-              </p>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-start gap-4">
-                <div className="h-11 w-11 shrink-0 rounded-2xl bg-[#e0f7fa] flex items-center justify-center text-cyan-600">
-                  <MapPin className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-black text-[#280f91] uppercase">Alamat Lengkap</h4>
-                  <p className="text-[11px] font-bold text-slate-600 mt-0.5 leading-normal">
-                    Dusun Pangrumasan Rt. 004 Rw. 001 Desa Cintanagara Kecamatan Jatinagara Kab. Ciamis Prov. Jawa Barat
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="h-11 w-11 shrink-0 rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600">
-                  <Mail className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-black text-[#280f91] uppercase">Kontak Resmi</h4>
-                  <a href="mailto:admin@pkbmmenujumakmur.sch.id" className="text-[11px] font-bold text-[#ff6105] hover:underline block mt-0.5">
-                    admin@pkbmmenujumakmur.sch.id
-                  </a>
-                  <span className="text-[11px] font-bold text-slate-600 block mt-0.5">0821 2859 4025</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Map Skeleton */}
-          <a
-            href="https://www.google.com/maps/search/?api=1&query=PKBM+MENUJU+MAKMUR+Jatinagara"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="aspect-[4/3] rounded-2xl overflow-hidden border border-slate-200 relative bg-slate-50 flex items-center justify-center group shadow-md"
-          >
-            <svg className="w-full h-full text-slate-200 bg-cyan-50/50" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="400" height="300" fill="#E2F0F9"/>
-              <path d="M0 80C100 80 120 180 220 180C320 180 340 50 400 50" stroke="#CBDCE7" strokeWidth="24" strokeLinecap="round"/>
-              <path d="M120 0C120 100 240 120 240 220C240 320 380 300 400 300" stroke="#CBDCE7" strokeWidth="16" strokeLinecap="round"/>
-              <path d="M0 240C150 240 200 150 400 150" stroke="#CBDCE7" strokeWidth="20" strokeLinecap="round"/>
-              <path d="M0 80C100 80 120 180 220 180C320 180 340 50 400 50" stroke="#FFF" strokeWidth="2" strokeDasharray="6 6"/>
-              <path d="M120 0C120 100 240 120 240 220C240 320 380 300 400 300" stroke="#FFF" strokeWidth="2" strokeDasharray="6 6"/>
-              <path d="M0 240C150 240 200 150 400 150" stroke="#FFF" strokeWidth="2" strokeDasharray="6 6"/>
-              <circle cx="220" cy="180" r="10" fill="#FF5252" stroke="#FFF" strokeWidth="2"/>
-              <circle cx="220" cy="180" r="18" fill="#FF5252" fillOpacity="0.2" className="animate-ping"/>
-            </svg>
-            <div className="absolute inset-0 bg-slate-900/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <span className="bg-slate-900 text-white font-black text-[10px] px-3.5 py-1.5 rounded-full uppercase tracking-wider shadow-md">
-                Klik Untuk Petunjuk Arah
-              </span>
-            </div>
-          </a>
-        </div>
       </div>
     </section>
   );

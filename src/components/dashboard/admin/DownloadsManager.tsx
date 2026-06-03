@@ -1,13 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ShieldAlert, Upload, Plus, Trash2, Edit, Save, FileText, Download } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogClose
-} from "@/components/ui/dialog";
+import { ShieldAlert, Upload, Plus, Trash2, Edit, Save, FileText, Download, X, Filter, RotateCcw } from "lucide-react";
 
 interface DownloadItem {
   id: number;
@@ -239,94 +232,66 @@ export default function DownloadsManager() {
   const currentItems = filteredDownloads.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-300">
       
-      {/* Top Header Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-xs">
-        <div className="space-y-1 text-left">
-          <h1 className="text-2xl font-black text-[#1a0b70] uppercase flex items-center gap-2">
-            <FileText className="h-6 w-6 text-[#9c27b0]" /> Manajemen File Download
-          </h1>
-          <p className="text-slate-500 text-xs font-semibold">
+      {/* HEADER SECTION */}
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
+        <div>
+          <h2 className="text-xl font-black text-cyan-900 tracking-tight flex items-center gap-2">
+            <span>📁</span> KELOLA WEBSITE FILE DOWNLOAD
+          </h2>
+          <p className="text-xs text-slate-500 font-semibold mt-1">
             Unggah modul pembelajaran, administrasi kurikulum, administrasi tutor, administrasi WB, dan administrasi kelembagaan.
           </p>
         </div>
-
-        <Button
-          onClick={openAddForm}
-          className="rounded-xl bg-[#9c27b0] hover:bg-[#ff6105] text-white font-extrabold text-xs px-5 h-11 cursor-pointer transition-all shadow-md flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" /> TAMBAH DATA
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={openAddForm}
+            className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
+          >
+            <Plus className="h-4 w-4" /> TAMBAH DATA
+          </Button>
+        </div>
       </div>
 
-      {/* FILTER & NOTE ROW */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Left Side: Filter Dropdown */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-100 shadow-xs flex flex-col justify-between">
-          <div className="space-y-4 text-left">
-            <h3 className="text-sm font-black text-[#1a0b70] uppercase">Cari & Filter Kategori</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full h-11 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 font-bold bg-white"
-              >
-                <option value="">CARI BERDASARKAN KATEGORI (DROP DOWN)</option>
-                {STATIC_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleFilter}
-                  className="flex-1 h-11 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-black text-xs cursor-pointer tracking-wider"
-                >
-                  FILTER
-                </Button>
-                <Button
-                  onClick={handleReset}
-                  className="flex-1 h-11 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs cursor-pointer tracking-wider"
-                >
-                  RESET
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Side: Pink notebook sticky-note matching mockup */}
-        <div className="bg-[#ffb3c1] rounded-3xl shadow-lg border border-[#ffa3b6] relative p-5 text-left overflow-hidden">
-          {/* Binder holes at the top */}
-          <div className="flex justify-center gap-5 -mt-3.5 mb-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="flex flex-col items-center">
-                <div className="h-3 w-3 rounded-full bg-slate-800 border border-white"></div>
-                <div className="h-2 w-1.5 bg-slate-400/40 -mt-0.5 rounded-b-md"></div>
-              </div>
+      {/* FILTER & SEARCH PANEL */}
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-cyan-500 font-bold bg-white text-slate-700 shadow-inner"
+          >
+            <option value="">CARI BERDASARKAN KATEGORI (DROP DOWN)</option>
+            {STATIC_CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
             ))}
-          </div>
+          </select>
 
-          <div className="space-y-2 text-[#7d0022]">
-            <h4 className="text-[10px] font-black tracking-widest uppercase border-b border-[#ffa3b6] pb-1">Catatan Sistem</h4>
-            <p className="text-[11px] font-extrabold leading-relaxed">
-              KATEGORI TETAP TIDAK BISA DITAMBAHKAN (MODUL PEMBELAJARAN, ADMINISTRASI KURIKULUM, ADMINISTRASI TUTOR, ADMINISTRASI WB, ADMINISTRASI KELEMBAGAAN)
-            </p>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleFilter}
+              className="flex-1 h-10 rounded-xl bg-[#00badb] hover:bg-[#009cb9] text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
+            >
+              <Filter className="h-4 w-4" /> FILTER
+            </Button>
+            <Button
+              onClick={handleReset}
+              className="flex-1 h-10 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
+            >
+              <RotateCcw className="h-4 w-4" /> RESET
+            </Button>
           </div>
         </div>
-
       </div>
 
-      {/* TABLE PANEL */}
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden">
-        <div className="p-6 border-b border-slate-50 flex items-center justify-between">
-          <h3 className="text-sm font-black text-[#1a0b70] uppercase">Daftar Dokumen</h3>
-          <span className="text-[10px] font-bold text-slate-400 uppercase">
-            Total: {filteredDownloads.length} data
+      {/* TABLE CONTAINER */}
+      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <span className="text-xs font-black text-slate-500 uppercase tracking-widest">
+            Daftar Dokumen ({filteredDownloads.length})
           </span>
         </div>
 
@@ -337,41 +302,41 @@ export default function DownloadsManager() {
           </div>
         ) : currentItems.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+            <table className="w-full text-left text-sm border-collapse min-w-[700px]">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-100 text-slate-450 font-black uppercase">
-                  <th className="py-4 px-6 text-center w-12">NO</th>
-                  <th className="py-4 px-6">NAMA FILE</th>
-                  <th className="py-4 px-6">KATEGORI</th>
-                  <th className="py-4 px-6">TANGGAL POSTING</th>
-                  <th className="py-4 px-6 text-center">HITS</th>
-                  <th className="py-4 px-6 text-center">STATUS</th>
+                <tr className="bg-[#00badb] text-white font-black text-sm uppercase">
+                  <th className="py-4 px-6 border-r border-[#009cb9] text-center w-16">NO</th>
+                  <th className="py-4 px-6 border-r border-[#009cb9]">NAMA FILE</th>
+                  <th className="py-4 px-6 border-r border-[#009cb9] w-64">KATEGORI</th>
+                  <th className="py-4 px-6 border-r border-[#009cb9] text-center w-48">TANGGAL POSTING</th>
+                  <th className="py-4 px-6 border-r border-[#009cb9] text-center w-32 font-mono">HITS</th>
+                  <th className="py-4 px-6 border-r border-[#009cb9] text-center w-36">STATUS</th>
                   <th className="py-4 px-6 text-center w-36">AKSI</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50 font-semibold text-slate-700">
+              <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
                 {currentItems.map((item, index) => (
-                  <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-3.5 px-6 text-center text-slate-400 font-mono">
+                  <tr key={item.id} className="border-b border-slate-100 hover:bg-cyan-50/20 font-bold text-slate-700 transition-colors">
+                    <td className="py-4 px-6 border-r border-slate-100 text-center text-slate-500 font-mono">
                       {indexOfFirstItem + index + 1}
                     </td>
-                    <td className="py-3.5 px-6 font-bold text-slate-800">
+                    <td className="py-4 px-6 border-r border-slate-100 font-bold text-slate-800">
                       {item.namaFile}
                     </td>
-                    <td className="py-3.5 px-6">
+                    <td className="py-4 px-6 border-r border-slate-100">
                       <span className="inline-flex items-center rounded-full bg-purple-50 border border-purple-100 px-2.5 py-0.5 text-[10px] font-extrabold text-purple-700 uppercase tracking-wide">
                         {item.kategori}
                       </span>
                     </td>
-                    <td className="py-3.5 px-6 font-mono text-slate-500">
+                    <td className="py-4 px-6 border-r border-slate-100 font-mono text-slate-500 text-center">
                       {item.tanggalUpload}
                     </td>
-                    <td className="py-3.5 px-6 text-center font-mono">
+                    <td className="py-4 px-6 border-r border-slate-100 text-center font-mono">
                       <span className="bg-slate-100 text-slate-600 font-black px-2 py-0.5 rounded text-[10px]">
                         {item.hits} Download
                       </span>
                     </td>
-                    <td className="py-3.5 px-6 text-center">
+                    <td className="py-4 px-6 border-r border-slate-100 text-center">
                       <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
                         item.status === 'PUBLISH'
                           ? "bg-emerald-50 border border-emerald-200 text-emerald-700"
@@ -466,132 +431,148 @@ export default function DownloadsManager() {
           </div>
         )}
       </div>
-
       {/* ADD / EDIT DIALOG FORM */}
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="sm:max-w-xl bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl text-left overflow-y-auto max-h-[85vh]">
-          <DialogHeader className="border-b border-slate-100 pb-3">
-            <DialogTitle className="text-lg font-black text-[#1a0b70] uppercase flex items-center gap-2">
-              {isAdding ? <Plus className="h-5 w-5 text-[#9c27b0]" /> : <Edit className="h-5 w-5 text-[#9c27b0]" />}
-              {isAdding ? "Tambah Dokumen Baru" : "Edit Data Dokumen"}
-            </DialogTitle>
-          </DialogHeader>
+      {formOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setFormOpen(false)} />
 
-          <form onSubmit={handleSave} className="py-4 space-y-4 text-xs font-semibold text-slate-700">
-            <div className="space-y-1.5 text-left">
-              <label className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider">NAMA FILE</label>
-              <input
-                type="text"
-                required
-                placeholder="Nama dokumen file, e.g. MODUL SEJARAH KELAS XII"
-                value={namaFile}
-                onChange={(e) => setNamaFile(e.target.value)}
-                className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 font-semibold"
-              />
-            </div>
-
-            <div className="space-y-1.5 text-left">
-              <label className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider">KATEGORI DOKUMEN</label>
-              <select
-                value={kategori}
-                onChange={(e) => setKategori(e.target.value)}
-                className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 font-bold bg-white"
+          {/* Form Container */}
+          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-xl animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
+            {/* Form Column (Cyan Background) */}
+            <div className="bg-[#00badb] p-6 relative text-white">
+              {/* Close Button */}
+              <button
+                onClick={() => setFormOpen(false)}
+                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
               >
-                {STATIC_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <X className="h-5 w-5" />
+              </button>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5 text-left">
-                <label className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider">STATUS</label>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 font-bold bg-white"
-                >
-                  <option value="PUBLISH">PUBLISH</option>
-                  <option value="DRAFT">DRAFT</option>
-                </select>
+              <div className="mb-6">
+                <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                  {isAdding ? "TAMBAH DOKUMEN BARU" : "EDIT DATA DOKUMEN"}
+                </span>
               </div>
 
-              <div className="space-y-1.5 text-left">
-                <label className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider">TANGGAL UPLOAD</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. 20 Januari 2020"
-                  value={tanggalUpload}
-                  onChange={(e) => setTanggalUpload(e.target.value)}
-                  className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 font-semibold"
-                />
-              </div>
-            </div>
+              <form onSubmit={handleSave} className="space-y-4 text-slate-800">
+                <div className="space-y-1.5 text-left">
+                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">NAMA FILE</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Nama dokumen file, e.g. MODUL SEJARAH KELAS XII"
+                    value={namaFile}
+                    onChange={(e) => setNamaFile(e.target.value)}
+                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner placeholder-slate-400"
+                  />
+                </div>
 
-            {/* Drag & Drop File Document Uploader */}
-            <div className="space-y-2 text-left">
-              <label className="text-[10px] font-black text-[#1a0b70] uppercase tracking-wider">BERKAS DOKUMEN (PDF/DOCX/ETC)</label>
-              <div
-                onDragEnter={handleDrag}
-                onDragOver={handleDrag}
-                onDragLeave={handleDrag}
-                onDrop={handleDrop}
-                className={`border-2 border-dashed rounded-2xl p-4 text-center transition-all ${
-                  dragActive ? "border-[#9c27b0] bg-purple-50/50" : "border-slate-200 bg-slate-50"
-                } h-36 flex flex-col justify-center items-center relative overflow-hidden`}
-              >
-                {fileUrl ? (
-                  <div className="space-y-2">
-                    <FileText className="h-10 w-10 text-emerald-600 mx-auto" />
-                    <p className="text-[10px] font-black text-emerald-700 truncate max-w-sm">
-                      {fileUrl}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setFileUrl("")}
-                      className="text-[10px] font-bold text-red-500 hover:underline cursor-pointer"
+                <div className="space-y-1.5 text-left">
+                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">KATEGORI DOKUMEN</label>
+                  <select
+                    value={kategori}
+                    onChange={(e) => setKategori(e.target.value)}
+                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider"
+                  >
+                    {STATIC_CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5 text-left">
+                    <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">STATUS</label>
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider"
                     >
-                      Hapus Berkas
-                    </button>
+                      <option value="PUBLISH">PUBLISH</option>
+                      <option value="DRAFT">DRAFT</option>
+                    </select>
                   </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Upload className="h-8 w-8 text-slate-400 mx-auto" />
-                    <p className="text-[10px] text-slate-500 font-bold">
-                      {uploading ? "Mengupload..." : "Tarik berkas Anda ke sini, atau klik untuk memilih"}
-                    </p>
+
+                  <div className="space-y-1.5 text-left">
+                    <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">TANGGAL UPLOAD</label>
                     <input
-                      type="file"
-                      onChange={handleFileInput}
-                      disabled={uploading}
-                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      type="text"
+                      required
+                      placeholder="e.g. 20 Januari 2020"
+                      value={tanggalUpload}
+                      onChange={(e) => setTanggalUpload(e.target.value)}
+                      className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner placeholder-slate-400 uppercase tracking-wider"
                     />
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
 
-            <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
-              <DialogClose asChild>
-                <Button type="button" variant="outline" className="rounded-xl border border-slate-200 font-extrabold px-6 h-11 text-xs text-slate-655 hover:bg-slate-55 cursor-pointer">
-                  Batal
-                </Button>
-              </DialogClose>
-              <Button
-                type="submit"
-                disabled={uploading}
-                className="rounded-xl bg-[#9c27b0] hover:bg-[#ff6105] text-white font-extrabold text-xs px-6 h-11 shadow-md shadow-purple-500/20 cursor-pointer flex items-center gap-1.5"
-              >
-                <Save className="h-4 w-4" /> Simpan
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+                {/* Drag & Drop File Document Uploader */}
+                <div className="space-y-2 text-left">
+                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">BERKAS DOKUMEN (PDF/DOCX/ETC)</label>
+                  <div
+                    onDragEnter={handleDrag}
+                    onDragOver={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDrop={handleDrop}
+                    className={`border-2 border-dashed rounded-xl p-4 text-center transition-all ${
+                      dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
+                    } h-36 flex flex-col justify-center items-center relative overflow-hidden`}
+                  >
+                    {fileUrl ? (
+                      <div className="space-y-2 text-white">
+                        <FileText className="h-10 w-10 text-emerald-300 mx-auto" />
+                        <p className="text-[10px] font-black text-emerald-200 truncate max-w-sm">
+                          {fileUrl}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setFileUrl("")}
+                          className="text-[10px] font-bold text-red-200 hover:text-red-100 hover:underline cursor-pointer"
+                        >
+                          Hapus Berkas
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 text-white/85">
+                        <Upload className="h-8 w-8 text-white/60 mx-auto" />
+                        <p className="text-[10px] font-bold">
+                          {uploading ? "Mengupload..." : "Tarik berkas Anda ke sini, atau klik untuk memilih"}
+                        </p>
+                        <input
+                          type="file"
+                          onChange={handleFileInput}
+                          disabled={uploading}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Masukkan URL berkas..."
+                    value={fileUrl}
+                    onChange={(e) => setFileUrl(e.target.value)}
+                    className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white text-slate-800 mt-2"
+                  />
+                </div>
 
+                <div className="flex justify-end gap-2 pt-4 border-t border-white/20">
+                  <Button
+                    type="submit"
+                    disabled={uploading}
+                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
+                  >
+                    <Save className="h-4 w-4" /> Simpan
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
