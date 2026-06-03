@@ -15,13 +15,6 @@ interface AlumniItem {
   nama: string;
   program: string;
   tahunLulus: string;
-  nisn: string;
-  nis: string;
-  tempatTglLahir: string;
-  jenisKelamin: string;
-  agama: string;
-  email: string;
-  alamat: string;
   cerita: string;
   foto: string;
 }
@@ -45,15 +38,25 @@ export default function AlumniPage({ onNavigate }: AlumniPageProps) {
   const itemsPerPage = 10;
 
   useEffect(() => {
-    fetch("/api/alumni")
+    const controller = new AbortController();
+    fetch("/api/alumni", { signal: controller.signal })
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.data) {
           setAlumniList(data.data);
         }
       })
-      .catch((err) => console.error("Failed to fetch alumni list:", err))
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          console.error("Failed to fetch alumni list:", err);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      });
+    return () => controller.abort();
   }, []);
 
   // Reset page when filters change
@@ -246,28 +249,12 @@ export default function AlumniPage({ onNavigate }: AlumniPageProps) {
 
                     <div className="grid grid-cols-2 gap-x-4 gap-y-3.5 text-xs">
                       <div>
-                        <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">NISN / NIS</span>
-                        <span className="text-[#280f91] font-black">{selectedAlumni.nisn} / {selectedAlumni.nis}</span>
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Program Pendidikan</span>
+                        <span className="text-[#280f91] font-black">{selectedAlumni.program}</span>
                       </div>
                       <div>
-                        <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Tempat, Tgl. Lahir</span>
-                        <span className="text-slate-800">{selectedAlumni.tempatTglLahir}</span>
-                      </div>
-                      <div>
-                        <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Jenis Kelamin</span>
-                        <span className="text-slate-800">{selectedAlumni.jenisKelamin}</span>
-                      </div>
-                      <div>
-                        <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Agama</span>
-                        <span className="text-slate-800">{selectedAlumni.agama}</span>
-                      </div>
-                      <div className="col-span-2">
-                        <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Email Address</span>
-                        <span className="text-slate-800">{selectedAlumni.email}</span>
-                      </div>
-                      <div className="col-span-2">
-                        <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Alamat Tinggal</span>
-                        <span className="text-slate-800">{selectedAlumni.alamat}</span>
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Tahun Lulus</span>
+                        <span className="text-slate-800 font-black">{selectedAlumni.tahunLulus}</span>
                       </div>
                     </div>
 

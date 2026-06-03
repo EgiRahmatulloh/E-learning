@@ -333,13 +333,13 @@ export default function AlumniManager() {
         if (lines.length <= 1) return;
 
         const token = localStorage.getItem("token");
-        let successCount = 0;
+        const imports = [];
 
         for (let i = 1; i < lines.length; i++) {
           const columns = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(col => col.replace(/^"|"$/g, "").trim());
           if (columns.length < 4) continue;
 
-          const payload = {
+          imports.push({
             nama: columns[0] || "",
             nik: columns[1] || "",
             program: columns[2] || "PAKET C",
@@ -356,26 +356,34 @@ export default function AlumniManager() {
             alamat: columns[13] || "",
             cerita: columns[14] || "",
             foto: ""
-          };
-
-          try {
-            const res = await fetch("/api/alumni", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify(payload),
-            });
-            const data = await res.json();
-            if (data.success) successCount++;
-          } catch (err) {
-            console.error("Import row failed:", err);
-          }
+          });
         }
 
-        alert(`Berhasil mengimpor ${successCount} data alumni!`);
-        fetchAlumni();
+        if (imports.length === 0) {
+          alert("Tidak ada data valid untuk diimpor");
+          return;
+        }
+
+        try {
+          const res = await fetch("/api/alumni/import", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(imports),
+          });
+          const data = await res.json();
+          if (data.success) {
+            alert(data.message || `Berhasil mengimpor ${imports.length} data alumni!`);
+          } else {
+            alert("Gagal mengimpor data alumni: " + (data.message || "Error tidak diketahui"));
+          }
+          fetchAlumni();
+        } catch (err) {
+          console.error("Import failed:", err);
+          alert("Terjadi kesalahan saat mengimpor data alumni");
+        }
       };
       reader.readAsText(file);
     }

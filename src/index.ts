@@ -2333,7 +2333,7 @@ app.delete("/api/products/:id", async ({ params, headers, jwt, set }) => {
 });
 
 // --- API ALUMNI ROUTES ---
-// Ambil daftar alumni untuk publik (tanpa data sensitif NIK & No HP)
+// Ambil daftar alumni untuk publik (tanpa data sensitif NIK, No HP, NISN, NIS, Tempat/Tgl Lahir, email, alamat, dll)
 app.get("/api/alumni", async ({ set }) => {
   try {
     const list = await db.select({
@@ -2341,13 +2341,6 @@ app.get("/api/alumni", async ({ set }) => {
       nama: alumni.nama,
       program: alumni.program,
       tahunLulus: alumni.tahunLulus,
-      nisn: alumni.nisn,
-      nis: alumni.nis,
-      tempatTglLahir: alumni.tempatTglLahir,
-      jenisKelamin: alumni.jenisKelamin,
-      agama: alumni.agama,
-      email: alumni.email,
-      alamat: alumni.alamat,
       cerita: alumni.cerita,
       foto: alumni.foto,
       createdAt: alumni.createdAt,
@@ -2414,6 +2407,57 @@ app.post("/api/alumni", async ({ body, headers, jwt, set }) => {
     cerita: t.String(),
     foto: t.String(),
   })
+});
+
+// Bulk import alumni
+app.post("/api/alumni/import", async ({ body, headers, jwt, set }) => {
+  const authError = await verifyAdmin(headers, jwt, set);
+  if (authError) return authError;
+
+  const list = body;
+  if (!Array.isArray(list)) {
+    set.status = 400;
+    return { success: false, message: "Format data tidak valid, harus berupa array" };
+  }
+
+  try {
+    const validItems = list.filter(item => item && typeof item === 'object' && typeof item.nama === 'string' && item.nama.trim().length > 0);
+    if (validItems.length === 0) {
+      set.status = 400;
+      return { success: false, message: "Tidak ada data valid untuk diimpor" };
+    }
+
+    const chunkSize = 100;
+    await db.transaction(async (tx) => {
+      for (let i = 0; i < validItems.length; i += chunkSize) {
+        const chunk = validItems.slice(i, i + chunkSize);
+        await tx.insert(alumni).values(chunk).run();
+      }
+    });
+    return { success: true, message: `Berhasil mengimpor ${validItems.length} data alumni` };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal mengimpor data alumni" };
+  }
+}, {
+  body: t.Array(t.Object({
+    nama: t.String(),
+    nik: t.String(),
+    program: t.String(),
+    tahunLulus: t.String(),
+    nisn: t.String(),
+    nis: t.String(),
+    tempatTglLahir: t.String(),
+    noHp: t.String(),
+    namaAyah: t.String(),
+    namaIbu: t.String(),
+    jenisKelamin: t.String(),
+    agama: t.String(),
+    email: t.String(),
+    alamat: t.String(),
+    cerita: t.String(),
+    foto: t.String(),
+  }))
 });
 
 // Update data alumni
