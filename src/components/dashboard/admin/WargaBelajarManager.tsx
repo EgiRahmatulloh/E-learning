@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { parseCSV, downloadCSV } from "@/lib/utils";
-import { ShieldAlert, Search, Upload, Download, Sparkles, Plus, Trash2, Save, X, Eye, EyeOff, GraduationCap, ArrowUpCircle, RefreshCw, List, LayoutGrid, Filter, RotateCcw } from "lucide-react";
+import { ShieldAlert, Search, Upload, Download, Sparkles, Plus, Trash2, Save, X, Eye, EyeOff, GraduationCap, ArrowUpCircle, RefreshCw, List, LayoutGrid, Filter, RotateCcw, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { toast } from "sonner";
 
 interface Student {
   id: number;
@@ -36,6 +37,7 @@ export default function WargaBelajarManager() {
   const confirm = useConfirm();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
@@ -125,7 +127,7 @@ export default function WargaBelajarManager() {
   // CSV Export
   const handleExportCSV = () => {
     if (students.length === 0) {
-      alert("Tidak ada data untuk diekspor!");
+      toast.error("Tidak ada data untuk diekspor!");
       return;
     }
     const headers = ["NAMA", "NIK", "PROGRAM", "KELAS", "NISN", "NIS", "TEMPAT TGL LAHIR", "TITIK LAYANAN", "JENIS KELAMIN", "NO HP", "AGAMA", "NAMA AYAH", "EMAIL", "NAMA IBU", "ALAMAT", "FOTO", "STATUS"];
@@ -149,6 +151,7 @@ export default function WargaBelajarManager() {
       `"${(s.status || "").replace(/"/g, '""')}"`
     ]);
     downloadCSV(headers, rows, "warga_belajar.csv");
+    toast.success("Berhasil mengekspor CSV");
   };
 
   // CSV Import
@@ -213,7 +216,7 @@ export default function WargaBelajarManager() {
       }
 
       if (importedData.length === 0) {
-        alert("Format CSV kosong atau tidak valid!");
+        toast.error("Format CSV kosong atau tidak valid!");
         return;
       }
 
@@ -223,19 +226,19 @@ export default function WargaBelajarManager() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(importedData),
         });
         const resData = await res.json();
         if (resData.success) {
-          alert(resData.message || "Berhasil mengimpor data!");
+          toast.success(resData.message || "Berhasil mengimpor data!");
           fetchStudents();
         } else {
-          alert(resData.message || "Gagal mengimpor data");
+          toast.error(resData.message || "Gagal mengimpor data");
         }
       } catch (err) {
-        alert("Kesalahan saat mengunggah CSV ke server.");
+        toast.error("Kesalahan saat mengunggah CSV ke server.");
       }
     };
     reader.readAsText(file);
@@ -305,12 +308,13 @@ export default function WargaBelajarManager() {
       const data = await res.json();
       if (data.success && data.url) {
         setFormData((prev) => ({ ...prev, foto: data.url }));
+        toast.success("Foto berhasil diunggah");
       } else {
-        alert("Upload gagal: " + (data.message || "Error tidak diketahui"));
+        toast.error("Upload gagal: " + (data.message || "Error tidak diketahui"));
       }
     } catch (e) {
       console.error(e);
-      alert("Error mengupload file");
+      toast.error("Error mengupload file");
     } finally {
       setUploading(false);
     }
@@ -335,10 +339,11 @@ export default function WargaBelajarManager() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.nama) {
-      alert("Nama wajib diisi!");
+      toast.error("Nama wajib diisi!");
       return;
     }
 
+    setSaving(true);
     try {
       const token = localStorage.getItem("token");
       const url = isAdding ? "/api/students" : `/api/students/${selectedStudent?.id}`;
@@ -355,19 +360,26 @@ export default function WargaBelajarManager() {
 
       const data = await res.json();
       if (data.success) {
+        toast.success(isAdding ? "Warga belajar berhasil ditambahkan" : "Data warga belajar berhasil diperbarui");
         setFormOpen(false);
         fetchStudents();
       } else {
-        alert("Gagal menyimpan data: " + (data.message || "Error tidak diketahui"));
+        toast.error("Gagal menyimpan data: " + (data.message || "Error tidak diketahui"));
       }
     } catch (e) {
       console.error(e);
-      alert("Terjadi kesalahan sistem saat menyimpan");
+      toast.error("Terjadi kesalahan sistem saat menyimpan");
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!await confirm("Apakah Anda yakin ingin menghapus data warga belajar ini?")) return;
+    if (!await confirm({
+      title: "Konfirmasi Hapus",
+      message: "Apakah Anda yakin ingin menghapus data warga belajar ini?",
+      variant: "danger"
+    })) return;
 
     try {
       const token = localStorage.getItem("token");
@@ -380,20 +392,24 @@ export default function WargaBelajarManager() {
 
       const data = await res.json();
       if (data.success) {
+        toast.success("Data warga belajar berhasil dihapus");
         setFormOpen(false);
         fetchStudents();
       } else {
-        alert("Gagal menghapus data: " + (data.message || "Error tidak diketahui"));
+        toast.error("Gagal menghapus data: " + (data.message || "Error tidak diketahui"));
       }
     } catch (e) {
       console.error(e);
-      alert("Terjadi kesalahan sistem saat menghapus");
+      toast.error("Terjadi kesalahan sistem saat menghapus");
     }
   };
 
   // Promote (Naikkan Kelas)
   const handlePromote = async (id: number) => {
-    if (!await confirm("Apakah Anda yakin ingin menaikkan tingkat kelas warga belajar ini?")) return;
+    if (!await confirm({
+      title: "Konfirmasi Kenaikan Kelas",
+      message: "Apakah Anda yakin ingin menaikkan tingkat kelas warga belajar ini?",
+    })) return;
 
     try {
       const token = localStorage.getItem("token");
@@ -405,20 +421,24 @@ export default function WargaBelajarManager() {
       });
       const data = await res.json();
       if (data.success) {
+        toast.success("Tingkat kelas berhasil dinaikkan!");
         setFormOpen(false);
         fetchStudents();
       } else {
-        alert("Gagal memproses kenaikan kelas: " + (data.message || ""));
+        toast.error("Gagal memproses kenaikan kelas: " + (data.message || ""));
       }
     } catch (e) {
       console.error(e);
-      alert("Terjadi kesalahan sistem atau koneksi saat memproses kenaikan kelas.");
+      toast.error("Terjadi kesalahan sistem atau koneksi saat memproses kenaikan kelas.");
     }
   };
 
   // Graduate (Luluskan)
   const handleGraduate = async (id: number) => {
-    if (!await confirm("Apakah Anda yakin ingin meluluskan warga belajar ini?")) return;
+    if (!await confirm({
+      title: "Konfirmasi Kelulusan",
+      message: "Apakah Anda yakin ingin meluluskan warga belajar ini?",
+    })) return;
 
     try {
       const token = localStorage.getItem("token");
@@ -430,15 +450,15 @@ export default function WargaBelajarManager() {
       });
       const data = await res.json();
       if (data.success) {
-        alert("Warga belajar telah dinyatakan lulus!");
+        toast.success("Warga belajar telah dinyatakan lulus!");
         setFormOpen(false);
         fetchStudents();
       } else {
-        alert("Gagal meluluskan warga belajar: " + (data.message || ""));
+        toast.error("Gagal meluluskan warga belajar: " + (data.message || ""));
       }
     } catch (e) {
       console.error(e);
-      alert("Terjadi kesalahan sistem atau koneksi saat meluluskan warga belajar.");
+      toast.error("Terjadi kesalahan sistem atau koneksi saat meluluskan warga belajar.");
     }
   };
 
@@ -462,15 +482,16 @@ export default function WargaBelajarManager() {
       });
       const data = await res.json();
       if (data.success) {
+        toast.success("Warga belajar berhasil dipindahkan ke program baru!");
         setContinueOpen(false);
         setFormOpen(false);
         fetchStudents();
       } else {
-        alert("Gagal memproses kelanjutan program: " + (data.message || ""));
+        toast.error("Gagal memproses kelanjutan program: " + (data.message || ""));
       }
     } catch (e) {
       console.error(e);
-      alert("Terjadi kesalahan sistem atau koneksi saat memproses kelanjutan program.");
+      toast.error("Terjadi kesalahan sistem atau koneksi saat memproses kelanjutan program.");
     }
   };
 
@@ -880,7 +901,7 @@ export default function WargaBelajarManager() {
                         placeholder="Contoh: Ciamis, 05-02-2008"
                         value={formData.tempatTglLahir || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, tempatTglLahir: e.target.value }))}
-                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
                       />
                     </div>
 
@@ -1105,9 +1126,18 @@ export default function WargaBelajarManager() {
                   )}
                   <Button
                     type="submit"
+                    disabled={saving || uploading}
                     className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
                   >
-                    <Save className="h-4 w-4" /> SIMPAN
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" /> SIMPAN
+                      </>
+                    )}
                   </Button>
                 </div>
               </form>

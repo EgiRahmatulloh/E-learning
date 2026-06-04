@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Trash2, Edit3, Plus, Search, UploadCloud, X } from "lucide-react";
+import { Trash2, Edit3, Plus, Search, UploadCloud, X, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { toast } from "sonner";
 
 interface SlideData {
   id: string;
@@ -36,7 +37,6 @@ export function HeaderManager() {
   const confirm = useConfirm();
   const [slides, setSlides] = useState<SlideData[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
 
   // Form State
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -46,6 +46,7 @@ export function HeaderManager() {
   const [formImage, setFormImage] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const fetchSliders = async () => {
     try {
@@ -82,24 +83,18 @@ export function HeaderManager() {
     fetchSliders();
   }, []);
 
-  const showToast = (message: string) => {
-    setToast({ message, show: true });
-    setTimeout(() => {
-      setToast({ message: "", show: false });
-    }, 3000);
-  };
-
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formTitle.trim()) {
-      showToast("Judul tidak boleh kosong!");
+      toast.error("Judul tidak boleh kosong!");
       return;
     }
     if (!formImage) {
-      showToast("Gambar harus diunggah atau diisi!");
+      toast.error("Gambar harus diunggah atau diisi!");
       return;
     }
 
+    setSaving(true);
     const token = getSafeItem("token");
     let apiSuccess = false;
     let apiErrorMessage = "";
@@ -122,7 +117,7 @@ export function HeaderManager() {
         });
         const data = await res.json();
         if (data.success) {
-          showToast("Slider berhasil diperbarui!");
+          toast.success("Slider berhasil diperbarui!");
           apiSuccess = true;
         } else {
           apiErrorMessage = data.message || "Gagal memperbarui data slider";
@@ -143,7 +138,7 @@ export function HeaderManager() {
         });
         const data = await res.json();
         if (data.success) {
-          showToast("Slider baru berhasil ditambahkan!");
+          toast.success("Slider baru berhasil ditambahkan!");
           apiSuccess = true;
         } else {
           apiErrorMessage = data.message || "Gagal menambahkan data slider";
@@ -155,16 +150,18 @@ export function HeaderManager() {
         closeForm();
         return;
       } else {
-        showToast(apiErrorMessage);
+        toast.error(apiErrorMessage);
         return;
       }
     } catch (err) {
       if (err instanceof TypeError) {
         isNetworkError = true;
       } else {
-        showToast("Terjadi kesalahan sistem saat menyimpan.");
+        toast.error("Terjadi kesalahan sistem saat menyimpan.");
         return;
       }
+    } finally {
+      setSaving(false);
     }
 
     // Local storage fallback ONLY on genuine fetch/network failures
@@ -181,7 +178,7 @@ export function HeaderManager() {
               }
             : slide
         );
-        showToast("Slider diperbarui secara lokal (Offline)!");
+        toast.info("Slider diperbarui secara lokal (Offline)!");
       } else {
         const newSlide: SlideData = {
           id: "local-" + Date.now().toString(),
@@ -191,7 +188,7 @@ export function HeaderManager() {
           image: formImage,
         };
         updatedSlides = [...slides, newSlide];
-        showToast("Slider ditambahkan secara lokal (Offline)!");
+        toast.info("Slider ditambahkan secara lokal (Offline)!");
       }
       setSlides(updatedSlides);
       setSafeItem(STORAGE_KEY, JSON.stringify(updatedSlides));
@@ -200,7 +197,11 @@ export function HeaderManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (await confirm("Apakah Anda yakin ingin menghapus slider ini?")) {
+    if (await confirm({
+      title: "Konfirmasi Hapus",
+      message: "Apakah Anda yakin ingin menghapus slider ini?",
+      variant: "danger"
+    })) {
       const isLocal = String(id).startsWith("local-") || isNaN(Number(id));
 
       if (isLocal) {
@@ -208,7 +209,7 @@ export function HeaderManager() {
         const updated = slides.filter((slide) => slide.id !== id);
         setSlides(updated);
         setSafeItem(STORAGE_KEY, JSON.stringify(updated));
-        showToast("Slider berhasil dihapus secara lokal!");
+        toast.success("Slider berhasil dihapus secara lokal!");
         return;
       }
 
@@ -222,10 +223,10 @@ export function HeaderManager() {
         });
         const data = await res.json();
         if (data.success) {
-          showToast("Slider berhasil dihapus!");
+          toast.success("Slider berhasil dihapus!");
           fetchSliders();
         } else {
-          showToast(data.message || "Gagal menghapus data dari server");
+          toast.error(data.message || "Gagal menghapus data dari server");
         }
       } catch (err) {
         if (err instanceof TypeError) {
@@ -233,9 +234,9 @@ export function HeaderManager() {
           const updated = slides.filter((slide) => slide.id !== id);
           setSlides(updated);
           setSafeItem(STORAGE_KEY, JSON.stringify(updated));
-          showToast("Slider berhasil dihapus secara lokal!");
+          toast.success("Slider berhasil dihapus secara lokal!");
         } else {
-          showToast("Terjadi kesalahan saat menghapus.");
+          toast.error("Terjadi kesalahan saat menghapus.");
         }
       }
     }
@@ -273,11 +274,11 @@ export function HeaderManager() {
   const processFile = async (file: File) => {
     // Validasi tipe berkas di sisi klien
     if (!file.type.startsWith("image/")) {
-      showToast("Hanya berkas gambar yang diperbolehkan!");
+      toast.error("Hanya berkas gambar yang diperbolehkan!");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      showToast("Ukuran gambar melebihi batas 5MB!");
+      toast.error("Ukuran gambar melebihi batas 5MB!");
       return;
     }
 
@@ -297,7 +298,7 @@ export function HeaderManager() {
       const data = await res.json();
       if (data.success && data.url) {
         setFormImage(data.url);
-        showToast("Gambar berhasil diunggah!");
+        toast.success("Gambar berhasil diunggah!");
       } else {
         throw new Error(data.message || "Gagal mengunggah gambar");
       }
@@ -307,11 +308,11 @@ export function HeaderManager() {
         const reader = new FileReader();
         reader.onloadend = () => {
           setFormImage(reader.result as string);
-          showToast("Gambar disimpan secara lokal (Offline)!");
+          toast.info("Gambar disimpan secara lokal (Offline)!");
         };
         reader.readAsDataURL(file);
       } else {
-        showToast(err.message || "Gagal mengunggah gambar.");
+        toast.error(err.message || "Gagal mengunggah gambar.");
       }
     } finally {
       setUploading(false);
@@ -607,22 +608,21 @@ export function HeaderManager() {
                 <div className="pt-2 text-right">
                   <Button
                     type="submit"
+                    disabled={saving || uploading}
                     className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-lg cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5 inline-flex"
                   >
-                    SIMPAN
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                      </>
+                    ) : (
+                      "SIMPAN"
+                    )}
                   </Button>
                 </div>
               </form>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Floating Modern Toast Notification */}
-      {toast.show && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-slate-900/95 backdrop-blur-md text-white px-5 py-4 rounded-2xl shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-6 duration-300">
-          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-          <span className="text-sm font-bold tracking-tight">{toast.message}</span>
         </div>
       )}
     </div>

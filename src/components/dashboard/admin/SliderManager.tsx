@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, ImageIcon } from "lucide-react";
+import { ImageIcon, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface SlideData {
   image: string;
@@ -58,7 +59,7 @@ export function SliderManager({ userRole }: SliderManagerProps) {
 
   const [slides, setSlides] = useState<SlideData[]>(DEFAULT_SLIDES);
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
-  const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -77,19 +78,6 @@ export function SliderManager({ userRole }: SliderManagerProps) {
     }
   }, []);
 
-  useEffect(() => {
-    if (toast.show) {
-      const timer = setTimeout(() => {
-        setToast({ message: "", show: false });
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast.show]);
-
-  const showToast = (message: string) => {
-    setToast({ message, show: true });
-  };
-
   const handleSlideChange = (index: number, field: keyof SlideData, value: string) => {
     setSlides((prev) => {
       const updated = [...prev];
@@ -102,13 +90,15 @@ export function SliderManager({ userRole }: SliderManagerProps) {
   };
 
   const handleSave = () => {
+    setSaving(true);
     // Validate structural integrity of slides before saving to local storage
     if (slides.every(isValidSlide)) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(slides));
-      showToast("Perubahan slider beranda berhasil disimpan!");
+      toast.success("Perubahan slider beranda berhasil disimpan!");
     } else {
-      showToast("Gagal menyimpan: Struktur data slide tidak valid.");
+      toast.error("Gagal menyimpan: Struktur data slide tidak valid.");
     }
+    setSaving(false);
   };
 
   return (
@@ -120,9 +110,16 @@ export function SliderManager({ userRole }: SliderManagerProps) {
         </div>
         <Button
           onClick={handleSave}
-          className="h-10 bg-[#280f91] text-white hover:bg-[#ff6105] rounded-lg font-bold text-xs cursor-pointer shadow-md shadow-[#280f91]/10 transition-colors"
+          disabled={saving}
+          className="h-10 bg-[#280f91] text-white hover:bg-[#ff6105] rounded-lg font-bold text-xs cursor-pointer shadow-md shadow-[#280f91]/10 transition-colors flex items-center gap-2"
         >
-          Simpan Perubahan
+          {saving ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+            </>
+          ) : (
+            "Simpan Perubahan"
+          )}
         </Button>
       </div>
 
@@ -193,13 +190,6 @@ export function SliderManager({ userRole }: SliderManagerProps) {
           </div>
         ))}
       </div>
-
-      {toast.show && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-slate-900/95 backdrop-blur-md text-white px-5 py-4 rounded-2xl shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-6 duration-300">
-          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-          <span className="text-sm font-bold tracking-tight">{toast.message}</span>
-        </div>
-      )}
     </Card>
   );
 }

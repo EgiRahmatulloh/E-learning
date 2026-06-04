@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export function AdminDashboard() {
   const [studentsList, setStudentsList] = useState([
@@ -12,19 +13,16 @@ export function AdminDashboard() {
   const [newStudentName, setNewStudentName] = useState("");
   const [newStudentEmail, setNewStudentEmail] = useState("");
   const [newStudentPackage, setNewStudentPackage] = useState("Paket C (SMA)");
-  const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
+  const [saving, setSaving] = useState(false);
 
-  const showToast = (message: string) => {
-    setToast({ message, show: true });
-    const timer = setTimeout(() => {
-      setToast({ message: "", show: false });
-    }, 3000);
-    return () => clearTimeout(timer);
-  };
-
-  const handleAddStudent = (e: React.FormEvent) => {
+  const handleAddStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newStudentName || !newStudentEmail) return;
+    
+    setSaving(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
     const newStudent = {
       id: Date.now(),
       name: newStudentName,
@@ -35,7 +33,8 @@ export function AdminDashboard() {
     setStudentsList([...studentsList, newStudent]);
     setNewStudentName("");
     setNewStudentEmail("");
-    showToast("Berhasil menambahkan warga belajar baru!");
+    setSaving(false);
+    toast.success("Berhasil menambahkan warga belajar baru!");
   };
 
   return (
@@ -83,8 +82,18 @@ export function AdminDashboard() {
             <option value="Paket C (SMA)">Paket C (SMA)</option>
           </select>
         </div>
-        <Button type="submit" className="h-10 bg-[#280f91] text-white hover:bg-[#ff6105] rounded-lg font-bold text-xs cursor-pointer shadow-md shadow-[#280f91]/10 transition-colors">
-          Tambah Siswa
+        <Button 
+          type="submit" 
+          disabled={saving}
+          className="h-10 bg-[#280f91] text-white hover:bg-[#ff6105] rounded-lg font-bold text-xs cursor-pointer shadow-md shadow-[#280f91]/10 transition-colors flex items-center justify-center gap-2"
+        >
+          {saving ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" /> MENAMBAHKAN...
+            </>
+          ) : (
+            "Tambah Siswa"
+          )}
         </Button>
       </form>
 
@@ -119,14 +128,6 @@ export function AdminDashboard() {
           </tbody>
         </table>
       </div>
-
-      {/* Floating Modern Toast Notification */}
-      {toast.show && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-slate-900/95 backdrop-blur-md text-white px-5 py-4 rounded-2xl shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-6 duration-300">
-          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-          <span className="text-sm font-bold tracking-tight">{toast.message}</span>
-        </div>
-      )}
     </Card>
   );
 }

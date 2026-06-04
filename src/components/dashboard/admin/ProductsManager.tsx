@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, Plus, Trash2, Edit, Save, HelpCircle, Search, X, Filter, RotateCcw } from "lucide-react";
+import { Upload, Plus, Trash2, Edit, Save, HelpCircle, Search, X, Filter, RotateCcw, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { toast } from "sonner";
 
 interface ProductItem {
   id: number;
@@ -20,6 +21,7 @@ export default function ProductsManager() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   // Search States
   const [searchQuery, setSearchQuery] = useState("");
@@ -125,12 +127,13 @@ export default function ProductsManager() {
       const data = await res.json();
       if (data.success && data.url) {
         setGambar(data.url);
+        toast.success("Gambar berhasil diunggah");
       } else {
-        alert("Upload gagal: " + (data.message || "Error tidak diketahui"));
+        toast.error("Upload gagal: " + (data.message || "Error tidak diketahui"));
       }
     } catch (e) {
       console.error(e);
-      alert("Error mengunggah gambar");
+      toast.error("Error mengunggah gambar");
     } finally {
       setUploading(false);
     }
@@ -156,13 +159,14 @@ export default function ProductsManager() {
       if (file.type.startsWith("image/")) {
         await handleImageUpload(file);
       } else {
-        alert("Hanya file gambar yang diperbolehkan");
+        toast.error("Hanya file gambar yang diperbolehkan");
       }
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
     const token = localStorage.getItem("token");
 
     const payload = {
@@ -200,19 +204,26 @@ export default function ProductsManager() {
 
       const data = await res.json();
       if (data.success) {
+        toast.success(isAdding ? "Produk berhasil ditambahkan" : "Produk berhasil diperbarui");
         setFormOpen(false);
         fetchProducts();
       } else {
-        alert("Gagal menyimpan produk: " + (data.message || "Error tidak diketahui"));
+        toast.error("Gagal menyimpan produk: " + (data.message || "Error tidak diketahui"));
       }
     } catch (e) {
       console.error(e);
-      alert("Terjadi kesalahan sistem saat menyimpan produk");
+      toast.error("Terjadi kesalahan sistem saat menyimpan produk");
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!await confirm("Apakah Anda yakin ingin menghapus produk ini?")) return;
+    if (!await confirm({
+      title: "Konfirmasi Hapus",
+      message: "Apakah Anda yakin ingin menghapus produk ini?",
+      variant: "danger"
+    })) return;
 
     const token = localStorage.getItem("token");
     try {
@@ -224,13 +235,14 @@ export default function ProductsManager() {
       });
       const data = await res.json();
       if (data.success) {
+        toast.success("Produk berhasil dihapus");
         fetchProducts();
       } else {
-        alert("Gagal menghapus produk: " + (data.message || "Error tidak diketahui"));
+        toast.error("Gagal menghapus produk: " + (data.message || "Error tidak diketahui"));
       }
     } catch (e) {
       console.error(e);
-      alert("Terjadi kesalahan saat menghapus produk");
+      toast.error("Terjadi kesalahan saat menghapus produk");
     }
   };
 
@@ -600,9 +612,18 @@ export default function ProductsManager() {
                 <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/20">
                   <Button
                     type="submit"
+                    disabled={saving || uploading}
                     className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
                   >
-                    <Save size={15} /> SIMPAN
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                      </>
+                    ) : (
+                      <>
+                        <Save size={15} /> SIMPAN
+                      </>
+                    )}
                   </Button>
                 </div>
               </form>

@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { parseCSV, downloadCSV } from "@/lib/utils";
-import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, List, LayoutGrid, Filter, RotateCcw } from "lucide-react";
+import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, List, LayoutGrid, Filter, RotateCcw, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { toast } from "sonner";
 
 interface Tutor {
   id: number;
@@ -30,6 +31,7 @@ export default function TutorManager() {
   const confirm = useConfirm();
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
@@ -103,7 +105,7 @@ export default function TutorManager() {
   // CSV Export
   const handleExportCSV = () => {
     if (tutors.length === 0) {
-      alert("Tidak ada data untuk diekspor!");
+      toast.error("Tidak ada data untuk diekspor!");
       return;
     }
     const headers = ["NAMA", "TUTOR MAPEL", "PROGRAM", "NUPTK", "TEMPAT TGL LAHIR", "JENIS KELAMIN", "AGAMA", "PENDIDIKAN", "EMAIL", "NIK", "ALAMAT", "FOTO", "TANGGAL MULAI TUGAS", "NOMOR SK PENGANGKATAN", "LEMBAGA PENGANGKAT", "NOMOR SK PENUGASAN", "LEMBAGA PENUGAS"];
@@ -127,6 +129,7 @@ export default function TutorManager() {
       `"${(t.lembagaPenugas || "").replace(/"/g, '""')}"`
     ]);
     downloadCSV(headers, rows, "tutor.csv");
+    toast.success("Berhasil mengekspor CSV");
   };
 
   // CSV Import
@@ -191,7 +194,7 @@ export default function TutorManager() {
       }
 
       if (importedData.length === 0) {
-        alert("Format CSV kosong atau tidak valid! Pastikan Nama dan Tutor Mapel tidak kosong.");
+        toast.error("Format CSV kosong atau tidak valid! Pastikan Nama dan Tutor Mapel tidak kosong.");
         return;
       }
 
@@ -201,19 +204,19 @@ export default function TutorManager() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(importedData),
         });
         const resData = await res.json();
         if (resData.success) {
-          alert(resData.message || "Berhasil mengimpor data!");
+          toast.success(resData.message || "Berhasil mengimpor data!");
           fetchTutors();
         } else {
-          alert(resData.message || "Gagal mengimpor data");
+          toast.error(resData.message || "Gagal mengimpor data");
         }
       } catch (err) {
-        alert("Kesalahan saat mengunggah CSV ke server.");
+        toast.error("Kesalahan saat mengunggah CSV ke server.");
       }
     };
     reader.readAsText(file);
@@ -284,12 +287,13 @@ export default function TutorManager() {
       const data = await res.json();
       if (data.success && data.url) {
         setFormData((prev) => ({ ...prev, foto: data.url }));
+        toast.success("Foto berhasil diunggah");
       } else {
-        alert("Upload gagal: " + (data.message || "Error tidak diketahui"));
+        toast.error("Upload gagal: " + (data.message || "Error tidak diketahui"));
       }
     } catch (e) {
       console.error(e);
-      alert("Error mengupload file");
+      toast.error("Error mengupload file");
     } finally {
       setUploading(false);
     }
@@ -315,10 +319,11 @@ export default function TutorManager() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.nama || !formData.tutorMapel) {
-      alert("Nama dan Tutor Mapel wajib diisi!");
+      toast.error("Nama dan Tutor Mapel wajib diisi!");
       return;
     }
 
+    setSaving(true);
     try {
       const token = localStorage.getItem("token");
       const url = isAdding ? "/api/tutors" : `/api/tutors/${selectedTutor?.id}`;
@@ -335,20 +340,27 @@ export default function TutorManager() {
 
       const data = await res.json();
       if (data.success) {
+        toast.success(isAdding ? "Tutor berhasil ditambahkan" : "Tutor berhasil diperbarui");
         setFormOpen(false);
         fetchTutors();
       } else {
-        alert("Gagal menyimpan data: " + (data.message || "Error tidak diketahui"));
+        toast.error("Gagal menyimpan data: " + (data.message || "Error tidak diketahui"));
       }
     } catch (e) {
       console.error(e);
-      alert("Terjadi kesalahan sistem saat menyimpan");
+      toast.error("Terjadi kesalahan sistem saat menyimpan");
+    } finally {
+      setSaving(false);
     }
   };
 
   // Delete Tutor
   const handleDelete = async (id: number) => {
-    if (!await confirm("Apakah Anda yakin ingin menghapus data tutor ini?")) return;
+    if (!await confirm({
+      title: "Konfirmasi Hapus",
+      message: "Apakah Anda yakin ingin menghapus data tutor ini?",
+      variant: "danger"
+    })) return;
 
     try {
       const token = localStorage.getItem("token");
@@ -361,14 +373,15 @@ export default function TutorManager() {
 
       const data = await res.json();
       if (data.success) {
+        toast.success("Data tutor berhasil dihapus");
         setFormOpen(false);
         fetchTutors();
       } else {
-        alert("Gagal menghapus data: " + (data.message || "Error tidak diketahui"));
+        toast.error("Gagal menghapus data: " + (data.message || "Error tidak diketahui"));
       }
     } catch (e) {
       console.error(e);
-      alert("Terjadi kesalahan sistem saat menghapus");
+      toast.error("Terjadi kesalahan sistem saat menghapus");
     }
   };
 
@@ -919,9 +932,18 @@ export default function TutorManager() {
                   )}
                   <Button
                     type="submit"
+                    disabled={saving || uploading}
                     className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
                   >
-                    <Save className="h-4 w-4" /> SIMPAN
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" /> SIMPAN
+                      </>
+                    )}
                   </Button>
                 </div>
               </form>

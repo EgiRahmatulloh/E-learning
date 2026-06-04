@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Search, UploadCloud, Plus, Save, Edit3, Trash2, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, UploadCloud, Plus, Save, Edit3, Trash2, X, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { toast } from "sonner";
 
 interface News {
   id: number;
@@ -66,6 +67,7 @@ export default function NewsManager() {
   const [foto, setFoto] = useState("");
   const [konten, setKonten] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Category Form States
   const [newCategoryName, setNewCategoryName] = useState("");
@@ -73,28 +75,6 @@ export default function NewsManager() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-
-  const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const showToast = (message: string) => {
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current);
-    }
-    setToast({ message, show: true });
-    toastTimeoutRef.current = setTimeout(() => {
-      setToast({ message: "", show: false });
-      toastTimeoutRef.current = null;
-    }, 3000);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (toastTimeoutRef.current) {
-        clearTimeout(toastTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const fetchNews = useCallback(async () => {
     try {
@@ -170,7 +150,12 @@ export default function NewsManager() {
   };
 
   const handleDeleteNewsClick = async (id: number) => {
-    if (!await confirm("Apakah Anda yakin ingin menghapus berita ini?")) return;
+    if (!await confirm({
+      title: "Hapus Berita",
+      message: "Apakah Anda yakin ingin menghapus berita ini? Tindakan ini tidak dapat dibatalkan.",
+      variant: "danger"
+    })) return;
+
     const token = getSafeItem("token");
     try {
       const res = await fetch(`/api/news/${id}`, {
@@ -181,23 +166,23 @@ export default function NewsManager() {
       });
       const resData = await res.json();
       if (resData.success) {
-        showToast("Berita berhasil dihapus!");
+        toast.success("Berita berhasil dihapus!");
         fetchNews();
       } else {
-        showToast(resData.message || "Gagal menghapus berita");
+        toast.error(resData.message || "Gagal menghapus berita");
       }
     } catch (err) {
-      showToast("Terjadi kesalahan koneksi atau sistem.");
+      toast.error("Terjadi kesalahan koneksi atau sistem.");
     }
   };
 
   const processUpload = async (file: File) => {
     if (!file.type.startsWith("image/")) {
-      showToast("Hanya berkas gambar yang diperbolehkan!");
+      toast.error("Hanya berkas gambar yang diperbolehkan!");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      showToast("Ukuran gambar melebihi batas 5MB!");
+      toast.error("Ukuran gambar melebihi batas 5MB!");
       return;
     }
 
@@ -217,12 +202,12 @@ export default function NewsManager() {
       const data = await res.json();
       if (data.success && data.url) {
         setFoto(data.url);
-        showToast("Foto berita berhasil diunggah!");
+        toast.success("Foto berita berhasil diunggah!");
       } else {
         throw new Error(data.message || "Gagal mengunggah gambar");
       }
     } catch (err: any) {
-      showToast(err.message || "Gagal mengunggah gambar.");
+      toast.error(err.message || "Gagal mengunggah gambar.");
     } finally {
       setUploading(false);
     }
@@ -230,18 +215,19 @@ export default function NewsManager() {
 
   const handleSaveNews = async () => {
     if (!judul.trim()) {
-      showToast("Judul berita tidak boleh kosong!");
+      toast.error("Judul berita tidak boleh kosong!");
       return;
     }
     if (!kategori.trim()) {
-      showToast("Pilih kategori berita terlebih dahulu!");
+      toast.error("Pilih kategori berita terlebih dahulu!");
       return;
     }
     if (!tanggalPosting.trim()) {
-      showToast("Tanggal posting tidak boleh kosong!");
+      toast.error("Tanggal posting tidak boleh kosong!");
       return;
     }
 
+    setSaving(true);
     const token = getSafeItem("token");
     const bodyData = {
       judul,
@@ -276,21 +262,23 @@ export default function NewsManager() {
 
       const resData = await res.json();
       if (resData.success) {
-        showToast(editId !== null ? "Berita berhasil diperbarui!" : "Berita baru berhasil ditambahkan!");
+        toast.success(editId !== null ? "Berita berhasil diperbarui!" : "Berita baru berhasil ditambahkan!");
         resetNewsForm();
         fetchNews();
       } else {
-        showToast(resData.message || "Gagal menyimpan berita.");
+        toast.error(resData.message || "Gagal menyimpan berita.");
       }
     } catch (err) {
-      showToast("Gagal menyimpan berita ke server.");
+      toast.error("Gagal menyimpan berita ke server.");
+    } finally {
+      setSaving(false);
     }
   };
 
   // Add Category Handler
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) {
-      showToast("Nama kategori tidak boleh kosong!");
+      toast.error("Nama kategori tidak boleh kosong!");
       return;
     }
 
@@ -306,20 +294,25 @@ export default function NewsManager() {
       });
       const resData = await res.json();
       if (resData.success) {
-        showToast("Kategori baru berhasil ditambahkan!");
+        toast.success("Kategori baru berhasil ditambahkan!");
         setNewCategoryName("");
         fetchCategories();
       } else {
-        showToast(resData.message || "Gagal menambahkan kategori.");
+        toast.error(resData.message || "Gagal menambahkan kategori.");
       }
     } catch (err) {
-      showToast("Terjadi kesalahan koneksi.");
+      toast.error("Terjadi kesalahan koneksi.");
     }
   };
 
   // Delete Category Handler
   const handleDeleteCategory = async (id: number) => {
-    if (!await confirm("Apakah Anda yakin ingin menghapus kategori ini?")) return;
+    if (!await confirm({
+      title: "Hapus Kategori",
+      message: "Apakah Anda yakin ingin menghapus kategori ini?",
+      variant: "danger"
+    })) return;
+    
     const token = getSafeItem("token");
     try {
       const res = await fetch(`/api/news-categories/${id}`, {
@@ -330,13 +323,13 @@ export default function NewsManager() {
       });
       const resData = await res.json();
       if (resData.success) {
-        showToast("Kategori berhasil dihapus!");
+        toast.success("Kategori berhasil dihapus!");
         fetchCategories();
       } else {
-        showToast(resData.message || "Gagal menghapus kategori.");
+        toast.error(resData.message || "Gagal menghapus kategori.");
       }
     } catch (err) {
-      showToast("Terjadi kesalahan koneksi.");
+      toast.error("Terjadi kesalahan koneksi.");
     }
   };
 
@@ -702,6 +695,7 @@ export default function NewsManager() {
                 <Button
                   type="button"
                   onClick={resetNewsForm}
+                  disabled={saving}
                   className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                 >
                   BATAL
@@ -710,9 +704,18 @@ export default function NewsManager() {
                 <Button
                   type="button"
                   onClick={handleSaveNews}
-                  className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                  disabled={saving || uploading}
+                  className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
                 >
-                  <Save className="h-4 w-4" /> SIMPAN
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" /> SIMPAN
+                    </>
+                  )}
                 </Button>
               </div>
             </form>
@@ -795,14 +798,7 @@ export default function NewsManager() {
           </div>
         </div>
       )}
-
-      {/* Floating Toast notification */}
-      {toast.show && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-slate-900/95 backdrop-blur-md text-white px-5 py-4 rounded-2xl shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-6 duration-300">
-          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-          <span className="text-sm font-bold tracking-tight">{toast.message}</span>
-        </div>
-      )}
     </div>
   );
 }
+

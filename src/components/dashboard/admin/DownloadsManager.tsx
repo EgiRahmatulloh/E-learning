@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ShieldAlert, Upload, Plus, Trash2, Edit, Save, FileText, Download, X, Filter, RotateCcw } from "lucide-react";
+import { ShieldAlert, Upload, Plus, Trash2, Edit, Save, FileText, Download, X, Filter, RotateCcw, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { toast } from "sonner";
 
 interface DownloadItem {
   id: number;
@@ -43,6 +44,7 @@ export default function DownloadsManager() {
   const [tanggalUpload, setTanggalUpload] = useState("");
 
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [dragActive, setDragActive] = useState(false);
 
   // Pagination states
@@ -121,12 +123,13 @@ export default function DownloadsManager() {
       const data = await res.json();
       if (data.success && data.url) {
         setFileUrl(data.url);
+        toast.success("File berhasil diunggah!");
       } else {
-        alert("Upload gagal: " + (data.message || "Error tidak diketahui"));
+        toast.error("Upload gagal: " + (data.message || "Error tidak diketahui"));
       }
     } catch (e) {
       console.error(e);
-      alert("Error mengupload file");
+      toast.error("Error mengupload file");
     } finally {
       setUploading(false);
     }
@@ -161,10 +164,11 @@ export default function DownloadsManager() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!namaFile || !fileUrl) {
-      alert("Nama File dan Berkas File wajib diisi!");
+      toast.error("Nama File dan Berkas File wajib diisi!");
       return;
     }
 
+    setSaving(true);
     try {
       const token = localStorage.getItem("token");
       const url = isAdding ? "/api/downloads" : `/api/downloads/${selectedItem?.id}`;
@@ -187,19 +191,26 @@ export default function DownloadsManager() {
 
       const data = await res.json();
       if (data.success) {
+        toast.success(isAdding ? "Dokumen berhasil ditambahkan!" : "Dokumen berhasil diperbarui!");
         setFormOpen(false);
         fetchDownloads();
       } else {
-        alert("Gagal menyimpan dokumen: " + (data.message || ""));
+        toast.error("Gagal menyimpan dokumen: " + (data.message || ""));
       }
     } catch (e) {
       console.error(e);
-      alert("Terjadi kesalahan sistem saat menyimpan data.");
+      toast.error("Terjadi kesalahan sistem saat menyimpan data.");
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!await confirm("Apakah Anda yakin ingin menghapus file ini?")) return;
+    if (!await confirm({
+      title: "Konfirmasi Hapus",
+      message: "Apakah Anda yakin ingin menghapus file ini?",
+      variant: "danger"
+    })) return;
 
     try {
       const token = localStorage.getItem("token");
@@ -212,13 +223,14 @@ export default function DownloadsManager() {
 
       const data = await res.json();
       if (data.success) {
+        toast.success("File berhasil dihapus!");
         fetchDownloads();
       } else {
-        alert("Gagal menghapus file: " + (data.message || ""));
+        toast.error("Gagal menghapus file: " + (data.message || ""));
       }
     } catch (e) {
       console.error(e);
-      alert("Terjadi kesalahan sistem saat menghapus data.");
+      toast.error("Terjadi kesalahan sistem saat menghapus data.");
     }
   };
 
@@ -299,7 +311,7 @@ export default function DownloadsManager() {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-3">
-            <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#9c27b0] border-t-transparent" />
+            <Loader2 className="h-10 w-10 text-[#9c27b0] animate-spin" />
             <span className="text-xs font-extrabold text-[#9c27b0] uppercase tracking-widest">Memuat file download...</span>
           </div>
         ) : currentItems.length > 0 ? (
@@ -539,7 +551,7 @@ export default function DownloadsManager() {
                       </div>
                     ) : (
                       <div className="space-y-2 text-white/85">
-                        <Upload className="h-8 w-8 text-white/60 mx-auto" />
+                        {uploading ? <Loader2 className="h-8 w-8 text-white/60 animate-spin mx-auto" /> : <Upload className="h-8 w-8 text-white/60 mx-auto" />}
                         <p className="text-[10px] font-bold">
                           {uploading ? "Mengupload..." : "Tarik berkas Anda ke sini, atau klik untuk memilih"}
                         </p>
@@ -564,10 +576,18 @@ export default function DownloadsManager() {
                 <div className="flex justify-end gap-2 pt-4 border-t border-white/20">
                   <Button
                     type="submit"
-                    disabled={uploading}
+                    disabled={uploading || saving}
                     className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
                   >
-                    <Save className="h-4 w-4" /> Simpan
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> SIMPAN
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" /> Simpan
+                      </>
+                    )}
                   </Button>
                 </div>
               </form>

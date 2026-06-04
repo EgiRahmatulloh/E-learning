@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Trash2, Edit3, Plus, Search, Calendar, X } from "lucide-react";
+import { Trash2, Edit3, Plus, Search, Calendar, X, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { toast } from "sonner";
 
 interface AnnouncementData {
   id: string;
@@ -27,14 +28,14 @@ export default function AnnouncementManager() {
   const confirm = useConfirm();
   const [announcements, setAnnouncements] = useState<AnnouncementData[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
-
+  
   // Form State
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [formText, setFormText] = useState("");
   const [formDate, setFormDate] = useState("");
   const [formStatus, setFormStatus] = useState<"AKTIF" | "TIDAK AKTIF">("AKTIF");
+  const [saving, setSaving] = useState(false);
 
   const fetchAnnouncements = async () => {
     try {
@@ -54,7 +55,7 @@ export default function AnnouncementManager() {
         throw new Error("Struktur data tidak valid");
       }
     } catch (err: any) {
-      showToast(err.message || "Gagal menghubungkan ke server");
+      toast.error(err.message || "Gagal menghubungkan ke server");
     }
   };
 
@@ -62,24 +63,18 @@ export default function AnnouncementManager() {
     fetchAnnouncements();
   }, []);
 
-  const showToast = (message: string) => {
-    setToast({ message, show: true });
-    setTimeout(() => {
-      setToast({ message: "", show: false });
-    }, 3050);
-  };
-
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formText.trim()) {
-      showToast("Teks pengumuman tidak boleh kosong!");
+      toast.error("Teks pengumuman tidak boleh kosong!");
       return;
     }
     if (!formDate) {
-      showToast("Tanggal harus dipilih!");
+      toast.error("Tanggal harus dipilih!");
       return;
     }
 
+    setSaving(true);
     const token = localStorage.getItem("token");
     try {
       if (editId) {
@@ -99,11 +94,11 @@ export default function AnnouncementManager() {
         
         const data = await res.json();
         if (res.ok && data.success) {
-          showToast("Pengumuman berhasil diperbarui!");
+          toast.success("Pengumuman berhasil diperbarui!");
           fetchAnnouncements();
           closeForm();
         } else {
-          showToast(data.message || "Gagal memperbarui data pengumuman");
+          toast.error(data.message || "Gagal memperbarui data pengumuman");
         }
       } else {
         // Add mode
@@ -122,20 +117,26 @@ export default function AnnouncementManager() {
 
         const data = await res.json();
         if (res.ok && data.success) {
-          showToast("Pengumuman baru berhasil ditambahkan!");
+          toast.success("Pengumuman baru berhasil ditambahkan!");
           fetchAnnouncements();
           closeForm();
         } else {
-          showToast(data.message || "Gagal menambahkan data pengumuman");
+          toast.error(data.message || "Gagal menambahkan data pengumuman");
         }
       }
     } catch {
-      showToast("Gagal menyimpan: periksa koneksi internet Anda.");
+      toast.error("Gagal menyimpan: periksa koneksi internet Anda.");
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (await confirm("Apakah Anda yakin ingin menghapus pengumuman ini?")) {
+    if (await confirm({
+      title: "Konfirmasi Hapus",
+      message: "Apakah Anda yakin ingin menghapus pengumuman ini?",
+      variant: "danger"
+    })) {
       const token = localStorage.getItem("token");
       try {
         const res = await fetch(`/api/announcements/${id}`, {
@@ -146,13 +147,13 @@ export default function AnnouncementManager() {
         });
         const data = await res.json();
         if (res.ok && data.success) {
-          showToast("Pengumuman berhasil dihapus!");
+          toast.success("Pengumuman berhasil dihapus!");
           fetchAnnouncements();
         } else {
-          showToast(data.message || "Gagal menghapus data dari server");
+          toast.error(data.message || "Gagal menghapus data dari server");
         }
       } catch {
-        showToast("Gagal menghapus: periksa koneksi internet Anda.");
+        toast.error("Gagal menghapus: periksa koneksi internet Anda.");
       }
     }
   };
@@ -350,7 +351,7 @@ export default function AnnouncementManager() {
                     placeholder="Masukkan teks pengumuman penting..."
                     value={formText}
                     onChange={(e) => setFormText(e.target.value)}
-                    className="w-full p-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner resize-none leading-relaxed placeholder-slate-400"
+                    className="w-full h-full p-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner resize-none leading-relaxed placeholder-slate-400"
                   />
                 </div>
 
@@ -387,22 +388,21 @@ export default function AnnouncementManager() {
                 <div className="pt-2 text-right">
                   <Button
                     type="submit"
+                    disabled={saving}
                     className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5 inline-flex"
                   >
-                    SIMPAN
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> SIMPAN
+                      </>
+                    ) : (
+                      "SIMPAN"
+                    )}
                   </Button>
                 </div>
               </form>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Floating Toast Notification */}
-      {toast.show && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-slate-900/95 backdrop-blur-md text-white px-5 py-4 rounded-2xl shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-6 duration-300">
-          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-          <span className="text-sm font-bold tracking-tight">{toast.message}</span>
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Edit3, Save } from "lucide-react";
+import { Edit3, Save, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface VisionMissionData {
   visi: string;
@@ -33,8 +34,7 @@ const setSafeItem = (key: string, value: string) => {
 export default function VisiMisiManager() {
   const [data, setData] = useState<VisionMissionData>(DEFAULT_DATA);
   const [isLocked, setIsLocked] = useState(true);
-  const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const fetchVisionMission = useCallback(async () => {
     try {
@@ -72,25 +72,6 @@ export default function VisiMisiManager() {
     fetchVisionMission();
   }, [fetchVisionMission]);
 
-  useEffect(() => {
-    return () => {
-      if (toastTimeoutRef.current) {
-        clearTimeout(toastTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const showToast = (message: string) => {
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current);
-    }
-    setToast({ message, show: true });
-    toastTimeoutRef.current = setTimeout(() => {
-      setToast({ message: "", show: false });
-      toastTimeoutRef.current = null;
-    }, 3000);
-  };
-
   const handleFieldChange = (field: keyof VisionMissionData, value: string) => {
     setData((prev) => ({ ...prev, [field]: value }));
   };
@@ -98,6 +79,7 @@ export default function VisiMisiManager() {
   const handleSave = async () => {
     const token = getSafeItem("token");
     let isNetworkError = false;
+    setSaving(true);
 
     try {
       const res = await fetch("/api/vision-mission", {
@@ -110,31 +92,33 @@ export default function VisiMisiManager() {
       });
       const resData = await res.json();
       if (resData.success) {
-        showToast("Visi dan Misi berhasil disimpan!");
+        toast.success("Visi dan Misi berhasil disimpan!");
         setIsLocked(true);
         fetchVisionMission();
         return;
       } else {
-        showToast(resData.message || "Gagal menyimpan visi dan misi");
+        toast.error(resData.message || "Gagal menyimpan visi dan misi");
       }
     } catch (err) {
       if (err instanceof TypeError) {
         isNetworkError = true;
       } else {
-        showToast("Terjadi kesalahan sistem saat menyimpan.");
+        toast.error("Terjadi kesalahan sistem saat menyimpan.");
       }
+    } finally {
+      setSaving(false);
     }
 
     if (isNetworkError) {
       try {
         setSafeItem(STORAGE_KEY, JSON.stringify(data));
-        showToast("Visi dan Misi disimpan secara lokal (Offline)!");
+        toast.success("Visi dan Misi disimpan secara lokal (Offline)!");
         setIsLocked(true);
       } catch (e: any) {
         if (e?.name === "QuotaExceededError" || e?.name === "NS_ERROR_DOM_QUOTA_REACHED") {
-          showToast("⚠️ Offline: Gagal menyimpan karena kuota penyimpanan lokal penuh.");
+          toast.error("⚠️ Offline: Gagal menyimpan karena kuota penyimpanan lokal penuh.");
         } else {
-          showToast("⚠️ Offline: Gagal menyimpan secara lokal.");
+          toast.error("⚠️ Offline: Gagal menyimpan secara lokal.");
         }
         setIsLocked(false);
       }
@@ -214,23 +198,24 @@ export default function VisiMisiManager() {
                 <Button
                   type="button"
                   onClick={handleSave}
+                  disabled={saving}
                   className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-2 transition-all active:scale-95"
                 >
-                  <Save className="h-4 w-4" /> SIMPAN
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" /> SIMPAN
+                    </>
+                  )}
                 </Button>
               </>
             )}
           </div>
         </form>
       </div>
-
-      {/* Floating Modern Toast Notification */}
-      {toast.show && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-slate-900/95 backdrop-blur-md text-white px-5 py-4 rounded-2xl shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-6 duration-300">
-          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-          <span className="text-sm font-bold tracking-tight">{toast.message}</span>
-        </div>
-      )}
     </div>
   );
 }

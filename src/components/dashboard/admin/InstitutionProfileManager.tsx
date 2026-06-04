@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Edit3, Save, UploadCloud } from "lucide-react";
+import { Edit3, Save, UploadCloud, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface InstitutionProfileData {
   namaLembaga: string;
@@ -66,8 +67,7 @@ export default function InstitutionProfileManager() {
   const [isLocked, setIsLocked] = useState(true);
   const [uploadingFoto, setUploadingFoto] = useState(false);
   const [uploadingGambar, setUploadingGambar] = useState(false);
-  const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
-  const toastTimeoutRef = useRef<any>(null);
+  const [saving, setSaving] = useState(false);
 
   const fetchProfile = async () => {
     try {
@@ -101,17 +101,6 @@ export default function InstitutionProfileManager() {
     fetchProfile();
   }, []);
 
-  const showToast = (message: string) => {
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current);
-    }
-    setToast({ message, show: true });
-    toastTimeoutRef.current = setTimeout(() => {
-      setToast({ message: "", show: false });
-      toastTimeoutRef.current = null;
-    }, 3000);
-  };
-
   const handleFieldChange = (field: keyof InstitutionProfileData, value: string) => {
     setProfile((prev) => ({
       ...prev,
@@ -120,6 +109,7 @@ export default function InstitutionProfileManager() {
   };
 
   const handleSave = async () => {
+    setSaving(true);
     const token = getSafeItem("token");
     let isNetworkError = false;
 
@@ -134,32 +124,34 @@ export default function InstitutionProfileManager() {
       });
       const data = await res.json();
       if (data.success) {
-        showToast("Identitas Lembaga berhasil disimpan!");
+        toast.success("Identitas Lembaga berhasil disimpan!");
         setIsLocked(true);
         fetchProfile();
         return;
       } else {
-        showToast(data.message || "Gagal menyimpan identitas lembaga");
+        toast.error(data.message || "Gagal menyimpan identitas lembaga");
       }
     } catch (err) {
       if (err instanceof TypeError) {
         isNetworkError = true;
       } else {
-        showToast("Terjadi kesalahan sistem saat menyimpan.");
+        toast.error("Terjadi kesalahan sistem saat menyimpan.");
       }
+    } finally {
+      setSaving(false);
     }
 
     // Local storage fallback ONLY on genuine fetch/network failures
     if (isNetworkError) {
       try {
         setSafeItem(STORAGE_KEY, JSON.stringify(profile));
-        showToast("Identitas Lembaga disimpan secara lokal (Offline)!");
+        toast.info("Identitas Lembaga disimpan secara lokal (Offline)!");
         setIsLocked(true);
       } catch (e: any) {
         if (e.name === "QuotaExceededError" || e.name === "NS_ERROR_DOM_QUOTA_REACHED") {
-          showToast("⚠️ Offline: Gagal menyimpan karena ukuran gambar/foto terlalu besar!");
+          toast.warning("Offline: Gagal menyimpan karena ukuran gambar/foto terlalu besar!");
         } else {
-          showToast("⚠️ Offline: Gagal menyimpan secara lokal.");
+          toast.error("Offline: Gagal menyimpan secara lokal.");
         }
         setIsLocked(false); // Tetap buka kunci form agar pengguna bisa memperbaiki input/gambar
       }
@@ -168,11 +160,11 @@ export default function InstitutionProfileManager() {
 
   const processUpload = async (file: File, type: "foto" | "gambar") => {
     if (!file.type.startsWith("image/")) {
-      showToast("Hanya berkas gambar yang diperbolehkan!");
+      toast.error("Hanya berkas gambar yang diperbolehkan!");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      showToast("Ukuran gambar melebihi batas 5MB!");
+      toast.error("Ukuran gambar melebihi batas 5MB!");
       return;
     }
 
@@ -194,7 +186,7 @@ export default function InstitutionProfileManager() {
       const data = await res.json();
       if (data.success && data.url) {
         handleFieldChange(type, data.url);
-        showToast(`${type === "foto" ? "Foto" : "Gambar"} berhasil diunggah!`);
+        toast.success(`${type === "foto" ? "Foto" : "Gambar"} berhasil diunggah!`);
       } else {
         throw new Error(data.message || "Gagal mengunggah gambar");
       }
@@ -203,11 +195,11 @@ export default function InstitutionProfileManager() {
         const reader = new FileReader();
         reader.onloadend = () => {
           handleFieldChange(type, reader.result as string);
-          showToast("Gambar disimpan secara lokal (Offline)!");
+          toast.info("Gambar disimpan secara lokal (Offline)!");
         };
         reader.readAsDataURL(file);
       } else {
-        showToast(err.message || "Gagal mengunggah gambar.");
+        toast.error(err.message || "Gagal mengunggah gambar.");
       }
     } finally {
       if (type === "foto") setUploadingFoto(false);
@@ -497,9 +489,18 @@ export default function InstitutionProfileManager() {
                   <Button
                     type="button"
                     onClick={handleSave}
+                    disabled={saving}
                     className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-6 h-10 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
                   >
-                    <Save className="h-4 w-4" /> SIMPAN
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" /> SIMPAN
+                      </>
+                    )}
                   </Button>
                 </>
               )}
@@ -519,7 +520,7 @@ export default function InstitutionProfileManager() {
             onDrop={(e) => {
               e.preventDefault();
               if (isLocked) {
-                showToast("Buka kunci (Klik Edit) untuk mengubah Foto!");
+                toast.warning("Buka kunci (Klik Edit) untuk mengubah Foto!");
                 return;
               }
               const file = e.dataTransfer.files?.[0];
@@ -527,7 +528,7 @@ export default function InstitutionProfileManager() {
             }}
             onClick={() => {
               if (isLocked) {
-                showToast("Buka kunci (Klik Edit) untuk mengubah Foto!");
+                toast.warning("Buka kunci (Klik Edit) untuk mengubah Foto!");
                 return;
               }
               document.getElementById("file-upload-foto")?.click();
@@ -609,7 +610,7 @@ export default function InstitutionProfileManager() {
           onDrop={(e) => {
             e.preventDefault();
             if (isLocked) {
-              showToast("Buka kunci (Klik Edit) untuk mengubah Gambar!");
+              toast.warning("Buka kunci (Klik Edit) untuk mengubah Gambar!");
               return;
             }
             const file = e.dataTransfer.files?.[0];
@@ -617,7 +618,7 @@ export default function InstitutionProfileManager() {
           }}
           onClick={() => {
             if (isLocked) {
-              showToast("Buka kunci (Klik Edit) untuk mengubah Gambar!");
+              toast.warning("Buka kunci (Klik Edit) untuk mengubah Gambar!");
               return;
             }
             document.getElementById("file-upload-gambar")?.click();
@@ -685,14 +686,6 @@ export default function InstitutionProfileManager() {
           />
         </div>
       </div>
-
-      {/* Floating Modern Toast Notification */}
-      {toast.show && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-slate-900/95 backdrop-blur-md text-white px-5 py-4 rounded-2xl shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-6 duration-300">
-          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-          <span className="text-sm font-bold tracking-tight">{toast.message}</span>
-        </div>
-      )}
     </div>
   );
 }

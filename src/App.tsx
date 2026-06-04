@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import DashboardPage from "@/components/dashboard/DashboardPage";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 
 // Landing Page Components
 import Header from "./components/landing/Header";
@@ -151,6 +152,7 @@ function App() {
   if (user && currentPath === "/dashboard") {
     return (
       <TooltipProvider>
+        <Toaster />
         <DashboardPage user={user} handleLogout={handleLogout} />
       </TooltipProvider>
     );
@@ -158,6 +160,7 @@ function App() {
 
   return (
     <TooltipProvider>
+      <Toaster />
       <div className={`min-h-screen bg-slate-50/50 text-slate-900 font-sans selection:bg-[#280f91] selection:text-white ${
         currentPath === "/profile" ? "animate-in fade-in duration-300" : ""
       }`}>

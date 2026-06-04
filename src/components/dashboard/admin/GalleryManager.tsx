@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Save, HelpCircle, Image, X, Edit3, Filter, RotateCcw } from "lucide-react";
+import { Plus, Trash2, Save, HelpCircle, Image, X, Edit3, Filter, RotateCcw, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { toast } from "sonner";
 
 const GALLERY_CATEGORIES = [
   "KEGIATAN PEMBELAJARAN",
@@ -50,6 +51,7 @@ export default function GalleryManager() {
   const [foto, setFoto] = useState("");
   const [status, setStatus] = useState("PUBLISH");
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [dragActive, setDragActive] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -116,11 +118,12 @@ export default function GalleryManager() {
       const data = await res.json();
       if (data.success && data.url) {
         setFoto(data.url);
+        toast.success("Foto berhasil diunggah!");
       } else {
-        alert("Upload gagal: " + (data.message || "Error tidak diketahui"));
+        toast.error("Upload gagal: " + (data.message || "Error tidak diketahui"));
       }
     } catch (e) {
-      alert("Error mengunggah foto");
+      toast.error("Error mengunggah foto");
     } finally {
       setUploading(false);
     }
@@ -142,13 +145,14 @@ export default function GalleryManager() {
       if (file.type.startsWith("image/")) {
         await handleImageUpload(file);
       } else {
-        alert("Hanya file gambar yang diperbolehkan");
+        toast.error("Hanya file gambar yang diperbolehkan");
       }
     }
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
     const token = localStorage.getItem("token");
     const payload = { namaFile, kategori, tanggalPosting, foto, status };
 
@@ -169,20 +173,27 @@ export default function GalleryManager() {
       }
       const data = await res.json();
       if (data.success) {
+        toast.success(isAdding ? "Foto galeri berhasil ditambahkan!" : "Foto galeri berhasil diperbarui!");
         closeForm();
         fetchGallery();
       } else {
-        alert("Gagal menyimpan: " + (data.message || "Error tidak diketahui"));
+        toast.error("Gagal menyimpan: " + (data.message || "Error tidak diketahui"));
       }
     } catch (e) {
-      alert("Terjadi kesalahan saat menyimpan data galeri");
+      toast.error("Terjadi kesalahan saat menyimpan data galeri");
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDelete = async (itemId?: number) => {
     const idToDelete = itemId || selectedId;
     if (!idToDelete) return;
-    if (!await confirm("Apakah Anda yakin ingin menghapus foto galeri ini?")) return;
+    if (!await confirm({
+      title: "Konfirmasi Hapus",
+      message: "Apakah Anda yakin ingin menghapus foto galeri ini?",
+      variant: "danger"
+    })) return;
     const token = localStorage.getItem("token");
     try {
       const res = await fetch(`/api/gallery/${idToDelete}`, {
@@ -191,13 +202,14 @@ export default function GalleryManager() {
       });
       const data = await res.json();
       if (data.success) {
+        toast.success("Foto galeri berhasil dihapus!");
         closeForm();
         fetchGallery();
       } else {
-        alert("Gagal menghapus: " + (data.message || "Error tidak diketahui"));
+        toast.error("Gagal menghapus: " + (data.message || "Error tidak diketahui"));
       }
     } catch (e) {
-      alert("Terjadi kesalahan saat menghapus data galeri");
+      toast.error("Terjadi kesalahan saat menghapus data galeri");
     }
   };
 
@@ -288,7 +300,7 @@ export default function GalleryManager() {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-3">
-            <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#9c27b0] border-t-transparent" />
+            <Loader2 className="h-10 w-10 text-[#9c27b0] animate-spin" />
             <span className="text-xs font-extrabold text-[#9c27b0] uppercase tracking-widest">Memuat galeri...</span>
           </div>
         ) : currentItems.length > 0 ? (
@@ -482,7 +494,7 @@ export default function GalleryManager() {
                   >
                     {uploading ? (
                       <div className="py-6 flex flex-col items-center gap-2">
-                        <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-white" />
+                        <Loader2 className="h-7 w-7 text-white animate-spin" />
                         <span className="text-[10px] font-bold text-white">Mengunggah...</span>
                       </div>
                     ) : foto ? (
@@ -511,9 +523,18 @@ export default function GalleryManager() {
                 <div className="flex items-center gap-3 pt-2 justify-end">
                   <Button
                     type="submit"
+                    disabled={saving || uploading}
                     className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
                   >
-                    <Save size={15} /> SIMPAN
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> SIMPAN
+                      </>
+                    ) : (
+                      <>
+                        <Save size={15} /> SIMPAN
+                      </>
+                    )}
                   </Button>
                   {selectedId && (
                     <Button

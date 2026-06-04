@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Search, UploadCloud, Plus, Save, Edit3, Trash2, X } from "lucide-react";
+import { Search, UploadCloud, Plus, Save, Edit3, Trash2, X, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { toast } from "sonner";
 
 interface Agenda {
   id: number;
@@ -51,27 +52,7 @@ export default function AgendaManager() {
   const [foto, setFoto] = useState("");
   
   const [uploading, setUploading] = useState(false);
-  const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const showToast = (message: string) => {
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current);
-    }
-    setToast({ message, show: true });
-    toastTimeoutRef.current = setTimeout(() => {
-      setToast({ message: "", show: false });
-      toastTimeoutRef.current = null;
-    }, 3000);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (toastTimeoutRef.current) {
-        clearTimeout(toastTimeoutRef.current);
-      }
-    };
-  }, []);
+  const [saving, setSaving] = useState(false);
 
   const fetchAgendas = useCallback(async () => {
     try {
@@ -129,7 +110,12 @@ export default function AgendaManager() {
   };
 
   const handleDeleteClick = async (id: number) => {
-    if (!await confirm("Apakah Anda yakin ingin menghapus agenda ini?")) return;
+    if (!await confirm({
+      title: "Hapus Agenda",
+      message: "Apakah Anda yakin ingin menghapus agenda ini? Tindakan ini tidak dapat dibatalkan.",
+      variant: "danger"
+    })) return;
+
     const token = getSafeItem("token");
     try {
       const res = await fetch(`/api/agendas/${id}`, {
@@ -140,23 +126,23 @@ export default function AgendaManager() {
       });
       const resData = await res.json();
       if (resData.success) {
-        showToast("Agenda berhasil dihapus!");
+        toast.success("Agenda berhasil dihapus!");
         fetchAgendas();
       } else {
-        showToast(resData.message || "Gagal menghapus agenda");
+        toast.error(resData.message || "Gagal menghapus agenda");
       }
     } catch (err) {
-      showToast("Terjadi kesalahan koneksi atau sistem.");
+      toast.error("Terjadi kesalahan koneksi atau sistem.");
     }
   };
 
   const processUpload = async (file: File) => {
     if (!file.type.startsWith("image/")) {
-      showToast("Hanya berkas gambar yang diperbolehkan!");
+      toast.error("Hanya berkas gambar yang diperbolehkan!");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      showToast("Ukuran gambar melebihi batas 5MB!");
+      toast.error("Ukuran gambar melebihi batas 5MB!");
       return;
     }
 
@@ -176,12 +162,12 @@ export default function AgendaManager() {
       const data = await res.json();
       if (data.success && data.url) {
         setFoto(data.url);
-        showToast("Foto agenda berhasil diunggah!");
+        toast.success("Foto agenda berhasil diunggah!");
       } else {
         throw new Error(data.message || "Gagal mengunggah gambar");
       }
     } catch (err: any) {
-      showToast(err.message || "Gagal mengunggah gambar.");
+      toast.error(err.message || "Gagal mengunggah gambar.");
     } finally {
       setUploading(false);
     }
@@ -189,18 +175,19 @@ export default function AgendaManager() {
 
   const handleSave = async () => {
     if (!nama.trim()) {
-      showToast("Nama Agenda tidak boleh kosong!");
+      toast.error("Nama Agenda tidak boleh kosong!");
       return;
     }
     if (!pelaksanaan.trim()) {
-      showToast("Pelaksanaan tidak boleh kosong!");
+      toast.error("Pelaksanaan tidak boleh kosong!");
       return;
     }
     if (!waktu.trim()) {
-      showToast("Waktu tidak boleh kosong!");
+      toast.error("Waktu tidak boleh kosong!");
       return;
     }
 
+    setSaving(true);
     const token = getSafeItem("token");
     const bodyData = {
       nama,
@@ -238,14 +225,16 @@ export default function AgendaManager() {
 
       const resData = await res.json();
       if (resData.success) {
-        showToast(editId !== null ? "Agenda berhasil diperbarui!" : "Agenda baru berhasil ditambahkan!");
+        toast.success(editId !== null ? "Agenda berhasil diperbarui!" : "Agenda baru berhasil ditambahkan!");
         resetForm();
         fetchAgendas();
       } else {
-        showToast(resData.message || "Gagal menyimpan agenda.");
+        toast.error(resData.message || "Gagal menyimpan agenda.");
       }
     } catch (err) {
-      showToast("Gagal menyimpan agenda ke server.");
+      toast.error("Gagal menyimpan agenda ke server.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -622,6 +611,7 @@ export default function AgendaManager() {
                 <Button
                   type="button"
                   onClick={resetForm}
+                  disabled={saving}
                   className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                 >
                   BATAL
@@ -630,21 +620,22 @@ export default function AgendaManager() {
                 <Button
                   type="button"
                   onClick={handleSave}
-                  className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                  disabled={saving || uploading}
+                  className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
                 >
-                  <Save className="h-4 w-4" /> SIMPAN
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" /> SIMPAN
+                    </>
+                  )}
                 </Button>
               </div>
             </form>
           </div>
-        </div>
-      )}
-
-      {/* Floating Toast notification */}
-      {toast.show && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-slate-900/95 backdrop-blur-md text-white px-5 py-4 rounded-2xl shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-6 duration-300">
-          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-          <span className="text-sm font-bold tracking-tight">{toast.message}</span>
         </div>
       )}
     </div>

@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { parseCSV, downloadCSV } from "@/lib/utils";
-import { Upload, Plus, Trash2, Save, HelpCircle, Download, LayoutGrid, List, Search, X } from "lucide-react";
+import { Upload, Plus, Trash2, Save, HelpCircle, Download, LayoutGrid, List, Search, X, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { toast } from "sonner";
 
 interface AlumniItem {
   id: number;
@@ -28,6 +29,7 @@ export default function AlumniManager() {
   const confirm = useConfirm();
   const [alumniList, setAlumniList] = useState<AlumniItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   // View state (Cards or Table)
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
@@ -185,12 +187,12 @@ export default function AlumniManager() {
       const data = await res.json();
       if (data.success && data.url) {
         setFoto(data.url);
+        toast.success("Foto berhasil diunggah!");
       } else {
-        alert("Upload gagal: " + (data.message || "Error tidak diketahui"));
+        toast.error("Upload gagal: " + (data.message || "Error tidak diketahui"));
       }
     } catch (e) {
-      console.error(e);
-      alert("Error mengunggah foto");
+      toast.error("Error mengunggah foto");
     } finally {
       setUploading(false);
     }
@@ -223,6 +225,12 @@ export default function AlumniManager() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!nama.trim()) {
+      toast.error("Nama wajib diisi!");
+      return;
+    }
+
+    setSaving(true);
     const token = localStorage.getItem("token");
 
     const payload = {
@@ -254,21 +262,28 @@ export default function AlumniManager() {
 
       const data = await res.json();
       if (data.success) {
+        toast.success(isAdding ? "Alumni berhasil ditambahkan!" : "Data alumni berhasil diperbarui!");
         closeForm();
         fetchAlumni();
       } else {
-        alert("Gagal menyimpan data: " + (data.message || "Error tidak diketahui"));
+        toast.error("Gagal menyimpan data: " + (data.message || "Error tidak diketahui"));
       }
     } catch (e) {
       console.error(e);
-      alert("Terjadi kesalahan sistem saat menyimpan data alumni");
+      toast.error("Terjadi kesalahan sistem saat menyimpan data alumni");
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDelete = async () => {
     const idToDelete = selectedId;
     if (!idToDelete) return;
-    if (!await confirm("Apakah Anda yakin ingin menghapus data alumni ini?")) return;
+    if (!await confirm({
+      title: "Hapus Alumni",
+      message: "Apakah Anda yakin ingin menghapus data alumni ini? Tindakan ini tidak dapat dibatalkan.",
+      variant: "danger"
+    })) return;
 
     const token = localStorage.getItem("token");
     try {
@@ -280,14 +295,14 @@ export default function AlumniManager() {
       });
       const data = await res.json();
       if (data.success) {
+        toast.success("Data alumni berhasil dihapus!");
         closeForm();
         fetchAlumni();
       } else {
-        alert("Gagal menghapus alumni: " + (data.message || "Error tidak diketahui"));
+        toast.error("Gagal menghapus alumni: " + (data.message || "Error tidak diketahui"));
       }
     } catch (e) {
-      console.error(e);
-      alert("Terjadi kesalahan saat menghapus data alumni");
+      toast.error("Terjadi kesalahan saat menghapus data alumni");
     }
   };
 
@@ -918,13 +933,23 @@ export default function AlumniManager() {
                 <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/20">
                   <Button
                     type="submit"
+                    disabled={saving || uploading}
                     className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
                   >
-                    <Save size={15} /> SIMPAN
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                      </>
+                    ) : (
+                      <>
+                        <Save size={15} /> SIMPAN
+                      </>
+                    )}
                   </Button>
                   {selectedId && (
                     <Button
                       type="button"
+                      disabled={saving}
                       onClick={handleDelete}
                       className="bg-rose-600 hover:bg-rose-700 text-white border-0 font-extrabold text-sm px-6 h-11 rounded-full cursor-pointer shadow-md shadow-rose-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
                     >

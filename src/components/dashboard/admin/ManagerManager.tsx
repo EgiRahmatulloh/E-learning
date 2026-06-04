@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { parseCSV, downloadCSV } from "@/lib/utils";
 import {
-  CheckCircle2,
   Edit3,
   Save,
   Trash2,
@@ -16,8 +15,10 @@ import {
   List,
   LayoutGrid,
   ShieldAlert,
+  Loader2,
 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { toast } from "sonner";
 
 interface ManagerData {
   id?: number;
@@ -94,8 +95,7 @@ export default function ManagerManager() {
   const [isFormDirty, setIsFormDirty] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [hasUnsyncedOfflineData, setHasUnsyncedOfflineData] = useState(false);
-  const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
-  const toastTimeoutRef = useRef<any>(null);
+  const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
   const [dbManagerIds, setDbManagerIds] = useState<Set<number>>(new Set());
@@ -157,7 +157,7 @@ export default function ManagerManager() {
       const list: ManagerData[] = JSON.parse(saved);
       const token = getSafeItem("token");
       
-      showToast("Sinkronisasi data pengelola ke server...");
+      toast.info("Sinkronisasi data pengelola ke server...");
 
       // 1. Sync offline deletions first
       const deletedIdsStr = getSafeItem("pkbm_managers_deleted_ids") || "[]";
@@ -212,11 +212,11 @@ export default function ManagerManager() {
         }
       }
       
-      showToast("Sinkronisasi data ke server berhasil!");
+      toast.success("Sinkronisasi data ke server berhasil!");
       setHasUnsyncedOfflineData(false);
       fetchManagers();
     } catch (err: any) {
-      showToast(`⚠️ Sinkronisasi terhenti: ${err.message || 'Periksa koneksi internet!'}`);
+      toast.error(`Sinkronisasi terhenti: ${err.message || 'Periksa koneksi internet!'}`);
     }
   };
 
@@ -224,19 +224,12 @@ export default function ManagerManager() {
     fetchManagers();
   }, []);
 
-  const showToast = (message: string) => {
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current);
-    }
-    setToast({ message, show: true });
-    toastTimeoutRef.current = setTimeout(() => {
-      setToast({ message: "", show: false });
-      toastTimeoutRef.current = null;
-    }, 3000);
-  };
-
   const handleCloseForm = async () => {
-    if (isFormDirty && !await confirm("Ada perubahan yang belum disimpan. Yakin ingin menutup?")) return;
+    if (isFormDirty && !await confirm({
+      title: "Perubahan Belum Disimpan",
+      message: "Ada perubahan yang belum disimpan. Yakin ingin menutup?",
+      variant: "danger"
+    })) return;
     setIsFormOpen(false);
     setIsLocked(true);
     setIsNew(false);
@@ -269,10 +262,11 @@ export default function ManagerManager() {
 
   const handleSave = async () => {
     if (!selectedManager.nama || !selectedManager.jabatan) {
-      showToast("Nama dan Jabatan wajib diisi!");
+      toast.error("Nama dan Jabatan wajib diisi!");
       return;
     }
 
+    setSaving(true);
     const token = getSafeItem("token");
     let isNetworkError = false;
 
@@ -293,7 +287,7 @@ export default function ManagerManager() {
       });
       const data = await res.json();
       if (data.success) {
-        showToast(isNew ? "Pengelola baru berhasil ditambahkan!" : "Profil pengelola berhasil disimpan!");
+        toast.success(isNew ? "Pengelola baru berhasil ditambahkan!" : "Profil pengelola berhasil disimpan!");
         setIsFormDirty(false);
         setIsLocked(true);
         setIsNew(false);
@@ -304,14 +298,16 @@ export default function ManagerManager() {
         }
         return;
       } else {
-        showToast(data.message || "Gagal menyimpan data pengelola");
+        toast.error(data.message || "Gagal menyimpan data pengelola");
       }
     } catch (err) {
       if (err instanceof TypeError) {
         isNetworkError = true;
       } else {
-        showToast("Terjadi kesalahan sistem saat menyimpan.");
+        toast.error("Terjadi kesalahan sistem saat menyimpan.");
       }
+    } finally {
+      setSaving(false);
     }
 
     // Local storage fallback ONLY on genuine fetch/network failures
@@ -331,18 +327,22 @@ export default function ManagerManager() {
         setManagersList(updatedList);
         setHasUnsyncedOfflineData(true);
         setIsFormDirty(false);
-        showToast("Disimpan secara lokal (Offline)!");
+        toast.success("Disimpan secara lokal (Offline)!");
         setIsLocked(true);
         setIsNew(false);
       } catch (e: any) {
-        showToast("⚠️ Offline: Gagal menyimpan data.");
+        toast.error("⚠️ Offline: Gagal menyimpan data.");
       }
     }
   };
 
   const handleDelete = async () => {
     if (isNew) {
-      if (isFormDirty && !await confirm("Ada perubahan yang belum disimpan. Yakin ingin menutup?")) return;
+      if (isFormDirty && !await confirm({
+        title: "Perubahan Belum Disimpan",
+        message: "Ada perubahan yang belum disimpan. Yakin ingin menutup?",
+        variant: "danger"
+      })) return;
       if (managersList.length > 0) {
         setSelectedManager(managersList[0]);
       } else {
@@ -357,7 +357,11 @@ export default function ManagerManager() {
 
     if (!selectedManager.id) return;
 
-    if (!await confirm(`Apakah Anda yakin ingin menghapus data pengelola ${selectedManager.nama}?`)) {
+    if (!await confirm({
+      title: "Hapus Data Pengelola",
+      message: `Apakah Anda yakin ingin menghapus data pengelola ${selectedManager.nama}?`,
+      variant: "danger"
+    })) {
       return;
     }
 
@@ -373,7 +377,7 @@ export default function ManagerManager() {
       });
       const data = await res.json();
       if (data.success) {
-        showToast("Data pengelola berhasil dihapus!");
+        toast.success("Data pengelola berhasil dihapus!");
         const remaining = managersList.filter((m) => m.id !== selectedManager.id);
         setManagersList(remaining);
         if (remaining.length > 0) {
@@ -386,13 +390,13 @@ export default function ManagerManager() {
         fetchManagers();
         return;
       } else {
-        showToast(data.message || "Gagal menghapus data pengelola");
+        toast.error(data.message || "Gagal menghapus data pengelola");
       }
     } catch (err) {
       if (err instanceof TypeError) {
         isNetworkError = true;
       } else {
-        showToast("Terjadi kesalahan sistem saat menghapus.");
+        toast.error("Terjadi kesalahan sistem saat menghapus.");
       }
     }
 
@@ -410,7 +414,7 @@ export default function ManagerManager() {
         }
         setSafeItem(STORAGE_KEY, JSON.stringify(remaining));
         setManagersList(remaining);
-        showToast("Dihapus secara lokal (Offline)!");
+        toast.success("Dihapus secara lokal (Offline)!");
         if (remaining.length > 0) {
           setSelectedManager(remaining[0]);
         } else {
@@ -419,18 +423,18 @@ export default function ManagerManager() {
         setIsLocked(true);
         setIsFormOpen(false);
       } catch {
-        showToast("⚠️ Offline: Gagal menghapus data.");
+        toast.error("⚠️ Offline: Gagal menghapus data.");
       }
     }
   };
 
   const processUpload = async (file: File) => {
     if (!file.type.startsWith("image/")) {
-      showToast("Hanya berkas gambar yang diperbolehkan!");
+      toast.error("Hanya berkas gambar yang diperbolehkan!");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      showToast("Ukuran gambar melebihi batas 5MB!");
+      toast.error("Ukuran gambar melebihi batas 5MB!");
       return;
     }
 
@@ -450,7 +454,7 @@ export default function ManagerManager() {
       const data = await res.json();
       if (data.success && data.url) {
         handleFieldChange("foto", data.url);
-        showToast("Foto berhasil diunggah!");
+        toast.success("Foto berhasil diunggah!");
       } else {
         throw new Error(data.message || "Gagal mengunggah foto");
       }
@@ -460,15 +464,15 @@ export default function ManagerManager() {
         reader.onloadend = () => {
           const base64Data = reader.result as string;
           if (base64Data.length > 1.5 * 1024 * 1024) { // Limit to 1.5MB base64 characters (~1.1MB file size) to prevent localStorage quota issues
-            showToast("⚠️ Offline: Berkas gambar terlalu besar untuk disimpan offline (Maks 1MB)!");
+            toast.error("⚠️ Offline: Berkas gambar terlalu besar untuk disimpan offline (Maks 1MB)!");
             return;
           }
           handleFieldChange("foto", base64Data);
-          showToast("Foto disimpan secara lokal (Offline)!");
+          toast.success("Foto disimpan secara lokal (Offline)!");
         };
         reader.readAsDataURL(file);
       } else {
-        showToast(err.message || "Gagal mengunggah foto.");
+        toast.error(err.message || "Gagal mengunggah foto.");
       }
     } finally {
       setUploadingFoto(false);
@@ -478,7 +482,7 @@ export default function ManagerManager() {
   // CSV Export
   const handleExportCSV = () => {
     if (managersList.length === 0) {
-      showToast("Tidak ada data untuk diekspor!");
+      toast.error("Tidak ada data untuk diekspor!");
       return;
     }
     const headers = ["NAMA", "NIK", "JABATAN", "NUPTK", "TEMPAT TGL LAHIR", "JENIS KELAMIN", "AGAMA", "PENDIDIKAN", "EMAIL", "TANGGAL MULAI TUGAS", "NOMOR SK PENGANGKATAN", "LEMBAGA PENGANGKAT", "NOMOR SK PENUGASAN", "LEMBAGA PENUGAS", "ALAMAT", "FOTO"];
@@ -501,7 +505,7 @@ export default function ManagerManager() {
       `"${(m.foto || "").replace(/"/g, '""')}"`
     ]);
     downloadCSV(headers, rows, "data_pengelola.csv");
-    showToast("Berhasil mengunduh CSV!");
+    toast.success("Berhasil mengunduh CSV!");
   };
 
   // CSV Import
@@ -564,7 +568,7 @@ export default function ManagerManager() {
       }
 
       if (importedData.length === 0) {
-        showToast("Format CSV kosong atau tidak valid!");
+        toast.error("Format CSV kosong atau tidak valid!");
         return;
       }
 
@@ -580,13 +584,13 @@ export default function ManagerManager() {
         });
         const resData = await res.json();
         if (resData.success) {
-          showToast(resData.message || "Berhasil mengimpor data!");
+          toast.success(resData.message || "Berhasil mengimpor data!");
           fetchManagers();
         } else {
-          showToast(resData.message || "Gagal mengimpor data");
+          toast.error(resData.message || "Gagal mengimpor data");
         }
       } catch (err) {
-        showToast("Kesalahan saat mengunggah CSV ke server.");
+        toast.error("Kesalahan saat mengunggah CSV ke server.");
       }
     };
     reader.readAsText(file);
@@ -609,9 +613,9 @@ export default function ManagerManager() {
       document.body.removeChild(downloadAnchor);
       URL.revokeObjectURL(url);
       
-      showToast("Data pengelola berhasil diunduh!");
+      toast.success("Data pengelola berhasil diunduh!");
     } catch {
-      showToast("Gagal mengunduh data pengelola.");
+      toast.error("Gagal mengunduh data pengelola.");
     }
   };
 
@@ -629,7 +633,7 @@ export default function ManagerManager() {
             (item) => typeof item === "object" && item !== null && "nama" in item && "jabatan" in item
           );
           if (!isValid) {
-            showToast("Format berkas JSON tidak valid! Tiap item wajib memiliki bidang 'nama' dan 'jabatan'.");
+            toast.error("Format berkas JSON tidak valid! Tiap item wajib memiliki bidang 'nama' dan 'jabatan'.");
             return;
           }
           
@@ -679,12 +683,12 @@ export default function ManagerManager() {
           if (mergedList.length > 0) {
             setSelectedManager(mergedList[0]);
           }
-          showToast("Data pengelola berhasil diunggah dan digabungkan!");
+          toast.success("Data pengelola berhasil diunggah dan digabungkan!");
         } else {
-          showToast("Format berkas JSON tidak valid (harus berupa array).");
+          toast.error("Format berkas JSON tidak valid (harus berupa array).");
         }
       } catch {
-        showToast("Gagal memproses berkas JSON.");
+        toast.error("Gagal memproses berkas JSON.");
       }
     };
     reader.readAsText(file);
@@ -761,7 +765,7 @@ export default function ManagerManager() {
         <Button
           onClick={() => {
             setActiveFilter(!activeFilter);
-            showToast(activeFilter ? "Filter dimatikan." : "Filter diaktifkan.");
+            toast.info(activeFilter ? "Filter dimatikan." : "Filter diaktifkan.");
           }}
           className={`h-10 px-4 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
             activeFilter ? "bg-cyan-600 hover:bg-cyan-700 text-white" : "bg-cyan-500 hover:bg-cyan-600 text-white"
@@ -776,7 +780,7 @@ export default function ManagerManager() {
             setSearchName("");
             setSearchNik("");
             setActiveFilter(false);
-            showToast("Pencarian direset!");
+            toast.info("Pencarian direset!");
           }}
           className="bg-purple-600 hover:bg-purple-700 text-white h-10 px-4 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
         >
@@ -1249,7 +1253,7 @@ export default function ManagerManager() {
                 onDrop={(e) => {
                   e.preventDefault();
                   if (isLocked) {
-                    showToast("Buka kunci (Klik Edit) untuk mengubah Foto!");
+                    toast.error("Buka kunci (Klik Edit) untuk mengubah Foto!");
                     return;
                   }
                   const file = e.dataTransfer.files?.[0];
@@ -1257,7 +1261,7 @@ export default function ManagerManager() {
                 }}
                 onClick={() => {
                   if (isLocked) {
-                    showToast("Buka kunci (Klik Edit) untuk mengubah Foto!");
+                    toast.error("Buka kunci (Klik Edit) untuk mengubah Foto!");
                     return;
                   }
                   fileInputRef.current?.click();
@@ -1375,9 +1379,18 @@ export default function ManagerManager() {
                 <Button
                   type="button"
                   onClick={handleSave}
+                  disabled={saving}
                   className="bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs px-6 h-10 rounded-xl cursor-pointer shadow-md uppercase tracking-wider flex items-center gap-1.5 transition-all"
                 >
-                  <Save className="h-4 w-4" /> SIMPAN
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" /> SIMPAN
+                    </>
+                  )}
                 </Button>
               </>
             )}
@@ -1388,15 +1401,6 @@ export default function ManagerManager() {
        </div>
       </div>
       )}
-
-      {/* Floating Modern Toast Notification */}
-      {toast.show && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-slate-900/95 backdrop-blur-md text-white px-5 py-4 rounded-2xl shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-6 duration-300">
-          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-          <span className="text-sm font-bold tracking-tight">{toast.message}</span>
-        </div>
-      )}
-
     </div>
   );
 }

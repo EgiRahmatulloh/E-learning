@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Edit3, Trash2, Search, UploadCloud, Plus, Save, X } from "lucide-react";
+import { Edit3, Trash2, Search, UploadCloud, Plus, Save, X, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { toast } from "sonner";
 
 interface EducationProgram {
   id: number;
@@ -48,28 +49,7 @@ export default function EducationProgramManager() {
   const [foto, setFoto] = useState("");
   
   const [uploading, setUploading] = useState(false);
-  const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const showToast = (message: string) => {
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current);
-    }
-    setToast({ message, show: true });
-    toastTimeoutRef.current = setTimeout(() => {
-      setToast({ message: "", show: false });
-      toastTimeoutRef.current = null;
-    }, 3000);
-  };
-
-  // Clean up toast timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (toastTimeoutRef.current) {
-        clearTimeout(toastTimeoutRef.current);
-      }
-    };
-  }, []);
+  const [saving, setSaving] = useState(false);
 
   const fetchPrograms = useCallback(async () => {
     try {
@@ -142,7 +122,11 @@ export default function EducationProgramManager() {
   };
 
   const handleDeleteClick = async (id: number) => {
-    if (!await confirm("Apakah Anda yakin ingin menghapus program ini?")) return;
+    if (!await confirm({
+      title: "Konfirmasi Hapus",
+      message: "Apakah Anda yakin ingin menghapus program ini?",
+      variant: "danger"
+    })) return;
     const token = getSafeItem("token");
     try {
       const res = await fetch(`/api/education-programs/${id}`, {
@@ -153,23 +137,23 @@ export default function EducationProgramManager() {
       });
       const resData = await res.json();
       if (resData.success) {
-        showToast("Program pendidikan berhasil dihapus!");
+        toast.success("Program pendidikan berhasil dihapus!");
         fetchPrograms();
       } else {
-        showToast(resData.message || "Gagal menghapus program");
+        toast.error(resData.message || "Gagal menghapus program");
       }
     } catch (err) {
-      showToast("Terjadi kesalahan koneksi atau sistem.");
+      toast.error("Terjadi kesalahan koneksi atau sistem.");
     }
   };
 
   const processUpload = async (file: File) => {
     if (!file.type.startsWith("image/")) {
-      showToast("Hanya berkas gambar yang diperbolehkan!");
+      toast.error("Hanya berkas gambar yang diperbolehkan!");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      showToast("Ukuran gambar melebihi batas 5MB!");
+      toast.error("Ukuran gambar melebihi batas 5MB!");
       return;
     }
 
@@ -189,12 +173,12 @@ export default function EducationProgramManager() {
       const data = await res.json();
       if (data.success && data.url) {
         setFoto(data.url);
-        showToast("Foto berhasil diunggah!");
+        toast.success("Foto berhasil diunggah!");
       } else {
         throw new Error(data.message || "Gagal mengunggah gambar");
       }
     } catch (err: any) {
-      showToast(err.message || "Gagal mengunggah gambar.");
+      toast.error(err.message || "Gagal mengunggah gambar.");
     } finally {
       setUploading(false);
     }
@@ -202,10 +186,11 @@ export default function EducationProgramManager() {
 
   const handleSave = async () => {
     if (!program.trim()) {
-      showToast("Nama Program tidak boleh kosong!");
+      toast.error("Nama Program tidak boleh kosong!");
       return;
     }
 
+    setSaving(true);
     const token = getSafeItem("token");
     const bodyData = { program, penjab, keterangan, foto };
 
@@ -235,14 +220,16 @@ export default function EducationProgramManager() {
 
       const resData = await res.json();
       if (resData.success) {
-        showToast(editId !== null ? "Program berhasil diperbarui!" : "Program baru berhasil ditambahkan!");
+        toast.success(editId !== null ? "Program berhasil diperbarui!" : "Program baru berhasil ditambahkan!");
         resetForm();
         fetchPrograms();
       } else {
-        showToast(resData.message || "Gagal menyimpan program.");
+        toast.error(resData.message || "Gagal menyimpan program.");
       }
     } catch (err) {
-      showToast("Gagal menyimpan data ke server.");
+      toast.error("Gagal menyimpan data ke server.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -484,7 +471,7 @@ export default function EducationProgramManager() {
 
                   {uploading ? (
                     <div className="flex flex-col items-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-4 border-white/30 border-t-purple-600 mb-2" />
+                      <Loader2 className="h-8 w-8 text-white/60 animate-spin mb-2" />
                       <span className="text-[10px] font-black text-purple-950 uppercase tracking-wide">MENGUNGGAH...</span>
                     </div>
                   ) : foto ? (
@@ -536,21 +523,22 @@ export default function EducationProgramManager() {
                 <Button
                   type="button"
                   onClick={handleSave}
+                  disabled={saving || uploading}
                   className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
                 >
-                  <Save className="h-4 w-4" /> SIMPAN
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" /> SIMPAN
+                    </>
+                  )}
                 </Button>
               </div>
             </form>
           </div>
-        </div>
-      )}
-
-      {/* Floating Toast notification */}
-      {toast.show && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-slate-900/95 backdrop-blur-md text-white px-5 py-4 rounded-2xl shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-6 duration-300">
-          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-          <span className="text-sm font-bold tracking-tight">{toast.message}</span>
         </div>
       )}
     </div>

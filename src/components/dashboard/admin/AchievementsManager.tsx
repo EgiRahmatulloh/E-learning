@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { parseCSV, downloadCSV } from "@/lib/utils";
-import { CheckCircle2, Edit3, Trash2, Search, UploadCloud, Plus, Save, X, Upload, Download } from "lucide-react";
+import { Edit3, Trash2, Search, UploadCloud, Plus, Save, X, Upload, Download, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { toast } from "sonner";
 
 interface Achievement {
   id: number;
@@ -48,28 +49,7 @@ export function AchievementsManager() {
   const [foto, setFoto] = useState("");
   
   const [uploading, setUploading] = useState(false);
-  const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const showToast = (message: string) => {
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current);
-    }
-    setToast({ message, show: true });
-    toastTimeoutRef.current = setTimeout(() => {
-      setToast({ message: "", show: false });
-      toastTimeoutRef.current = null;
-    }, 3000);
-  };
-
-  // Clean up toast timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (toastTimeoutRef.current) {
-        clearTimeout(toastTimeoutRef.current);
-      }
-    };
-  }, []);
+  const [saving, setSaving] = useState(false);
 
   const fetchAchievements = useCallback(async () => {
     try {
@@ -121,7 +101,11 @@ export function AchievementsManager() {
   };
 
   const handleDeleteClick = async (id: number) => {
-    if (!await confirm("Apakah Anda yakin ingin menghapus data prestasi ini?")) return;
+    if (!await confirm({ 
+      title: "Konfirmasi Hapus", 
+      message: "Apakah Anda yakin ingin menghapus data prestasi ini?", 
+      variant: "danger" 
+    })) return;
     const token = getSafeItem("token");
     try {
       const res = await fetch(`/api/achievements/${id}`, {
@@ -132,23 +116,23 @@ export function AchievementsManager() {
       });
       const resData = await res.json();
       if (resData.success) {
-        showToast("Data prestasi berhasil dihapus!");
+        toast.success("Data prestasi berhasil dihapus!");
         fetchAchievements();
       } else {
-        showToast(resData.message || "Gagal menghapus data");
+        toast.error(resData.message || "Gagal menghapus data");
       }
     } catch (err) {
-      showToast("Terjadi kesalahan koneksi atau sistem.");
+      toast.error("Terjadi kesalahan koneksi atau sistem.");
     }
   };
 
   const processUpload = async (file: File) => {
     if (!file.type.startsWith("image/")) {
-      showToast("Hanya berkas gambar yang diperbolehkan!");
+      toast.error("Hanya berkas gambar yang diperbolehkan!");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      showToast("Ukuran gambar melebihi batas 5MB!");
+      toast.error("Ukuran gambar melebihi batas 5MB!");
       return;
     }
 
@@ -168,12 +152,12 @@ export function AchievementsManager() {
       const data = await res.json();
       if (data.success && data.url) {
         setFoto(data.url);
-        showToast("Foto berhasil diunggah!");
+        toast.success("Foto berhasil diunggah!");
       } else {
         throw new Error(data.message || "Gagal mengunggah gambar");
       }
     } catch (err: any) {
-      showToast(err.message || "Gagal mengunggah gambar.");
+      toast.error(err.message || "Gagal mengunggah gambar.");
     } finally {
       setUploading(false);
     }
@@ -181,18 +165,19 @@ export function AchievementsManager() {
 
   const handleSave = async () => {
     if (!nama.trim()) {
-      showToast("Nama Prestasi tidak boleh kosong!");
+      toast.error("Nama Prestasi tidak boleh kosong!");
       return;
     }
     if (!tahun.trim()) {
-      showToast("Tahun tidak boleh kosong!");
+      toast.error("Tahun tidak boleh kosong!");
       return;
     }
     if (!tingkat.trim()) {
-      showToast("Tingkat tidak boleh kosong!");
+      toast.error("Tingkat tidak boleh kosong!");
       return;
     }
 
+    setSaving(true);
     const token = getSafeItem("token");
     const bodyData = {
       nama,
@@ -228,21 +213,23 @@ export function AchievementsManager() {
 
       const resData = await res.json();
       if (resData.success) {
-        showToast(editId !== null ? "Data prestasi berhasil diperbarui!" : "Data prestasi baru berhasil ditambahkan!");
+        toast.success(editId !== null ? "Data prestasi berhasil diperbarui!" : "Data prestasi baru berhasil ditambahkan!");
         resetForm();
         fetchAchievements();
       } else {
-        showToast(resData.message || "Gagal menyimpan data prestasi.");
+        toast.error(resData.message || "Gagal menyimpan data prestasi.");
       }
     } catch (err) {
-      showToast("Gagal menyimpan data ke server.");
+      toast.error("Gagal menyimpan data ke server.");
+    } finally {
+      setSaving(false);
     }
   };
 
   // CSV Export Logic
   const handleExportCSV = () => {
     if (achievements.length === 0) {
-      showToast("Tidak ada data untuk diekspor!");
+      toast.error("Tidak ada data untuk diekspor!");
       return;
     }
     const headers = ["NAMA PRESTASI", "TAHUN", "TINGKAT", "PENYELENGGARA", "PESERTA", "KETERANGAN", "FOTO"];
@@ -256,7 +243,7 @@ export function AchievementsManager() {
       `"${(a.foto || "").replace(/"/g, '""')}"`
     ]);
     downloadCSV(headers, rows, "prestasi.csv");
-    showToast("Berhasil mengunduh CSV!");
+    toast.success("Berhasil mengunduh CSV!");
   };
 
   // CSV Import Logic
@@ -301,7 +288,7 @@ export function AchievementsManager() {
       }
       
       if (importedData.length === 0) {
-        showToast("Format CSV kosong atau tidak valid! Pastikan Nama, Tahun, dan Tingkat tidak kosong.");
+        toast.error("Format CSV kosong atau tidak valid! Pastikan Nama, Tahun, dan Tingkat tidak kosong.");
         return;
       }
       
@@ -317,13 +304,13 @@ export function AchievementsManager() {
         });
         const resData = await res.json();
         if (resData.success) {
-          showToast(resData.message || "Berhasil mengimpor data!");
+          toast.success(resData.message || "Berhasil mengimpor data!");
           fetchAchievements();
         } else {
-          showToast(resData.message || "Gagal mengimpor data");
+          toast.error(resData.message || "Gagal mengimpor data");
         }
       } catch (err) {
-        showToast("Kesalahan saat mengunggah CSV ke server.");
+        toast.error("Kesalahan saat mengunggah CSV ke server.");
       }
     };
     reader.readAsText(file);
@@ -637,7 +624,7 @@ export function AchievementsManager() {
 
                   {uploading ? (
                     <div className="flex flex-col items-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-4 border-white/30 border-t-purple-600 mb-2" />
+                      <Loader2 className="h-8 w-8 text-white/60 animate-spin mb-2" />
                       <span className="text-[10px] font-black text-purple-950 uppercase tracking-wide">MENGUNGGAH...</span>
                     </div>
                   ) : foto ? (
@@ -689,21 +676,22 @@ export function AchievementsManager() {
                 <Button
                   type="button"
                   onClick={handleSave}
+                  disabled={saving || uploading}
                   className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
                 >
-                  <Save className="h-4 w-4" /> SIMPAN
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" /> SIMPAN
+                    </>
+                  )}
                 </Button>
               </div>
             </form>
           </div>
-        </div>
-      )}
-
-      {/* Floating Toast notification */}
-      {toast.show && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-slate-900/95 backdrop-blur-md text-white px-5 py-4 rounded-2xl shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-6 duration-300">
-          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-          <span className="text-sm font-bold tracking-tight">{toast.message}</span>
         </div>
       )}
     </div>
