@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { parseCSV, downloadCSV } from "@/lib/utils";
 import { Upload, Plus, Trash2, Save, HelpCircle, Download, LayoutGrid, List, Search, X } from "lucide-react";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 interface AlumniItem {
   id: number;
@@ -24,6 +25,7 @@ interface AlumniItem {
 }
 
 export default function AlumniManager() {
+  const confirm = useConfirm();
   const [alumniList, setAlumniList] = useState<AlumniItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -252,7 +254,6 @@ export default function AlumniManager() {
 
       const data = await res.json();
       if (data.success) {
-        alert("Data alumni berhasil disimpan!");
         closeForm();
         fetchAlumni();
       } else {
@@ -267,7 +268,7 @@ export default function AlumniManager() {
   const handleDelete = async () => {
     const idToDelete = selectedId;
     if (!idToDelete) return;
-    if (!confirm("Apakah Anda yakin ingin menghapus data alumni ini?")) return;
+    if (!await confirm("Apakah Anda yakin ingin menghapus data alumni ini?")) return;
 
     const token = localStorage.getItem("token");
     try {

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { parseCSV, downloadCSV } from "@/lib/utils";
 import { ShieldAlert, Search, Upload, Download, Sparkles, Plus, Trash2, Save, X, Eye, EyeOff, GraduationCap, ArrowUpCircle, RefreshCw, List, LayoutGrid, Filter, RotateCcw } from "lucide-react";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 interface Student {
   id: number;
@@ -32,6 +33,7 @@ const KELAS_BY_PROGRAM: Record<string, string[]> = {
 };
 
 export default function WargaBelajarManager() {
+  const confirm = useConfirm();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -365,7 +367,7 @@ export default function WargaBelajarManager() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus data warga belajar ini?")) return;
+    if (!await confirm("Apakah Anda yakin ingin menghapus data warga belajar ini?")) return;
 
     try {
       const token = localStorage.getItem("token");
@@ -391,7 +393,7 @@ export default function WargaBelajarManager() {
 
   // Promote (Naikkan Kelas)
   const handlePromote = async (id: number) => {
-    if (!confirm("Apakah Anda yakin ingin menaikkan tingkat kelas warga belajar ini?")) return;
+    if (!await confirm("Apakah Anda yakin ingin menaikkan tingkat kelas warga belajar ini?")) return;
 
     try {
       const token = localStorage.getItem("token");
@@ -403,7 +405,6 @@ export default function WargaBelajarManager() {
       });
       const data = await res.json();
       if (data.success) {
-        alert("Warga belajar berhasil naik kelas!");
         setFormOpen(false);
         fetchStudents();
       } else {
@@ -417,7 +418,7 @@ export default function WargaBelajarManager() {
 
   // Graduate (Luluskan)
   const handleGraduate = async (id: number) => {
-    if (!confirm("Apakah Anda yakin ingin meluluskan warga belajar ini?")) return;
+    if (!await confirm("Apakah Anda yakin ingin meluluskan warga belajar ini?")) return;
 
     try {
       const token = localStorage.getItem("token");
@@ -461,7 +462,6 @@ export default function WargaBelajarManager() {
       });
       const data = await res.json();
       if (data.success) {
-        alert("Program belajar berhasil diperbarui!");
         setContinueOpen(false);
         setFormOpen(false);
         fetchStudents();

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Save, HelpCircle, Image, X, Edit3, Filter, RotateCcw } from "lucide-react";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 const GALLERY_CATEGORIES = [
   "KEGIATAN PEMBELAJARAN",
@@ -25,6 +26,7 @@ interface GalleryItem {
 }
 
 export default function GalleryManager() {
+  const confirm = useConfirm();
   const [galleryList, setGalleryList] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -167,7 +169,6 @@ export default function GalleryManager() {
       }
       const data = await res.json();
       if (data.success) {
-        alert("Data galeri berhasil disimpan!");
         closeForm();
         fetchGallery();
       } else {
@@ -181,7 +182,7 @@ export default function GalleryManager() {
   const handleDelete = async (itemId?: number) => {
     const idToDelete = itemId || selectedId;
     if (!idToDelete) return;
-    if (!confirm("Apakah Anda yakin ingin menghapus foto galeri ini?")) return;
+    if (!await confirm("Apakah Anda yakin ingin menghapus foto galeri ini?")) return;
     const token = localStorage.getItem("token");
     try {
       const res = await fetch(`/api/gallery/${idToDelete}`, {

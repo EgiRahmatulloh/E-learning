@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Search, UploadCloud, Plus, Save, Edit3, Trash2, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 interface News {
   id: number;
@@ -47,6 +48,7 @@ const getIndonesianDate = () => {
 };
 
 export default function NewsManager() {
+  const confirm = useConfirm();
   const [newsList, setNewsList] = useState<News[]>([]);
   const [categories, setCategories] = useState<NewsCategory[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -168,7 +170,7 @@ export default function NewsManager() {
   };
 
   const handleDeleteNewsClick = async (id: number) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus berita ini?")) return;
+    if (!await confirm("Apakah Anda yakin ingin menghapus berita ini?")) return;
     const token = getSafeItem("token");
     try {
       const res = await fetch(`/api/news/${id}`, {
@@ -317,7 +319,7 @@ export default function NewsManager() {
 
   // Delete Category Handler
   const handleDeleteCategory = async (id: number) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus kategori ini?")) return;
+    if (!await confirm("Apakah Anda yakin ingin menghapus kategori ini?")) return;
     const token = getSafeItem("token");
     try {
       const res = await fetch(`/api/news-categories/${id}`, {

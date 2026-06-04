@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { parseCSV, downloadCSV } from "@/lib/utils";
 import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, List, LayoutGrid, Filter, RotateCcw } from "lucide-react";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 interface Tutor {
   id: number;
@@ -26,6 +27,7 @@ interface Tutor {
 }
 
 export default function TutorManager() {
+  const confirm = useConfirm();
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -346,7 +348,7 @@ export default function TutorManager() {
 
   // Delete Tutor
   const handleDelete = async (id: number) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus data tutor ini?")) return;
+    if (!await confirm("Apakah Anda yakin ingin menghapus data tutor ini?")) return;
 
     try {
       const token = localStorage.getItem("token");

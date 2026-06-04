@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { parseCSV, downloadCSV } from "@/lib/utils";
 import { CheckCircle2, Edit3, Trash2, Search, UploadCloud, Plus, Save, X, Upload, Download } from "lucide-react";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 interface Achievement {
   id: number;
@@ -31,6 +32,7 @@ const setSafeItem = (key: string, value: string) => {
 };
 
 export function AchievementsManager() {
+  const confirm = useConfirm();
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   
@@ -119,7 +121,7 @@ export function AchievementsManager() {
   };
 
   const handleDeleteClick = async (id: number) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus data prestasi ini?")) return;
+    if (!await confirm("Apakah Anda yakin ingin menghapus data prestasi ini?")) return;
     const token = getSafeItem("token");
     try {
       const res = await fetch(`/api/achievements/${id}`, {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Trash2, Edit3, Plus, Search, Calendar, X } from "lucide-react";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 interface AnnouncementData {
   id: string;
@@ -23,6 +24,7 @@ const formatDateDisplay = (dateStr: string | null | undefined) => {
 };
 
 export default function AnnouncementManager() {
+  const confirm = useConfirm();
   const [announcements, setAnnouncements] = useState<AnnouncementData[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
@@ -133,7 +135,7 @@ export default function AnnouncementManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Apakah Anda yakin ingin menghapus pengumuman ini?")) {
+    if (await confirm("Apakah Anda yakin ingin menghapus pengumuman ini?")) {
       const token = localStorage.getItem("token");
       try {
         const res = await fetch(`/api/announcements/${id}`, {

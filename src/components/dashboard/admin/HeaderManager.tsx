@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Trash2, Edit3, Plus, Search, UploadCloud, X } from "lucide-react";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 interface SlideData {
   id: string;
@@ -32,6 +33,7 @@ const setSafeItem = (key: string, value: string) => {
 };
 
 export function HeaderManager() {
+  const confirm = useConfirm();
   const [slides, setSlides] = useState<SlideData[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
@@ -198,7 +200,7 @@ export function HeaderManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Apakah Anda yakin ingin menghapus slider ini?")) {
+    if (await confirm("Apakah Anda yakin ingin menghapus slider ini?")) {
       const isLocal = String(id).startsWith("local-") || isNaN(Number(id));
 
       if (isLocal) {

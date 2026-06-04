@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Search, UploadCloud, Plus, Save, Edit3, Trash2, X } from "lucide-react";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 interface Agenda {
   id: number;
@@ -32,6 +33,7 @@ const setSafeItem = (key: string, value: string) => {
 };
 
 export default function AgendaManager() {
+  const confirm = useConfirm();
   const [agendas, setAgendas] = useState<Agenda[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   
@@ -127,7 +129,7 @@ export default function AgendaManager() {
   };
 
   const handleDeleteClick = async (id: number) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus agenda ini?")) return;
+    if (!await confirm("Apakah Anda yakin ingin menghapus agenda ini?")) return;
     const token = getSafeItem("token");
     try {
       const res = await fetch(`/api/agendas/${id}`, {

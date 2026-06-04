@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { parseCSV, downloadCSV } from "@/lib/utils";
 import { CheckCircle2, Edit3, Trash2, Search, UploadCloud, Plus, Save, X, Upload, Download } from "lucide-react";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 interface ServicePoint {
   id: number;
@@ -37,6 +38,7 @@ const setSafeItem = (key: string, value: string) => {
 };
 
 export function ServicePointsManager() {
+  const confirm = useConfirm();
   const [servicePoints, setServicePoints] = useState<ServicePoint[]>([]);
   const [managers, setManagers] = useState<Manager[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -146,7 +148,7 @@ export function ServicePointsManager() {
   };
 
   const handleDeleteClick = async (id: number) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus titik layanan ini?")) return;
+    if (!await confirm("Apakah Anda yakin ingin menghapus titik layanan ini?")) return;
     const token = getSafeItem("token");
     try {
       const res = await fetch(`/api/service-points/${id}`, {

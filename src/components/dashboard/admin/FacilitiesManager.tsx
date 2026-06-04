@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { parseCSV, downloadCSV } from "@/lib/utils";
 import { CheckCircle2, Edit3, Trash2, Search, UploadCloud, Plus, Save, X, Upload, Download } from "lucide-react";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 interface Facility {
   id: number;
@@ -27,6 +28,7 @@ const setSafeItem = (key: string, value: string) => {
 };
 
 export default function FacilitiesManager() {
+  const confirm = useConfirm();
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   
@@ -103,7 +105,7 @@ export default function FacilitiesManager() {
   };
 
   const handleDeleteClick = async (id: number) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus sarana dan fasilitas ini?")) return;
+    if (!await confirm("Apakah Anda yakin ingin menghapus sarana dan fasilitas ini?")) return;
     const token = getSafeItem("token");
     try {
       const res = await fetch(`/api/facilities/${id}`, {

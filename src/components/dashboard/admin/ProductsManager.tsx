@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, Plus, Trash2, Edit, Save, HelpCircle, Search, X, Filter, RotateCcw } from "lucide-react";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 interface ProductItem {
   id: number;
@@ -15,6 +16,7 @@ interface ProductItem {
 }
 
 export default function ProductsManager() {
+  const confirm = useConfirm();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -210,7 +212,7 @@ export default function ProductsManager() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus produk ini?")) return;
+    if (!await confirm("Apakah Anda yakin ingin menghapus produk ini?")) return;
 
     const token = localStorage.getItem("token");
     try {

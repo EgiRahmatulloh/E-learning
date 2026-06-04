@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ShieldAlert, Upload, Plus, Trash2, Edit, Save, FileText, Download, X, Filter, RotateCcw } from "lucide-react";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 interface DownloadItem {
   id: number;
@@ -21,6 +22,7 @@ const STATIC_CATEGORIES = [
 ];
 
 export default function DownloadsManager() {
+  const confirm = useConfirm();
   const [downloads, setDownloads] = useState<DownloadItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -197,7 +199,7 @@ export default function DownloadsManager() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus file ini?")) return;
+    if (!await confirm("Apakah Anda yakin ingin menghapus file ini?")) return;
 
     try {
       const token = localStorage.getItem("token");

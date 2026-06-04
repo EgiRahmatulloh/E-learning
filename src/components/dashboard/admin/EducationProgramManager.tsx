@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Edit3, Trash2, Search, UploadCloud, Plus, Save, X } from "lucide-react";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 interface EducationProgram {
   id: number;
@@ -33,6 +34,7 @@ const setSafeItem = (key: string, value: string) => {
 };
 
 export default function EducationProgramManager() {
+  const confirm = useConfirm();
   const [programs, setPrograms] = useState<EducationProgram[]>([]);
   const [managers, setManagers] = useState<Manager[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -140,7 +142,7 @@ export default function EducationProgramManager() {
   };
 
   const handleDeleteClick = async (id: number) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus program ini?")) return;
+    if (!await confirm("Apakah Anda yakin ingin menghapus program ini?")) return;
     const token = getSafeItem("token");
     try {
       const res = await fetch(`/api/education-programs/${id}`, {

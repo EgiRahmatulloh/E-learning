@@ -17,6 +17,7 @@ import {
   LayoutGrid,
   ShieldAlert,
 } from "lucide-react";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 interface ManagerData {
   id?: number;
@@ -79,6 +80,7 @@ const setSafeItem = (key: string, value: string) => {
 };
 
 export default function ManagerManager() {
+  const confirm = useConfirm();
   const [managersList, setManagersList] = useState<ManagerData[]>([]);
   const [selectedManager, setSelectedManager] = useState<ManagerData>(DEFAULT_MANAGER);
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
@@ -233,8 +235,8 @@ export default function ManagerManager() {
     }, 3000);
   };
 
-  const handleCloseForm = () => {
-    if (isFormDirty && !confirm("Ada perubahan yang belum disimpan. Yakin ingin menutup?")) return;
+  const handleCloseForm = async () => {
+    if (isFormDirty && !await confirm("Ada perubahan yang belum disimpan. Yakin ingin menutup?")) return;
     setIsFormOpen(false);
     setIsLocked(true);
     setIsNew(false);
@@ -340,7 +342,7 @@ export default function ManagerManager() {
 
   const handleDelete = async () => {
     if (isNew) {
-      if (isFormDirty && !confirm("Ada perubahan yang belum disimpan. Yakin ingin menutup?")) return;
+      if (isFormDirty && !await confirm("Ada perubahan yang belum disimpan. Yakin ingin menutup?")) return;
       if (managersList.length > 0) {
         setSelectedManager(managersList[0]);
       } else {
@@ -355,7 +357,7 @@ export default function ManagerManager() {
 
     if (!selectedManager.id) return;
 
-    if (!confirm(`Apakah Anda yakin ingin menghapus data pengelola ${selectedManager.nama}?`)) {
+    if (!await confirm(`Apakah Anda yakin ingin menghapus data pengelola ${selectedManager.nama}?`)) {
       return;
     }
 
@@ -1352,8 +1354,8 @@ export default function ManagerManager() {
               <>
                 <Button
                   type="button"
-                  onClick={() => {
-                    if (isFormDirty && !confirm("Ada perubahan yang belum disimpan. Yakin ingin menutup?")) return;
+                  onClick={async () => {
+                    if (isFormDirty && !await confirm("Ada perubahan yang belum disimpan. Yakin ingin menutup?")) return;
                     if (isNew) {
                       if (managersList.length > 0) {
                         setSelectedManager(managersList[0]);
