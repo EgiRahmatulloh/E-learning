@@ -108,7 +108,7 @@ export default function Header({ currentPath = "/", onNavigate }: HeaderProps) {
         ? "bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs py-0" 
         : "bg-transparent border-b border-transparent py-2"
     }`}>
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="flex h-20 w-full items-center justify-between px-4 sm:px-8 lg:px-12">
         {/* Logo & Brand */}
         <div onClick={handleLogoClick} className="flex items-center gap-3 cursor-pointer select-none">
           <img

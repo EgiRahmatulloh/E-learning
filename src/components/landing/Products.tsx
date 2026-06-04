@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -10,11 +9,6 @@ import {
   DialogFooter,
   DialogClose
 } from "@/components/ui/dialog";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger
-} from "@/components/ui/tooltip";
 import { MessageCircle, Sparkles } from "lucide-react";
 import type { ProductItem } from "../../types/landing";
 
@@ -45,78 +39,86 @@ const productItems: ProductItem[] = [
     image: "/images/b5212ec568f692a2bb92f8a422335d81.jpg",
     imageGlow: "from-purple-500/20 to-pink-500/20",
     waLink: "https://wa.me/6282128594025?text=Halo%20Admin%20PKBM,%20saya%20tertarik%20membeli%20Tas%20dan%20Keset%20Rajut%20Elegan%20karya%20warga%20belajar."
+  },
+  {
+    id: 4,
+    name: "Aksesoris Manik Kreatif",
+    price: "Rp 25.000",
+    description: "Gelang dan kalung manik-manik cantik hasil kerajinan tangan warga belajar untuk aksesoris harian.",
+    image: "/images/2160f0de812acb1585c6ed4218198819.png",
+    imageGlow: "from-blue-500/20 to-cyan-500/20",
+    waLink: "https://wa.me/6282128594025?text=Halo%20Admin%20PKBM,%20saya%20tertarik%20membeli%20Aksesoris%20Manik%20Kreatif%20karya%20warga%20belajar."
   }
 ];
 
 export default function Products() {
   return (
-    <section id="produk" className="py-24 bg-white relative">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-          <span className="text-xs font-extrabold uppercase tracking-widest text-[#ff6105] bg-orange-100 rounded-full px-4 py-1.5 inline-block">
-            Etalase Produk
-          </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#280f91]">
-            Produk Warga Belajar
+    <section id="produk" className="pt-8 pb-20 bg-[#f0f9ff] border-y border-slate-200 relative overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+        
+        {/* Centered purple-green Title (Matches News Style) */}
+        <div className="text-center max-w-4xl mx-auto space-y-4 mb-12">
+          <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-center leading-none">
+            <span className="text-[#9c27b0] font-black drop-shadow-sm">
+              PRODUK
+            </span>{" "}
+            <span className="text-[#0ff60a] font-black drop-shadow-xs">
+              WARGA BELAJAR
+            </span>
           </h2>
-          <p className="text-slate-600 font-semibold leading-relaxed">
-            Dukung kreativitas warga belajar dengan membeli produk karya mereka. Dibuat dengan penuh kreativitas, berkualitas, dan harga terjangkau.
+          <p className="text-slate-700 font-bold text-xs sm:text-sm leading-relaxed px-4 max-w-2xl mx-auto text-center">
+            Etalase kreativitas dan kemandirian ekonomi warga belajar PKBM Menuju Makmur melalui berbagai produk berkualitas hasil karya tangan terampil.
           </p>
         </div>
 
         {/* Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
           {productItems.map((product) => (
             <Dialog key={product.id}>
               <DialogTrigger asChild>
-                <Card className="overflow-hidden border-2 hover:border-[#ff6105] transition-all duration-300 flex flex-col shadow-lg bg-white group cursor-pointer">
-                  
-                  {/* Visual Representation of product */}
-                  <div className="h-48 w-full relative overflow-hidden bg-slate-100">
+                <div 
+                  className="bg-white rounded-3xl overflow-hidden shadow-lg p-4 flex flex-col justify-between border border-slate-100 group hover:border-[#ff6105] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer text-left"
+                >
+                  {/* Visual Representation of product - Matches News/Agenda Image Frame */}
+                  <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-slate-50 border border-slate-100 shadow-inner">
                     <img 
                       src={product.image} 
                       alt={product.name}
                       loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent"></div>
                     
                     {/* Floating Price Tag */}
-                    <span className="absolute bottom-4 right-4 inline-flex items-center rounded-lg bg-[#ff6105] px-3.5 py-1 text-sm font-black text-white shadow-md">
+                    <span className="absolute bottom-3 right-3 inline-block rounded-lg bg-[#ff6105] px-2.5 py-1 text-[11px] font-black text-white shadow-md">
                       {product.price}
                     </span>
                   </div>
 
-                  <CardContent className="p-6 flex-1 space-y-2">
-                    <h3 className="text-lg font-black text-[#280f91] group-hover:text-[#ff6105] transition-colors leading-tight">
-                      {product.name}
-                    </h3>
-                    <p className="text-slate-600 text-sm font-medium leading-relaxed">
-                      {product.description}
-                    </p>
-                  </CardContent>
+                  {/* Text Details Area */}
+                  <div className="space-y-3 text-left px-2 flex-1 flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <h3 className="text-sm font-black text-[#280f91] group-hover:text-[#ff6105] transition-colors leading-tight line-clamp-2 uppercase">
+                        {product.name}
+                      </h3>
+                      <p className="text-slate-600 text-[10px] font-semibold leading-relaxed line-clamp-2">
+                        {product.description}
+                      </p>
+                    </div>
 
-                  {/* Footer with WA link and tooltipped hover */}
-                  <CardFooter className="p-6 pt-0" onClick={(e) => e.stopPropagation()}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button asChild className="w-full rounded-xl bg-emerald-600 hover:bg-[#ff6105] text-white font-bold h-11 transition-all flex items-center justify-center gap-2 cursor-pointer">
-                          <a 
-                            href={product.waLink} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                          >
-                            <MessageCircle className="h-5 w-5" />
-                            Hubungi Penjual
-                          </a>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent className="bg-slate-950 text-white font-bold py-1.5 px-3 rounded-lg shadow-xl text-xs">
-                        Hubungi penjual via WhatsApp
-                      </TooltipContent>
-                    </Tooltip>
-                  </CardFooter>
-                </Card>
+                    <div className="pt-3 border-t border-slate-50 flex items-center justify-between mt-2" onClick={(e) => e.stopPropagation()}>
+                      <a 
+                        href={product.waLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-[8px] font-black text-emerald-600 hover:text-[#ff6105] uppercase tracking-wider transition-colors flex items-center gap-1"
+                      >
+                        PESAN VIA WA &gt;&gt;
+                      </a>
+                      <span className="text-slate-300 text-[8px] font-black uppercase">READY</span>
+                    </div>
+                  </div>
+                </div>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl">
                 <DialogHeader>

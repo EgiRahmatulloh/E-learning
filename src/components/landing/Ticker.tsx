@@ -40,22 +40,45 @@ export default function Ticker() {
       .catch((err) => console.error("Gagal memuat pengumuman:", err));
   }, []);
 
-  // Use latest active announcement, otherwise don't display ticker at all
-  const activeAnnouncement = announcements[announcements.length - 1];
+  // Don't render if no active announcements
+  if (announcements.length === 0) return null;
 
-  if (!activeAnnouncement) return null;
+  // Build the marquee content with all announcements
+  const renderAnnouncements = () =>
+    announcements.map((item, index) => (
+      <span key={item.id} className="inline-flex items-center">
+        <span className="text-sm md:text-base font-bold text-white px-4">
+          📢 {item.text}{" "}
+          <span className="text-[#cafc05] font-extrabold tracking-wide ml-2">
+            [{formatDateDisplay(item.date)}]
+          </span>
+        </span>
+        {/* Separator between announcements */}
+        {index < announcements.length - 1 && (
+          <span className="text-white/40 mx-4 text-lg">•</span>
+        )}
+      </span>
+    ));
 
   return (
-    <div className="bg-[#e5fbff] border-b border-blue-200/60 py-3.5 px-4 overflow-hidden relative">
-      <div className="mx-auto max-w-7xl flex flex-col md:flex-row items-center gap-3">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 text-white px-3 py-1 text-xs font-black uppercase tracking-wider shadow-sm animate-pulse shrink-0">
-          <AlertCircle className="h-3.5 w-3.5" />
-          Pengumuman
-        </span>
-        <div className="text-sm md:text-base font-bold text-[#280f91] text-center md:text-left leading-relaxed">
-          <span className="animate-in fade-in duration-300">
-            📢 {activeAnnouncement.text} <span className="text-[#ff6105] font-extrabold tracking-wide">{formatDateDisplay(activeAnnouncement.date)}</span>
-          </span>
+    <div className="fixed bottom-0 left-0 w-full z-50 bg-[#280f91] border-t border-white/10 py-2 shadow-[0_-4px_20px_rgba(0,0,0,0.4)] backdrop-blur-md">
+      <div className="flex items-center">
+        {/* Label - Fixed on the left */}
+        <div className="bg-[#ff6105] text-white px-4 py-1 flex items-center gap-2 z-10 relative shadow-[5px_0_15px_rgba(0,0,0,0.3)]">
+          <AlertCircle className="h-4 w-4 animate-pulse" />
+          <span className="text-xs font-black uppercase tracking-widest whitespace-nowrap">Pengumuman</span>
+        </div>
+        
+        {/* Marquee Container - seamless infinite loop */}
+        <div className="flex-1 overflow-hidden whitespace-nowrap relative">
+          <div className="animate-marquee">
+            {[0, 1, 2, 3].map((i) => (
+              <span key={i} className="inline-flex items-center">
+                {renderAnnouncements()}
+                <span className="text-white/40 mx-4 text-lg">•</span>
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     </div>

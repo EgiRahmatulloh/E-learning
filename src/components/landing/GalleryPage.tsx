@@ -121,7 +121,7 @@ export default function GalleryPage(_props: GalleryPageProps) {
   };
 
   return (
-    <section id="galeri-landing" className="py-20 bg-[#b2ebf2] border-y border-slate-300 relative overflow-hidden min-h-[85vh] text-left">
+    <section id="galeri-landing" className="pt-8 pb-20 bg-[#b2ebf2] border-y border-slate-300 relative overflow-hidden min-h-[85vh] text-left">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
 
 

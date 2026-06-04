@@ -90,13 +90,13 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
     }
   };
 
-  // Limit homepage news list to 3 items
-  const displayNews = isDetailed ? filteredNews : filteredNews.slice(0, 3);
+  // Limit homepage news list to 4 items
+  const displayNews = isDetailed ? filteredNews : filteredNews.slice(0, 4);
 
   // DETAILED FULL NEWS PAGE VIEW (Halaman Menu Berita)
   if (isDetailed) {
     return (
-      <section id="berita" className="py-20 bg-[#cdeff6] border-y border-slate-300 relative overflow-hidden min-h-[85vh]">
+      <section id="berita" className="pt-8 pb-20 bg-[#cdeff6] border-y border-slate-300 relative overflow-hidden min-h-[85vh]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
           
 
@@ -161,14 +161,14 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
             </div>
           </div>
 
-          {/* NEWS GRID (3 Column Cards vertical) */}
+          {/* NEWS GRID (4 Column Cards vertical) */}
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-3">
               <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#9c27b0] border-t-transparent" />
               <span className="text-sm font-bold text-[#9c27b0] uppercase tracking-widest">Memuat Berita...</span>
             </div>
           ) : displayNews.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
               {displayNews.map((news) => (
                 <Dialog key={news.id}>
                   <DialogTrigger asChild>
@@ -282,7 +282,7 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
 
   // DEFAULT HOMEPAGE KABAR TERKINI VIEW
   return (
-    <section id="berita" className="py-20 bg-[#cdeff6] border-y border-slate-300 relative overflow-hidden">
+    <section id="berita" className="pt-8 pb-20 bg-[#cdeff6] border-y border-slate-300 relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Centered purple-green Title */}
@@ -308,16 +308,16 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
           </div>
         ) : displayNews.length > 0 ? (
           <div className="space-y-12 max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {displayNews.map((news) => (
                 <Dialog key={news.id}>
                   <DialogTrigger asChild>
                     <div 
                       onClick={() => incrementHits(news.id)}
-                      className="bg-[#20108a] rounded-3xl overflow-hidden shadow-2xl p-4 flex flex-col justify-between border border-blue-900/30 group hover:-translate-y-1.5 transition-all duration-300 cursor-pointer text-left"
+                      className="bg-white rounded-3xl overflow-hidden shadow-lg p-4 flex flex-col justify-between border border-slate-100 group hover:border-[#ff6105] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer text-left"
                     >
                       {/* Top part: Image + Category overlay */}
-                      <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-blue-950">
+                      <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-slate-50">
                         {news.foto ? (
                           <img 
                             src={news.foto} 
@@ -325,14 +325,14 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-tr from-indigo-900 to-purple-800 flex items-center justify-center text-white/20">
+                          <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-300">
                             <Calendar className="h-12 w-12" />
                           </div>
                         )}
 
                         {/* Category tag overlay on top left */}
-                        <div className="absolute top-4 left-4 z-10">
-                          <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[9px] px-3.5 py-1.5 rounded-full uppercase shadow-md tracking-wider">
+                        <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[85%] z-10 text-center">
+                          <span className="inline-block w-full bg-[#9c27b0] text-white font-extrabold text-[9px] px-3 py-1.5 rounded-full uppercase shadow-md tracking-wider">
                             {news.kategori}
                           </span>
                         </div>
@@ -341,17 +341,17 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
                       {/* Bottom part: Title + Excerpt + link */}
                       <div className="space-y-3 text-left px-2 flex-1 flex flex-col justify-between">
                         <div className="space-y-2">
-                          <h3 className="text-base font-black text-[#00ff00] leading-tight uppercase line-clamp-2">
+                          <h3 className="text-sm font-black text-[#280f91] leading-tight uppercase line-clamp-2 group-hover:text-[#ff6105] transition-colors">
                             {news.judul}
                           </h3>
-                          <p className="text-white/80 text-xs font-semibold leading-relaxed line-clamp-3">
+                          <p className="text-slate-600 text-[10px] font-semibold leading-relaxed line-clamp-3">
                             {news.konten}
                           </p>
                         </div>
 
-                        <div className="pt-4 border-t border-white/10 flex items-center justify-between text-[9px] text-[#00ff00] font-black uppercase tracking-wider mt-3">
-                          <span className="hover:underline">SELENGKAPNYA &gt;&gt;&gt;</span>
-                          <span className="text-white/50">{news.tanggalPosting}</span>
+                        <div className="pt-3 border-t border-slate-50 flex items-center justify-between text-[8px] text-slate-400 font-black uppercase tracking-wider mt-2">
+                          <span className="hover:text-[#ff6105] transition-colors uppercase">SELENGKAPNYA &gt;&gt;</span>
+                          <span className="text-slate-300">{news.tanggalPosting}</span>
                         </div>
                       </div>
 

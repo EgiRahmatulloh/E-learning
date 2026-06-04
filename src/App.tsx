@@ -21,7 +21,6 @@ import GalleryPage from "./components/landing/GalleryPage";
 import Products from "./components/landing/Products";
 import Testimonials from "./components/landing/Testimonials";
 import Gallery from "./components/landing/Gallery";
-import Contact from "./components/landing/Contact";
 import Footer from "./components/landing/Footer";
 import LoginModal from "./components/landing/LoginModal";
 
@@ -192,7 +191,7 @@ function App() {
           </div>
         ) : currentPath === "/produk-wb" ? (
           <div className="pt-20">
-            <ProductsPage onNavigate={navigate} />
+            <ProductsPage />
           </div>
         ) : currentPath === "/alumni" ? (
           <div className="pt-20">
@@ -214,9 +213,9 @@ function App() {
             
             <Ticker />
             
-            <Agenda isDetailed={false} onNavigate={navigate} />
-            
             <Profile isDetailed={false} onNavigate={navigate} />
+            
+            <Agenda isDetailed={false} onNavigate={navigate} />
             
             <News isDetailed={false} onNavigate={navigate} />
             
@@ -230,7 +229,6 @@ function App() {
           </>
         )}
         
-        <Contact />
         <Footer />
 
         <LoginModal

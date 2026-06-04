@@ -41,7 +41,7 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
   // If detailed page view (halaman menu agenda)
   if (isDetailed) {
     return (
-      <section id="agenda" className="py-20 bg-[#cdeff6] border-y border-slate-300 relative overflow-hidden min-h-[85vh]">
+      <section id="agenda" className="pt-8 pb-20 bg-[#cdeff6] border-y border-slate-300 relative overflow-hidden min-h-[85vh]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
           
 
@@ -61,69 +61,75 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
             </p>
           </div>
 
-          {/* Agenda items list in horizontal news format */}
+          {/* Agenda items grid (4-Column Grid, News Style) */}
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-3">
               <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#9c27b0] border-t-transparent" />
               <span className="text-sm font-bold text-[#9c27b0] uppercase tracking-widest">Memuat Agenda...</span>
             </div>
           ) : displayAgendas.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
               {displayAgendas.map((agenda) => (
                 <div 
                   key={agenda.id} 
-                  className="bg-white rounded-3xl overflow-hidden shadow-lg flex flex-col sm:flex-row border border-slate-200/50 group"
+                  className="bg-[#20108a] rounded-3xl overflow-hidden shadow-2xl p-4 flex flex-col justify-between border border-blue-900/30 group hover:-translate-y-1.5 transition-all duration-300 text-left"
                 >
-                  {/* Image part with wave at bottom */}
-                  <div className="sm:w-48 h-48 shrink-0 relative overflow-hidden bg-slate-100">
+                  {/* Top part: Image + Execution Date overlay */}
+                  <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-blue-950">
                     {agenda.foto ? (
                       <img 
                         src={agenda.foto} 
                         alt={agenda.nama} 
-                        className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-tr from-cyan-400 to-indigo-500 flex items-center justify-center text-white/30">
+                      <div className="w-full h-full bg-gradient-to-tr from-indigo-900 to-purple-800 flex items-center justify-center text-white/20">
                         <Calendar className="h-12 w-12" />
                       </div>
                     )}
 
-                    {/* Green wave overlay at the bottom of the image */}
-                    <div className="absolute bottom-0 left-0 right-0 w-full overflow-hidden leading-[0]">
-                      <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-full h-8 text-[#98cc29] fill-current">
-                        <path d="M985.66,92.83C906.67,72,823.78,31,743.84,14.19c-82.26-17.34-168.06-16.33-250.45.39-57.84,11.73-114,31.07-172,41.86C245.54,64.39,165.73,45.88,90.47,26.79,57.05,18.3,26.9,8.75,0,0V120H1200V95.8C1132.19,118.92,1055.71,111.31,985.66,92.83Z"></path>
-                      </svg>
-                    </div>
-
-                    {/* Date Badge */}
-                    <div className="absolute top-4 left-4 z-10">
-                      <span className="inline-block bg-[#ffb300] text-white font-extrabold text-[10px] px-3.5 py-1.5 rounded-full uppercase shadow-md tracking-wider">
+                    {/* Date Badge overlay on top left */}
+                    <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[85%] z-10 text-center">
+                      <span className="inline-block w-full bg-[#ffb300] text-white font-extrabold text-[9px] px-3 py-1.5 rounded-full uppercase shadow-md tracking-wider truncate">
                         {agenda.pelaksanaan}
                       </span>
                     </div>
                   </div>
 
-                  {/* Text details in black/slate */}
-                  <div className="flex-1 p-6 flex flex-col justify-start text-left space-y-2">
-                    <h3 className="text-xl font-bold text-black uppercase leading-tight">
-                      {agenda.nama}
-                    </h3>
-                    <p className="text-slate-650 text-xs font-semibold leading-relaxed">
-                      {agenda.keterangan || "Deskripsi"}
-                    </p>
+                  {/* Bottom part: Title + Details */}
+                  <div className="space-y-3 text-left px-2 flex-1 flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <h3 className="text-sm font-black text-[#00ff00] leading-tight uppercase line-clamp-2">
+                        {agenda.nama}
+                      </h3>
+                      <p className="text-white/80 text-[10px] font-semibold leading-relaxed line-clamp-3">
+                        {agenda.keterangan || "Kegiatan resmi PKBM Menuju Makmur untuk meningkatkan kompetensi warga belajar."}
+                      </p>
+                    </div>
+
+                    <div className="pt-3 border-t border-white/10 flex flex-col gap-1.5 mt-2">
+                      <div className="flex items-center gap-2 text-[#00ff00] text-[9px] font-black uppercase tracking-wider">
+                        <Home className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{agenda.lokasi || "PKBM MENUJU MAKMUR"}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[#00ff00] text-[9px] font-black uppercase tracking-wider">
+                        <Clock className="h-3 w-3 shrink-0" />
+                        <span>{agenda.waktu || "08.00 WIB"}</span>
+                      </div>
+                    </div>
                   </div>
 
                 </div>
               ))}
             </div>
           ) : (
-            <div className="max-w-md mx-auto bg-white rounded-3xl p-8 text-center space-y-4 shadow-xl border border-slate-200">
-              <div className="h-16 w-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto">
-                <Calendar className="h-8 w-8 text-orange-600" />
+            <div className="max-w-md mx-auto bg-[#20108a] rounded-3xl p-8 text-center space-y-4 shadow-xl border border-blue-900/30">
+              <div className="h-16 w-16 bg-[#00ff00]/10 rounded-2xl flex items-center justify-center mx-auto">
+                <ShieldAlert className="h-8 w-8 text-[#00ff00]" />
               </div>
-              <h3 className="text-lg font-black text-slate-800 uppercase tracking-wider">Belum Ada Agenda</h3>
-              <p className="text-slate-500 font-bold text-xs">
-                Jadwal pelaksanaan kegiatan saat ini belum dipublikasikan oleh administrator.
+              <h3 className="text-lg font-black text-white uppercase tracking-wider">Belum Ada Agenda</h3>
+              <p className="text-white/70 font-bold text-xs">
+                Jadwal pelaksanaan kegiatan saat ini belum tersedia.
               </p>
             </div>
           )}
@@ -135,7 +141,7 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
 
   // Otherwise, default landing homepage view
   return (
-    <section id="agenda" className="py-20 bg-[#aee2ed] border-y border-slate-350 relative overflow-hidden">
+    <section id="agenda" className="pt-8 pb-20 bg-[#aee2ed] border-y border-slate-350 relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Centered, dark blue header */}
@@ -160,9 +166,9 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
               {displayAgendas.map((agenda) => (
                 <div 
                   key={agenda.id} 
-                  className="bg-[#20108a] rounded-3xl overflow-hidden shadow-2xl p-4 flex flex-col justify-between border border-blue-900/30 group hover:-translate-y-1.5 transition-all duration-300"
+                  className="bg-white rounded-3xl overflow-hidden shadow-lg p-4 flex flex-col justify-between border border-slate-100 group hover:border-[#ff6105] hover:-translate-y-1.5 transition-all duration-300"
                 >
-                  <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-blue-950">
+                  <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-slate-50">
                     {agenda.foto ? (
                       <img 
                         src={agenda.foto} 
@@ -170,7 +176,7 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-tr from-indigo-900 to-purple-800 flex items-center justify-center text-white/20">
+                      <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-300">
                         <Calendar className="h-12 w-12" />
                       </div>
                     )}
@@ -183,18 +189,18 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
                   </div>
 
                   <div className="space-y-3.5 text-left px-2">
-                    <h3 className="text-sm font-black text-[#00ff00] leading-tight uppercase line-clamp-2">
+                    <h3 className="text-sm font-black text-[#280f91] leading-tight uppercase line-clamp-2 group-hover:text-[#ff6105] transition-colors">
                       {agenda.nama}
                     </h3>
                     
-                    <div className="flex items-start gap-2.5 text-[#00ff00]">
+                    <div className="flex items-start gap-2.5 text-slate-500">
                       <Home className="h-4 w-4 shrink-0 mt-0.5" />
                       <span className="text-[11px] font-black uppercase tracking-wide truncate">
                         {agenda.lokasi || "PKBM MENUJU MAKMUR"}
                       </span>
                     </div>
 
-                    <div className="flex items-start gap-2.5 text-[#00ff00]">
+                    <div className="flex items-start gap-2.5 text-slate-500">
                       <Clock className="h-4 w-4 shrink-0 mt-0.5" />
                       <span className="text-[11px] font-black uppercase tracking-wide truncate">
                         {agenda.waktu || "08.00 WIB"}

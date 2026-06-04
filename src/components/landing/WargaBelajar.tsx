@@ -83,7 +83,7 @@ export default function WargaBelajar(_props: WargaBelajarProps) {
   const currentStudents = filteredStudents.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
-    <section id="warga-belajar" className="py-20 bg-[#cdeff6] border-y border-slate-300 relative overflow-hidden min-h-[85vh]">
+    <section id="warga-belajar" className="pt-8 pb-20 bg-[#cdeff6] border-y border-slate-300 relative overflow-hidden min-h-[85vh]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         
 
@@ -162,7 +162,7 @@ export default function WargaBelajar(_props: WargaBelajarProps) {
           </div>
         </div>
 
-        {/* WARGA BELAJAR GRID (5-Column Grid with Deep Purple bg and bright green text overlay) */}
+        {/* WARGA BELAJAR GRID (4-Column Grid) */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16 space-y-3">
             <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#9c27b0] border-t-transparent" />
@@ -170,15 +170,15 @@ export default function WargaBelajar(_props: WargaBelajarProps) {
           </div>
         ) : currentStudents.length > 0 ? (
           <div className="space-y-12">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-7xl mx-auto">
               {currentStudents.map((student) => (
                 <Dialog key={student.id}>
                   <DialogTrigger asChild>
                     <div 
-                      className="bg-[#20108a] rounded-3xl overflow-hidden shadow-2xl p-4 flex flex-col justify-between border border-blue-900/30 group hover:-translate-y-1.5 transition-all duration-300 cursor-pointer"
+                      className="bg-[#20108a] rounded-2xl overflow-hidden shadow-xl p-3 flex flex-col justify-between border border-blue-900/30 group hover:-translate-y-1.5 transition-all duration-300 cursor-pointer"
                     >
                       {/* Photo Frame */}
-                      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-blue-950 mb-3 border border-blue-900/20">
+                      <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-blue-950 mb-2 border border-blue-900/20">
                         {student.foto ? (
                           <img 
                             src={student.foto} 
@@ -187,15 +187,15 @@ export default function WargaBelajar(_props: WargaBelajarProps) {
                           />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-tr from-indigo-900 to-purple-850 flex flex-col items-center justify-center text-white/20">
-                            <svg className="w-20 h-20 opacity-30" fill="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-16 h-16 opacity-30" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                             </svg>
                           </div>
                         )}
 
                         {/* Program overlay tag (top-left) */}
-                        <div className="absolute top-2.5 left-2.5 z-10">
-                          <span className={`inline-block text-white font-extrabold text-[8px] px-2.5 py-1 rounded-full uppercase shadow-md tracking-wider ${
+                        <div className="absolute top-2 left-2 z-10">
+                          <span className={`inline-block text-white font-extrabold text-[7px] px-2 py-0.5 rounded-full uppercase shadow-md tracking-wider ${
                             student.program.includes("C") ? "bg-[#ffb300]" : student.program.includes("B") ? "bg-blue-600" : "bg-emerald-600"
                           }`}>
                             {student.program}
@@ -203,11 +203,11 @@ export default function WargaBelajar(_props: WargaBelajarProps) {
                         </div>
 
                         {/* Text Overlay inside photo at the bottom (Bright Green) */}
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3.5 text-left">
-                          <h3 className="text-xs font-black text-[#0ff60a] uppercase tracking-wide line-clamp-1">
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-2.5 text-left">
+                          <h3 className="text-[10px] font-black text-[#0ff60a] uppercase tracking-tight line-clamp-1">
                             {student.nama}
                           </h3>
-                          <p className="text-[10px] font-bold text-[#0ff60a] uppercase tracking-wider line-clamp-1 mt-0.5">
+                          <p className="text-[8px] font-bold text-[#0ff60a] uppercase tracking-wider line-clamp-1 mt-0.5 opacity-80">
                             {student.kelas}
                           </p>
                         </div>

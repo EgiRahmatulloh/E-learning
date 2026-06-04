@@ -52,13 +52,13 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
       .finally(() => setLoading(false));
   }, []);
 
-  // Limit homepage tutors grid to 3 items
-  const displayTutors = isDetailed ? tutorsList : tutorsList.slice(0, 3);
+  // Limit homepage tutors grid to 4 items
+  const displayTutors = isDetailed ? tutorsList : tutorsList.slice(0, 4);
 
   // DETAILED VIEW (Menu Tutor - Mockup 1)
   if (isDetailed) {
     return (
-      <section id="tutor" className="py-20 bg-[#cdeff6] border-y border-slate-300 relative overflow-hidden min-h-[85vh]">
+      <section id="tutor" className="pt-8 pb-20 bg-[#cdeff6] border-y border-slate-300 relative overflow-hidden min-h-[85vh]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
           
 
@@ -78,22 +78,22 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
             </p>
           </div>
 
-          {/* TUTORS GRID (Mockup 1 layout with deep purple/blue bg and green text) */}
+          {/* TUTORS GRID (4-Column Grid) */}
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-3">
               <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#9c27b0] border-t-transparent" />
               <span className="text-sm font-bold text-[#9c27b0] uppercase tracking-widest">Memuat data tutor...</span>
             </div>
           ) : displayTutors.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-7xl mx-auto">
               {displayTutors.map((tutor) => (
                 <Dialog key={tutor.id}>
                   <DialogTrigger asChild>
                     <div 
-                      className="bg-[#20108a] rounded-3xl overflow-hidden shadow-2xl p-4 flex flex-col justify-between border border-blue-900/30 group hover:-translate-y-1.5 transition-all duration-300 cursor-pointer"
+                      className="bg-[#20108a] rounded-2xl overflow-hidden shadow-xl p-3 flex flex-col justify-between border border-blue-900/30 group hover:-translate-y-1.5 transition-all duration-300 cursor-pointer"
                     >
                       {/* Photo Frame */}
-                      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-blue-950 mb-3 border border-blue-900/20">
+                      <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-blue-950 mb-2 border border-blue-900/20">
                         {tutor.foto ? (
                           <img 
                             src={tutor.foto} 
@@ -102,18 +102,18 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                           />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-tr from-indigo-900 to-purple-800 flex flex-col items-center justify-center text-white/20">
-                            <svg className="w-20 h-20 opacity-30" fill="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-12 h-12 opacity-30" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                             </svg>
                           </div>
                         )}
 
                         {/* Text Overlay inside photo at the bottom */}
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 text-left">
-                          <h3 className="text-xs font-black text-[#0ff60a] uppercase tracking-wide line-clamp-1">
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-2 text-left">
+                          <h3 className="text-[10px] font-black text-[#0ff60a] uppercase tracking-tight line-clamp-1">
                             {tutor.nama}
                           </h3>
-                          <p className="text-[10px] font-bold text-[#0ff60a] uppercase tracking-wider line-clamp-1 mt-0.5">
+                          <p className="text-[8px] font-bold text-[#0ff60a] uppercase tracking-wider line-clamp-1 mt-0.5 opacity-80">
                             {tutor.tutorMapel}
                           </p>
                         </div>
@@ -257,19 +257,16 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
 
   // DEFAULT HOMEPAGE VIEW (Tenaga Pendidik Section)
   return (
-    <section id="tutor" className="py-24 bg-white relative border-t border-slate-200">
+    <section id="tutor" className="pt-8 pb-20 bg-white relative border-t border-slate-200">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row items-end justify-between gap-6 mb-16">
-          <div className="space-y-4 max-w-2xl text-left">
-            <span className="text-sm font-extrabold uppercase tracking-widest text-[#ff6105] bg-orange-100 rounded-full px-4 py-1.5 inline-block">
+        <div className="flex flex-col md:flex-row items-end justify-between gap-6 mb-12">
+          <div className="space-y-3 max-w-2xl text-left">
+            <span className="text-xs font-extrabold uppercase tracking-widest text-[#ff6105] bg-orange-100 rounded-full px-4 py-1.5 inline-block">
               Tenaga Pendidik
             </span>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#280f91] uppercase">
               Daftar Tutor PKBM
             </h2>
-            <p className="text-slate-650 font-semibold leading-relaxed">
-              Didukung oleh tutor dan tenaga pendidik yang profesional, sabar, kompeten, dan berdedikasi tinggi membantu warga belajar berkembang.
-            </p>
           </div>
 
           <Button
@@ -293,7 +290,7 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
             <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#280f91] border-t-transparent" />
           </div>
         ) : displayTutors.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {displayTutors.map((tutor) => (
               <Dialog key={tutor.id}>
                 <DialogTrigger asChild>
@@ -308,34 +305,35 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                         />
                       ) : (
                         <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
-                          No Photo
+                          <svg className="w-12 h-12 opacity-30" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                          </svg>
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent"></div>
-                      <span className="absolute top-4 left-4 inline-flex items-center gap-1 rounded-full bg-[#280f91] px-3.5 py-1 text-[10px] font-black tracking-widest text-white uppercase shadow-xs z-10">
-                        {tutor.tutorMapel}
-                      </span>
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent h-1/2"></div>
+                      <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[85%] z-10 text-center">
+                        <span className="inline-block w-full bg-[#280f91] text-white font-extrabold text-[9px] py-2 px-3 rounded-full uppercase shadow-md tracking-wider truncate">
+                          {tutor.tutorMapel}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="p-6 flex-1 space-y-2.5">
-                      <h3 className="text-base font-black text-[#280f91] leading-tight uppercase">
+                    <div className="p-4 flex-1 space-y-2">
+                      <h3 className="text-sm font-black text-[#280f91] leading-tight uppercase line-clamp-2">
                         {tutor.nama}
                       </h3>
-                      <p className="text-slate-500 text-[10px] font-black uppercase tracking-wider">
+                      <p className="text-slate-500 text-[9px] font-black uppercase tracking-wider">
                         Program: {tutor.program || "Paket C"}
-                      </p>
-                      <p className="text-slate-600 text-xs font-semibold leading-relaxed line-clamp-2">
-                        Pendidikan: {tutor.pendidikan || "-"} ({tutor.tempatTglLahir})
                       </p>
                     </div>
                     
-                    <div className="p-6 pt-0 border-t border-slate-50/50 mt-2">
+                    <div className="p-4 pt-0 border-t border-slate-50/50 mt-1">
                       <Button 
                         variant="link" 
-                        className="p-0 h-auto font-black text-xs text-[#ff6105] group-hover:translate-x-1.5 transition-transform inline-flex items-center gap-1.5 uppercase"
+                        className="p-0 h-auto font-black text-[10px] text-[#ff6105] group-hover:translate-x-1.5 transition-transform inline-flex items-center gap-1.5 uppercase"
                       >
-                        Detail Profil Tutor
-                        <ArrowRight className="h-3.5 w-3.5" />
+                        Profil Tutor
+                        <ArrowRight className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>

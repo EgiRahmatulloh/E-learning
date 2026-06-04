@@ -6,7 +6,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
   DialogClose
 } from "@/components/ui/dialog";
@@ -14,39 +13,37 @@ import {
 interface ProductItem {
   id: number;
   namaProduk: string;
-  deskripsi: string;
-  noHp: string;
+  harga: number;
   penjual: string;
   satuan: string;
-  harga: number;
   status: string;
+  deskripsi: string;
+  noHp: string;
   gambar: string;
 }
 
-interface ProductsPageProps {
-  onNavigate?: (path: string) => void;
-}
-
-export default function ProductsPage(_props: ProductsPageProps) {
-  const [productsList, setProductsList] = useState<ProductItem[]>([]);
+export default function ProductsPage() {
+  const [products, setProducts] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
 
   useEffect(() => {
     fetch("/api/products")
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.data) {
-          setProductsList(data.data);
+          setProducts(data.data.filter((p: ProductItem) => p.status === "AKTIF"));
         }
       })
-      .catch((err) => console.error("Failed to fetch products:", err))
+      .catch((err) => console.error("Gagal memuat produk:", err))
       .finally(() => setLoading(false));
   }, []);
 
-  const filteredProducts = productsList.filter((item) =>
-    item.namaProduk.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredProducts = products.filter((p) =>
+    p.namaProduk.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.deskripsi.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const formatWaNumber = (num: string) => {
@@ -70,15 +67,13 @@ export default function ProductsPage(_props: ProductsPageProps) {
   };
 
   return (
-    <section id="products-landing" className="py-20 bg-[#f0f9ff] border-y border-slate-200 relative overflow-hidden min-h-[85vh] text-left">
+    <section id="products-landing" className="pt-8 pb-20 bg-[#f0f9ff] border-y border-slate-200 relative overflow-hidden min-h-[85vh] text-left">
       {/* Dynamic Background Blob elements */}
       <div className="absolute top-0 right-0 -translate-y-12 translate-x-12 w-96 h-96 bg-cyan-200/40 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-0 left-0 translate-y-12 -translate-x-12 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         
-
-
         {/* Centered Title */}
         <div className="text-center max-w-4xl mx-auto space-y-4 mb-12">
           <span className="text-xs font-extrabold uppercase tracking-widest text-emerald-600 bg-emerald-100 rounded-full px-4 py-1.5 inline-block">
@@ -100,13 +95,13 @@ export default function ProductsPage(_props: ProductsPageProps) {
               className="w-full bg-white/95 text-slate-700 text-sm font-semibold pl-12 pr-4 py-3.5 rounded-2xl border border-cyan-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-md placeholder-slate-400"
               placeholder="Cari produk warga belajar..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 h-5 w-5" />
           </div>
         </div>
 
-        {/* Products Grid */}
+        {/* Products Grid (4 Column Cards vertical, News Style) */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4"></div>
@@ -121,12 +116,19 @@ export default function ProductsPage(_props: ProductsPageProps) {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {filteredProducts.map((product) => (
-              <div key={product.id} className="bg-white rounded-3xl overflow-hidden border border-cyan-100 hover:border-emerald-500/50 hover:shadow-2xl transition-all duration-300 flex flex-col shadow-lg group">
+              <div 
+                key={product.id} 
+                onClick={() => {
+                  setSelectedProduct(product);
+                  setDetailModalVisible(true);
+                }}
+                className="bg-[#20108a] rounded-3xl overflow-hidden border border-blue-900/30 group hover:-translate-y-1.5 transition-all duration-300 flex flex-col shadow-2xl cursor-pointer"
+              >
                 
                 {/* Image Container with Hover glow */}
-                <div className="h-52 w-full relative overflow-hidden bg-slate-50 border-b border-slate-100">
+                <div className="h-52 w-full relative overflow-hidden bg-blue-950">
                   {product.gambar ? (
                     <img 
                       src={product.gambar} 
@@ -135,58 +137,32 @@ export default function ProductsPage(_props: ProductsPageProps) {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                     />
                   ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-100/50">
+                    <div className="w-full h-full flex flex-col items-center justify-center text-white/20 bg-slate-100/50">
                       <ShoppingBag className="h-10 w-10 mb-1" />
                       <span className="text-xs font-semibold">Foto Produk</span>
                     </div>
                   )}
                   
                   {/* Floating Price Tag */}
-                  <span className="absolute bottom-4 right-4 inline-flex items-center rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-black text-white shadow-md">
-                    Rp. {product.harga.toLocaleString("id-ID")},-
+                  <span className="absolute bottom-3 right-3 inline-flex items-center rounded-lg bg-[#ff6105] px-2.5 py-1.5 text-[11px] font-black text-white shadow-md">
+                    Rp {product.harga.toLocaleString("id-ID")}
                   </span>
                 </div>
 
                 {/* Card Body */}
-                <div className="p-6 flex-1 flex flex-col justify-between">
+                <div className="p-5 flex-1 space-y-3 flex flex-col justify-between">
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">
-                        Karya: {product.penjual}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-semibold uppercase">
-                        Per {product.satuan}
-                      </span>
-                    </div>
-                    <h3 className="text-lg font-black text-[#280f91] group-hover:text-emerald-600 transition-colors leading-tight truncate">
+                    <h3 className="text-sm font-black text-[#00ff00] leading-tight line-clamp-2 uppercase group-hover:text-white transition-colors">
                       {product.namaProduk}
                     </h3>
-                    <p className="text-slate-600 text-xs font-medium leading-relaxed line-clamp-3">
+                    <p className="text-white/80 text-[10px] font-semibold leading-relaxed line-clamp-2">
                       {product.deskripsi}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2 mt-6 pt-4 border-t border-slate-100">
-                    <Button 
-                      onClick={() => setSelectedProduct(product)}
-                      variant="outline" 
-                      className="flex-1 rounded-xl font-bold text-xs h-10 cursor-pointer"
-                    >
-                      Detail
-                    </Button>
-
-                    {/* Purchase WA link */}
-                    <a 
-                      href={getWaLink(product)} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex-1"
-                    >
-                      <Button className="w-full rounded-xl bg-[#00e676] hover:bg-emerald-600 text-emerald-950 hover:text-white font-bold text-xs h-10 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-                        <MessageCircle className="h-4 w-4 fill-current" />
-                        Pesan
-                      </Button>
-                    </a>
+                  <div className="pt-3 border-t border-white/10 flex items-center justify-between text-[8px] text-[#00ff00] font-black uppercase tracking-wider">
+                    <span>PENJUAL: {product.penjual}</span>
+                    <span className="text-white/50">{product.satuan}</span>
                   </div>
                 </div>
               </div>
@@ -194,67 +170,47 @@ export default function ProductsPage(_props: ProductsPageProps) {
           </div>
         )}
 
-        {/* Global Details Popup Modal */}
-        <Dialog open={selectedProduct !== null} onOpenChange={(open) => { if (!open) setSelectedProduct(null); }}>
+        {/* Product Detail Modal */}
+        <Dialog open={detailModalVisible} onOpenChange={setDetailModalVisible}>
           <DialogContent className="sm:max-w-md bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl">
             {selectedProduct && (
               <>
                 <DialogHeader>
-                  <DialogTitle className="text-2xl font-black text-[#280f91]">{selectedProduct.namaProduk}</DialogTitle>
-                  <DialogDescription className="text-sm font-bold text-emerald-600 mt-1">
-                    Rp. {selectedProduct.harga.toLocaleString("id-ID")},- / {selectedProduct.satuan}
-                  </DialogDescription>
+                  <DialogTitle className="text-2xl font-black text-[#280f91] uppercase">{selectedProduct.namaProduk}</DialogTitle>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-sm font-bold text-[#ff6105]">Rp {selectedProduct.harga.toLocaleString("id-ID")}</span>
+                    <span className="text-slate-300">|</span>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedProduct.satuan}</span>
+                  </div>
                 </DialogHeader>
-
                 <div className="space-y-4 py-4">
-                  <div className="h-56 w-full rounded-2xl relative overflow-hidden border border-slate-200 bg-slate-50">
-                    {selectedProduct.gambar ? (
-                      <img 
-                        src={selectedProduct.gambar} 
-                        alt={selectedProduct.namaProduk}
-                        className="w-full h-full object-cover" 
-                      />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-100">
-                        <ShoppingBag className="h-12 w-12 mb-2" />
-                        <span className="text-xs font-semibold">Foto Produk Belum Tersedia</span>
-                      </div>
-                    )}
+                  <div className="h-56 w-full rounded-2xl relative overflow-hidden border border-slate-200">
+                    <img 
+                      src={selectedProduct.gambar} 
+                      alt={selectedProduct.namaProduk}
+                      className="w-full h-full object-cover" 
+                    />
                   </div>
-
-                  <div className="space-y-2">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Deskripsi Karya</h4>
-                    <p className="text-slate-600 text-xs sm:text-sm font-semibold leading-relaxed whitespace-pre-line">
-                      {selectedProduct.deskripsi}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 bg-slate-50 p-3 rounded-2xl border border-slate-100 text-xs">
-                    <div>
-                      <span className="text-[10px] text-slate-400 font-bold block uppercase">Warga Belajar / Penjual</span>
-                      <span className="font-bold text-[#280f91]">{selectedProduct.penjual}</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-slate-400 font-bold block uppercase">No. HP / WA Penjual</span>
-                      <span className="font-mono font-bold text-slate-600">{selectedProduct.noHp}</span>
-                    </div>
-                  </div>
-
-                  <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100 flex items-start gap-2.5">
-                    <Sparkles className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span className="text-[11px] font-bold text-emerald-800 leading-normal">
-                      Produk ini dibuat langsung oleh kelompok wirausaha mandiri warga belajar PKBM Menuju Makmur sebagai karya kecakapan hidup (life skills).
+                  <p className="text-slate-600 text-sm font-semibold leading-relaxed">
+                    {selectedProduct.deskripsi}
+                  </p>
+                  <div className="bg-cyan-50 rounded-xl p-3 border border-cyan-100 flex items-start gap-2.5">
+                    <Sparkles className="h-5 w-5 text-cyan-600 shrink-0 mt-0.5" />
+                    <span className="text-xs font-semibold text-cyan-900 leading-relaxed">
+                      Karya wirausaha kreatif warga belajar PKBM Menuju Makmur. Mari dukung produk lokal kami!
                     </span>
                   </div>
+                  <div className="pt-2">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Penjual: {selectedProduct.penjual}</span>
+                  </div>
                 </div>
-
                 <DialogFooter className="flex sm:justify-between items-center gap-2 border-t border-slate-100 pt-4 mt-2">
                   <DialogClose asChild>
-                    <Button variant="outline" className="rounded-xl font-bold cursor-pointer text-xs">Tutup</Button>
+                    <Button variant="outline" className="rounded-xl font-bold cursor-pointer h-11 px-6">Tutup</Button>
                   </DialogClose>
                   <a href={getWaLink(selectedProduct)} target="_blank" rel="noopener noreferrer">
-                    <Button className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 px-5 flex items-center gap-1.5 cursor-pointer text-xs">
-                      <MessageCircle className="h-4 w-4" />
+                    <Button className="rounded-xl bg-emerald-600 hover:bg-[#ff6105] text-white font-bold h-11 px-5 flex items-center gap-2 cursor-pointer shadow-lg shadow-emerald-900/20">
+                      <MessageCircle className="h-5 w-5" />
                       Pesan Sekarang
                     </Button>
                   </a>

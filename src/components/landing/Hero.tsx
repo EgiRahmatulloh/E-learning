@@ -192,8 +192,8 @@ export default function Hero({ onServiceClick }: HeroProps) {
       </div>
 
       {/* ===== MAIN CONTENT OVERLAY ===== */}
-      <div className="relative z-20 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-full flex items-center min-h-screen">
-        <div className="w-full flex flex-col lg:flex-row items-center lg:items-end justify-between gap-8 py-16 sm:py-20">
+      <div className="relative z-20 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-full flex items-center pt-20">
+        <div className="w-full flex flex-col lg:flex-row items-center lg:items-center justify-between gap-8 py-12">
           
           {/* ===== LEFT: Welcome Text ===== */}
           <div className="flex-1 max-w-2xl text-center lg:text-left space-y-4">
@@ -268,18 +268,18 @@ export default function Hero({ onServiceClick }: HeroProps) {
 
           {/* ===== RIGHT: Layanan Digital Portal ===== */}
           <div className="shrink-0 w-full sm:w-auto">
-            <div className="max-w-xs mx-auto lg:mx-0">
+            <div className="max-w-[200px] mx-auto lg:mx-0">
               <h4 
-                className="text-center text-xl sm:text-2xl font-black text-white mb-6 tracking-tight"
+                className="text-center text-xl sm:text-2xl font-black text-white mb-4 tracking-tight"
                 style={{ textShadow: "0 2px 10px rgba(0,0,0,0.6)" }}
               >
                 Layanan Digital
               </h4>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {/* E-SPMB Button */}
                 <button
                   onClick={() => onServiceClick?.("e-spmb")}
-                  className="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-black text-base sm:text-lg tracking-wider py-4 px-6 shadow-lg shadow-purple-900/30 hover:shadow-xl hover:shadow-purple-800/40 active:scale-[0.97] transition-all duration-200 cursor-pointer"
+                  className="w-full group relative overflow-hidden rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-black text-sm sm:text-base tracking-wider py-2.5 px-4 shadow-lg shadow-purple-900/30 hover:shadow-xl hover:shadow-purple-800/40 active:scale-[0.97] transition-all duration-200 cursor-pointer"
                 >
                   <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                   <span className="relative">E-SPMB</span>
@@ -288,7 +288,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
                 {/* E-LEARNING Button */}
                 <button
                   onClick={() => onServiceClick?.("e-learning")}
-                  className="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#280f91] to-indigo-700 hover:from-indigo-600 hover:to-[#280f91] text-white font-black text-base sm:text-lg tracking-wider py-4 px-6 shadow-lg shadow-indigo-900/30 hover:shadow-xl hover:shadow-indigo-800/40 active:scale-[0.97] transition-all duration-200 cursor-pointer"
+                  className="w-full group relative overflow-hidden rounded-xl bg-gradient-to-r from-[#280f91] to-indigo-700 hover:from-indigo-600 hover:to-[#280f91] text-white font-black text-sm sm:text-base tracking-wider py-2.5 px-4 shadow-lg shadow-indigo-900/30 hover:shadow-xl hover:shadow-indigo-800/40 active:scale-[0.97] transition-all duration-200 cursor-pointer"
                 >
                   <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                   <span className="relative">E-LEARNING</span>
@@ -297,7 +297,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
                 {/* E-UJIAN Button */}
                 <button
                   onClick={() => onServiceClick?.("e-ujian")}
-                  className="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#ff6105] to-amber-500 hover:from-amber-500 hover:to-[#ff6105] text-white font-black text-base sm:text-lg tracking-wider py-4 px-6 shadow-lg shadow-orange-900/30 hover:shadow-xl hover:shadow-orange-700/40 active:scale-[0.97] transition-all duration-200 cursor-pointer"
+                  className="w-full group relative overflow-hidden rounded-xl bg-gradient-to-r from-[#ff6105] to-amber-500 hover:from-amber-500 hover:to-[#ff6105] text-white font-black text-sm sm:text-base tracking-wider py-2.5 px-4 shadow-lg shadow-orange-900/30 hover:shadow-xl hover:shadow-orange-700/40 active:scale-[0.97] transition-all duration-200 cursor-pointer"
                 >
                   <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                   <span className="relative">E-UJIAN</span>
@@ -333,7 +333,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
         href="https://wa.me/6282128594025?text=Halo%20Admin%20PKBM%20Menuju%20Makmur"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-2xl shadow-green-600/40 hover:bg-green-600 hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer animate-bounce"
+        className="fixed bottom-16 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-2xl shadow-green-600/40 hover:bg-green-600 hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer animate-bounce"
         style={{ animationDuration: "2s", animationIterationCount: 3 }}
         aria-label="Hubungi via WhatsApp"
       >

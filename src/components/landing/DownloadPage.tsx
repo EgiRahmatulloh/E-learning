@@ -72,7 +72,7 @@ export default function DownloadPage(_props: DownloadPageProps) {
   const currentItems = filteredDownloads.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
-    <section id="downloads-landing" className="py-20 bg-[#cdeff6] border-y border-slate-300 relative overflow-hidden min-h-[85vh] text-left">
+    <section id="downloads-landing" className="pt-8 pb-20 bg-[#cdeff6] border-y border-slate-300 relative overflow-hidden min-h-[85vh] text-left">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         
 
