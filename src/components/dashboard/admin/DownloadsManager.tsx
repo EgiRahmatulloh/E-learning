@@ -564,6 +564,9 @@ export default function DownloadsManager() {
                       </div>
                     )}
                   </div>
+                  <p className="text-[10px] font-bold text-white/80 mt-1 italic">
+                    * Batas maksimal ukuran dokumen adalah 100MB.
+                  </p>
                   <input
                     type="text"
                     placeholder="Masukkan URL berkas..."

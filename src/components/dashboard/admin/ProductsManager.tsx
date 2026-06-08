@@ -606,7 +606,7 @@ export default function ProductsManager() {
                   <span className="font-bold text-white block">
                     {uploading ? "Mengunggah..." : "Tarik Foto / Klik di sini"}
                   </span>
-                  <span className="text-[10px] text-cyan-100 block mt-0.5">Mendukung format JPG, PNG, WEBP</span>
+                  <span className="text-[10px] text-cyan-100 block mt-0.5">Mendukung format JPG, PNG, WEBP (Maksimal 5MB)</span>
                 </div>
 
                 <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/20">

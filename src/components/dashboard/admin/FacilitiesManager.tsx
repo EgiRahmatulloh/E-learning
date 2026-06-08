@@ -524,6 +524,10 @@ export default function FacilitiesManager() {
                   )}
                 </div>
 
+                <p className="text-[10px] font-bold text-white/80 mt-1.5 italic text-center">
+                  * Batas maksimal ukuran foto adalah 5MB.
+                </p>
+
                 <div className="w-full mt-4 flex flex-col gap-1 text-left">
                   <label className="text-[10px] font-black uppercase text-cyan-50">URL Foto Sarana</label>
                   <input

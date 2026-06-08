@@ -906,9 +906,10 @@ export default function TutorManager() {
                           </div>
                         )}
                       </div>
-                      <input
-                        type="text"
-                        placeholder="Masukkan URL foto..."
+                      <p className="text-[10px] font-bold text-white/80 mt-1 italic text-center">
+                        * Batas maksimal ukuran foto adalah 5MB.
+                      </p>
+                      <input type="text" placeholder="Masukkan URL foto..."
                         value={formData.foto || ""}
                         onChange={(e) => setFormData((prev) => ({ ...prev, foto: e.target.value }))}
                         className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white text-slate-800 mt-2"

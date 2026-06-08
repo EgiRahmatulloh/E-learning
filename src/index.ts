@@ -3375,10 +3375,12 @@ app.post("/api/upload", async ({ body, headers, jwt, set }) => {
     return { success: false, message: "Hanya berkas gambar atau dokumen yang diperbolehkan" };
   }
 
-  // Validasi Ukuran Berkas (Maksimal 5MB)
-  if (file.size > 5 * 1024 * 1024) {
+  // Validasi Ukuran Berkas (Maksimal 100MB untuk dokumen/arsip, 5MB untuk gambar)
+  const isImage = file.type.startsWith("image/");
+  const maxLimit = isImage ? 5 * 1024 * 1024 : 100 * 1024 * 1024;
+  if (file.size > maxLimit) {
     set.status = 400;
-    return { success: false, message: "Ukuran berkas melebihi batas 5MB" };
+    return { success: false, message: `Ukuran berkas melebihi batas maksimal (Gambar: 5MB, Dokumen/Arsip: 100MB)` };
   }
 
   const uploadDir = "public/uploads";

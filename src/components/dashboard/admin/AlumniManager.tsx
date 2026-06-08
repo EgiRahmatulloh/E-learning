@@ -900,6 +900,7 @@ export default function AlumniManager() {
 
                   <div>
                     <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Unggah Foto Fisik</label>
+                    <p className="text-[10px] font-semibold text-white/60 mb-2">* Maksimal ukuran foto adalah 5MB.</p>
                     <input
                       type="file"
                       ref={fileInputRef}
@@ -924,7 +925,7 @@ export default function AlumniManager() {
                       <span className="font-bold text-white block">
                         {uploading ? "Mengunggah..." : "Tarik Foto / Klik di sini"}
                       </span>
-                      <span className="text-[10px] text-cyan-100 block mt-0.5">Mendukung format JPG, PNG, WEBP</span>
+                      <span className="text-[10px] text-cyan-100 block mt-0.5">Mendukung format JPG, PNG, WEBP (Maksimal 5MB)</span>
                     </div>
                   </div>
                 </div>

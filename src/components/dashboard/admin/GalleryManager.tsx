@@ -510,6 +510,9 @@ export default function GalleryManager() {
                       </div>
                     )}
                   </div>
+                  <p className="text-[10px] font-bold text-white/80 mt-1 italic">
+                    * Batas maksimal ukuran foto adalah 5MB.
+                  </p>
                   <input
                     type="text"
                     className="w-full mt-2 text-[10px] font-mono border border-transparent rounded-lg px-2.5 py-2 bg-white text-slate-800 focus:outline-none"
