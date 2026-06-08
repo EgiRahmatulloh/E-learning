@@ -267,7 +267,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
           </div>
 
           {/* ===== RIGHT: Layanan Digital Portal ===== */}
-          <div className="shrink-0 w-full sm:w-auto">
+          <div className="shrink-0 w-full sm:w-auto self-start pt-0 lg:-mt-10">
             <div className="max-w-[200px] mx-auto lg:mx-0">
               <h4 
                 className="text-center text-xl sm:text-2xl font-black text-white mb-4 tracking-tight"
