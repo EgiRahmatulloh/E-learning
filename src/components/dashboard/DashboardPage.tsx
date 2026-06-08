@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
@@ -34,14 +34,85 @@ import WelcomeBanner from "./WelcomeBanner";
 import RoleStatsGrid from "./RoleStatsGrid";
 
 interface DashboardPageProps {
-  user: { id: number; name: string; username: string; role: string; email?: string };
+  user: { id: number; name: string; username: string; role: string; email?: string; noHp?: string; alamat?: string; nik?: string; program?: string; kelas?: string };
   handleLogout: () => void;
+  setUser: (user: any) => void;
 }
 
-export default function DashboardPage({ user, handleLogout }: DashboardPageProps) {
+export default function DashboardPage({ user, handleLogout, setUser }: DashboardPageProps) {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // Profile Form States
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileMsg, setProfileMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  
+  const [formData, setFormData] = useState({
+    name: user.name || "",
+    email: user.email || user.username || "",
+    password: "",
+    confirmPassword: "",
+    noHp: user.noHp || "",
+    alamat: user.alamat || "",
+  });
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        email: user.email || user.username || "",
+        password: "",
+        confirmPassword: "",
+        noHp: user.noHp || "",
+        alamat: user.alamat || "",
+      });
+    }
+  }, [user]);
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileMsg(null);
+
+    if (formData.password && formData.password !== formData.confirmPassword) {
+      setProfileMsg({ type: "error", text: "Konfirmasi password baru tidak cocok" });
+      return;
+    }
+
+    setProfileLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/auth/update-profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password || undefined,
+          noHp: formData.noHp || undefined,
+          alamat: formData.alamat || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Gagal memperbarui profil");
+
+      if (data.success) {
+        setProfileMsg({ type: "success", text: "Profil Anda berhasil diperbarui!" });
+        setUser(data.user);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        setFormData(prev => ({ ...prev, password: "", confirmPassword: "" }));
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Terjadi kesalahan";
+      setProfileMsg({ type: "error", text: msg });
+    } finally {
+      setProfileLoading(false);
+    }
+  };
 
   // Render akademik / profil / other tabs content
   const renderActiveContent = () => {
@@ -68,28 +139,126 @@ export default function DashboardPage({ user, handleLogout }: DashboardPageProps
           <div className="rounded-2xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-sm space-y-6">
             <div className="border-b border-slate-100 pb-4">
               <h3 className="text-lg font-black text-cyan-900">Profil Akun Saya</h3>
-              <p className="text-xs text-slate-500 font-semibold">Informasi kredensial dan identitas terdaftar Anda.</p>
+              <p className="text-xs text-slate-500 font-semibold">Ubah informasi identitas diri dan kata sandi akun Anda.</p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 font-medium text-slate-700">
-              <div className="space-y-1">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Nama Lengkap</span>
-                <span className="text-base font-black text-slate-800">{user.name}</span>
+
+            {profileMsg && (
+              <div className={`p-4 rounded-xl border font-bold text-sm ${
+                profileMsg.type === "success" 
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-800" 
+                  : "bg-red-50 border-red-200 text-red-800"
+              }`}>
+                {profileMsg.text}
               </div>
-              <div className="space-y-1">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Alamat Email</span>
-                <span className="text-base font-semibold">{user.email || `${user.username}@pkbmmakmur.org`}</span>
+            )}
+
+            <form onSubmit={handleUpdateProfile} className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Nama Lengkap</label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Alamat Email</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                  />
+                </div>
+
+                {user.role === "siswa" && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Nomor HP</label>
+                    <input
+                      type="text"
+                      value={formData.noHp}
+                      onChange={(e) => setFormData({ ...formData, noHp: e.target.value })}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Alamat</label>
+                  <textarea
+                    value={formData.alamat}
+                    onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
+                    rows={3}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all resize-none"
+                  />
+                </div>
+
+                <div className="border-t border-slate-100 my-2 sm:col-span-2" />
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Password Baru (Opsional)</label>
+                  <input
+                    type="password"
+                    placeholder="Kosongkan jika tidak diubah"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Konfirmasi Password Baru</label>
+                  <input
+                    type="password"
+                    placeholder="Kosongkan jika tidak diubah"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                  />
+                </div>
               </div>
-              <div className="space-y-1">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Username Akun</span>
-                <span className="text-base font-semibold font-mono text-slate-600">{user.username}</span>
+
+              {/* Tampilkan detail statis lainnya */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 grid grid-cols-2 gap-4 text-xs font-semibold text-slate-600">
+                <div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Role Akun</span>
+                  <span className="font-bold text-slate-700 uppercase">{user.role}</span>
+                </div>
+                {user.nik && (
+                  <div>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">NIK</span>
+                    <span className="font-bold text-slate-700">{user.nik}</span>
+                  </div>
+                )}
+                {user.program && (
+                  <div>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Program</span>
+                    <span className="font-bold text-slate-700">{user.program}</span>
+                  </div>
+                )}
+                {user.kelas && (
+                  <div>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Kelas</span>
+                    <span className="font-bold text-slate-700">{user.kelas}</span>
+                  </div>
+                )}
               </div>
-              <div className="space-y-1">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Role / Otoritas Sesi</span>
-                <span className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-3 py-0.5 text-xs font-bold text-emerald-700 uppercase tracking-widest mt-1">
-                  {user.role}
-                </span>
+
+              <div className="flex justify-end pt-2">
+                <Button
+                  type="submit"
+                  disabled={profileLoading}
+                  className="rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold text-sm px-6 py-2.5 cursor-pointer transition-colors"
+                >
+                  {profileLoading ? "Menyimpan..." : "Simpan Perubahan"}
+                </Button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       );
@@ -419,16 +588,22 @@ export default function DashboardPage({ user, handleLogout }: DashboardPageProps
 
             {/* Right: User Info + Logout */}
             <div className="flex items-center gap-3">
-              <div className="hidden sm:flex flex-col text-right">
-                <span className="text-xs font-black text-cyan-900">{user.name}</span>
-                <span className="text-[10px] font-bold text-cyan-600 uppercase tracking-widest leading-none mt-0.5">
-                  {user.role}
-                </span>
-              </div>
+              <div 
+                onClick={() => setActiveTab("profil")}
+                className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                title="Buka Profil Saya"
+              >
+                <div className="hidden sm:flex flex-col text-right">
+                  <span className="text-xs font-black text-cyan-900">{user.name}</span>
+                  <span className="text-[10px] font-bold text-cyan-600 uppercase tracking-widest leading-none mt-0.5">
+                    {user.role}
+                  </span>
+                </div>
 
-              {/* Avatar */}
-              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center text-white font-black text-sm shadow-md shadow-cyan-500/20">
-                {user.name.charAt(0).toUpperCase()}
+                {/* Avatar */}
+                <div className="h-9 w-9 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center text-white font-black text-sm shadow-md shadow-cyan-500/20">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
               </div>
 
               {/* Logout Button */}

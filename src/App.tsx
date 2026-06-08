@@ -152,7 +152,7 @@ function App() {
     return (
       <TooltipProvider>
         <Toaster />
-        <DashboardPage user={user} handleLogout={handleLogout} />
+        <DashboardPage user={user} handleLogout={handleLogout} setUser={setUser} />
       </TooltipProvider>
     );
   }

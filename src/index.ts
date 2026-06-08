@@ -191,7 +191,19 @@ app.get("/api/auth/me", async ({ headers, jwt, set }) => {
       }
       return {
         success: true,
-        user: { id: manager.id, name: manager.nama, email: manager.email, username: manager.email, role: 'admin' }
+        user: {
+          id: manager.id,
+          name: manager.nama,
+          email: manager.email,
+          username: manager.email,
+          role: 'admin',
+          alamat: manager.alamat,
+          nik: manager.nik,
+          tempatTglLahir: manager.tempatTglLahir,
+          jenisKelamin: manager.jenisKelamin,
+          agama: manager.agama,
+          foto: manager.foto
+        }
       };
     }
 
@@ -203,7 +215,21 @@ app.get("/api/auth/me", async ({ headers, jwt, set }) => {
       }
       return {
         success: true,
-        user: { id: tutor.id, name: tutor.nama, email: tutor.email, username: tutor.email, role: 'tutor' }
+        user: {
+          id: tutor.id,
+          name: tutor.nama,
+          email: tutor.email,
+          username: tutor.email,
+          role: 'tutor',
+          alamat: tutor.alamat,
+          nik: tutor.nik,
+          tempatTglLahir: tutor.tempatTglLahir,
+          jenisKelamin: tutor.jenisKelamin,
+          agama: tutor.agama,
+          foto: tutor.foto,
+          tutorMapel: tutor.tutorMapel,
+          program: tutor.program
+        }
       };
     }
 
@@ -219,7 +245,24 @@ app.get("/api/auth/me", async ({ headers, jwt, set }) => {
       }
       return {
         success: true,
-        user: { id: student.id, name: student.nama, email: student.email, username: student.email, role: 'siswa' }
+        user: {
+          id: student.id,
+          name: student.nama,
+          email: student.email,
+          username: student.email,
+          role: 'siswa',
+          alamat: student.alamat,
+          nik: student.nik,
+          tempatTglLahir: student.tempatTglLahir,
+          jenisKelamin: student.jenisKelamin,
+          agama: student.agama,
+          foto: student.foto,
+          noHp: student.noHp,
+          program: student.program,
+          kelas: student.kelas,
+          nisn: student.nisn,
+          nis: student.nis
+        }
       };
     }
 
@@ -229,6 +272,140 @@ app.get("/api/auth/me", async ({ headers, jwt, set }) => {
     set.status = 500;
     return { message: "Gagal memuat data profil" };
   }
+});
+
+// Update info profile aktif & password
+app.put("/api/auth/update-profile", async ({ headers, jwt, body, set }) => {
+  const authHeader = headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    set.status = 401;
+    return { success: false, message: "Akses ditolak, token hilang" };
+  }
+
+  const token = authHeader.split(' ')[1];
+  const payload = await jwt.verify(token);
+  if (!payload) {
+    set.status = 401;
+    return { success: false, message: "Sesi Anda telah kedaluwarsa" };
+  }
+
+  const role = payload.role as string;
+  const id = Number(payload.id);
+  const { name, email, password, noHp, alamat } = body;
+
+  try {
+    const updateData: any = {};
+    if (name !== undefined) updateData.nama = name;
+    if (email !== undefined) updateData.email = email;
+    if (alamat !== undefined) updateData.alamat = alamat;
+    if (noHp !== undefined && role === 'siswa') updateData.noHp = noHp;
+    if (password) {
+      updateData.password = await Bun.password.hash(password, { algorithm: "bcrypt" });
+    }
+    updateData.updatedAt = new Date().toISOString();
+
+    if (role === 'admin') {
+      const updated = await db.update(managers)
+        .set(updateData)
+        .where(eq(managers.id, id))
+        .returning().get();
+      if (!updated) {
+        set.status = 404;
+        return { success: false, message: "Akun tidak ditemukan" };
+      }
+      return {
+        success: true,
+        user: {
+          id: updated.id,
+          name: updated.nama,
+          email: updated.email,
+          username: updated.email,
+          role: 'admin',
+          alamat: updated.alamat,
+          nik: updated.nik,
+          tempatTglLahir: updated.tempatTglLahir,
+          jenisKelamin: updated.jenisKelamin,
+          agama: updated.agama,
+          foto: updated.foto
+        }
+      };
+    }
+
+    if (role === 'tutor') {
+      const updated = await db.update(tutors)
+        .set(updateData)
+        .where(eq(tutors.id, id))
+        .returning().get();
+      if (!updated) {
+        set.status = 404;
+        return { success: false, message: "Akun tidak ditemukan" };
+      }
+      return {
+        success: true,
+        user: {
+          id: updated.id,
+          name: updated.nama,
+          email: updated.email,
+          username: updated.email,
+          role: 'tutor',
+          alamat: updated.alamat,
+          nik: updated.nik,
+          tempatTglLahir: updated.tempatTglLahir,
+          jenisKelamin: updated.jenisKelamin,
+          agama: updated.agama,
+          foto: updated.foto,
+          tutorMapel: updated.tutorMapel,
+          program: updated.program
+        }
+      };
+    }
+
+    if (role === 'siswa') {
+      const updated = await db.update(students)
+        .set(updateData)
+        .where(eq(students.id, id))
+        .returning().get();
+      if (!updated) {
+        set.status = 404;
+        return { success: false, message: "Akun tidak ditemukan" };
+      }
+      return {
+        success: true,
+        user: {
+          id: updated.id,
+          name: updated.nama,
+          email: updated.email,
+          username: updated.email,
+          role: 'siswa',
+          alamat: updated.alamat,
+          nik: updated.nik,
+          tempatTglLahir: updated.tempatTglLahir,
+          jenisKelamin: updated.jenisKelamin,
+          agama: updated.agama,
+          foto: updated.foto,
+          noHp: updated.noHp,
+          program: updated.program,
+          kelas: updated.kelas,
+          nisn: updated.nisn,
+          nis: updated.nis
+        }
+      };
+    }
+
+    set.status = 400;
+    return { success: false, message: "Role tidak dikenal" };
+  } catch (err) {
+    set.status = 500;
+    return { success: false, message: "Gagal memperbarui profil" };
+  }
+}, {
+  body: t.Object({
+    name: t.Optional(t.String()),
+    email: t.Optional(t.String()),
+    password: t.Optional(t.String()),
+    noHp: t.Optional(t.String()),
+    alamat: t.Optional(t.String()),
+  })
 });
 
 // Helper untuk validasi Admin secara aman
