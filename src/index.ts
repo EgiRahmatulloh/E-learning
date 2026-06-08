@@ -2138,7 +2138,7 @@ app.post("/api/students/:id/promote", async ({ params, headers, jwt, set }) => {
   }
 });
 
-// Luluskan warga belajar (Otomatis status LULUS)
+// Luluskan warga belajar (Otomatis status LULUS & Masuk Alumni)
 app.post("/api/students/:id/graduate", async ({ params, headers, jwt, set }) => {
   const authError = await verifyAdmin(headers, jwt, set);
   if (authError) return authError;
@@ -2154,6 +2154,29 @@ app.post("/api/students/:id/graduate", async ({ params, headers, jwt, set }) => 
       .set({ status: "LULUS", updatedAt: new Date().toISOString() })
       .where(eq(students.id, id))
       .returning().get();
+
+    if (updated) {
+      // Masukkan ke tabel alumni
+      await db.insert(alumni).values({
+        nama: updated.nama,
+        nik: updated.nik,
+        program: updated.program,
+        tahunLulus: new Date().getFullYear().toString(),
+        nisn: updated.nisn,
+        nis: updated.nis,
+        tempatTglLahir: updated.tempatTglLahir,
+        noHp: updated.noHp,
+        namaAyah: updated.namaAyah,
+        namaIbu: updated.namaIbu,
+        jenisKelamin: updated.jenisKelamin,
+        agama: updated.agama,
+        email: updated.email,
+        alamat: updated.alamat,
+        cerita: `Lulusan program ${updated.program}`,
+        foto: updated.foto,
+      });
+    }
+
     return { success: true, data: updated };
   } catch (e) {
     set.status = 500;
