@@ -191,9 +191,20 @@ export default function GalleryPage(_props: GalleryPageProps) {
         {/* === PHOTOS VIEW (inside a category) === */}
         {viewMode === "photos" && (
           <div className="space-y-8">
-            {/* Search inside category */}
-            <div className="max-w-xl mx-auto relative">
-              <div className="relative">
+            {/* Action Bar: Back Button & Search inside category */}
+            <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-4 max-w-5xl mx-auto">
+              {/* Left Column: Back Button */}
+              <div className="flex justify-start order-2 md:order-1">
+                <Button
+                  onClick={() => setViewMode("categories")}
+                  className="w-full md:w-auto rounded-2xl bg-[#280f91] hover:bg-[#ff6105] text-white font-extrabold text-xs px-6 py-3.5 shadow-md active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <ChevronLeft className="h-4.5 w-4.5" /> KEMBALI
+                </Button>
+              </div>
+              
+              {/* Center Column: Search (Centered) */}
+              <div className="w-full relative order-1 md:order-2">
                 <input
                   type="text"
                   className="w-full bg-white text-slate-700 text-sm font-semibold pl-12 pr-4 py-3.5 rounded-2xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-md placeholder-slate-400"
@@ -203,6 +214,9 @@ export default function GalleryPage(_props: GalleryPageProps) {
                 />
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 h-5 w-5" />
               </div>
+
+              {/* Right Column: Empty space for symmetry */}
+              <div className="hidden md:block order-3" />
             </div>
 
             {categoryPhotos.length === 0 ? (
