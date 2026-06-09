@@ -96,13 +96,13 @@ app.post("/api/auth/login", async ({ body, jwt, set }) => {
         const token = await jwt.sign({
           id: manager.id,
           username: manager.email,
-          role: 'admin',
+          role: manager.role,
           name: manager.nama,
           email: manager.email,
         });
         return {
           success: true, token,
-          user: { id: manager.id, name: manager.nama, username: manager.email, role: 'admin', email: manager.email }
+          user: { id: manager.id, name: manager.nama, username: manager.email, role: manager.role, email: manager.email }
         };
       }
     }
@@ -183,7 +183,7 @@ app.get("/api/auth/me", async ({ headers, jwt, set }) => {
   const id = Number(payload.id);
 
   try {
-    if (role === 'admin') {
+    if (role === 'admin' || role === 'super_admin') {
       const manager = await db.select().from(managers).where(eq(managers.id, id)).get();
       if (!manager) {
         set.status = 404;
@@ -196,7 +196,7 @@ app.get("/api/auth/me", async ({ headers, jwt, set }) => {
           name: manager.nama,
           email: manager.email,
           username: manager.email,
-          role: 'admin',
+          role: manager.role,
           alamat: manager.alamat,
           nik: manager.nik,
           tempatTglLahir: manager.tempatTglLahir,
@@ -304,7 +304,7 @@ app.put("/api/auth/update-profile", async ({ headers, jwt, body, set }) => {
     }
     updateData.updatedAt = new Date().toISOString();
 
-    if (role === 'admin') {
+    if (role === 'admin' || role === 'super_admin') {
       const updated = await db.update(managers)
         .set(updateData)
         .where(eq(managers.id, id))
@@ -320,7 +320,7 @@ app.put("/api/auth/update-profile", async ({ headers, jwt, body, set }) => {
           name: updated.nama,
           email: updated.email,
           username: updated.email,
-          role: 'admin',
+          role: updated.role,
           alamat: updated.alamat,
           nik: updated.nik,
           tempatTglLahir: updated.tempatTglLahir,
@@ -423,7 +423,7 @@ const verifyAdmin = async (headers: Record<string, string | undefined>, jwt: any
     return { success: false, message: "Sesi Anda telah kedaluwarsa, silakan masuk kembali" };
   }
 
-  if (payload.role !== 'admin') {
+  if (payload.role !== 'admin' && payload.role !== 'super_admin') {
     set.status = 403;
     return { success: false, message: "Akses ditolak, hanya admin yang diizinkan" };
   }
@@ -3397,6 +3397,58 @@ app.post("/api/upload", async ({ body, headers, jwt, set }) => {
 }, {
   body: t.Object({
     file: t.File()
+  })
+});
+
+// Endpoint untuk Reset Password Pengguna oleh Super Admin
+app.post("/api/admin/reset-password", async ({ body, headers, jwt, set }) => {
+  const authHeader = headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    set.status = 401;
+    return { success: false, message: "Akses ditolak, token hilang" };
+  }
+  const token = authHeader.split(' ')[1];
+  const payload = await jwt.verify(token);
+  if (!payload || payload.role !== 'super_admin') {
+    set.status = 403;
+    return { success: false, message: "Akses ditolak. Anda tidak memiliki otoritas." };
+  }
+
+  const { targetRole, targetId, newPassword } = body;
+  try {
+    const hashedPassword = await Bun.password.hash(newPassword, { algorithm: "bcrypt" });
+    if (targetRole === 'admin' || targetRole === 'super_admin' || targetRole === 'manager') {
+      const result = await db.update(managers).set({ password: hashedPassword }).where(eq(managers.id, Number(targetId))).returning().get();
+      if (!result) {
+        set.status = 404;
+        return { success: false, message: "User tidak ditemukan" };
+      }
+    } else if (targetRole === 'tutor') {
+      const result = await db.update(tutors).set({ password: hashedPassword }).where(eq(tutors.id, Number(targetId))).returning().get();
+      if (!result) {
+        set.status = 404;
+        return { success: false, message: "User tidak ditemukan" };
+      }
+    } else if (targetRole === 'siswa') {
+      const result = await db.update(students).set({ password: hashedPassword }).where(eq(students.id, Number(targetId))).returning().get();
+      if (!result) {
+        set.status = 404;
+        return { success: false, message: "User tidak ditemukan" };
+      }
+    } else {
+      set.status = 400;
+      return { success: false, message: "Role target tidak dikenal" };
+    }
+    return { success: true, message: "Password berhasil di-reset" };
+  } catch (e) {
+    set.status = 500;
+    return { success: false, message: "Gagal me-reset password" };
+  }
+}, {
+  body: t.Object({
+    targetRole: t.String(),
+    targetId: t.Union([t.String(), t.Number()]),
+    newPassword: t.String({ minLength: 6 }),
   })
 });
 

@@ -148,19 +148,44 @@ export default function DashboardSidebar({
   };
 
   // Filter sidebar menu items dynamically by role
-  const filteredMenuItems = menuItems.filter((item) => {
-    // Menu khusus tutor
-    if (item.id === "kelola-nilai" && userRole !== "tutor") return false;
-    // Menu khusus siswa
-    if (item.id === "aktivitas-belajar" && userRole !== "siswa") return false;
-    if (userRole !== "admin") {
-      // Non-admin cannot see WEBSITE and E-SPMB
-      if (item.id === "website" || item.id === "e-spmb") {
-        return false;
+  const filteredMenuItems = menuItems
+    .map((item) => {
+      // Jika item adalah website dan role adalah admin/tutor, kita harus memfilter sub-menunya
+      if (item.id === "website" && (userRole === "admin" || userRole === "tutor")) {
+        const allowedSubmenus = ["pengumuman", "berita", "agenda", "galeri"];
+        return {
+          ...item,
+          children: item.children?.filter((child) => allowedSubmenus.includes(child.id)),
+        };
       }
-    }
-    return true;
-  });
+      return item;
+    })
+    .filter((item) => {
+      // Menu khusus tutor
+      if (item.id === "kelola-nilai" && userRole !== "tutor") return false;
+      // Menu khusus siswa
+      if (item.id === "aktivitas-belajar" && userRole !== "siswa") return false;
+
+      // Aturan untuk Siswa
+      if (userRole === "siswa") {
+        const allowedForSiswa = ["e-learning", "e-ujian", "profil", "aktivitas-belajar"];
+        return allowedForSiswa.includes(item.id);
+      }
+
+      // Aturan untuk Admin & Tutor (Admin (Tutor & Pengelola))
+      if (userRole === "admin" || userRole === "tutor") {
+        // Bisa melihat semua kecuali menu khusus siswa
+        return item.id !== "aktivitas-belajar";
+      }
+
+      // Aturan untuk Super Admin
+      if (userRole === "super_admin") {
+        // Bisa melihat semua kecuali menu khusus tutor dan siswa
+        return item.id !== "kelola-nilai" && item.id !== "aktivitas-belajar";
+      }
+
+      return true;
+    });
 
   return (
     <div className="flex flex-col h-full">

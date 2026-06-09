@@ -264,6 +264,13 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       );
     }
     if (activeTab === "header") {
+      if (user.role !== "super_admin") {
+        return (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
+            🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka manajemen header.
+          </div>
+        );
+      }
       return (
         <div className="space-y-6 animate-in fade-in duration-300">
           <HeaderManager />
@@ -271,7 +278,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       );
     }
     if (activeTab === "pengumuman") {
-      if (user.role !== "admin") {
+      if (user.role !== "admin" && user.role !== "tutor" && user.role !== "super_admin") {
         return (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
             🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka manajemen pengumuman.
@@ -285,7 +292,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       );
     }
     if (activeTab === "identitas-lembaga") {
-      if (user.role !== "admin") {
+      if (user.role !== "super_admin") {
         return (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
             🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka identitas lembaga.
@@ -299,7 +306,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       );
     }
     if (activeTab === "data-pengelola") {
-      if (user.role !== "admin") {
+      if (user.role !== "super_admin") {
         return (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
             🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka data pengelola.
@@ -313,7 +320,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       );
     }
     if (activeTab === "visi-misi") {
-      if (user.role !== "admin") {
+      if (user.role !== "super_admin") {
         return (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
             🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka Visi dan Misi.
@@ -327,7 +334,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       );
     }
     if (activeTab === "program-pendidikan") {
-      if (user.role !== "admin") {
+      if (user.role !== "super_admin") {
         return (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
             🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka Program Pendidikan.
@@ -341,7 +348,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       );
     }
     if (activeTab === "sarana-fasilitas") {
-      if (user.role !== "admin") {
+      if (user.role !== "super_admin") {
         return (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
             🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka Sarana dan Fasilitas.
@@ -355,7 +362,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       );
     }
     if (activeTab === "prestasi") {
-      if (user.role !== "admin") {
+      if (user.role !== "super_admin") {
         return (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
             🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka Prestasi.
@@ -369,7 +376,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       );
     }
     if (activeTab === "titik-layanan") {
-      if (user.role !== "admin") {
+      if (user.role !== "super_admin") {
         return (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
             🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka Titik Layanan.
@@ -383,7 +390,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       );
     }
     if (activeTab === "agenda") {
-      if (user.role !== "admin") {
+      if (user.role !== "admin" && user.role !== "tutor" && user.role !== "super_admin") {
         return (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
             🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka Agenda.
@@ -397,7 +404,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       );
     }
     if (activeTab === "berita") {
-      if (user.role !== "admin") {
+      if (user.role !== "admin" && user.role !== "tutor" && user.role !== "super_admin") {
         return (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
             🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka Berita.
@@ -411,7 +418,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       );
     }
     if (activeTab === "tutor") {
-      if (user.role !== "admin") {
+      if (user.role !== "super_admin") {
         return (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
             🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka data Tutor.
@@ -425,7 +432,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       );
     }
     if (activeTab === "warga-belajar") {
-      if (user.role !== "admin") {
+      if (user.role !== "super_admin") {
         return (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
             🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka data Warga Belajar.
@@ -439,7 +446,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       );
     }
     if (activeTab === "download") {
-      if (user.role !== "admin") {
+      if (user.role !== "super_admin") {
         return (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
             🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka manajemen file download.
@@ -453,7 +460,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       );
     }
     if (activeTab === "produk-wb") {
-      if (user.role !== "admin") {
+      if (user.role !== "super_admin") {
         return (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
             🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka manajemen produk warga belajar.
@@ -467,7 +474,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       );
     }
     if (activeTab === "alumni") {
-      if (user.role !== "admin") {
+      if (user.role !== "super_admin") {
         return (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
             🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka manajemen alumni.
@@ -481,7 +488,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       );
     }
     if (activeTab === "galeri") {
-      if (user.role !== "admin") {
+      if (user.role !== "admin" && user.role !== "tutor" && user.role !== "super_admin") {
         return (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
             🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka manajemen galeri.

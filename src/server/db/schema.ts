@@ -119,6 +119,7 @@ export const managers = sqliteTable('managers', {
   alamat: text('alamat').notNull().default(''),
   password: text('password').notNull().default(''),
   foto: text('foto').notNull().default(''),
+  role: text('role').notNull().default('admin'),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
   updatedAt: text('updated_at')
     .$defaultFn(() => new Date().toISOString())

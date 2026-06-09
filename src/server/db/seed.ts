@@ -170,6 +170,7 @@ export async function seedDatabase() {
           alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
           password: await Bun.password.hash("admin123"),
           foto: "/images/2c06b6fab7e6a9490c046e362160f2d0.png",
+          role: "super_admin",
         },
         {
           nama: "Siti Aminah, S.E.",
@@ -189,6 +190,7 @@ export async function seedDatabase() {
           alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
           password: await Bun.password.hash("password123"),
           foto: "/images/2c06b6fab7e6a9490c046e362160f2d0.png",
+          role: "admin",
         }
       ]);
       console.log("✅ Seeding managers berhasil!");

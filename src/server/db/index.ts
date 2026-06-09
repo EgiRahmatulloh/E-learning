@@ -135,6 +135,7 @@ CREATE TABLE IF NOT EXISTS managers (
   alamat TEXT NOT NULL DEFAULT '',
   password TEXT NOT NULL DEFAULT '',
   foto TEXT NOT NULL DEFAULT '',
+  role TEXT NOT NULL DEFAULT 'admin',
   created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
