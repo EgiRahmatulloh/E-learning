@@ -8,5 +8,7 @@ if (!jwtSecret) {
   console.warn("⚠️ Warning: JWT_SECRET is missing. Using insecure fallback secret for development.");
 }
 
-export const finalJwtSecret = jwtSecret;
+export const finalJwtSecret = jwtSecret!;
 export const IS_PROD = isProd;
+
+
