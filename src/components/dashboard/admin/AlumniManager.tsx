@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { parseCSV, downloadCSV } from "@/lib/utils";
+import { parseCSV, downloadCSV, mapCsvRows, parseExcel } from "@/lib/utils";
 import { Upload, Plus, Trash2, Save, HelpCircle, Download, LayoutGrid, List, Search, X, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
@@ -330,70 +330,91 @@ export default function AlumniManager() {
     downloadCSV(headers, rows, `data-alumni-${Date.now()}.csv`);
   };
 
-  // CSV Import
-  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const text = event.target?.result as string;
-        const rows = parseCSV(text);
+      e.target.value = "";
+      try {
+        let rows: string[][] = [];
+        if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
+          rows = await parseExcel(file);
+        } else {
+          const text = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => resolve(event.target?.result as string || "");
+            reader.onerror = (err) => reject(err);
+            reader.readAsText(file);
+          });
+          rows = parseCSV(text);
+        }
+        
         if (rows.length <= 1) return;
 
         const token = localStorage.getItem("token");
-        const imports = [];
+        
+        const mapped = mapCsvRows(rows, [
+          { key: "nama", aliases: ["nama", "name"], defaultIndex: 0 },
+          { key: "nik", aliases: ["nik", "identitas"], defaultIndex: 1 },
+          { key: "program", aliases: ["program", "paket", "kelas"], defaultIndex: 2 },
+          { key: "tahunLulus", aliases: ["tahun lulus", "tahunlulus", "tahun", "graduated", "graduation"], defaultIndex: 3 },
+          { key: "nisn", aliases: ["nisn"], defaultIndex: 4 },
+          { key: "nis", aliases: ["nis"], defaultIndex: 5 },
+          { key: "tempatTglLahir", aliases: ["tempat/tgl lahir", "tempat lahir", "tanggal lahir", "tempat tgllahir", "birth"], defaultIndex: 6 },
+          { key: "noHp", aliases: ["no. hp", "no hp", "hp", "telepon", "phone"], defaultIndex: 7 },
+          { key: "namaAyah", aliases: ["nama ayah", "ayah", "father"], defaultIndex: 8 },
+          { key: "namaIbu", aliases: ["nama ibu", "ibu", "mother"], defaultIndex: 9 },
+          { key: "jenisKelamin", aliases: ["jenis kelamin", "gender", "jk"], defaultIndex: 10 },
+          { key: "agama", aliases: ["agama", "religion"], defaultIndex: 11 },
+          { key: "email", aliases: ["email", "e-mail"], defaultIndex: 12 },
+          { key: "alamat", aliases: ["alamat", "address"], defaultIndex: 13 },
+          { key: "cerita", aliases: ["cerita", "story", "testimoni", "keterangan"], defaultIndex: 14 },
+        ]);
 
-        for (let i = 1; i < rows.length; i++) {
-          const cols = rows[i];
-          if (cols.length < 4) continue;
-
-          imports.push({
-            nama: cols[0] || "",
-            nik: cols[1] || "",
-            program: cols[2] || "PAKET C",
-            tahunLulus: cols[3] || "",
-            nisn: cols[4] || "",
-            nis: cols[5] || "",
-            tempatTglLahir: cols[6] || "",
-            noHp: cols[7] || "",
-            namaAyah: cols[8] || "",
-            namaIbu: cols[9] || "",
-            jenisKelamin: cols[10] || "Laki-laki",
-            agama: cols[11] || "Islam",
-            email: cols[12] || "",
-            alamat: cols[13] || "",
-            cerita: cols[14] || "",
+        const imports = mapped
+          .filter(item => item.nama)
+          .map(item => ({
+            nama: item.nama,
+            nik: item.nik || "",
+            program: item.program || "PAKET C",
+            tahunLulus: item.tahunLulus || "",
+            nisn: item.nisn || "",
+            nis: item.nis || "",
+            tempatTglLahir: item.tempatTglLahir || "",
+            noHp: item.noHp || "",
+            namaAyah: item.namaAyah || "",
+            namaIbu: item.namaIbu || "",
+            jenisKelamin: item.jenisKelamin || "Laki-laki",
+            agama: item.agama || "Islam",
+            email: item.email || "",
+            alamat: item.alamat || "",
+            cerita: item.cerita || "",
             foto: ""
-          });
-        }
+          }));
 
         if (imports.length === 0) {
           alert("Tidak ada data valid untuk diimpor");
           return;
         }
 
-        try {
-          const res = await fetch("/api/alumni/import", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(imports),
-          });
-          const data = await res.json();
-          if (data.success) {
-            alert(data.message || `Berhasil mengimpor ${imports.length} data alumni!`);
-          } else {
-            alert("Gagal mengimpor data alumni: " + (data.message || "Error tidak diketahui"));
-          }
-          fetchAlumni();
-        } catch (err) {
-          console.error("Import failed:", err);
-          alert("Terjadi kesalahan saat mengimpor data alumni");
+        const res = await fetch("/api/alumni/import", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(imports),
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(data.message || `Berhasil mengimpor ${imports.length} data alumni!`);
+        } else {
+          alert("Gagal mengimpor data alumni: " + (data.message || "Error tidak diketahui"));
         }
-      };
-      reader.readAsText(file);
+        fetchAlumni();
+      } catch (err) {
+        console.error("Import failed:", err);
+        alert("Terjadi kesalahan saat mengimpor data alumni");
+      }
     }
   };
 
@@ -414,9 +435,9 @@ export default function AlumniManager() {
   const currentItems = filteredAlumni.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
-    <div className="space-y-6 relative pb-16 animate-in fade-in duration-300 text-left">
+    <div className="space-y-6 pb-24 relative animate-in fade-in duration-300">
       
-      {/* HEADER SECTION */}
+      {/* HEADER */}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
         <div>
           <h2 className="text-xl font-black text-cyan-900 tracking-tight flex items-center gap-2">
@@ -431,11 +452,11 @@ export default function AlumniManager() {
             type="file"
             ref={importInputRef}
             className="hidden"
-            accept=".csv"
+            accept=".csv, .xlsx, .xls"
             onChange={handleImportCSV}
           />
           <Button onClick={() => importInputRef.current?.click()} className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 py-2.5 rounded-xl cursor-pointer tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md shadow-purple-200 uppercase">
-            <Upload size={16} /> Upload CSV
+            <Upload size={16} /> Upload CSV / Excel
           </Button>
           <Button onClick={handleExportCSV} className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl cursor-pointer tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md shadow-emerald-200 uppercase">
             <Download size={16} /> Download CSV
