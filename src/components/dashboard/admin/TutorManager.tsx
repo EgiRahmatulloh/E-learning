@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { parseCSV, downloadCSV } from "@/lib/utils";
+import { parseCSV, downloadCSV, mapCsvRows, parseExcel } from "@/lib/utils";
 import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, List, LayoutGrid, Filter, RotateCcw, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
@@ -132,94 +132,90 @@ export default function TutorManager() {
     toast.success("Berhasil mengekspor CSV");
   };
 
-  // CSV Import
-  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // CSV/Excel Import
+  const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const text = event.target?.result as string;
-      if (!text) return;
-
-      const rows = parseCSV(text);
-      const importedData: {
-        nama: string;
-        tutorMapel: string;
-        program: string;
-        nuptk: string;
-        tempatTglLahir: string;
-        jenisKelamin: string;
-        agama: string;
-        pendidikan: string;
-        email: string;
-        nik: string;
-        alamat: string;
-        foto: string;
-        tanggalMulaiTugas: string;
-        nomorSkPengangkatan: string;
-        lembagaPengangkat: string;
-        nomorSkPenugasan: string;
-        lembagaPenugas: string;
-      }[] = [];
-
-      let startIdx = 0;
-      if (rows[0] && (rows[0][0]?.toLowerCase().includes("nama") || rows[0][0]?.toLowerCase().includes("name"))) {
-        startIdx = 1;
+    try {
+      let rows: string[][] = [];
+      if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
+        rows = await parseExcel(file);
+      } else {
+        const text = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (event) => resolve(event.target?.result as string || "");
+          reader.readAsText(file);
+        });
+        rows = parseCSV(text);
       }
 
-      for (let i = startIdx; i < rows.length; i++) {
-        const cols = rows[i];
-        if (cols[0] && cols[1]) {
-          importedData.push({
-            nama: cols[0],
-            tutorMapel: cols[1],
-            program: cols[2] || "",
-            nuptk: cols[3] || "",
-            tempatTglLahir: cols[4] || "",
-            jenisKelamin: cols[5] || "",
-            agama: cols[6] || "",
-            pendidikan: cols[7] || "",
-            email: cols[8] || "",
-            nik: cols[9] || "",
-            alamat: cols[10] || "",
-            foto: cols[11] || "",
-            tanggalMulaiTugas: cols[12] || "",
-            nomorSkPengangkatan: cols[13] || "",
-            lembagaPengangkat: cols[14] || "",
-            nomorSkPenugasan: cols[15] || "",
-            lembagaPenugas: cols[16] || "",
-          });
-        }
-      }
+      const mapped = mapCsvRows(rows, [
+        { key: "nama", aliases: ["nama", "name"], defaultIndex: 0 },
+        { key: "tutorMapel", aliases: ["tutor mapel", "tutor mapel/kelas/program", "mapel", "mata pelajaran", "subject"], defaultIndex: 1 },
+        { key: "program", aliases: ["program", "paket"], defaultIndex: 2 },
+        { key: "nuptk", aliases: ["nuptk"], defaultIndex: 3 },
+        { key: "tempatTglLahir", aliases: ["tempat/tgl lahir", "tempat lahir", "tanggal lahir", "tempat tgllahir", "birth"], defaultIndex: 4 },
+        { key: "jenisKelamin", aliases: ["jenis kelamin", "gender", "jk"], defaultIndex: 5 },
+        { key: "agama", aliases: ["agama", "religion"], defaultIndex: 6 },
+        { key: "pendidikan", aliases: ["pendidikan", "education"], defaultIndex: 7 },
+        { key: "email", aliases: ["email", "e-mail"], defaultIndex: 8 },
+        { key: "nik", aliases: ["nik", "identitas"], defaultIndex: 9 },
+        { key: "alamat", aliases: ["alamat", "address"], defaultIndex: 10 },
+        { key: "foto", aliases: ["foto", "photo", "image", "gambar"], defaultIndex: 11 },
+        { key: "tanggalMulaiTugas", aliases: ["tanggal mulai tugas", "tmt", "start date", "tanggalmulaitugas"], defaultIndex: 12 },
+        { key: "nomorSkPengangkatan", aliases: ["nomor sk pengangkatan", "sk pengangkatan", "skpengangkatan"], defaultIndex: 13 },
+        { key: "lembagaPengangkat", aliases: ["lembaga pengangkat", "lembagapengangkat"], defaultIndex: 14 },
+        { key: "nomorSkPenugasan", aliases: ["nomor sk penugasan", "sk penugasan", "skpenugasan"], defaultIndex: 15 },
+        { key: "lembagaPenugas", aliases: ["lembaga penugas", "lembagapenugas"], defaultIndex: 16 },
+      ]);
+
+      const importedData = mapped
+        .filter((item) => item.nama && item.tutorMapel)
+        .map((item) => ({
+          nama: item.nama,
+          tutorMapel: item.tutorMapel,
+          program: item.program || "",
+          nuptk: item.nuptk || "",
+          tempatTglLahir: item.tempatTglLahir || "",
+          jenisKelamin: item.jenisKelamin || "",
+          agama: item.agama || "",
+          pendidikan: item.pendidikan || "",
+          email: item.email || "",
+          nik: item.nik || "",
+          alamat: item.alamat || "",
+          foto: item.foto || "",
+          tanggalMulaiTugas: item.tanggalMulaiTugas || "",
+          nomorSkPengangkatan: item.nomorSkPengangkatan || "",
+          lembagaPengangkat: item.lembagaPengangkat || "",
+          nomorSkPenugasan: item.nomorSkPenugasan || "",
+          lembagaPenugas: item.lembagaPenugas || "",
+        }));
 
       if (importedData.length === 0) {
-        toast.error("Format CSV kosong atau tidak valid! Pastikan Nama dan Tutor Mapel tidak kosong.");
+        toast.error("Format data kosong atau tidak valid! Pastikan Nama dan Tutor Mapel tidak kosong.");
         return;
       }
 
       const token = localStorage.getItem("token");
-      try {
-        const res = await fetch("/api/tutors/import", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(importedData),
-        });
-        const resData = await res.json();
-        if (resData.success) {
-          toast.success(resData.message || "Berhasil mengimpor data!");
-          fetchTutors();
-        } else {
-          toast.error(resData.message || "Gagal mengimpor data");
-        }
-      } catch (err) {
-        toast.error("Kesalahan saat mengunggah CSV ke server.");
+      const res = await fetch("/api/tutors/import", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(importedData),
+      });
+      const resData = await res.json();
+      if (resData.success) {
+        toast.success(resData.message || "Berhasil mengimpor data!");
+        fetchTutors();
+      } else {
+        toast.error(resData.message || "Gagal mengimpor data");
       }
-    };
-    reader.readAsText(file);
+    } catch (err) {
+      toast.error("Kesalahan saat mengunggah file ke server.");
+    }
     e.target.value = "";
   };
 
@@ -412,14 +408,14 @@ export default function TutorManager() {
             type="file"
             ref={importInputRef}
             className="hidden"
-            accept=".csv"
+            accept=".csv, .xlsx, .xls"
             onChange={handleImportCSV}
           />
           <Button
             onClick={() => importInputRef.current?.click()}
             className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95"
           >
-            <Upload className="h-4 w-4" /> UPLOAD CSV
+            <Upload className="h-4 w-4" /> UPLOAD CSV / EXCEL
           </Button>
           <Button
             onClick={handleExportCSV}

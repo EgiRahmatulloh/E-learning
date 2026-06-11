@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { parseCSV, downloadCSV } from "@/lib/utils";
+import { parseCSV, downloadCSV, mapCsvRows, parseExcel } from "@/lib/utils";
 import { ShieldAlert, Search, Upload, Download, Sparkles, Plus, Trash2, Save, X, Eye, EyeOff, GraduationCap, ArrowUpCircle, RefreshCw, List, LayoutGrid, Filter, RotateCcw, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
@@ -154,94 +154,90 @@ export default function WargaBelajarManager() {
     toast.success("Berhasil mengekspor CSV");
   };
 
-  // CSV Import
-  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // CSV/Excel Import
+  const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const text = event.target?.result as string;
-      if (!text) return;
-
-      const rows = parseCSV(text);
-      const importedData: {
-        nama: string;
-        nik: string;
-        program: string;
-        kelas: string;
-        nisn: string;
-        nis: string;
-        tempatTglLahir: string;
-        titikLayanan: string;
-        jenisKelamin: string;
-        noHp: string;
-        agama: string;
-        namaAyah: string;
-        email: string;
-        namaIbu: string;
-        alamat: string;
-        foto: string;
-        status: string;
-      }[] = [];
-
-      let startIdx = 0;
-      if (rows[0] && (rows[0][0]?.toLowerCase().includes("nama") || rows[0][0]?.toLowerCase().includes("name"))) {
-        startIdx = 1;
+    try {
+      let rows: string[][] = [];
+      if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
+        rows = await parseExcel(file);
+      } else {
+        const text = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (event) => resolve(event.target?.result as string || "");
+          reader.readAsText(file);
+        });
+        rows = parseCSV(text);
       }
 
-      for (let i = startIdx; i < rows.length; i++) {
-        const cols = rows[i];
-        if (cols[0]) {
-          importedData.push({
-            nama: cols[0],
-            nik: cols[1] || "",
-            program: cols[2] || "",
-            kelas: cols[3] || "",
-            nisn: cols[4] || "",
-            nis: cols[5] || "",
-            tempatTglLahir: cols[6] || "",
-            titikLayanan: cols[7] || "",
-            jenisKelamin: cols[8] || "",
-            noHp: cols[9] || "",
-            agama: cols[10] || "",
-            namaAyah: cols[11] || "",
-            email: cols[12] || "",
-            namaIbu: cols[13] || "",
-            alamat: cols[14] || "",
-            foto: cols[15] || "",
-            status: cols[16] || "AKTIF",
-          });
-        }
-      }
+      const mapped = mapCsvRows(rows, [
+        { key: "nama", aliases: ["nama", "name"], defaultIndex: 0 },
+        { key: "nik", aliases: ["nik", "identitas"], defaultIndex: 1 },
+        { key: "program", aliases: ["program", "paket"], defaultIndex: 2 },
+        { key: "kelas", aliases: ["kelas", "tingkatan", "grade"], defaultIndex: 3 },
+        { key: "nisn", aliases: ["nisn"], defaultIndex: 4 },
+        { key: "nis", aliases: ["nis"], defaultIndex: 5 },
+        { key: "tempatTglLahir", aliases: ["tempat/tgl lahir", "tempat lahir", "tanggal lahir", "tempat tgllahir", "birth"], defaultIndex: 6 },
+        { key: "titikLayanan", aliases: ["titik layanan", "titiklayanan", "tupok", "lokasi"], defaultIndex: 7 },
+        { key: "jenisKelamin", aliases: ["jenis kelamin", "gender", "jk"], defaultIndex: 8 },
+        { key: "noHp", aliases: ["no. hp", "no hp", "hp", "telepon", "phone"], defaultIndex: 9 },
+        { key: "agama", aliases: ["agama", "religion"], defaultIndex: 10 },
+        { key: "namaAyah", aliases: ["nama ayah", "ayah", "father"], defaultIndex: 11 },
+        { key: "email", aliases: ["email", "e-mail"], defaultIndex: 12 },
+        { key: "namaIbu", aliases: ["nama ibu", "ibu", "mother"], defaultIndex: 13 },
+        { key: "alamat", aliases: ["alamat", "address"], defaultIndex: 14 },
+        { key: "foto", aliases: ["foto", "photo", "image", "gambar"], defaultIndex: 15 },
+        { key: "status", aliases: ["status", "keaktifan"], defaultIndex: 16 },
+      ]);
+
+      const importedData = mapped
+        .filter((item) => item.nama)
+        .map((item) => ({
+          nama: item.nama,
+          nik: item.nik || "",
+          program: item.program || "",
+          kelas: item.kelas || "",
+          nisn: item.nisn || "",
+          nis: item.nis || "",
+          tempatTglLahir: item.tempatTglLahir || "",
+          titikLayanan: item.titikLayanan || "",
+          jenisKelamin: item.jenisKelamin || "",
+          noHp: item.noHp || "",
+          agama: item.agama || "",
+          namaAyah: item.namaAyah || "",
+          email: item.email || "",
+          namaIbu: item.namaIbu || "",
+          alamat: item.alamat || "",
+          foto: item.foto || "",
+          status: item.status || "AKTIF",
+        }));
 
       if (importedData.length === 0) {
-        toast.error("Format CSV kosong atau tidak valid!");
+        toast.error("Format data kosong atau tidak valid!");
         return;
       }
 
       const token = localStorage.getItem("token");
-      try {
-        const res = await fetch("/api/students/import", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(importedData),
-        });
-        const resData = await res.json();
-        if (resData.success) {
-          toast.success(resData.message || "Berhasil mengimpor data!");
-          fetchStudents();
-        } else {
-          toast.error(resData.message || "Gagal mengimpor data");
-        }
-      } catch (err) {
-        toast.error("Kesalahan saat mengunggah CSV ke server.");
+      const res = await fetch("/api/students/import", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(importedData),
+      });
+      const resData = await res.json();
+      if (resData.success) {
+        toast.success(resData.message || "Berhasil mengimpor data!");
+        fetchStudents();
+      } else {
+        toast.error(resData.message || "Gagal mengimpor data");
       }
-    };
-    reader.readAsText(file);
+    } catch (err) {
+      toast.error("Kesalahan saat mengunggah file ke server.");
+    }
     e.target.value = "";
   };
 
@@ -527,14 +523,14 @@ export default function WargaBelajarManager() {
             type="file"
             ref={importInputRef}
             className="hidden"
-            accept=".csv"
+            accept=".csv, .xlsx, .xls"
             onChange={handleImportCSV}
           />
           <Button
             onClick={() => importInputRef.current?.click()}
             className="rounded-xl bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 h-11 cursor-pointer transition-all shadow-md flex items-center gap-1.5 active:scale-95"
           >
-            <Upload className="h-4 w-4" /> UPLOAD CSV
+            <Upload className="h-4 w-4" /> UPLOAD CSV / EXCEL
           </Button>
           <Button
             onClick={handleExportCSV}

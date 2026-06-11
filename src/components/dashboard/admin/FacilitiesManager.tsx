@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { parseCSV, downloadCSV } from "@/lib/utils";
+import { parseCSV, downloadCSV, mapCsvRows, parseExcel } from "@/lib/utils";
 import { Edit3, Trash2, Search, UploadCloud, Plus, Save, X, Upload, Download, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
@@ -210,61 +210,62 @@ export default function FacilitiesManager() {
     toast.success("Berhasil mengunduh CSV!");
   };
 
-  // CSV Import Logic
-  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // CSV/Excel Import Logic
+  const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const text = event.target?.result as string;
-      if (!text) return;
-      
-      const rows = parseCSV(text);
-      const importedData: { nama: string; keterangan: string; foto: string }[] = [];
-      
-      let startIdx = 0;
-      if (rows[0] && (rows[0][0]?.toLowerCase().includes("nama") || rows[0][0]?.toLowerCase().includes("name"))) {
-        startIdx = 1;
+    try {
+      let rows: string[][] = [];
+      if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
+        rows = await parseExcel(file);
+      } else {
+        const text = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (event) => resolve(event.target?.result as string || "");
+          reader.readAsText(file);
+        });
+        rows = parseCSV(text);
       }
 
-      for (let i = startIdx; i < rows.length; i++) {
-        const cols = rows[i];
-        if (!cols[0]) continue;
-        importedData.push({
-          nama: cols[0],
-          keterangan: cols[1] || "",
-          foto: cols[2] || "",
-        });
-      }
+      const mapped = mapCsvRows(rows, [
+        { key: "nama", aliases: ["nama", "name", "fasilitas", "sarana"], defaultIndex: 0 },
+        { key: "keterangan", aliases: ["keterangan", "deskripsi", "description"], defaultIndex: 1 },
+        { key: "foto", aliases: ["foto", "photo", "image", "gambar"], defaultIndex: 2 },
+      ]);
+
+      const importedData = mapped
+        .filter((item) => item.nama)
+        .map((item) => ({
+          nama: item.nama,
+          keterangan: item.keterangan || "",
+          foto: item.foto || "",
+        }));
       
       if (importedData.length === 0) {
-        toast.error("Format CSV kosong atau tidak valid!");
+        toast.error("Format data kosong atau tidak valid!");
         return;
       }
       
       const token = getSafeItem("token");
-      try {
-        const res = await fetch("/api/facilities/import", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-          },
-          body: JSON.stringify(importedData),
-        });
-        const resData = await res.json();
-        if (resData.success) {
-          toast.success(resData.message || "Berhasil mengimpor data!");
-          fetchFacilities();
-        } else {
-          toast.error(resData.message || "Gagal mengimpor data");
-        }
-      } catch (err) {
-        toast.error("Kesalahan saat mengunggah CSV ke server.");
+      const res = await fetch("/api/facilities/import", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(importedData),
+      });
+      const resData = await res.json();
+      if (resData.success) {
+        toast.success(resData.message || "Berhasil mengimpor data!");
+        fetchFacilities();
+      } else {
+        toast.error(resData.message || "Gagal mengimpor data");
       }
-    };
-    reader.readAsText(file);
+    } catch (err) {
+      toast.error("Kesalahan saat mengunggah file ke server.");
+    }
     e.target.value = "";
   };
 
@@ -292,10 +293,10 @@ export default function FacilitiesManager() {
         </div>
         <div className="flex items-center gap-3">
           <label className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95">
-            <Upload className="h-4 w-4" /> UPLOAD CSV
+            <Upload className="h-4 w-4" /> UPLOAD CSV / EXCEL
             <input
               type="file"
-              accept=".csv"
+              accept=".csv, .xlsx, .xls"
               onChange={handleImportCSV}
               className="hidden"
             />
