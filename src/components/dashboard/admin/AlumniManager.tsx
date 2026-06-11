@@ -330,18 +330,19 @@ export default function AlumniManager() {
     downloadCSV(headers, rows, `data-alumni-${Date.now()}.csv`);
   };
 
-  // CSV/Excel Import
   const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      e.target.value = "";
       try {
         let rows: string[][] = [];
         if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
           rows = await parseExcel(file);
         } else {
-          const text = await new Promise<string>((resolve) => {
+          const text = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = (event) => resolve(event.target?.result as string || "");
+            reader.onerror = (err) => reject(err);
             reader.readAsText(file);
           });
           rows = parseCSV(text);

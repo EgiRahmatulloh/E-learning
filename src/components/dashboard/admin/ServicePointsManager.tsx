@@ -273,19 +273,20 @@ export function ServicePointsManager() {
     toast.success("Berhasil mengunduh CSV!");
   };
 
-  // CSV/Excel Import Logic
   const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    e.target.value = "";
     
     try {
       let rows: string[][] = [];
       if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
         rows = await parseExcel(file);
       } else {
-        const text = await new Promise<string>((resolve) => {
+        const text = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = (event) => resolve(event.target?.result as string || "");
+          reader.onerror = (err) => reject(err);
           reader.readAsText(file);
         });
         rows = parseCSV(text);

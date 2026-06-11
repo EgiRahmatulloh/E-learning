@@ -15,7 +15,7 @@ export async function parseExcel(file: File): Promise<string[][]> {
         const workbook = XLSX.read(data, { type: "array" });
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
-        const sheetData = XLSX.utils.sheet_to_json<any[]>(worksheet, { header: 1, defval: "" });
+        const sheetData = XLSX.utils.sheet_to_json<unknown[]>(worksheet, { header: 1, defval: "" });
         const rows = sheetData.map(row => 
           Array.isArray(row) ? row.map(cell => String(cell ?? "")) : []
         );
@@ -117,7 +117,7 @@ export function mapCsvRows<T extends string>(
     
     // Find index in header
     const idx = cleanFirstRow.findIndex(cell => 
-      aliases.some(alias => cell === alias || cell.includes(alias) || alias.includes(cell))
+      aliases.some(alias => cell === alias)
     );
     
     if (idx !== -1) {
