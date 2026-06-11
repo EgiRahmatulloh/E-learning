@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { AdminDashboard } from "./admin/AdminDashboard";
 import { TutorDashboard } from "./tutor/TutorDashboard";
-import { SiswaDashboard } from "./siswa/SiswaDashboard";
+import { ElearningSiswa } from "./siswa/ElearningSiswa";
 import { HeaderManager } from "./admin/HeaderManager";
 import AnnouncementManager from "./admin/AnnouncementManager";
 import InstitutionProfileManager from "./admin/InstitutionProfileManager";
@@ -40,7 +40,7 @@ interface DashboardPageProps {
 }
 
 export default function DashboardPage({ user, handleLogout, setUser }: DashboardPageProps) {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState(user.role === "siswa" ? "elearning-dashboard" : "dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -124,14 +124,23 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
         </div>
       );
     }
-    if (activeTab === "kelola-nilai" || activeTab === "aktivitas-belajar") {
+    if (activeTab === "kelola-nilai") {
       return (
         <div className="space-y-6">
           {user.role === "admin" && <AdminDashboard />}
           {user.role === "tutor" && <TutorDashboard />}
-          {user.role === "siswa" && <SiswaDashboard />}
         </div>
       );
+    }
+    if (activeTab === "elearning-dashboard" || activeTab.startsWith("mapel-")) {
+      if (user.role === "siswa") {
+        return (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <ElearningSiswa activeTab={activeTab} user={user} setActiveTab={setActiveTab} />
+          </div>
+        );
+      }
+      // Placeholder for tutor or admin e-learning can go here later
     }
     if (activeTab === "profil") {
       return (
@@ -533,7 +542,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
         }`}
       >
         <DashboardSidebar
-          userRole={user.role}
+          user={user}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           setMobileSidebarOpen={setMobileSidebarOpen}
@@ -558,7 +567,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
               <X className="h-5 w-5" />
             </button>
             <DashboardSidebar
-              userRole={user.role}
+              user={user}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
               setMobileSidebarOpen={setMobileSidebarOpen}

@@ -18,19 +18,8 @@ import {
   ShoppingBag,
   Award,
   Image,
+  BookMarked,
 } from "lucide-react";
-
-interface MenuItem {
-  id: string;
-  label: string;
-  icon: React.ReactNode;
-  children?: {
-    id: string;
-    label: string;
-    icon: React.ReactNode;
-    children?: { id: string; label: string }[]
-  }[];
-}
 
 export const TAB_LABELS: Record<string, string> = {
   dashboard: "DASHBOARD",
@@ -38,158 +27,347 @@ export const TAB_LABELS: Record<string, string> = {
   "identitas-lembaga": "IDENTITAS LEMBAGA",
   "data-pengelola": "DATA PENGELOLA",
   "kelola-nilai": "KELOLA NILAI & KELAS",
-  "aktivitas-belajar": "AKTIVITAS BELAJAR",
   profil: "PROFIL SAYA",
   prestasi: "PRESTASI",
   "titik-layanan": "TITIK LAYANAN",
   "produk-wb": "PRODUK WARGA BELAJAR",
   alumni: "ALUMNI",
+  "elearning-dashboard": "DASHBOARD E-LEARNING",
 };
 
 export const getTabLabel = (id: string): string => {
   if (TAB_LABELS[id]) return TAB_LABELS[id];
+  if (id.startsWith("mapel-")) {
+    const part = id.replace("mapel-", "");
+    // mapel-{slug}-nilai / mapel-{slug}-pendahuluan / mapel-{slug}-sesi-{n}
+    const parts = part.split("-");
+    if (parts[parts.length - 1] === "nilai") {
+      return `NILAI – ${parts.slice(0, -1).join(" ").toUpperCase()}`;
+    }
+    if (parts[parts.length - 1] === "pendahuluan") {
+      return `PENDAHULUAN – ${parts.slice(0, -1).join(" ").toUpperCase()}`;
+    }
+    if (parts[parts.length - 2] === "sesi") {
+      const n = parts[parts.length - 1];
+      return `SESI ${n} – ${parts.slice(0, -2).join(" ").toUpperCase()}`;
+    }
+    return part.replace(/-/g, " ").toUpperCase();
+  }
   return id.replace(/-/g, " ").toUpperCase();
 };
 
-const menuItems: MenuItem[] = [
-  {
-    id: "dashboard",
-    label: "DASHBOARD",
-    icon: <LayoutDashboard className="h-5 w-5" />,
-  },
-  {
-    id: "kelola-nilai",
-    label: "KELOLA NILAI & KELAS",
-    icon: <GraduationCap className="h-5 w-5" />,
-  },
-  {
-    id: "aktivitas-belajar",
-    label: "AKTIVITAS BELAJAR",
-    icon: <GraduationCap className="h-5 w-5" />,
-  },
-  {
-    id: "website",
-    label: "WEBSITE",
-    icon: <Globe className="h-5 w-5" />,
-    children: [
-      { id: "header", label: "HEADER", icon: <Type className="h-4 w-4" /> },
-      { id: "pengumuman", label: "PENGUMUMAN", icon: <Megaphone className="h-4 w-4" /> },
-      // Collapsible Profil Sub-menu
-      {
-        id: "profil-group",
-        label: "PROFIL",
-        icon: <User className="h-4 w-4" />,
-        children: [
-          { id: "identitas-lembaga", label: "IDENTITAS LEMBAGA" },
-          { id: "data-pengelola", label: "DATA PENGELOLA" },
-          { id: "visi-misi", label: "VISI DAN MISI" },
-          { id: "program-pendidikan", label: "PROGRAM PENDIDIKAN" },
-          { id: "sarana-fasilitas", label: "SARANA DAN FASILITAS" },
-          { id: "prestasi", label: "PRESTASI" },
-          { id: "titik-layanan", label: "TITIK LAYANAN" },
-        ]
-      },
-      // Other Website items
-      { id: "agenda", label: "AGENDA", icon: <CalendarDays className="h-4 w-4" /> },
-      { id: "berita", label: "BERITA", icon: <Newspaper className="h-4 w-4" /> },
-      { id: "tutor", label: "TUTOR", icon: <GraduationCap className="h-4 w-4" /> },
-      { id: "warga-belajar", label: "WARGA BELAJAR", icon: <Users className="h-4 w-4" /> },
-      { id: "download", label: "DOWNLOAD", icon: <Download className="h-4 w-4" /> },
-      { id: "produk-wb", label: "PRODUK WB", icon: <ShoppingBag className="h-4 w-4" /> },
-      { id: "alumni", label: "ALUMNI", icon: <Award className="h-4 w-4" /> },
-      { id: "galeri", label: "GALERI", icon: <Image className="h-4 w-4" /> },
-    ],
-  },
-  {
-    id: "e-learning",
-    label: "E-LEARNING",
-    icon: <BookOpen className="h-5 w-5" />,
-  },
-  {
-    id: "e-ujian",
-    label: "E-UJIAN",
-    icon: <FileText className="h-5 w-5" />,
-  },
-  {
-    id: "e-spmb",
-    label: "E-SPMB",
-    icon: <ClipboardList className="h-5 w-5" />,
-  },
-  {
-    id: "profil",
-    label: "PROFIL SAYA",
-    icon: <User className="h-5 w-5" />,
-  },
-];
+export const getSubjectsSiswa = (program?: string, kelas?: string): string[] => {
+  const pA = [
+    "Pendidikan Agama Islam dan Budi Pekerti", "Pendidikan Pancasila", "Bahasa Indonesia",
+    "Matematika", "Ilmu Pengetahuan Alam dan Sosial", "PJOK", "Seni Budaya",
+    "Bahasa Inggris", "Pemberdayaan", "Keterampilan",
+  ];
+  const pB = [
+    "Pendidikan Agama Islam dan Budi Pekerti", "Pendidikan Pancasila", "Bahasa Indonesia",
+    "Matematika", "Ilmu Pengetahuan Alam", "Ilmu Pengetahuan Sosial", "Bahasa Inggris",
+    "PJOK", "Seni", "Pemberdayaan", "Keterampilan",
+  ];
+  const pC10 = [
+    "Pendidikan Agama Islam dan Budi Pekerti", "Pendidikan Pancasila", "Bahasa Indonesia",
+    "Matematika", "Ilmu Pengetahuan Alam", "Ilmu Pengetahuan Sosial", "Bahasa Inggris",
+    "PJOK", "Seni", "Pemberdayaan", "Keterampilan",
+  ];
+  const pC1112 = [
+    "Pendidikan Agama Islam dan Budi Pekerti", "Pendidikan Pancasila", "Bahasa Indonesia",
+    "Matematika", "Bahasa Inggris", "PJOK", "Seni", "Sejarah", "Sosiologi",
+    "Ekonomi", "Geografi", "Informatika", "Pemberdayaan", "Keterampilan",
+  ];
+
+  if (program === "Paket A") return pA;
+  if (program === "Paket B") return pB;
+  if (program === "Paket C") {
+    if (kelas === "Kelas 10") return pC10;
+    return pC1112;
+  }
+  // Fallback: tampilkan semua mapel Paket B
+  return pB;
+};
+
+const toSlug = (name: string) =>
+  name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
 
 interface DashboardSidebarProps {
-  userRole: string;
+  user: any;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   setMobileSidebarOpen: (open: boolean) => void;
 }
 
+// ──────────────────────────────────────────────
+// Komponen Sidebar
+// ──────────────────────────────────────────────
 export default function DashboardSidebar({
-  userRole,
+  user,
   activeTab,
   setActiveTab,
   setMobileSidebarOpen,
 }: DashboardSidebarProps) {
+  const userRole = user?.role;
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
 
-  const handleMenuClick = (id: string) => {
-    const item = menuItems.find((m) => m.id === id);
-    if (item?.children) {
-      setExpandedMenus((prev) => ({ ...prev, [id]: !prev[id] }));
+  const toggleExpand = (id: string) => {
+    setExpandedMenus((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleLeafClick = (id: string) => {
+    setActiveTab(id);
+    setMobileSidebarOpen(false);
+  };
+
+  // ── Daftar mapel (untuk siswa)
+  const subjects = userRole === "siswa" ? getSubjectsSiswa(user?.program, user?.kelas) : [];
+
+  // ── Menentukan apakah suatu tab aktif berada di dalam pohon sebuah menu
+  const isAncestorActive = (id: string): boolean => {
+    if (id === "e-learning") {
+      return activeTab === "elearning-dashboard" ||
+        activeTab.startsWith("mapel-");
+    }
+    if (id === "elearning-mata-pelajaran") {
+      return activeTab.startsWith("mapel-");
+    }
+    // cek apakah tab aktif adalah salah satu sesi dari mapel ini
+    const prefix = `mapel-${id.replace("mapel-parent-", "")}-`;
+    return activeTab.startsWith(prefix);
+  };
+
+  // ─────────────────────────────────────────
+  // RENDER: Sidebar untuk Siswa
+  // ─────────────────────────────────────────
+  if (userRole === "siswa") {
+    return (
+      <div className="flex flex-col h-full">
+        {/* Logo */}
+        <div className="p-5 pb-6 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <img
+              src="/images/2c06b6fab7e6a9490c046e362160f2d0.png"
+              alt="PKBM Menuju Makmur"
+              className="h-12 w-12 rounded-xl shadow-lg shadow-black/20 bg-white/10 p-0.5 object-contain"
+            />
+            <div className="min-w-0">
+              <span className="block text-[10px] font-black tracking-[0.2em] text-cyan-300 uppercase">PKBM</span>
+              <span className="block text-sm font-black tracking-tight text-white leading-tight">MENUJU MAKMUR</span>
+            </div>
+          </div>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1 custom-scrollbar">
+
+          {/* ── E-LEARNING (collapsible) */}
+          <div>
+            <button
+              onClick={() => toggleExpand("e-learning")}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all cursor-pointer group ${
+                isAncestorActive("e-learning") || activeTab === "elearning-dashboard"
+                  ? "bg-white/20 text-white shadow-lg"
+                  : "text-white/70 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              <span className={`transition-colors ${isAncestorActive("e-learning") ? "text-cyan-300" : "text-white/50 group-hover:text-cyan-300"}`}>
+                <BookOpen className="h-5 w-5" />
+              </span>
+              <span className="flex-1 text-left tracking-wide">E-LEARNING</span>
+              <span className="text-white/40">
+                {expandedMenus["e-learning"] ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              </span>
+            </button>
+
+            {expandedMenus["e-learning"] && (
+              <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-white/10 pl-3 animate-in slide-in-from-top-2 duration-200">
+
+                {/* Dashboard E-Learning */}
+                <button
+                  onClick={() => handleLeafClick("elearning-dashboard")}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-bold text-left transition-all cursor-pointer ${
+                    activeTab === "elearning-dashboard"
+                      ? "bg-white/15 text-cyan-300"
+                      : "text-white/70 hover:bg-white/10 hover:text-white/90"
+                  }`}
+                >
+                  <span className={activeTab === "elearning-dashboard" ? "text-cyan-300" : "text-white/30"}>
+                    <LayoutDashboard className="h-4 w-4" />
+                  </span>
+                  DASHBOARD
+                </button>
+
+                {/* Mata Pelajaran Saya (collapsible) */}
+                <div>
+                  <button
+                    onClick={() => toggleExpand("elearning-mata-pelajaran")}
+                    className={`w-full flex items-center gap-2.5 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      isAncestorActive("elearning-mata-pelajaran")
+                        ? "bg-white/10 text-white"
+                        : "text-white/70 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    <span className="text-white/30"><BookMarked className="h-4 w-4" /></span>
+                    <span className="flex-1 text-left uppercase">Mata Pelajaran Saya</span>
+                    <span className="text-white/40">
+                      {expandedMenus["elearning-mata-pelajaran"] ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                    </span>
+                  </button>
+
+                  {expandedMenus["elearning-mata-pelajaran"] && (
+                    <div className="ml-3 mt-1 space-y-0.5 border-l border-white/10 pl-3 animate-in slide-in-from-top-1 duration-200">
+                      {subjects.map((subject) => {
+                        const slug = toSlug(subject);
+                        const parentId = `mapel-parent-${slug}`;
+                        const isMapelActive = activeTab.startsWith(`mapel-${slug}-`);
+
+                        return (
+                          <div key={slug}>
+                            {/* Nama Mata Pelajaran (collapsible) */}
+                            <button
+                              onClick={() => toggleExpand(parentId)}
+                              className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-bold text-left transition-all cursor-pointer ${
+                                isMapelActive
+                                  ? "bg-white/10 text-white"
+                                  : "text-white/50 hover:bg-white/10 hover:text-white/85"
+                              }`}
+                            >
+                              <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shrink-0"></span>
+                              <span className="flex-1 leading-tight">{subject}</span>
+                              <span className="text-white/30 shrink-0">
+                                {expandedMenus[parentId] ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                              </span>
+                            </button>
+
+                            {/* Sub-menu: Nilai, Pendahuluan, Sesi 1–8 */}
+                            {expandedMenus[parentId] && (
+                              <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-2 animate-in slide-in-from-top-1 duration-150">
+                                {["nilai", "pendahuluan", ...Array.from({ length: 8 }, (_, i) => `sesi-${i + 1}`)].map((sub) => {
+                                  const tabId = `mapel-${slug}-${sub}`;
+                                  const label = sub === "nilai" ? "Nilai"
+                                    : sub === "pendahuluan" ? "Pendahuluan"
+                                    : `Sesi ${sub.replace("sesi-", "")}`;
+                                  return (
+                                    <button
+                                      key={tabId}
+                                      onClick={() => handleLeafClick(tabId)}
+                                      className={`w-full flex items-center gap-2 px-2 py-1 rounded-md text-[10px] font-bold text-left transition-all cursor-pointer ${
+                                        activeTab === tabId
+                                          ? "bg-white/15 text-cyan-300"
+                                          : "text-white/40 hover:bg-white/10 hover:text-white/80"
+                                      }`}
+                                    >
+                                      <span className={`h-1 w-1 rounded-full shrink-0 ${activeTab === tabId ? "bg-cyan-300" : "bg-white/30"}`}></span>
+                                      {label}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            )}
+          </div>
+
+          {/* ── E-UJIAN */}
+          <button
+            onClick={() => handleLeafClick("e-ujian")}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all cursor-pointer group ${
+              activeTab === "e-ujian"
+                ? "bg-white/20 text-white shadow-lg"
+                : "text-white/70 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            <span className={`transition-colors ${activeTab === "e-ujian" ? "text-cyan-300" : "text-white/50 group-hover:text-cyan-300"}`}>
+              <FileText className="h-5 w-5" />
+            </span>
+            <span className="flex-1 text-left tracking-wide">E-UJIAN</span>
+          </button>
+
+          {/* ── PROFIL SAYA */}
+          <button
+            onClick={() => handleLeafClick("profil")}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all cursor-pointer group ${
+              activeTab === "profil"
+                ? "bg-white/20 text-white shadow-lg"
+                : "text-white/70 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            <span className={`transition-colors ${activeTab === "profil" ? "text-cyan-300" : "text-white/50 group-hover:text-cyan-300"}`}>
+              <User className="h-5 w-5" />
+            </span>
+            <span className="flex-1 text-left tracking-wide">PROFIL SAYA</span>
+          </button>
+
+        </nav>
+      </div>
+    );
+  }
+
+  // ─────────────────────────────────────────
+  // RENDER: Sidebar untuk Admin / Tutor / Super Admin
+  // ─────────────────────────────────────────
+  const adminMenuItems = [
+    { id: "dashboard", label: "DASHBOARD", icon: <LayoutDashboard className="h-5 w-5" /> },
+    ...(userRole === "tutor" ? [{ id: "kelola-nilai", label: "KELOLA NILAI & KELAS", icon: <GraduationCap className="h-5 w-5" /> }] : []),
+    {
+      id: "website",
+      label: "WEBSITE",
+      icon: <Globe className="h-5 w-5" />,
+      children:
+        userRole === "super_admin"
+          ? [
+              { id: "header", label: "HEADER", icon: <Type className="h-4 w-4" /> },
+              { id: "pengumuman", label: "PENGUMUMAN", icon: <Megaphone className="h-4 w-4" /> },
+              {
+                id: "profil-group", label: "PROFIL", icon: <User className="h-4 w-4" />,
+                children: [
+                  { id: "identitas-lembaga", label: "IDENTITAS LEMBAGA" },
+                  { id: "data-pengelola", label: "DATA PENGELOLA" },
+                  { id: "visi-misi", label: "VISI DAN MISI" },
+                  { id: "program-pendidikan", label: "PROGRAM PENDIDIKAN" },
+                  { id: "sarana-fasilitas", label: "SARANA DAN FASILITAS" },
+                  { id: "prestasi", label: "PRESTASI" },
+                  { id: "titik-layanan", label: "TITIK LAYANAN" },
+                ],
+              },
+              { id: "agenda", label: "AGENDA", icon: <CalendarDays className="h-4 w-4" /> },
+              { id: "berita", label: "BERITA", icon: <Newspaper className="h-4 w-4" /> },
+              { id: "tutor", label: "TUTOR", icon: <GraduationCap className="h-4 w-4" /> },
+              { id: "warga-belajar", label: "WARGA BELAJAR", icon: <Users className="h-4 w-4" /> },
+              { id: "download", label: "DOWNLOAD", icon: <Download className="h-4 w-4" /> },
+              { id: "produk-wb", label: "PRODUK WB", icon: <ShoppingBag className="h-4 w-4" /> },
+              { id: "alumni", label: "ALUMNI", icon: <Award className="h-4 w-4" /> },
+              { id: "galeri", label: "GALERI", icon: <Image className="h-4 w-4" /> },
+            ]
+          : [
+              { id: "pengumuman", label: "PENGUMUMAN", icon: <Megaphone className="h-4 w-4" /> },
+              { id: "berita", label: "BERITA", icon: <Newspaper className="h-4 w-4" /> },
+              { id: "agenda", label: "AGENDA", icon: <CalendarDays className="h-4 w-4" /> },
+              { id: "galeri", label: "GALERI", icon: <Image className="h-4 w-4" /> },
+            ],
+    },
+    { id: "e-learning", label: "E-LEARNING", icon: <BookOpen className="h-5 w-5" /> },
+    { id: "e-ujian", label: "E-UJIAN", icon: <FileText className="h-5 w-5" /> },
+    { id: "e-spmb", label: "E-SPMB", icon: <ClipboardList className="h-5 w-5" /> },
+    { id: "profil", label: "PROFIL SAYA", icon: <User className="h-5 w-5" /> },
+  ];
+
+  const handleAdminClick = (id: string, hasChildren: boolean) => {
+    if (hasChildren) {
+      toggleExpand(id);
     } else {
-      setActiveTab(id);
-      setMobileSidebarOpen(false);
+      handleLeafClick(id);
     }
   };
 
-  // Filter sidebar menu items dynamically by role
-  const filteredMenuItems = menuItems
-    .map((item) => {
-      // Jika item adalah website dan role adalah admin/tutor, kita harus memfilter sub-menunya
-      if (item.id === "website" && (userRole === "admin" || userRole === "tutor")) {
-        const allowedSubmenus = ["pengumuman", "berita", "agenda", "galeri"];
-        return {
-          ...item,
-          children: item.children?.filter((child) => allowedSubmenus.includes(child.id)),
-        };
-      }
-      return item;
-    })
-    .filter((item) => {
-      // Menu khusus tutor
-      if (item.id === "kelola-nilai" && userRole !== "tutor") return false;
-      // Menu khusus siswa
-      if (item.id === "aktivitas-belajar" && userRole !== "siswa") return false;
-
-      // Aturan untuk Siswa
-      if (userRole === "siswa") {
-        const allowedForSiswa = ["e-learning", "e-ujian", "profil", "aktivitas-belajar"];
-        return allowedForSiswa.includes(item.id);
-      }
-
-      // Aturan untuk Admin & Tutor (Admin (Tutor & Pengelola))
-      if (userRole === "admin" || userRole === "tutor") {
-        // Bisa melihat semua kecuali menu khusus siswa
-        return item.id !== "aktivitas-belajar";
-      }
-
-      // Aturan untuk Super Admin
-      if (userRole === "super_admin") {
-        // Bisa melihat semua kecuali menu khusus tutor dan siswa
-        return item.id !== "kelola-nilai" && item.id !== "aktivitas-belajar";
-      }
-
-      return true;
-    });
-
   return (
     <div className="flex flex-col h-full">
-      {/* Logo Section */}
       <div className="p-5 pb-6 border-b border-white/10">
         <div className="flex items-center gap-3">
           <img
@@ -204,12 +382,11 @@ export default function DashboardSidebar({
         </div>
       </div>
 
-      {/* Navigation Menu */}
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1 custom-scrollbar">
-        {filteredMenuItems.map((item) => (
+        {adminMenuItems.map((item: any) => (
           <div key={item.id}>
             <button
-              onClick={() => handleMenuClick(item.id)}
+              onClick={() => handleAdminClick(item.id, !!item.children)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 group cursor-pointer ${
                 activeTab === item.id
                   ? "bg-white/20 text-white shadow-lg shadow-black/10 backdrop-blur-sm"
@@ -227,45 +404,34 @@ export default function DashboardSidebar({
               )}
             </button>
 
-            {/* Sub-menu */}
             {item.children && expandedMenus[item.id] && (
               <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-white/10 pl-3 animate-in slide-in-from-top-2 duration-200">
-                {item.children.map((child) => {
-                  const hasSubChildren = !!child.children;
-                  const isSubExpanded = !!expandedMenus[child.id];
-
-                  if (hasSubChildren) {
+                {item.children.map((child: any) => {
+                  if (child.children) {
                     return (
                       <div key={child.id} className="space-y-0.5">
                         <button
-                          onClick={() => {
-                            setExpandedMenus((prev) => ({ ...prev, [child.id]: !prev[child.id] }));
-                          }}
+                          onClick={() => toggleExpand(child.id)}
                           className="w-full flex items-center gap-2.5 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer text-white/70 hover:bg-white/10 hover:text-white"
                         >
                           <span className="text-white/30">{child.icon}</span>
                           <span className="flex-1 text-left uppercase">{child.label}</span>
                           <span className="text-white/40">
-                            {isSubExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                            {expandedMenus[child.id] ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                           </span>
                         </button>
-                        {isSubExpanded && (
-                          <div className="ml-3 mt-1 space-y-0.5 border-l border-white/10 pl-3 animate-in slide-in-from-top-1 duration-200">
-                            {child.children?.map((subChild) => (
+                        {expandedMenus[child.id] && (
+                          <div className="ml-3 mt-1 space-y-0.5 border-l border-white/10 pl-3">
+                            {child.children.map((sub: any) => (
                               <button
-                                key={subChild.id}
-                                onClick={() => {
-                                  setActiveTab(subChild.id);
-                                  setMobileSidebarOpen(false);
-                                }}
+                                key={sub.id}
+                                onClick={() => handleLeafClick(sub.id)}
                                 className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-left transition-all cursor-pointer ${
-                                  activeTab === subChild.id
-                                    ? "bg-white/15 text-cyan-300"
-                                    : "text-white/50 hover:bg-white/10 hover:text-white/85"
+                                  activeTab === sub.id ? "bg-white/15 text-cyan-300" : "text-white/50 hover:bg-white/10 hover:text-white/85"
                                 }`}
                               >
                                 <span className="h-1.5 w-1.5 rounded-full bg-cyan-300"></span>
-                                {subChild.label}
+                                {sub.label}
                               </button>
                             ))}
                           </div>
@@ -273,18 +439,12 @@ export default function DashboardSidebar({
                       </div>
                     );
                   }
-
                   return (
                     <button
                       key={child.id}
-                      onClick={() => {
-                        setActiveTab(child.id);
-                        setMobileSidebarOpen(false);
-                      }}
+                      onClick={() => handleLeafClick(child.id)}
                       className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-bold text-left transition-all cursor-pointer ${
-                        activeTab === child.id
-                          ? "bg-white/15 text-cyan-300"
-                          : "text-white/70 hover:bg-white/10 hover:text-white/90"
+                        activeTab === child.id ? "bg-white/15 text-cyan-300" : "text-white/70 hover:bg-white/10 hover:text-white/90"
                       }`}
                     >
                       <span className={activeTab === child.id ? "text-cyan-300" : "text-white/30"}>{child.icon}</span>
