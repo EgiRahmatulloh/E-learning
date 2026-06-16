@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Plus, Trash2, Save, FileQuestion, CheckCircle } from "lucide-react";
@@ -6,11 +6,28 @@ import { toast } from "sonner";
 
 export default function AngketEvaluasiTutor() {
   const [isActive, setIsActive] = useState(false);
-  const [questions, setQuestions] = useState([
-    { id: 1, text: "Tutor menguasai materi pembelajaran dengan baik." },
-    { id: 2, text: "Tutor merespon pertanyaan dengan cepat dan jelas." },
-    { id: 3, text: "Materi yang diberikan mudah dipahami." },
-  ]);
+  const [questions, setQuestions] = useState<{id: number, text: string}[]>([]);
+
+  useEffect(() => {
+    async function fetchQuestions() {
+      try {
+        const res = await fetch("/api/elearning/evaluations");
+        const json = await res.json();
+        if (json.success && json.data.length > 0) {
+          setQuestions(json.data.map((q: any) => ({ id: q.id, text: q.question })));
+        } else {
+          setQuestions([
+            { id: 1, text: "Tutor menguasai materi pembelajaran dengan baik." },
+            { id: 2, text: "Tutor merespon pertanyaan dengan cepat dan jelas." },
+            { id: 3, text: "Materi yang diberikan mudah dipahami." },
+          ]);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    fetchQuestions();
+  }, []);
 
   const addQuestion = () => {
     setQuestions([...questions, { id: Date.now(), text: "" }]);
@@ -24,12 +41,26 @@ export default function AngketEvaluasiTutor() {
     setQuestions(questions.filter((q) => q.id !== id));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (questions.some(q => !q.text.trim())) {
       toast.error("Ada pertanyaan yang masih kosong. Harap isi atau hapus.");
       return;
     }
-    toast.success("Berhasil menyimpan form kuesioner evaluasi tutor.");
+    try {
+      const res = await fetch("/api/elearning/evaluations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ questions: questions.map(q => ({ text: q.text })) })
+      });
+      const json = await res.json();
+      if (json.success) {
+        toast.success("Berhasil menyimpan form kuesioner evaluasi tutor.");
+      } else {
+        toast.error("Gagal", { description: json.message });
+      }
+    } catch (err: any) {
+      toast.error("Terjadi kesalahan", { description: err.message });
+    }
   };
 
   return (

@@ -8,6 +8,7 @@ import {
 import { eq, and } from "drizzle-orm";
 import { jwt } from "@elysia/jwt";
 import { finalJwtSecret } from "../config/jwt";
+import sanitizeHtml from "sanitize-html";
 
 export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
   .use(
@@ -69,8 +70,8 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
     async (context: any) => {
       const { query, set } = context;
       try {
-        const courseId = parseInt(query.courseId);
-        const sessionNumber = parseInt(query.sessionNumber);
+        const courseId = query.courseId;
+        const sessionNumber = query.sessionNumber;
 
         let session = await db
           .select()
@@ -111,8 +112,8 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
     },
     {
       query: t.Object({
-        courseId: t.String(),
-        sessionNumber: t.String(),
+        courseId: t.Numeric(),
+        sessionNumber: t.Numeric(),
       }),
     }
   )
@@ -125,7 +126,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
       try {
         await db
           .update(elearningSessions)
-          .set({ description: body.description })
+          .set({ description: sanitizeHtml(body.description) })
           .where(eq(elearningSessions.id, parseInt(id)));
 
         return { success: true, message: "Berhasil menyimpan teks pembuka" };
@@ -189,6 +190,57 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         title: t.String(),
         type: t.String(), // PPT, PDF (RAT/Tata Tertib), Video (Youtube)
         fileUrl: t.String(),
+      }),
+    }
+  )
+
+  // Ambil daftar pertanyaan angket
+  .get(
+    "/evaluations",
+    async (context: any) => {
+      const { set } = context;
+      try {
+        // Ambil data evaluasi dari schema, pastikan import elearningEvaluations sudah ada di schema yang di-import
+        const { elearningEvaluations } = require("../db/schema");
+        const evaluations = await db.select().from(elearningEvaluations).all();
+        return { success: true, data: evaluations };
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
+    }
+  )
+
+  // Simpan daftar pertanyaan angket
+  .post(
+    "/evaluations",
+    async (context: any) => {
+      const { body, set } = context;
+      try {
+        const { elearningEvaluations } = require("../db/schema");
+        // Hapus semua lalu insert ulang
+        await db.delete(elearningEvaluations);
+        if (body.questions && body.questions.length > 0) {
+          const insertData = body.questions.map((q: any) => ({
+            sessionId: 7, // Default sesi 7 untuk evaluasi tutor
+            question: q.text,
+            scaleMax: 5,
+          }));
+          await db.insert(elearningEvaluations).values(insertData);
+        }
+        return { success: true, message: "Berhasil menyimpan angket evaluasi" };
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
+    },
+    {
+      body: t.Object({
+        questions: t.Array(
+          t.Object({
+            text: t.String(),
+          })
+        ),
       }),
     }
   );

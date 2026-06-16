@@ -23,6 +23,7 @@ export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) 
   const [pptUrl, setPptUrl] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [showAngket, setShowAngket] = useState(false);
+  const [angketQuestions, setAngketQuestions] = useState<string[]>([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -50,6 +51,20 @@ export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) 
         const video = materials.find((m: any) => m.type === "VIDEO");
         if (video) setVideoUrl(video.fileUrl);
 
+        if (sessionNumber === 7) {
+          const evalRes = await fetch("/api/elearning/evaluations");
+          const evalData = await evalRes.json();
+          if (evalData.success && evalData.data.length > 0) {
+            setAngketQuestions(evalData.data.map((q: any) => q.question));
+          } else {
+            setAngketQuestions([
+              "Tutor menguasai materi pembelajaran dengan baik.",
+              "Tutor merespon pertanyaan dengan cepat dan jelas.",
+              "Materi yang diberikan mudah dipahami."
+            ]);
+          }
+        }
+
       } catch (err) {
         console.error("Failed to load sesi data", err);
       } finally {
@@ -57,7 +72,7 @@ export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) 
       }
     }
     fetchData();
-  }, [subjectName, sessionNumber, user]);
+  }, [subjectName, sessionNumber, user?.program, user?.kelas]);
 
   const handleSendDiscussion = () => {
     if (!discussionInput.trim()) return;
@@ -290,11 +305,7 @@ export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) 
               </button>
             </div>
             <div className="p-6 space-y-6">
-              {[
-                "Tutor menguasai materi pembelajaran dengan baik.",
-                "Tutor merespon pertanyaan dengan cepat dan jelas.",
-                "Materi yang diberikan mudah dipahami."
-              ].map((q, idx) => (
+              {angketQuestions.map((q, idx) => (
                 <div key={idx} className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
                   <p className="font-bold text-slate-800 text-sm mb-4">{idx + 1}. {q}</p>
                   <div className="flex justify-between items-center gap-2">

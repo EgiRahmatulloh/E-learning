@@ -18,16 +18,18 @@ export default function LaporanNilaiTab({}: { activeTab?: string, user?: any }) 
       `"${student.name}",${student.tugas},${student.partisipasi},${student.kehadiran},${student.final.toFixed(1)},"${student.predikat}"`
     ).join("\n");
     
-    const csvContent = "data:text/csv;charset=utf-8," + header + rows;
-    const encodedUri = encodeURI(csvContent);
+    const csvContent = header + rows;
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
     
     // Create download link
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", url);
     link.setAttribute("download", "laporan_nilai_warga_belajar.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
     
     toast.success("Berhasil mengunduh laporan nilai (.CSV)");
   };
