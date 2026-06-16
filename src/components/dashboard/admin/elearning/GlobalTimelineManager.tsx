@@ -16,6 +16,12 @@ export default function GlobalTimelineManager() {
   ]);
 
   const handleSave = () => {
+    for (const sesi of sessions) {
+      if (sesi.start && sesi.end && new Date(sesi.start) > new Date(sesi.end)) {
+        toast.error("Tanggal Buka untuk Sesi " + sesi.id + " tidak boleh melebihi Tanggal Tutup.");
+        return;
+      }
+    }
     toast.success("Timeline global berhasil disimpan! Semua kelas akan mengikuti jadwal ini.");
   };
 

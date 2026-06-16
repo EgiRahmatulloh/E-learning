@@ -375,21 +375,21 @@ export type NewElearningCourse = typeof elearningCourses.$inferInsert;
 
 export const elearningCourseTutors = sqliteTable('elearning_course_tutors', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  courseId: integer('course_id').notNull(),
-  tutorId: integer('tutor_id').notNull(),
+  courseId: integer('course_id').notNull().references(() => elearningCourses.id, { onDelete: 'cascade' }),
+  tutorId: integer('tutor_id').notNull().references(() => tutors.id, { onDelete: 'cascade' }),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
 });
 
 export const elearningCourseStudents = sqliteTable('elearning_course_students', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  courseId: integer('course_id').notNull(),
-  studentId: integer('student_id').notNull(),
+  courseId: integer('course_id').notNull().references(() => elearningCourses.id, { onDelete: 'cascade' }),
+  studentId: integer('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
 });
 
 export const elearningSessions = sqliteTable('elearning_sessions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  courseId: integer('course_id').notNull(),
+  courseId: integer('course_id').notNull().references(() => elearningCourses.id, { onDelete: 'cascade' }),
   sessionNumber: integer('session_number').notNull(), // 1 - 8
   title: text('title').notNull().default(''),
   description: text('description').notNull().default(''),
@@ -407,7 +407,7 @@ export type NewElearningSession = typeof elearningSessions.$inferInsert;
 
 export const elearningMaterials = sqliteTable('elearning_materials', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  sessionId: integer('session_id').notNull(),
+  sessionId: integer('session_id').notNull().references(() => elearningSessions.id, { onDelete: 'cascade' }),
   title: text('title').notNull().default(''),
   type: text('type').notNull().default('PPT'), // PPT, Video, PDF
   fileUrl: text('file_url').notNull().default(''),

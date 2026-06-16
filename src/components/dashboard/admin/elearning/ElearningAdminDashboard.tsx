@@ -7,7 +7,7 @@ import TutorMonitoring from "./TutorMonitoring";
 import ServerLogsViewer from "./ServerLogsViewer";
 
 export default function ElearningAdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"sync" | "blueprint" | "timeline" | "monitoring" | "logs">("sync");
+  const [activeTab, setActiveTab] = useState<"sync" | "blueprint" | "timeline" | "monitoring">("sync");
 
   const tabs = [
     { id: "sync", label: "Sinkronisasi & Master Data", icon: <Database className="w-4 h-4" /> },

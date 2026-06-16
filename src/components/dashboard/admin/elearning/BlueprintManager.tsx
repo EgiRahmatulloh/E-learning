@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { FolderPlus, BookOpen, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -6,6 +6,15 @@ import { toast } from "sonner";
 export default function BlueprintManager() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [newCourseName, setNewCourseName] = useState("");
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
 
   const handleGenerate = () => {
     if (!newCourseName.trim()) {
@@ -13,7 +22,7 @@ export default function BlueprintManager() {
       return;
     }
     setIsGenerating(true);
-    setTimeout(() => {
+    timerRef.current = setTimeout(() => {
       setIsGenerating(false);
       toast.success(`Template Course "${newCourseName}" berhasil digandakan dengan 8 sesi!`);
       setNewCourseName("");

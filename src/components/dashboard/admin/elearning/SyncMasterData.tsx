@@ -1,14 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { DownloadCloud, Users, GraduationCap, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 export default function SyncMasterData() {
   const [isSyncing, setIsSyncing] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
 
   const handleSync = (type: "siswa" | "tutor") => {
     setIsSyncing(true);
-    setTimeout(() => {
+    timerRef.current = setTimeout(() => {
       setIsSyncing(false);
       toast.success(`Sinkronisasi data ${type === "siswa" ? "Warga Belajar" : "Tutor"} berhasil!`);
     }, 2000);
