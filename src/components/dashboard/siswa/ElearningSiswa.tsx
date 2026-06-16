@@ -124,7 +124,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
       : subPart.startsWith("sesi-") ? `Sesi ${subPart.replace("sesi-", "")}`
       : subPart;
 
-    const renderMapelContent = () => {
+    const mapelContent = useMemo(() => {
       const subjectName = matchedSubject?.name || "Mata Pelajaran";
       const tutorName = matchedSubject?.tutor || "Tutor";
       
@@ -145,7 +145,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
           </p>
         </div>
       );
-    };
+    }, [subPart, matchedSubject, subLabel]);
 
     const menus = [
       { id: "partisipasi", label: "Partisipasi" },
@@ -191,7 +191,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
         </div>
 
         {/* Dinamis konten */}
-        {renderMapelContent()}
+        {mapelContent}
 
         {/* Navigasi Bawah */}
         <div className="flex items-center justify-between mt-8 pt-4">

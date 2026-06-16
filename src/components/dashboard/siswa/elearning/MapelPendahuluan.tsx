@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FileText, Download, Users, FileSignature } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface MapelPendahuluanProps {
   subjectName: string;
@@ -23,7 +24,9 @@ export function MapelPendahuluan({ subjectName }: MapelPendahuluanProps) {
   };
 
   const handleDownload = () => {
-    alert("Dokumen belum diunggah oleh tutor.");
+    toast.info("Dokumen belum tersedia", {
+      description: "Dokumen belum diunggah oleh tutor saat ini."
+    });
   };
 
   return (

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CheckCircle2, FileText, PlayCircle, MessageSquare, PenTool, Upload, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface MapelSesiProps {
   subjectName: string;
@@ -29,7 +30,9 @@ export function MapelSesi({ subjectName, sessionNumber }: MapelSesiProps) {
   };
 
   const handleNotAvailable = (item: string) => {
-    alert(`${item} belum tersedia atau belum diunggah oleh tutor saat ini.`);
+    toast.info("Belum tersedia", {
+      description: `${item} belum tersedia atau belum diunggah oleh tutor saat ini.`
+    });
   };
 
   return (
@@ -77,14 +80,17 @@ export function MapelSesi({ subjectName, sessionNumber }: MapelSesiProps) {
             <PlayCircle className="h-5 w-5 text-red-600" />
             <h3 className="font-bold text-slate-700">Materi Pengayaan (Video)</h3>
           </div>
-          <div onClick={() => handleNotAvailable("Video pengayaan")} className="h-40 bg-slate-900 rounded-xl flex items-center justify-center overflow-hidden relative cursor-pointer">
+          <button 
+            onClick={() => handleNotAvailable("Video pengayaan")} 
+            className="w-full h-40 bg-slate-900 rounded-xl flex items-center justify-center overflow-hidden relative cursor-pointer border-none"
+          >
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm cursor-pointer hover:bg-white/30 transition-all">
                 <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-white border-b-[8px] border-b-transparent ml-1"></div>
               </div>
             </div>
             <p className="text-white/40 text-xs font-bold absolute bottom-3">Preview YouTube Embed</p>
-          </div>
+          </button>
         </div>
       </div>
 
