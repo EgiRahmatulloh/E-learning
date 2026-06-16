@@ -107,46 +107,46 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
     return result;
   }, [allSubjects, hiddenSubjects, filter, searchQuery, sortBy]);
 
+  // Contoh: mapel-matematika-sesi-3 → slug=matematika, sub=sesi-3
+  const withoutPrefix = activeTab.replace("mapel-", "");
+  // Cari slug subjek yang cocok
+  const matchedSubject = allSubjects.find((s) => withoutPrefix.startsWith(s.slug + "-"));
+  const subPart = matchedSubject
+    ? withoutPrefix.replace(matchedSubject.slug + "-", "")
+    : withoutPrefix;
+
+  const subLabel =
+    subPart === "partisipasi" ? "Partisipasi"
+    : subPart === "nilai" ? "Nilai"
+    : subPart === "pendahuluan" ? "Pendahuluan"
+    : subPart.startsWith("sesi-") ? `Sesi ${subPart.replace("sesi-", "")}`
+    : subPart;
+
+  const mapelContent = useMemo(() => {
+    const subjectName = matchedSubject?.name || "Mata Pelajaran";
+    const tutorName = matchedSubject?.tutor || "Tutor";
+    
+    if (subPart === "partisipasi") return <MapelPartisipasi subjectName={subjectName} tutorName={tutorName} />;
+    if (subPart === "nilai") return <MapelNilai subjectName={subjectName} />;
+    if (subPart === "pendahuluan") return <MapelPendahuluan subjectName={subjectName} />;
+    if (subPart.startsWith("sesi-")) {
+      const sessionNumber = parseInt(subPart.replace("sesi-", ""), 10);
+      return <MapelSesi subjectName={subjectName} sessionNumber={sessionNumber} />;
+    }
+    return (
+      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-8 text-center space-y-4">
+        <BookOpen className="h-14 w-14 text-slate-300 mx-auto" />
+        <h3 className="text-lg font-black text-slate-700">Konten sedang disiapkan</h3>
+        <p className="text-sm text-slate-500 max-w-md mx-auto">
+          Halaman <span className="font-bold text-[#280f91]">{subLabel}</span> untuk mata pelajaran{" "}
+          <span className="font-bold text-[#280f91]">{matchedSubject?.name || "terpilih"}</span> sedang dalam pengembangan.
+        </p>
+      </div>
+    );
+  }, [subPart, matchedSubject, subLabel]);
+
   // ──── Halaman Detail (Nilai / Pendahuluan / Sesi)
   if (isMapelDetail) {
-    // Contoh: mapel-matematika-sesi-3 → slug=matematika, sub=sesi-3
-    const withoutPrefix = activeTab.replace("mapel-", "");
-    // Cari slug subjek yang cocok
-    const matchedSubject = allSubjects.find((s) => withoutPrefix.startsWith(s.slug + "-"));
-    const subPart = matchedSubject
-      ? withoutPrefix.replace(matchedSubject.slug + "-", "")
-      : withoutPrefix;
-
-    const subLabel =
-      subPart === "partisipasi" ? "Partisipasi"
-      : subPart === "nilai" ? "Nilai"
-      : subPart === "pendahuluan" ? "Pendahuluan"
-      : subPart.startsWith("sesi-") ? `Sesi ${subPart.replace("sesi-", "")}`
-      : subPart;
-
-    const mapelContent = useMemo(() => {
-      const subjectName = matchedSubject?.name || "Mata Pelajaran";
-      const tutorName = matchedSubject?.tutor || "Tutor";
-      
-      if (subPart === "partisipasi") return <MapelPartisipasi subjectName={subjectName} tutorName={tutorName} />;
-      if (subPart === "nilai") return <MapelNilai subjectName={subjectName} />;
-      if (subPart === "pendahuluan") return <MapelPendahuluan subjectName={subjectName} />;
-      if (subPart.startsWith("sesi-")) {
-        const sessionNumber = parseInt(subPart.replace("sesi-", ""), 10);
-        return <MapelSesi subjectName={subjectName} sessionNumber={sessionNumber} />;
-      }
-      return (
-        <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-8 text-center space-y-4">
-          <BookOpen className="h-14 w-14 text-slate-300 mx-auto" />
-          <h3 className="text-lg font-black text-slate-700">Konten sedang disiapkan</h3>
-          <p className="text-sm text-slate-500 max-w-md mx-auto">
-            Halaman <span className="font-bold text-[#280f91]">{subLabel}</span> untuk mata pelajaran{" "}
-            <span className="font-bold text-[#280f91]">{matchedSubject?.name || "terpilih"}</span> sedang dalam pengembangan.
-          </p>
-        </div>
-      );
-    }, [subPart, matchedSubject, subLabel]);
-
     const menus = [
       { id: "partisipasi", label: "Partisipasi" },
       { id: "nilai", label: "Nilai" },
