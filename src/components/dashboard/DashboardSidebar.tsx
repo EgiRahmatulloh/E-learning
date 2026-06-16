@@ -48,6 +48,15 @@ export const getTabLabel = (id: string): string => {
     if (parts[parts.length - 1] === "pendahuluan") {
       return `PENDAHULUAN – ${parts.slice(0, -1).join(" ").toUpperCase()}`;
     }
+    if (parts[parts.length - 2] === "manajemen" && parts[parts.length - 1] === "sesi") {
+      return `MANAJEMEN SESI – ${parts.slice(0, -2).join(" ").toUpperCase()}`;
+    }
+    if (parts[parts.length - 2] === "manajemen" && parts[parts.length - 1] === "tugas") {
+      return `MANAJEMEN TUGAS – ${parts.slice(0, -2).join(" ").toUpperCase()}`;
+    }
+    if (parts[parts.length - 2] === "laporan" && parts[parts.length - 1] === "nilai") {
+      return `LAPORAN & NILAI – ${parts.slice(0, -2).join(" ").toUpperCase()}`;
+    }
     if (parts[parts.length - 2] === "sesi") {
       const n = parts[parts.length - 1];
       return `SESI ${n} – ${parts.slice(0, -2).join(" ").toUpperCase()}`;
@@ -315,7 +324,6 @@ export default function DashboardSidebar({
   // ─────────────────────────────────────────
   const adminMenuItems = [
     { id: "dashboard", label: "DASHBOARD", icon: <LayoutDashboard className="h-5 w-5" /> },
-    ...(userRole === "tutor" ? [{ id: "kelola-nilai", label: "KELOLA NILAI & KELAS", icon: <GraduationCap className="h-5 w-5" /> }] : []),
     {
       id: "website",
       label: "WEBSITE",
@@ -353,7 +361,27 @@ export default function DashboardSidebar({
               { id: "galeri", label: "GALERI", icon: <Image className="h-4 w-4" /> },
             ],
     },
-    { id: "e-learning", label: "E-LEARNING", icon: <BookOpen className="h-5 w-5" /> },
+    { 
+      id: "e-learning", 
+      label: "E-LEARNING", 
+      icon: <BookOpen className="h-5 w-5" />,
+      children: userRole === "tutor"
+        ? getSubjectsSiswa(user?.program, user?.kelas).map((subject) => {
+            const slug = toSlug(subject);
+            return {
+              id: `mapel-parent-${slug}`,
+              label: subject,
+              icon: <BookMarked className="h-4 w-4" />,
+              children: [
+                { id: `mapel-${slug}-pendahuluan`, label: "Pendahuluan" },
+                { id: `mapel-${slug}-manajemen-sesi`, label: "Manajemen Sesi" },
+                { id: `mapel-${slug}-manajemen-tugas`, label: "Manajemen Tugas" },
+                { id: `mapel-${slug}-laporan-nilai`, label: "Laporan & Nilai" },
+              ]
+            };
+          })
+        : undefined
+    },
     { id: "e-ujian", label: "E-UJIAN", icon: <FileText className="h-5 w-5" /> },
     { id: "e-spmb", label: "E-SPMB", icon: <ClipboardList className="h-5 w-5" /> },
     { id: "profil", label: "PROFIL SAYA", icon: <User className="h-5 w-5" /> },

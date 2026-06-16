@@ -7,7 +7,6 @@ import {
   LogOut,
 } from "lucide-react";
 import { AdminDashboard } from "./admin/AdminDashboard";
-import { TutorDashboard } from "./tutor/TutorDashboard";
 import { ElearningSiswa } from "./siswa/ElearningSiswa";
 import { HeaderManager } from "./admin/HeaderManager";
 import AnnouncementManager from "./admin/AnnouncementManager";
@@ -33,6 +32,12 @@ import DashboardSidebar, { getTabLabel } from "./DashboardSidebar";
 import DashboardRightSidebar from "./DashboardRightSidebar";
 import WelcomeBanner from "./WelcomeBanner";
 import RoleStatsGrid from "./RoleStatsGrid";
+
+// Tutor Sub-components
+import PendahuluanTab from "./tutor/elearning/PendahuluanTab";
+import SesiKelasTab from "./tutor/elearning/SesiKelasTab";
+import ManajemenTugasTab from "./tutor/elearning/ManajemenTugasTab";
+import LaporanNilaiTab from "./tutor/elearning/LaporanNilaiTab";
 
 interface DashboardPageProps {
   user: { id: number; name: string; username: string; role: string; email?: string; noHp?: string; alamat?: string; nik?: string; program?: string; kelas?: string };
@@ -129,7 +134,6 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       return (
         <div className="space-y-6">
           {user.role === "admin" && <AdminDashboard />}
-          {user.role === "tutor" && <TutorDashboard />}
         </div>
       );
     }
@@ -149,7 +153,21 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
           </div>
         );
       }
-      // Placeholder for tutor e-learning can go here later
+      
+      if (user.role === "tutor") {
+        if (activeTab.endsWith("-pendahuluan")) {
+          return <div className="space-y-6 animate-in fade-in duration-300"><PendahuluanTab /></div>;
+        }
+        if (activeTab.endsWith("-manajemen-sesi")) {
+          return <div className="space-y-6 animate-in fade-in duration-300"><SesiKelasTab /></div>;
+        }
+        if (activeTab.endsWith("-manajemen-tugas")) {
+          return <div className="space-y-6 animate-in fade-in duration-300"><ManajemenTugasTab /></div>;
+        }
+        if (activeTab.endsWith("-laporan-nilai")) {
+          return <div className="space-y-6 animate-in fade-in duration-300"><LaporanNilaiTab /></div>;
+        }
+      }
     }
     if (activeTab === "profil") {
       return (
@@ -607,7 +625,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
 
               {/* Page Title */}
               <h1 className="text-xl sm:text-2xl font-black text-cyan-900 tracking-tight uppercase">
-                {getTabLabel(activeTab)}
+                PKBM MENUJU MAKMUR
               </h1>
             </div>
 
