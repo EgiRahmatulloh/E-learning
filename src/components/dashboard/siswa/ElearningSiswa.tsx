@@ -128,11 +128,11 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
     
     if (subPart === "partisipasi") return <MapelPartisipasi subjectName={subjectName} tutorName={tutorName} />;
     if (subPart === "nilai") return <MapelNilai subjectName={subjectName} />;
-    if (subPart === "pendahuluan") return <MapelPendahuluan subjectName={subjectName} />;
+    if (subPart === "pendahuluan") return <MapelPendahuluan subjectName={subjectName} user={user} />;
     if (subPart.startsWith("sesi-")) {
       const sessionNumber = parseInt(subPart.replace("sesi-", ""), 10);
       if (!isNaN(sessionNumber)) {
-        return <MapelSesi subjectName={subjectName} sessionNumber={sessionNumber} />;
+        return <MapelSesi subjectName={subjectName} sessionNumber={sessionNumber} user={user} />;
       }
     }
     return (

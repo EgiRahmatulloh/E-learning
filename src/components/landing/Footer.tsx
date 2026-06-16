@@ -1,5 +1,5 @@
 import { Separator } from "@/components/ui/separator";
-import { GraduationCap, Clock, Calendar, MapPin, Mail, Phone } from "lucide-react";
+import { MapPin, Phone, Mail, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -7,10 +7,10 @@ export default function Footer() {
   return (
     <footer className="bg-slate-950 text-slate-400 py-20 border-t border-slate-900 relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-        
+
         {/* TOP: CONTACT & MAP SECTION WITH CARDS */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-20 items-stretch">
-          
+
           {/* Contact Details Card */}
           <div className="lg:col-span-5">
             <Card className="h-full bg-slate-900/50 border-slate-800 p-8 rounded-3xl shadow-2xl flex flex-col justify-between">
@@ -77,21 +77,21 @@ export default function Footer() {
                   Temukan rute perjalanan terbaik menuju PKBM Menuju Makmur melalui peta interaktif.
                 </p>
               </div>
-              
+
               <div className="flex-1 w-full rounded-2xl overflow-hidden border border-slate-800 shadow-inner bg-slate-950 relative min-h-[300px]">
-                <iframe 
+                <iframe
                   src="https://maps.google.com/maps?q=PKBM%20Menuju%20Makmur%2C%20Jatinagara%2C%20Ciamis&t=&z=15&ie=UTF8&iwloc=&output=embed"
-                  width="100%" 
-                  height="100%" 
-                  style={{ border: 0 }} 
-                  allowFullScreen={true} 
-                  loading="lazy" 
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen={true}
+                  loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                   title="Peta Lokasi PKBM Menuju Makmur"
                   className="absolute inset-0 w-full h-full grayscale-[0.3] invert-[0.05]"
                 ></iframe>
               </div>
-              
+
               <div className="mt-6">
                 <Button asChild className="w-full rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 transition-all flex items-center justify-center gap-2 shadow-lg shadow-black/20 group cursor-pointer">
                   <a href="https://maps.app.goo.gl/Hp5bXgiobn5McmL39" target="_blank" rel="noopener noreferrer">
@@ -136,14 +136,14 @@ export default function Footer() {
           <div className="space-y-4">
             <h4 className="text-xs font-black text-white uppercase tracking-wider">Layanan Pintar</h4>
             <ul className="space-y-2 text-xs font-semibold text-slate-500">
-              <li><a href="#beranda" className="hover:text-white transition-colors">Pendaftaran (E-SPMB)</a></li>
-              <li><a href="#beranda" className="hover:text-white transition-colors">E-Learning Siswa</a></li>
-              <li><a href="#beranda" className="hover:text-white transition-colors">Ujian & Evaluasi</a></li>
+              <li><a href="#beranda" className="hover:text-white transition-colors">E-SPMB</a></li>
+              <li><a href="#beranda" className="hover:text-white transition-colors">E-LEARNING</a></li>
+              <li><a href="#beranda" className="hover:text-white transition-colors">E-UJIAN</a></li>
             </ul>
           </div>
 
           {/* Col 4: Jam Kerja */}
-          <div className="space-y-4">
+          {/* <div className="space-y-4">
             <h4 className="text-xs font-black text-white uppercase tracking-wider">Jam Pelayanan</h4>
             <ul className="space-y-2 text-xs font-semibold text-slate-500">
               <li className="flex items-center gap-2">
@@ -155,7 +155,7 @@ export default function Footer() {
                 <span>Minggu & Merah: Libur</span>
               </li>
             </ul>
-          </div>
+          </div> */}
         </div>
 
         <Separator className="bg-slate-900" />

@@ -343,4 +343,48 @@ CREATE TABLE IF NOT EXISTS gallery (
 );
 `);
 
+// ==========================================
+// E-LEARNING TABLES
+// ==========================================
+
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS elearning_courses (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nama_mapel TEXT NOT NULL DEFAULT '',
+  program TEXT NOT NULL DEFAULT '',
+  kelas TEXT NOT NULL DEFAULT '',
+  deskripsi TEXT NOT NULL DEFAULT '',
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+`);
+
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS elearning_sessions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  course_id INTEGER NOT NULL,
+  session_number INTEGER NOT NULL,
+  title TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  start_date TEXT,
+  end_date TEXT,
+  is_evaluation INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  FOREIGN KEY (course_id) REFERENCES elearning_courses(id) ON DELETE CASCADE
+);
+`);
+
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS elearning_materials (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id INTEGER NOT NULL,
+  title TEXT NOT NULL DEFAULT '',
+  type TEXT NOT NULL DEFAULT 'PPT',
+  file_url TEXT NOT NULL DEFAULT '',
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  FOREIGN KEY (session_id) REFERENCES elearning_sessions(id) ON DELETE CASCADE
+);
+`);
+
 export const db = drizzle(sqlite, { schema });

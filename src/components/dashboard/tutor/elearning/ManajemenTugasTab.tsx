@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DownloadCloud, Upload, Clock, CheckCircle } from "lucide-react";
 
-export default function ManajemenTugasTab() {
+export default function ManajemenTugasTab(_props: { activeTab?: string, user?: any }) {
   const [selectedTugas, setSelectedTugas] = useState(3);
 
   return (

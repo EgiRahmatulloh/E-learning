@@ -51,11 +51,11 @@ export const getTabLabel = (id: string): string => {
     if (parts[parts.length - 1] === "pendahuluan") {
       return `PENDAHULUAN – ${parts.slice(0, -1).join(" ").toUpperCase()}`;
     }
-    if (parts[parts.length - 2] === "manajemen" && parts[parts.length - 1] === "sesi") {
-      return `MANAJEMEN SESI – ${parts.slice(0, -2).join(" ").toUpperCase()}`;
+    if (parts[parts.length - 1] === "sesi") {
+      return `SESI – ${parts.slice(0, -1).join(" ").toUpperCase()}`;
     }
-    if (parts[parts.length - 2] === "manajemen" && parts[parts.length - 1] === "tugas") {
-      return `MANAJEMEN TUGAS – ${parts.slice(0, -2).join(" ").toUpperCase()}`;
+    if (parts[parts.length - 1] === "tugas") {
+      return `TUGAS – ${parts.slice(0, -1).join(" ").toUpperCase()}`;
     }
     if (parts[parts.length - 2] === "laporan" && parts[parts.length - 1] === "nilai") {
       return `LAPORAN & NILAI – ${parts.slice(0, -2).join(" ").toUpperCase()}`;
@@ -254,10 +254,9 @@ export default function DashboardSidebar({
                             {/* Sub-menu: Partisipasi, Nilai, Pendahuluan, Sesi 1–8 */}
                             {expandedMenus[parentId] && (
                               <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-2 animate-in slide-in-from-top-1 duration-150">
-                                {["partisipasi", "nilai", "pendahuluan", ...Array.from({ length: 8 }, (_, i) => `sesi-${i + 1}`)].map((sub) => {
+                                {["nilai", "pendahuluan", ...Array.from({ length: 8 }, (_, i) => `sesi-${i + 1}`)].map((sub) => {
                                   const tabId = `mapel-${slug}-${sub}`;
-                                  const label = sub === "partisipasi" ? "Partisipasi"
-                                    : sub === "nilai" ? "Nilai"
+                                  const label = sub === "nilai" ? "Nilai"
                                     : sub === "pendahuluan" ? "Pendahuluan"
                                     : `Sesi ${sub.replace("sesi-", "")}`;
                                   return (
@@ -377,10 +376,8 @@ export default function DashboardSidebar({
               label: subject,
               icon: <BookMarked className="h-4 w-4" />,
               children: [
-                { id: `mapel-${slug}-partisipasi`, label: "Partisipasi" },
                 { id: `mapel-${slug}-pendahuluan`, label: "Pendahuluan" },
-                { id: `mapel-${slug}-manajemen-sesi`, label: "Manajemen Sesi" },
-                { id: `mapel-${slug}-manajemen-tugas`, label: "Manajemen Tugas" },
+                { id: `mapel-${slug}-sesi`, label: "Sesi" },
                 { id: `mapel-${slug}-laporan-nilai`, label: "Laporan & Nilai" },
               ]
             };

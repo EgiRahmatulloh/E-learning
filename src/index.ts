@@ -10,6 +10,7 @@ import { tutorsHandlers } from "./server/handlers/tutors";
 import { studentsHandlers } from "./server/handlers/students";
 import { newsHandlers } from "./server/handlers/news";
 import { contentHandlers } from "./server/handlers/content";
+import { elearningHandlers } from "./server/handlers/elearning";
 
 // Services
 import { uploadServices } from "./server/services/upload";
@@ -28,6 +29,7 @@ const app = new Elysia()
   .use(studentsHandlers)
   .use(newsHandlers)
   .use(contentHandlers)
+  .use(elearningHandlers)
   .use(uploadServices)
   .use(statsServices);
 
@@ -66,7 +68,8 @@ if (IS_PROD) {
   );
 
   // Wildcard fallback rute untuk SPA di produksi agar refresh halaman aman
-  app.get("/*", ({ set, request }) => {
+  app.get("/*", (context: any) => {
+    const { set, request } = context;
     const url = new URL(request.url);
     if (url.pathname.startsWith("/api/") || url.pathname.includes(".")) {
       set.status = 404;

@@ -218,7 +218,7 @@ export default function AlumniManager() {
       if (file.type.startsWith("image/")) {
         await handleImageUpload(file);
       } else {
-        alert("Hanya file gambar yang diperbolehkan");
+        toast.error("Hanya file gambar yang diperbolehkan");
       }
     }
   };
@@ -392,7 +392,7 @@ export default function AlumniManager() {
           }));
 
         if (imports.length === 0) {
-          alert("Tidak ada data valid untuk diimpor");
+          toast.error("Tidak ada data valid untuk diimpor");
           return;
         }
 
@@ -406,14 +406,14 @@ export default function AlumniManager() {
         });
         const data = await res.json();
         if (data.success) {
-          alert(data.message || `Berhasil mengimpor ${imports.length} data alumni!`);
+          toast.success(data.message || `Berhasil mengimpor ${imports.length} data alumni!`);
         } else {
-          alert("Gagal mengimpor data alumni: " + (data.message || "Error tidak diketahui"));
+          toast.error("Gagal mengimpor data alumni: " + (data.message || "Error tidak diketahui"));
         }
         fetchAlumni();
       } catch (err) {
         console.error("Import failed:", err);
-        alert("Terjadi kesalahan saat mengimpor data alumni");
+        toast.error("Terjadi kesalahan saat mengimpor data alumni");
       }
     }
   };

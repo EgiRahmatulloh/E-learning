@@ -64,14 +64,6 @@ export default function SyncMasterData() {
           </Button>
         </div>
       </div>
-
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="font-bold text-slate-800 mb-4">User Role Mapping</h3>
-        <p className="text-sm text-slate-500 mb-4">Pilih kelas/mata pelajaran dan tetapkan siapa tutornya dan siapa siswanya (enrollment).</p>
-        <div className="flex flex-col items-center justify-center py-10 border-2 border-dashed border-slate-200 rounded-xl">
-          <p className="text-sm text-slate-400 font-medium">Fitur mapping sedang dalam pengembangan antarmuka (UI).</p>
-        </div>
-      </div>
     </div>
   );
 }
