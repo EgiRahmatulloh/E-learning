@@ -110,7 +110,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
   // Contoh: mapel-matematika-sesi-3 → slug=matematika, sub=sesi-3
   const withoutPrefix = activeTab.replace("mapel-", "");
   // Cari slug subjek yang cocok
-  const matchedSubject = allSubjects.find((s) => withoutPrefix.startsWith(s.slug + "-"));
+  const matchedSubject = allSubjects.find((s) => withoutPrefix === s.slug || withoutPrefix.startsWith(s.slug + "-"));
   const subPart = matchedSubject
     ? withoutPrefix.replace(matchedSubject.slug + "-", "")
     : withoutPrefix;
@@ -131,7 +131,9 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
     if (subPart === "pendahuluan") return <MapelPendahuluan subjectName={subjectName} />;
     if (subPart.startsWith("sesi-")) {
       const sessionNumber = parseInt(subPart.replace("sesi-", ""), 10);
-      return <MapelSesi subjectName={subjectName} sessionNumber={sessionNumber} />;
+      if (!isNaN(sessionNumber)) {
+        return <MapelSesi subjectName={subjectName} sessionNumber={sessionNumber} />;
+      }
     }
     return (
       <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-8 text-center space-y-4">
