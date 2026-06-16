@@ -45,6 +45,9 @@ export const getTabLabel = (id: string): string => {
     if (parts[parts.length - 1] === "nilai") {
       return `NILAI – ${parts.slice(0, -1).join(" ").toUpperCase()}`;
     }
+    if (parts[parts.length - 1] === "partisipasi") {
+      return `PARTISIPASI – ${parts.slice(0, -1).join(" ").toUpperCase()}`;
+    }
     if (parts[parts.length - 1] === "pendahuluan") {
       return `PENDAHULUAN – ${parts.slice(0, -1).join(" ").toUpperCase()}`;
     }
@@ -169,12 +172,27 @@ export default function DashboardSidebar({
 
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1 custom-scrollbar">
 
+          {/* ── DASHBOARD E-LEARNING */}
+          <button
+            onClick={() => handleLeafClick("elearning-dashboard")}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all cursor-pointer group ${
+              activeTab === "elearning-dashboard"
+                ? "bg-white/20 text-white shadow-lg"
+                : "text-white/70 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            <span className={`transition-colors ${activeTab === "elearning-dashboard" ? "text-cyan-300" : "text-white/50 group-hover:text-cyan-300"}`}>
+              <LayoutDashboard className="h-5 w-5" />
+            </span>
+            <span className="flex-1 text-left tracking-wide">DASHBOARD</span>
+          </button>
+
           {/* ── E-LEARNING (collapsible) */}
           <div>
             <button
               onClick={() => toggleExpand("e-learning")}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all cursor-pointer group ${
-                isAncestorActive("e-learning") || activeTab === "elearning-dashboard"
+                isAncestorActive("e-learning")
                   ? "bg-white/20 text-white shadow-lg"
                   : "text-white/70 hover:bg-white/10 hover:text-white"
               }`}
@@ -190,21 +208,6 @@ export default function DashboardSidebar({
 
             {expandedMenus["e-learning"] && (
               <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-white/10 pl-3 animate-in slide-in-from-top-2 duration-200">
-
-                {/* Dashboard E-Learning */}
-                <button
-                  onClick={() => handleLeafClick("elearning-dashboard")}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-bold text-left transition-all cursor-pointer ${
-                    activeTab === "elearning-dashboard"
-                      ? "bg-white/15 text-cyan-300"
-                      : "text-white/70 hover:bg-white/10 hover:text-white/90"
-                  }`}
-                >
-                  <span className={activeTab === "elearning-dashboard" ? "text-cyan-300" : "text-white/30"}>
-                    <LayoutDashboard className="h-4 w-4" />
-                  </span>
-                  DASHBOARD
-                </button>
 
                 {/* Mata Pelajaran Saya (collapsible) */}
                 <div>
@@ -248,12 +251,13 @@ export default function DashboardSidebar({
                               </span>
                             </button>
 
-                            {/* Sub-menu: Nilai, Pendahuluan, Sesi 1–8 */}
+                            {/* Sub-menu: Partisipasi, Nilai, Pendahuluan, Sesi 1–8 */}
                             {expandedMenus[parentId] && (
                               <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-2 animate-in slide-in-from-top-1 duration-150">
-                                {["nilai", "pendahuluan", ...Array.from({ length: 8 }, (_, i) => `sesi-${i + 1}`)].map((sub) => {
+                                {["partisipasi", "nilai", "pendahuluan", ...Array.from({ length: 8 }, (_, i) => `sesi-${i + 1}`)].map((sub) => {
                                   const tabId = `mapel-${slug}-${sub}`;
-                                  const label = sub === "nilai" ? "Nilai"
+                                  const label = sub === "partisipasi" ? "Partisipasi"
+                                    : sub === "nilai" ? "Nilai"
                                     : sub === "pendahuluan" ? "Pendahuluan"
                                     : `Sesi ${sub.replace("sesi-", "")}`;
                                   return (
@@ -373,6 +377,7 @@ export default function DashboardSidebar({
               label: subject,
               icon: <BookMarked className="h-4 w-4" />,
               children: [
+                { id: `mapel-${slug}-partisipasi`, label: "Partisipasi" },
                 { id: `mapel-${slug}-pendahuluan`, label: "Pendahuluan" },
                 { id: `mapel-${slug}-manajemen-sesi`, label: "Manajemen Sesi" },
                 { id: `mapel-${slug}-manajemen-tugas`, label: "Manajemen Tugas" },
