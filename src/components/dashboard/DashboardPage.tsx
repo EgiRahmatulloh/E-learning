@@ -26,6 +26,7 @@ import DownloadsManager from "./admin/DownloadsManager";
 import ProductsManager from "./admin/ProductsManager";
 import AlumniManager from "./admin/AlumniManager";
 import GalleryManager from "./admin/GalleryManager";
+import ElearningAdminDashboard from "./admin/elearning/ElearningAdminDashboard";
 
 // Dashboard Sub-components
 import DashboardSidebar, { getTabLabel } from "./DashboardSidebar";
@@ -132,7 +133,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
         </div>
       );
     }
-    if (activeTab === "elearning-dashboard" || activeTab.startsWith("mapel-")) {
+    if (activeTab === "elearning-dashboard" || activeTab === "e-learning" || activeTab.startsWith("mapel-")) {
       if (user.role === "siswa") {
         return (
           <div className="space-y-6 animate-in fade-in duration-300">
@@ -140,7 +141,15 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
           </div>
         );
       }
-      // Placeholder for tutor or admin e-learning can go here later
+      
+      if (user.role === "admin" || user.role === "super_admin") {
+        return (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <ElearningAdminDashboard />
+          </div>
+        );
+      }
+      // Placeholder for tutor e-learning can go here later
     }
     if (activeTab === "profil") {
       return (

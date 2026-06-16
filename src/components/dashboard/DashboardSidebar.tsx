@@ -32,6 +32,7 @@ export const TAB_LABELS: Record<string, string> = {
   "titik-layanan": "TITIK LAYANAN",
   "produk-wb": "PRODUK WARGA BELAJAR",
   alumni: "ALUMNI",
+  "e-learning": "DASHBOARD E-LEARNING ADMIN",
   "elearning-dashboard": "DASHBOARD E-LEARNING",
 };
 
