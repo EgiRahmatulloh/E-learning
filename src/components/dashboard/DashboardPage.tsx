@@ -38,6 +38,7 @@ import PendahuluanTab from "./tutor/elearning/PendahuluanTab";
 import SesiKelasTab from "./tutor/elearning/SesiKelasTab";
 import ManajemenTugasTab from "./tutor/elearning/ManajemenTugasTab";
 import LaporanNilaiTab from "./tutor/elearning/LaporanNilaiTab";
+import { TutorDashboard } from "./tutor/TutorDashboard";
 
 interface DashboardPageProps {
   user: { id: number; name: string; username: string; role: string; email?: string; noHp?: string; alamat?: string; nik?: string; program?: string; kelas?: string };
@@ -127,6 +128,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
         <div className="space-y-6 animate-in fade-in duration-500">
           <WelcomeBanner userName={user.name} userRole={user.role} />
           <RoleStatsGrid userRole={user.role} />
+          {user.role === "tutor" && <TutorDashboard />}
         </div>
       );
     }

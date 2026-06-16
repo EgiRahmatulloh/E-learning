@@ -91,7 +91,7 @@ export default function PendahuluanTab() {
                   <Reply className="w-4 h-4 mr-1" /> Balas
                 </Button>
               </div>
-              <p className="text-sm text-slate-600 ml-13">
+              <p className="text-sm text-slate-600 ml-14">
                 Halo semuanya, perkenalkan nama saya Warga Belajar {item}. Salam kenal dan mohon bimbingannya selama sesi kelas ini berlangsung.
               </p>
             </div>
