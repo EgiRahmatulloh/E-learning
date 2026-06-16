@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Search, ShieldAlert, Key } from "lucide-react";
-import { toast } from "sonner";
+import { Search, ShieldAlert } from "lucide-react";
 
 export default function TutorMonitoring() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -14,11 +12,7 @@ export default function TutorMonitoring() {
 
   const filtered = mockTutors.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()) || t.mapel.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  const handleOverride = (tutorName: string) => {
-    toast(`Mengambil alih akses kelas dari Tutor ${tutorName}...`, {
-      description: "Anda sekarang bertindak sebagai tutor di kelas tersebut."
-    });
-  };
+
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
@@ -47,7 +41,7 @@ export default function TutorMonitoring() {
               <th className="py-3 px-4">Login Terakhir</th>
               <th className="py-3 px-4">Tugas Belum Dinilai</th>
               <th className="py-3 px-4">Ruang Diskusi</th>
-              <th className="py-3 px-4 text-right">Aksi</th>
+
             </tr>
           </thead>
           <tbody className="text-sm font-medium text-slate-700">
@@ -76,16 +70,7 @@ export default function TutorMonitoring() {
                     <span className="text-emerald-500 text-xs font-bold">Sudah Dibuat</span>
                   )}
                 </td>
-                <td className="py-3 px-4 text-right">
-                  <Button
-                    onClick={() => handleOverride(t.name)}
-                    variant="outline"
-                    className="h-8 text-xs font-bold rounded-lg border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
-                  >
-                    <Key className="w-3 h-3 mr-1.5" />
-                    Override
-                  </Button>
-                </td>
+
               </tr>
             ))}
             {filtered.length === 0 && (

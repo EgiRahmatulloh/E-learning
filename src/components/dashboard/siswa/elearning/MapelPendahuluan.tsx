@@ -1,18 +1,56 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FileText, Download, Users, FileSignature } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 interface MapelPendahuluanProps {
   subjectName: string;
+  user?: any;
 }
 
-export function MapelPendahuluan({ subjectName }: MapelPendahuluanProps) {
-  const [messages, setMessages] = useState<{sender: string; text: string; isSelf: boolean; initial: string; color: string}[]>([
-    { sender: "Ahmad Budi", text: "Halo teman-teman dan Bapak/Ibu Tutor, perkenalkan nama saya Ahmad Budi dari Jakarta. Salam kenal!", isSelf: false, initial: "A", color: "bg-emerald-600" },
-    { sender: "Siti Nurhaliza", text: "Selamat pagi! Saya Siti, semoga semester ini kita bisa belajar bersama dengan baik.", isSelf: false, initial: "S", color: "bg-orange-600" }
-  ]);
+export function MapelPendahuluan({ subjectName, user }: MapelPendahuluanProps) {
+  const [messages, setMessages] = useState<{sender: string; text: string; isSelf: boolean; initial: string; color: string}[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [loading, setLoading] = useState(true);
+  
+  const [teksPembuka, setTeksPembuka] = useState("Halo semuanya, selamat datang di mata pelajaran ini.");
+  const [ratUrl, setRatUrl] = useState<string | null>(null);
+  const [tertibUrl, setTertibUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const courseRes = await fetch("/api/elearning/course", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subjectName, program: user?.program, kelas: user?.kelas })
+        });
+        const courseData = await courseRes.json();
+        if (!courseData.success) return;
+
+        const sessionRes = await fetch(`/api/elearning/session?courseId=${courseData.data.id}&sessionNumber=0`);
+        const sessionData = await sessionRes.json();
+        if (!sessionData.success) return;
+        
+        if (sessionData.data.session.description) {
+          setTeksPembuka(sessionData.data.session.description);
+        }
+
+        const materials = sessionData.data.materials || [];
+        const rat = materials.find((m: any) => m.type === "RAT");
+        if (rat) setRatUrl(rat.fileUrl);
+        
+        const tertib = materials.find((m: any) => m.type === "TATA_TERTIB");
+        if (tertib) setTertibUrl(tertib.fileUrl);
+        
+      } catch (err) {
+        console.error("Failed to load pendahuluan data", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [subjectName, user]);
 
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
@@ -23,11 +61,19 @@ export function MapelPendahuluan({ subjectName }: MapelPendahuluanProps) {
     setInputValue("");
   };
 
-  const handleDownload = () => {
-    toast.info("Dokumen belum tersedia", {
-      description: "Dokumen belum diunggah oleh tutor saat ini."
-    });
+  const handleDownload = (url: string | null) => {
+    if (!url) {
+      toast.info("Dokumen belum tersedia", {
+        description: "Dokumen belum diunggah oleh tutor saat ini."
+      });
+      return;
+    }
+    window.open(url, "_blank");
   };
+
+  if (loading) {
+    return <div className="p-10 text-center text-slate-500 animate-pulse">Memuat materi pendahuluan...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -41,7 +87,7 @@ export function MapelPendahuluan({ subjectName }: MapelPendahuluanProps) {
             <h2 className="text-lg font-black text-slate-800">RAT (Rancangan Aktivitas Tutorial)</h2>
             <p className="text-sm text-slate-500">Panduan belajar selama satu semester (PDF)</p>
           </div>
-          <Button variant="outline" onClick={handleDownload} className="rounded-xl border-slate-200 font-bold text-slate-700 hover:bg-slate-50">
+          <Button variant="outline" onClick={() => handleDownload(ratUrl)} className="rounded-xl border-slate-200 font-bold text-slate-700 hover:bg-slate-50">
             <Download className="h-4 w-4 mr-2" /> Unduh PDF
           </Button>
         </div>
@@ -61,9 +107,9 @@ export function MapelPendahuluan({ subjectName }: MapelPendahuluanProps) {
         <div className="bg-slate-50 rounded-xl border border-slate-100 p-4 space-y-4">
           <div className="flex gap-3">
             <div className="h-8 w-8 rounded-full bg-[#280f91] text-white flex items-center justify-center font-bold text-xs shrink-0">T</div>
-            <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex-1">
-              <p className="text-xs font-bold text-[#280f91] mb-1">Tutor</p>
-              <p className="text-sm text-slate-700">Halo semuanya, selamat datang di mata pelajaran {subjectName}. Silakan perkenalkan diri Anda dengan membalas pesan ini.</p>
+            <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex-1 prose prose-sm max-w-none prose-slate">
+              <p className="text-xs font-bold text-[#280f91] mb-1 not-prose">Tutor</p>
+              <div dangerouslySetInnerHTML={{ __html: teksPembuka }} />
             </div>
           </div>
           
@@ -104,7 +150,7 @@ export function MapelPendahuluan({ subjectName }: MapelPendahuluanProps) {
             <p className="text-sm text-slate-500">Aturan dan etika mengikuti tutorial online (Docs)</p>
           </div>
         </div>
-        <Button variant="outline" onClick={handleDownload} className="rounded-xl border-slate-200 font-bold text-slate-700 hover:bg-slate-50">
+        <Button variant="outline" onClick={() => handleDownload(tertibUrl)} className="rounded-xl border-slate-200 font-bold text-slate-700 hover:bg-slate-50">
           <Download className="h-4 w-4 mr-2" /> Unduh Dokumen
         </Button>
       </div>

@@ -158,16 +158,16 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       
       if (user.role === "tutor") {
         if (activeTab.endsWith("-pendahuluan")) {
-          return <div className="space-y-6 animate-in fade-in duration-300"><PendahuluanTab /></div>;
+          return <div className="space-y-6 animate-in fade-in duration-300"><PendahuluanTab activeTab={activeTab} user={user} /></div>;
         }
-        if (activeTab.endsWith("-manajemen-sesi")) {
-          return <div className="space-y-6 animate-in fade-in duration-300"><SesiKelasTab /></div>;
+        if (activeTab.endsWith("-sesi")) {
+          return <div className="space-y-6 animate-in fade-in duration-300"><SesiKelasTab activeTab={activeTab} user={user} /></div>;
         }
-        if (activeTab.endsWith("-manajemen-tugas")) {
-          return <div className="space-y-6 animate-in fade-in duration-300"><ManajemenTugasTab /></div>;
+        if (activeTab.endsWith("-tugas")) {
+          return <div className="space-y-6 animate-in fade-in duration-300"><ManajemenTugasTab activeTab={activeTab} user={user} /></div>;
         }
         if (activeTab.endsWith("-laporan-nilai")) {
-          return <div className="space-y-6 animate-in fade-in duration-300"><LaporanNilaiTab /></div>;
+          return <div className="space-y-6 animate-in fade-in duration-300"><LaporanNilaiTab activeTab={activeTab} user={user} /></div>;
         }
       }
     }

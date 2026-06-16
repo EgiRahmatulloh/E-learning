@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 
 interface SlideData {
   image: string;
@@ -157,13 +157,6 @@ export default function Hero({ onServiceClick }: HeroProps) {
     }, 400);
   }, [startAutoSlide]);
 
-  const prevSlide = useCallback(() => {
-    goToSlide((currentSlide - 1 + slides.length) % slides.length);
-  }, [currentSlide, slides.length, goToSlide]);
-
-  const nextSlide = useCallback(() => {
-    goToSlide((currentSlide + 1) % slides.length);
-  }, [currentSlide, slides.length, goToSlide]);
 
   return (
     <section id="beranda" className="relative w-full overflow-hidden h-screen min-h-screen">
@@ -173,7 +166,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
           <div
             key={idx}
             className="absolute inset-0 transition-opacity duration-700 ease-in-out bg-slate-950"
-            style={{ 
+            style={{
               opacity: idx === currentSlide && !isTransitioning ? 1 : 0,
               zIndex: idx === currentSlide ? 1 : 0
             }}
@@ -194,7 +187,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
       {/* ===== MAIN CONTENT OVERLAY ===== */}
       <div className="relative z-20 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-full flex items-center pt-20">
         <div className="w-full flex flex-col lg:flex-row items-center lg:items-center justify-between gap-8 py-12">
-          
+
           {/* ===== LEFT: Welcome Text ===== */}
           <div className="flex-1 max-w-2xl text-center lg:text-left space-y-4">
             {/* Decorative "Selamat Datang" */}
@@ -251,11 +244,10 @@ export default function Hero({ onServiceClick }: HeroProps) {
                   <button
                     key={idx}
                     onClick={() => goToSlide(idx)}
-                    className={`h-3 rounded-full transition-all duration-500 cursor-pointer ${
-                      idx === currentSlide
+                    className={`h-3 rounded-full transition-all duration-500 cursor-pointer ${idx === currentSlide
                         ? "w-10 bg-[#cafc05] shadow-md shadow-[#cafc05]/30"
                         : "w-3 bg-white/40 hover:bg-white/70"
-                    }`}
+                      }`}
                     aria-label={`Slide ${idx + 1}`}
                   />
                 ))}
@@ -269,7 +261,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
           {/* ===== RIGHT: Layanan Digital Portal ===== */}
           <div className="shrink-0 w-full sm:w-auto self-start pt-0 lg:-mt-10">
             <div className="max-w-[200px] mx-auto lg:mx-0">
-              <h4 
+              <h4
                 className="text-center text-xl sm:text-2xl font-black text-white mb-4 tracking-tight"
                 style={{ textShadow: "0 2px 10px rgba(0,0,0,0.6)" }}
               >
@@ -309,7 +301,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
       </div>
 
       {/* ===== SLIDER NAVIGATION ARROWS ===== */}
-      {slides.length > 1 && (
+      {/* {slides.length > 1 && (
         <>
           <button
             onClick={prevSlide}
@@ -326,7 +318,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
             <ChevronRight className="h-6 w-6 sm:h-7 sm:w-7" />
           </button>
         </>
-      )}
+      )} */}
 
       {/* ===== WHATSAPP FLOATING BUTTON ===== */}
       <a

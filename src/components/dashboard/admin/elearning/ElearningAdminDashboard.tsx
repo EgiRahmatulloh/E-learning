@@ -1,19 +1,24 @@
 import { useState } from "react";
-import { Database, FolderTree, CalendarDays, Activity } from "lucide-react";
+import { Users, BookOpen, CalendarDays, Activity, FileQuestion, RefreshCw, LayoutTemplate } from "lucide-react";
 import SyncMasterData from "./SyncMasterData";
 import BlueprintManager from "./BlueprintManager";
 import GlobalTimelineManager from "./GlobalTimelineManager";
 import TutorMonitoring from "./TutorMonitoring";
-import ServerLogsViewer from "./ServerLogsViewer";
+import SiswaMonitoring from "./SiswaMonitoring";
+import MasterMapel from "./MasterMapel";
+import AngketEvaluasiTutor from "./AngketEvaluasiTutor";
 
 export default function ElearningAdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"sync" | "blueprint" | "timeline" | "monitoring">("sync");
+  const [activeTab, setActiveTab] = useState<"sync" | "mapel" | "blueprint" | "timeline" | "monitoring" | "siswa" | "angket">("sync");
 
   const tabs = [
-    { id: "sync", label: "Sinkronisasi & Master Data", icon: <Database className="w-4 h-4" /> },
-    { id: "blueprint", label: "Master Template Course", icon: <FolderTree className="w-4 h-4" /> },
-    { id: "timeline", label: "Timeline Global", icon: <CalendarDays className="w-4 h-4" /> },
-    { id: "monitoring", label: "Kepatuhan Tutor", icon: <Activity className="w-4 h-4" /> },
+    { id: "sync", label: "Sinkronisasi Data", icon: <RefreshCw className="w-4 h-4" /> },
+    { id: "mapel", label: "Mata Pelajaran", icon: <BookOpen className="w-4 h-4" /> },
+    { id: "blueprint", label: "Kelola Sesi Kelas", icon: <LayoutTemplate className="w-4 h-4" /> },
+    { id: "timeline", label: "Kelola Timeline", icon: <CalendarDays className="w-4 h-4" /> },
+    { id: "monitoring", label: "Tutor", icon: <Activity className="w-4 h-4" /> },
+    { id: "siswa", label: "Siswa/Warga Belajar", icon: <Users className="w-4 h-4" /> },
+    { id: "angket", label: "Angket Evaluasi Tutor", icon: <FileQuestion className="w-4 h-4" /> },
   ] as const;
 
   return (
@@ -47,14 +52,12 @@ export default function ElearningAdminDashboard() {
       {/* Active Tab Content */}
       <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
         {activeTab === "sync" && <SyncMasterData />}
+        {activeTab === "mapel" && <MasterMapel />}
         {activeTab === "blueprint" && <BlueprintManager />}
         {activeTab === "timeline" && <GlobalTimelineManager />}
-        {activeTab === "monitoring" && (
-          <div className="space-y-6">
-            <TutorMonitoring />
-            <ServerLogsViewer />
-          </div>
-        )}
+        {activeTab === "monitoring" && <TutorMonitoring />}
+        {activeTab === "siswa" && <SiswaMonitoring />}
+        {activeTab === "angket" && <AngketEvaluasiTutor />}
       </div>
     </div>
   );
