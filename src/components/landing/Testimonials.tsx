@@ -16,7 +16,7 @@ interface TestimonialsProps {
   onNavigate?: (path: string) => void;
 }
 
-export default function Testimonials({ onNavigate }: TestimonialsProps) {
+export default function Testimonials(_props: TestimonialsProps) {
   const [testimonials, setTestimonials] = useState<AlumniItem[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
