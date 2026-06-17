@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,7 +10,7 @@ import {
   DialogFooter,
   DialogClose
 } from "@/components/ui/dialog";
-import { MessageCircle, Sparkles } from "lucide-react";
+import { MessageCircle, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import type { ProductItem } from "../../types/landing";
 
 const productItems: ProductItem[] = [
@@ -52,112 +53,156 @@ const productItems: ProductItem[] = [
 ];
 
 export default function Products() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const handleScroll = (direction: "left" | "right") => {
+    if (!scrollRef.current) return;
+    const card = scrollRef.current.querySelector("[data-card]") as HTMLElement | null;
+    const cardWidth = card ? card.offsetWidth + 24 : 280;
+    scrollRef.current.scrollBy({ left: direction === "left" ? -cardWidth : cardWidth, behavior: "smooth" });
+  };
   return (
-    <section id="produk" className="pt-8 pb-20 bg-[#f0f9ff] border-y border-slate-200 relative overflow-hidden">
+    <section id="produk" className="pt-8 pb-16 bg-white relative overflow-hidden">
+      <div aria-hidden className="absolute top-0 left-1/2 -translate-x-1/2 h-px w-2/3 bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-        
-        {/* Centered purple-green Title (Matches News Style) */}
-        <div className="text-center max-w-4xl mx-auto space-y-4 mb-12">
-          <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-center leading-none">
-            <span className="text-[#9c27b0] font-black drop-shadow-sm">
-              PRODUK
-            </span>{" "}
-            <span className="text-[#0ff60a] font-black drop-shadow-xs">
-              WARGA BELAJAR
-            </span>
+
+        {/* Header */}
+        <div className="text-center max-w-3xl mx-auto space-y-3 mb-10">
+          <span className="text-xs font-extrabold uppercase tracking-widest text-[#ff6105] bg-orange-100 rounded-full px-4 py-1.5 inline-block">
+            Produk
+          </span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight uppercase">
+            <span className="text-[#280f91]">PRODUK HASIL</span>{" "}
+            <span className="text-[#ff6105]">WARGA BELAJAR</span>
           </h2>
-          <p className="text-slate-700 font-bold text-xs sm:text-sm leading-relaxed px-4 max-w-2xl mx-auto text-center">
-            Etalase kreativitas dan kemandirian ekonomi warga belajar PKBM Menuju Makmur melalui berbagai produk berkualitas hasil karya tangan terampil.
+          <p className="text-slate-600 font-semibold text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
+            Dukung karya warga belajar PKBM Menuju Makmur dengan membeli produk hasil kreativitas mereka untuk mendorong kemandirian, semangat berwirausaha, dan masa depan yang lebih baik.
           </p>
         </div>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-          {productItems.map((product) => (
-            <Dialog key={product.id}>
-              <DialogTrigger asChild>
-                <div 
-                  className="bg-white rounded-3xl overflow-hidden shadow-lg p-4 flex flex-col justify-between border border-slate-100 group hover:border-[#ff6105] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer text-left"
+        {/* Products Carousel */}
+        <div className="space-y-8 max-w-7xl mx-auto">
+          <div className="relative">
+            {productItems.length > 1 && (
+              <>
+                <button
+                  onClick={() => handleScroll("left")}
+                  aria-label="Geser kiri"
+                  className="hidden sm:flex absolute -left-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-white border border-slate-200 shadow-lg text-[#280f91] hover:bg-[#280f91] hover:text-white transition-all cursor-pointer"
                 >
-                  {/* Visual Representation of product - Matches News/Agenda Image Frame */}
-                  <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-slate-50 border border-slate-100 shadow-inner">
-                    <img 
-                      src={product.image} 
-                      alt={product.name}
-                      loading="lazy"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent"></div>
-                    
-                    {/* Floating Price Tag */}
-                    <span className="absolute bottom-3 right-3 inline-block rounded-lg bg-[#ff6105] px-2.5 py-1 text-[11px] font-black text-white shadow-md">
-                      {product.price}
-                    </span>
-                  </div>
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => handleScroll("right")}
+                  aria-label="Geser kanan"
+                  className="hidden sm:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-white border border-slate-200 shadow-lg text-[#280f91] hover:bg-[#280f91] hover:text-white transition-all cursor-pointer"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </>
+            )}
 
-                  {/* Text Details Area */}
-                  <div className="space-y-3 text-left px-2 flex-1 flex flex-col justify-between">
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-black text-[#280f91] group-hover:text-[#ff6105] transition-colors leading-tight line-clamp-2 uppercase">
-                        {product.name}
-                      </h3>
-                      <p className="text-slate-600 text-[10px] font-semibold leading-relaxed line-clamp-2">
+            <div
+              ref={scrollRef}
+              className={`flex gap-6 overflow-x-auto scrollbar-none snap-x snap-mandatory pt-4 pb-4 ${
+                productItems.length === 1 ? "justify-center" : ""
+              }`}
+            >
+              {productItems.map((product) => (
+                <Dialog key={product.id}>
+                  <DialogTrigger asChild>
+                    <div
+                      data-card
+                      className="snap-start shrink-0 w-[calc(50%-0.75rem)] sm:w-[calc(50%-0.75rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(20%-1.2rem)] bg-white rounded-3xl overflow-hidden p-4 flex flex-col justify-between border border-slate-300 group hover:border-[#ff6105] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer text-left"
+                    >
+                      <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-slate-50 border border-slate-100 shadow-inner">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          loading="lazy"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent"></div>
+
+                        <span className="absolute bottom-3 right-3 inline-block rounded-lg bg-[#ff6105] px-2.5 py-1 text-[11px] font-black text-white shadow-md">
+                          {product.price}
+                        </span>
+                      </div>
+
+                      <div className="space-y-3 text-left px-1 flex-1 flex flex-col justify-between">
+                        <div className="space-y-2">
+                          <h3 className="text-sm font-black text-[#280f91] group-hover:text-[#ff6105] transition-colors leading-tight line-clamp-2 uppercase">
+                            {product.name}
+                          </h3>
+                          <p className="text-slate-600 text-[10px] font-semibold leading-relaxed line-clamp-2">
+                            {product.description}
+                          </p>
+                        </div>
+
+                        <div className="pt-3 border-t border-slate-50 flex items-center justify-between mt-2" onClick={(e) => e.stopPropagation()}>
+                          <a
+                            href={product.waLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[8px] font-black text-emerald-600 hover:text-[#ff6105] uppercase tracking-wider transition-colors flex items-center gap-1"
+                          >
+                            PESAN VIA WA &gt;&gt;
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl">
+                    <DialogHeader>
+                      <DialogTitle className="text-2xl font-black text-[#280f91]">{product.name}</DialogTitle>
+                      <DialogDescription className="text-sm font-bold text-[#ff6105]">{product.price}</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="h-56 w-full rounded-2xl relative overflow-hidden border border-slate-200">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <p className="text-slate-600 text-sm font-semibold leading-relaxed">
                         {product.description}
                       </p>
+                      <div className="bg-orange-50 rounded-xl p-3 border border-orange-100 flex items-start gap-2.5">
+                        <Sparkles className="h-5 w-5 text-[#ff6105] shrink-0 mt-0.5" />
+                        <span className="text-xs font-semibold text-orange-900 leading-relaxed">
+                          Produk ini dibuat langsung oleh kelompok wirausaha mandiri warga belajar PKBM Menuju Makmur untuk mendukung kemandirian ekonomi daerah.
+                        </span>
+                      </div>
                     </div>
-
-                    <div className="pt-3 border-t border-slate-50 flex items-center justify-between mt-2" onClick={(e) => e.stopPropagation()}>
-                      <a 
-                        href={product.waLink} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-[8px] font-black text-emerald-600 hover:text-[#ff6105] uppercase tracking-wider transition-colors flex items-center gap-1"
-                      >
-                        PESAN VIA WA &gt;&gt;
+                    <DialogFooter className="flex sm:justify-between items-center gap-2 border-t border-slate-100 pt-4 mt-2">
+                      <DialogClose asChild>
+                        <Button variant="outline" className="rounded-xl font-bold cursor-pointer">Tutup</Button>
+                      </DialogClose>
+                      <a href={product.waLink} target="_blank" rel="noopener noreferrer">
+                        <Button className="rounded-xl bg-emerald-600 hover:bg-[#ff6105] text-white font-bold h-11 px-5 flex items-center gap-2 cursor-pointer">
+                          <MessageCircle className="h-5 w-5" />
+                          Beli via WhatsApp
+                        </Button>
                       </a>
-                      <span className="text-slate-300 text-[8px] font-black uppercase">READY</span>
-                    </div>
-                  </div>
-                </div>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl">
-                <DialogHeader>
-                  <DialogTitle className="text-2xl font-black text-[#280f91]">{product.name}</DialogTitle>
-                  <DialogDescription className="text-sm font-bold text-[#ff6105]">{product.price}</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="h-56 w-full rounded-2xl relative overflow-hidden border border-slate-200">
-                    <img 
-                      src={product.image} 
-                      alt={product.name}
-                      loading="lazy"
-                      className="w-full h-full object-cover" 
-                    />
-                  </div>
-                  <p className="text-slate-600 text-sm font-semibold leading-relaxed">
-                    {product.description}
-                  </p>
-                  <div className="bg-orange-50 rounded-xl p-3 border border-orange-100 flex items-start gap-2.5">
-                    <Sparkles className="h-5 w-5 text-[#ff6105] shrink-0 mt-0.5" />
-                    <span className="text-xs font-semibold text-orange-900 leading-relaxed">
-                      Produk ini dibuat langsung oleh kelompok wirausaha mandiri warga belajar PKBM Menuju Makmur untuk mendukung kemandirian ekonomi daerah.
-                    </span>
-                  </div>
-                </div>
-                <DialogFooter className="flex sm:justify-between items-center gap-2 border-t border-slate-100 pt-4 mt-2">
-                  <DialogClose asChild>
-                    <Button variant="outline" className="rounded-xl font-bold cursor-pointer">Tutup</Button>
-                  </DialogClose>
-                  <a href={product.waLink} target="_blank" rel="noopener noreferrer">
-                    <Button className="rounded-xl bg-emerald-600 hover:bg-[#ff6105] text-white font-bold h-11 px-5 flex items-center gap-2 cursor-pointer">
-                      <MessageCircle className="h-5 w-5" />
-                      Beli via WhatsApp
-                    </Button>
-                  </a>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          ))}
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              ))}
+            </div>
+          </div>
+
+          <div className="text-center flex justify-center">
+            <Button
+              onClick={() => {
+                window.history.pushState({}, "", "/produk-wb");
+                window.dispatchEvent(new PopStateEvent("popstate"));
+              }}
+              className="rounded-full bg-[#280f91] hover:bg-[#ff6105] text-white font-bold px-8 h-12 shadow-md shadow-[#280f91]/10 cursor-pointer"
+            >
+              Lihat Selengkapnya
+            </Button>
+          </div>
         </div>
       </div>
     </section>

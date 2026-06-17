@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { Calendar, Home, ChevronRight, Clock, ShieldAlert } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Calendar, Home, ChevronRight, ChevronLeft, Clock, ShieldAlert } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface AgendaItem {
   id: number;
@@ -35,8 +36,16 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
       .finally(() => setLoading(false));
   }, []);
 
-  // Limit shown items on the homepage to 4
-  const displayAgendas = isDetailed ? agendas : agendas.slice(0, 4);
+  // Limit shown items on the homepage to 5
+  const displayAgendas = isDetailed ? agendas : agendas.slice(0, 5);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = (direction: "left" | "right") => {
+    if (!scrollRef.current) return;
+    const card = scrollRef.current.querySelector("[data-card]") as HTMLElement | null;
+    const cardWidth = card ? card.offsetWidth + 24 : 280;
+    scrollRef.current.scrollBy({ left: direction === "left" ? -cardWidth : cardWidth, behavior: "smooth" });
+  };
 
   // If detailed page view (halaman menu agenda)
   if (isDetailed) {
@@ -141,81 +150,112 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
 
   // Otherwise, default landing homepage view
   return (
-    <section id="agenda" className="pt-8 pb-20 bg-[#aee2ed] border-y border-slate-350 relative overflow-hidden">
+    <section id="agenda" className="pt-8 pb-16 bg-white relative overflow-hidden">
+      <div aria-hidden className="absolute top-0 left-1/2 -translate-x-1/2 h-px w-2/3 bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-        
-        {/* Centered, dark blue header */}
-        <div className="text-center max-w-3xl mx-auto space-y-2 mb-12">
-          <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-[#1a0b70] uppercase">
-            AGENDA
+
+        {/* Header */}
+        <div className="text-center max-w-3xl mx-auto space-y-3 mb-10">
+          <span className="text-xs font-extrabold uppercase tracking-widest text-[#ff6105] bg-orange-100 rounded-full px-4 py-1.5 inline-block">
+            Agenda
+          </span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight uppercase">
+            <span className="text-[#280f91]">AGENDA</span>{" "}
+            <span className="text-[#ff6105]">PKBM MENUJU MAKMUR</span>
           </h2>
-          <p className="text-slate-800 font-bold text-sm sm:text-base">
-            Agenda PKBM Menuju Makmur
+          <p className="text-slate-600 font-semibold text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
+            Agenda kegiatan disusun sebagai informasi mengenai rangkaian kegiatan yang akan dilaksanakan di PKBM Menuju Makmur agar seluruh kegiatan dapat berjalan dengan tertib, terarah, dan sesuai tujuan.
           </p>
         </div>
 
-        {/* Grid containing 4 items */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-3">
-            <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#1a0b70] border-t-transparent" />
-            <span className="text-sm font-bold text-[#1a0b70] uppercase tracking-widest">Memuat Agenda...</span>
+            <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#280f91] border-t-transparent" />
+            <span className="text-sm font-bold text-[#280f91] uppercase tracking-widest">Memuat Agenda...</span>
           </div>
         ) : displayAgendas.length > 0 ? (
-          <div className="space-y-12 max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {displayAgendas.map((agenda) => (
-                <div 
-                  key={agenda.id} 
-                  className="bg-white rounded-3xl overflow-hidden shadow-lg p-4 flex flex-col justify-between border border-slate-100 group hover:border-[#ff6105] hover:-translate-y-1.5 transition-all duration-300"
-                >
-                  <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-slate-50">
-                    {agenda.foto ? (
-                      <img 
-                        src={agenda.foto} 
-                        alt={agenda.nama} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-300">
-                        <Calendar className="h-12 w-12" />
-                      </div>
-                    )}
+          <div className="space-y-8 max-w-7xl mx-auto">
+            <div className="relative">
+              {/* Navigation arrows */}
+              {displayAgendas.length > 1 && (
+                <>
+                  <button
+                    onClick={() => handleScroll("left")}
+                    aria-label="Geser kiri"
+                    className="hidden sm:flex absolute -left-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-white border border-slate-200 shadow-lg text-[#280f91] hover:bg-[#280f91] hover:text-white transition-all cursor-pointer"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => handleScroll("right")}
+                    aria-label="Geser kanan"
+                    className="hidden sm:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-white border border-slate-200 shadow-lg text-[#280f91] hover:bg-[#280f91] hover:text-white transition-all cursor-pointer"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
 
-                    <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[85%] z-10 text-center">
-                      <span className="inline-block w-full bg-[#ffb300] text-white font-extrabold text-[10px] sm:text-[11px] py-2.5 px-3 rounded-full uppercase shadow-md tracking-wider">
+              <div
+                ref={scrollRef}
+                className={`flex gap-6 overflow-x-auto scrollbar-none snap-x snap-mandatory pt-4 pb-4 ${
+                  displayAgendas.length === 1 ? "justify-center" : ""
+                }`}
+              >
+                {displayAgendas.map((agenda) => (
+                  <div
+                    key={agenda.id}
+                    data-card
+                    className="snap-start shrink-0 w-[calc(100%-1rem)] sm:w-[calc(50%-0.75rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(20%-1.2rem)] bg-white rounded-3xl overflow-hidden p-4 flex flex-col justify-between border border-slate-300 group hover:border-[#ff6105] hover:-translate-y-1.5 transition-all duration-300"
+                  >
+                    {/* Date small top-left in orange */}
+                    <div className="px-1 mb-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-[#ff6105]">
                         {agenda.pelaksanaan}
                       </span>
                     </div>
-                  </div>
 
-                  <div className="space-y-3.5 text-left px-2">
-                    <h3 className="text-sm font-black text-[#280f91] leading-tight uppercase line-clamp-2 group-hover:text-[#ff6105] transition-colors">
-                      {agenda.nama}
-                    </h3>
-                    
-                    <div className="flex items-start gap-2.5 text-slate-500">
-                      <Home className="h-4 w-4 shrink-0 mt-0.5" />
-                      <span className="text-[11px] font-black uppercase tracking-wide truncate">
-                        {agenda.lokasi || "PKBM MENUJU MAKMUR"}
-                      </span>
+                    <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-slate-50">
+                      {agenda.foto ? (
+                        <img
+                          src={agenda.foto}
+                          alt={agenda.nama}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-300">
+                          <Calendar className="h-12 w-12" />
+                        </div>
+                      )}
                     </div>
 
-                    <div className="flex items-start gap-2.5 text-slate-500">
-                      <Clock className="h-4 w-4 shrink-0 mt-0.5" />
-                      <span className="text-[11px] font-black uppercase tracking-wide truncate">
-                        {agenda.waktu || "08.00 WIB"}
-                      </span>
+                    <div className="space-y-3 text-left px-1">
+                      <h3 className="text-sm font-black text-[#280f91] leading-tight uppercase line-clamp-2 group-hover:text-[#ff6105] transition-colors">
+                        {agenda.nama}
+                      </h3>
+
+                      <div className="flex items-start gap-2 text-slate-500">
+                        <Home className="h-4 w-4 shrink-0 mt-0.5" />
+                        <span className="text-[11px] font-black uppercase tracking-wide truncate">
+                          {agenda.lokasi || "PKBM MENUJU MAKMUR"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-start gap-2 text-slate-500">
+                        <Clock className="h-4 w-4 shrink-0 mt-0.5" />
+                        <span className="text-[11px] font-black uppercase tracking-wide truncate">
+                          {agenda.waktu || "08.00 WIB"}
+                        </span>
+                      </div>
                     </div>
                   </div>
-
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
-            {/* Custom pill-style READ MORE button */}
             {agendas.length > 0 && (
-              <div className="text-center mt-12 flex justify-center">
-                <button
+              <div className="text-center flex justify-center">
+                <Button
                   onClick={() => {
                     if (onNavigate) {
                       onNavigate("/agenda");
@@ -224,23 +264,20 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
                       window.dispatchEvent(new PopStateEvent("popstate"));
                     }
                   }}
-                  className="inline-flex items-center bg-[#a8e0ea] hover:bg-[#8fd0dc] text-black font-black text-lg py-2.5 pl-2.5 pr-8 rounded-full border-4 border-black shadow-lg transition-all active:scale-95 cursor-pointer hover:shadow-black/20"
+                  className="rounded-full bg-[#280f91] hover:bg-[#ff6105] text-white font-bold px-8 h-12 shadow-md shadow-[#280f91]/10 cursor-pointer"
                 >
-                  <div className="h-11 w-11 rounded-full bg-black flex items-center justify-center text-white shrink-0 mr-4">
-                    <ChevronRight className="h-6 w-6 stroke-[3]" />
-                  </div>
-                  <span className="tracking-wide uppercase text-sm font-black">READ MORE</span>
-                </button>
+                  Lihat Selengkapnya
+                </Button>
               </div>
             )}
           </div>
         ) : (
-          <div className="max-w-md mx-auto bg-[#20108a] rounded-3xl p-8 text-center space-y-4 shadow-xl border border-blue-900/30">
-            <div className="h-16 w-16 bg-[#00ff00]/10 rounded-2xl flex items-center justify-center mx-auto">
-              <ShieldAlert className="h-8 w-8 text-[#00ff00]" />
+          <div className="max-w-md mx-auto bg-white rounded-3xl p-8 text-center space-y-4 shadow-xl border border-slate-200">
+            <div className="h-16 w-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto">
+              <ShieldAlert className="h-8 w-8 text-orange-500" />
             </div>
-            <h3 className="text-lg font-black text-[#00ff00] uppercase tracking-wider">Belum Ada Agenda</h3>
-            <p className="text-white/80 font-bold text-xs leading-relaxed">
+            <h3 className="text-lg font-black text-slate-800 uppercase tracking-wider">Belum Ada Agenda</h3>
+            <p className="text-slate-500 font-bold text-xs leading-relaxed">
               Jadwal pelaksanaan kegiatan saat ini belum dipublikasikan oleh administrator.
             </p>
           </div>

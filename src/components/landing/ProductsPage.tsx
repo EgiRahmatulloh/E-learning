@@ -83,7 +83,7 @@ export default function ProductsPage() {
             PRODUK WARGA BELAJAR
           </h2>
           <p className="text-slate-600 font-bold text-xs sm:text-sm leading-relaxed px-4 max-w-3xl mx-auto">
-            Dukung kemandirian ekonomi warga belajar PKBM Menuju Makmur dengan membeli produk hasil karya wirausaha kreatif mereka.
+            Dukung karya dan kreativitas warga belajar dengan membeli produk mereka karena Setiap karya adalah bukti semangat, kreativitas, dan kemampuan warga belajar dalam mengembangkan potensi menuju masa depan yang lebih baik
           </p>
         </div>
 

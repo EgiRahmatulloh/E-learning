@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,7 +9,7 @@ import {
   DialogFooter,
   DialogClose
 } from "@/components/ui/dialog";
-import { ArrowRight, ShieldAlert, Award, Mail } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShieldAlert, Award, Mail } from "lucide-react";
 
 interface Tutor {
   id: number;
@@ -52,8 +52,16 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
       .finally(() => setLoading(false));
   }, []);
 
-  // Limit homepage tutors grid to 4 items
-  const displayTutors = isDetailed ? tutorsList : tutorsList.slice(0, 4);
+  // Limit homepage tutors grid to 5 items
+  const displayTutors = isDetailed ? tutorsList : tutorsList.slice(0, 5);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = (direction: "left" | "right") => {
+    if (!scrollRef.current) return;
+    const card = scrollRef.current.querySelector("[data-card]") as HTMLElement | null;
+    const cardWidth = card ? card.offsetWidth + 24 : 240;
+    scrollRef.current.scrollBy({ left: direction === "left" ? -cardWidth : cardWidth, behavior: "smooth" });
+  };
 
   // DETAILED VIEW (Menu Tutor - Mockup 1)
   if (isDetailed) {
@@ -257,203 +265,213 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
 
   // DEFAULT HOMEPAGE VIEW (Tenaga Pendidik Section)
   return (
-    <section id="tutor" className="pt-8 pb-20 bg-white relative border-t border-slate-200">
+    <section id="tutor" className="pt-8 pb-16 bg-white relative">
+      <div aria-hidden className="absolute top-0 left-1/2 -translate-x-1/2 h-px w-2/3 bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row items-end justify-between gap-6 mb-12">
-          <div className="space-y-3 max-w-2xl text-left">
-            <span className="text-xs font-extrabold uppercase tracking-widest text-[#ff6105] bg-orange-100 rounded-full px-4 py-1.5 inline-block">
-              Tenaga Pendidik
-            </span>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#280f91] uppercase">
-              Daftar Tutor PKBM
-            </h2>
-          </div>
-
-          <Button
-            onClick={() => {
-              if (onNavigate) {
-                onNavigate("/tutor");
-              } else {
-                window.history.pushState({}, "", "/tutor");
-                window.dispatchEvent(new PopStateEvent("popstate"));
-              }
-            }}
-            className="rounded-full bg-[#280f91] hover:bg-[#ff6105] text-white font-extrabold text-xs px-6 h-11 cursor-pointer transition-all shadow-md flex items-center gap-1.5"
-          >
-            Lihat Semua Pendidik <ArrowRight className="h-4 w-4" />
-          </Button>
+        {/* Header */}
+        <div className="text-center max-w-3xl mx-auto space-y-3 mb-10">
+          <span className="text-xs font-extrabold uppercase tracking-widest text-[#ff6105] bg-orange-100 rounded-full px-4 py-1.5 inline-block">
+            Tenaga Pendidik
+          </span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight uppercase">
+            <span className="text-[#280f91]">TUTOR</span>{" "}
+            <span className="text-[#ff6105]">PKBM MENUJU MAKMUR</span>
+          </h2>
+          <p className="text-slate-600 font-semibold text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
+            Tutor PKBM Menuju Makmur merupakan tenaga pendidik yang berdedikasi dalam membimbing, mendampingi, dan memberikan ilmu pengetahuan kepada warga belajar guna meningkatkan kualitas pendidikan dan keterampilan.
+          </p>
         </div>
 
-        {/* Dynamic Tutor Grid on Homepage */}
+        {/* Dynamic Tutor Carousel on Homepage */}
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#280f91] border-t-transparent" />
           </div>
         ) : displayTutors.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {displayTutors.map((tutor) => (
-              <Dialog key={tutor.id}>
-                <DialogTrigger asChild>
-                  <div className="overflow-hidden border-2 border-slate-100 hover:border-[#ff6105] rounded-3xl transition-all duration-300 flex flex-col shadow-lg bg-white group cursor-pointer text-left">
-                    <div className="aspect-[4/3] w-full relative overflow-hidden bg-slate-50">
-                      {tutor.foto ? (
-                        <img 
-                          src={tutor.foto} 
-                          alt={tutor.nama}
-                          loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
-                          <svg className="w-12 h-12 opacity-30" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                          </svg>
-                        </div>
-                      )}
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent h-1/2"></div>
-                      <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[85%] z-10 text-center">
-                        <span className="inline-block w-full bg-[#280f91] text-white font-extrabold text-[9px] py-2 px-3 rounded-full uppercase shadow-md tracking-wider truncate">
-                          {tutor.tutorMapel}
-                        </span>
-                      </div>
-                    </div>
+          <div className="space-y-8">
+            <div className="relative">
+              {displayTutors.length > 1 && (
+                <>
+                  <button
+                    onClick={() => handleScroll("left")}
+                    aria-label="Geser kiri"
+                    className="hidden sm:flex absolute -left-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-white border border-slate-200 shadow-lg text-[#280f91] hover:bg-[#280f91] hover:text-white transition-all cursor-pointer"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => handleScroll("right")}
+                    aria-label="Geser kanan"
+                    className="hidden sm:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-white border border-slate-200 shadow-lg text-[#280f91] hover:bg-[#280f91] hover:text-white transition-all cursor-pointer"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
 
-                    <div className="p-4 flex-1 space-y-2">
-                      <h3 className="text-sm font-black text-[#280f91] leading-tight uppercase line-clamp-2">
-                        {tutor.nama}
-                      </h3>
-                      <p className="text-slate-500 text-[9px] font-black uppercase tracking-wider">
-                        Program: {tutor.program || "Paket C"}
-                      </p>
-                    </div>
-                    
-                    <div className="p-4 pt-0 border-t border-slate-50/50 mt-1">
-                      <Button 
-                        variant="link" 
-                        className="p-0 h-auto font-black text-[10px] text-[#ff6105] group-hover:translate-x-1.5 transition-transform inline-flex items-center gap-1.5 uppercase"
+              <div
+                ref={scrollRef}
+                className={`flex gap-6 overflow-x-auto scrollbar-none snap-x snap-mandatory pt-4 pb-4 ${
+                  displayTutors.length === 1 ? "justify-center" : ""
+                }`}
+              >
+                {displayTutors.map((tutor) => (
+                  <Dialog key={tutor.id}>
+                    <DialogTrigger asChild>
+                      <div
+                        data-card
+                        className="snap-start shrink-0 w-[calc(50%-0.75rem)] sm:w-[calc(50%-0.75rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(20%-1.2rem)] overflow-hidden border border-slate-300 hover:border-[#ff6105] rounded-3xl transition-all duration-300 flex flex-col bg-white group cursor-pointer text-left"
                       >
-                        Profil Tutor
-                        <ArrowRight className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </DialogTrigger>
+                        <div className="aspect-[4/3] w-full relative overflow-hidden bg-slate-50">
+                          {tutor.foto ? (
+                            <img
+                              src={tutor.foto}
+                              alt={tutor.nama}
+                              loading="lazy"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
+                              <svg className="w-12 h-12 opacity-30" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                              </svg>
+                            </div>
+                          )}
+                        </div>
 
-                {/* DETAIL DIALOG POP-UP */}
-                <DialogContent className="sm:max-w-2xl bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl text-left overflow-y-auto max-h-[85vh]">
-                  <DialogHeader className="border-b border-slate-100 pb-3">
-                    <DialogTitle className="text-xl font-black text-[#280f91] uppercase flex items-center gap-2">
-                      <Award className="h-5 w-5 text-[#ff6105]" /> Detail Profil Pendidik
-                    </DialogTitle>
-                  </DialogHeader>
+                        <div className="p-4 flex-1 space-y-1.5 text-center">
+                          <h3 className="text-sm font-black text-[#280f91] leading-tight uppercase line-clamp-2">
+                            {tutor.nama}
+                          </h3>
+                          <p className="text-slate-500 text-[10px] font-black uppercase tracking-wider">
+                            Tutor
+                          </p>
+                        </div>
+                      </div>
+                    </DialogTrigger>
 
-                  <div className="py-4 grid grid-cols-1 sm:grid-cols-3 gap-6">
-                    {/* Photo Column */}
-                    <div className="sm:col-span-1 space-y-4">
-                      <div className="aspect-[3/4] w-full rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm">
-                        {tutor.foto ? (
-                          <img 
-                            src={tutor.foto} 
-                            alt={tutor.nama}
-                            className="w-full h-full object-cover" 
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-400">
-                            No Photo
+                    {/* DETAIL DIALOG POP-UP */}
+                    <DialogContent className="sm:max-w-2xl bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl text-left overflow-y-auto max-h-[85vh]">
+                      <DialogHeader className="border-b border-slate-100 pb-3">
+                        <DialogTitle className="text-xl font-black text-[#280f91] uppercase flex items-center gap-2">
+                          <Award className="h-5 w-5 text-[#ff6105]" /> Detail Profil Pendidik
+                        </DialogTitle>
+                      </DialogHeader>
+
+                      <div className="py-4 grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <div className="sm:col-span-1 space-y-4">
+                          <div className="aspect-[3/4] w-full rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm">
+                            {tutor.foto ? (
+                              <img
+                                src={tutor.foto}
+                                alt={tutor.nama}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-400">
+                                No Photo
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-center space-y-1">
-                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Mulai Tugas</span>
-                        <span className="text-xs font-black text-slate-700">{tutor.tanggalMulaiTugas || "-"}</span>
-                      </div>
-                    </div>
-
-                    {/* Detail Fields Column */}
-                    <div className="sm:col-span-2 space-y-4 text-slate-700">
-                      <div className="border-b border-slate-100 pb-2">
-                        <h2 className="text-xl font-black text-[#280f91] uppercase leading-tight">{tutor.nama}</h2>
-                        <span className="inline-block bg-orange-100 text-[#ff6105] font-extrabold text-[10px] px-3.5 py-1 rounded-full uppercase tracking-wider mt-1.5 shadow-xs">
-                          {tutor.tutorMapel}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-semibold text-xs leading-relaxed">
-                        <div className="space-y-1">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Program Tugas</span>
-                          <span className="text-slate-800 font-bold uppercase">{tutor.program || "-"}</span>
-                        </div>
-
-                        <div className="space-y-1">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">NUPTK</span>
-                          <span className="text-slate-800 font-bold">{tutor.nuptk || "-"}</span>
-                        </div>
-
-                        <div className="space-y-1">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Tempat, Tgl Lahir</span>
-                          <span className="text-slate-800 font-bold">{tutor.tempatTglLahir || "-"}</span>
-                        </div>
-
-                        <div className="space-y-1">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Jenis Kelamin</span>
-                          <span className="text-slate-800 font-bold">{tutor.jenisKelamin || "-"}</span>
-                        </div>
-
-                        <div className="space-y-1">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Agama</span>
-                          <span className="text-slate-800 font-bold">{tutor.agama || "-"}</span>
-                        </div>
-
-                        <div className="space-y-1">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Pendidikan</span>
-                          <span className="text-slate-800 font-bold">{tutor.pendidikan || "-"}</span>
-                        </div>
-
-                        <div className="space-y-1 sm:col-span-2">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Alamat Lengkap</span>
-                          <span className="text-slate-800 font-bold leading-normal block">{tutor.alamat || "-"}</span>
-                        </div>
-
-                        <div className="space-y-1 sm:col-span-2">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block flex items-center gap-1">
-                            <Mail className="h-3 w-3" /> Email
-                          </span>
-                          <a href={`mailto:${tutor.email}`} className="text-[#ff6105] hover:underline font-bold text-[11px] block">
-                            {tutor.email || "-"}
-                          </a>
-                        </div>
-                      </div>
-
-                      {/* SK Details */}
-                      <div className="bg-[#cdeff6]/40 border border-[#a6e5f3] p-3.5 rounded-2xl space-y-2.5 text-xs text-slate-800">
-                        <span className="block text-[9px] font-black text-[#280f91] uppercase tracking-wider border-b border-[#a6e5f3] pb-1">Keterangan SK Pengangkatan / Penugasan</span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-bold">
-                          <div>
-                            <p className="text-[9px] text-slate-400 font-black uppercase">SK PENGANGKATAN</p>
-                            <p>{tutor.nomorSkPengangkatan || "-"}</p>
-                            <p className="text-[9px] text-slate-400 font-normal italic mt-0.5">{tutor.lembagaPengangkat}</p>
-                          </div>
-                          <div>
-                            <p className="text-[9px] text-slate-400 font-black uppercase">SK PENUGASAN</p>
-                            <p>{tutor.nomorSkPenugasan || "-"}</p>
-                            <p className="text-[9px] text-slate-400 font-normal italic mt-0.5">{tutor.lembagaPenugas}</p>
+                          <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-center space-y-1">
+                            <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Mulai Tugas</span>
+                            <span className="text-xs font-black text-slate-700">{tutor.tanggalMulaiTugas || "-"}</span>
                           </div>
                         </div>
+
+                        <div className="sm:col-span-2 space-y-4 text-slate-700">
+                          <div className="border-b border-slate-100 pb-2">
+                            <h2 className="text-xl font-black text-[#280f91] uppercase leading-tight">{tutor.nama}</h2>
+                            <span className="inline-block bg-orange-100 text-[#ff6105] font-extrabold text-[10px] px-3.5 py-1 rounded-full uppercase tracking-wider mt-1.5 shadow-xs">
+                              {tutor.tutorMapel}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-semibold text-xs leading-relaxed">
+                            <div className="space-y-1">
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Program Tugas</span>
+                              <span className="text-slate-800 font-bold uppercase">{tutor.program || "-"}</span>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">NUPTK</span>
+                              <span className="text-slate-800 font-bold">{tutor.nuptk || "-"}</span>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Tempat, Tgl Lahir</span>
+                              <span className="text-slate-800 font-bold">{tutor.tempatTglLahir || "-"}</span>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Jenis Kelamin</span>
+                              <span className="text-slate-800 font-bold">{tutor.jenisKelamin || "-"}</span>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Agama</span>
+                              <span className="text-slate-800 font-bold">{tutor.agama || "-"}</span>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Pendidikan</span>
+                              <span className="text-slate-800 font-bold">{tutor.pendidikan || "-"}</span>
+                            </div>
+                            <div className="space-y-1 sm:col-span-2">
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Alamat Lengkap</span>
+                              <span className="text-slate-800 font-bold leading-normal block">{tutor.alamat || "-"}</span>
+                            </div>
+                            <div className="space-y-1 sm:col-span-2">
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block flex items-center gap-1">
+                                <Mail className="h-3 w-3" /> Email
+                              </span>
+                              <a href={`mailto:${tutor.email}`} className="text-[#ff6105] hover:underline font-bold text-[11px] block">
+                                {tutor.email || "-"}
+                              </a>
+                            </div>
+                          </div>
+
+                          <div className="bg-[#cdeff6]/40 border border-[#a6e5f3] p-3.5 rounded-2xl space-y-2.5 text-xs text-slate-800">
+                            <span className="block text-[9px] font-black text-[#280f91] uppercase tracking-wider border-b border-[#a6e5f3] pb-1">Keterangan SK Pengangkatan / Penugasan</span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-bold">
+                              <div>
+                                <p className="text-[9px] text-slate-400 font-black uppercase">SK PENGANGKATAN</p>
+                                <p>{tutor.nomorSkPengangkatan || "-"}</p>
+                                <p className="text-[9px] text-slate-400 font-normal italic mt-0.5">{tutor.lembagaPengangkat}</p>
+                              </div>
+                              <div>
+                                <p className="text-[9px] text-slate-400 font-black uppercase">SK PENUGASAN</p>
+                                <p>{tutor.nomorSkPenugasan || "-"}</p>
+                                <p className="text-[9px] text-slate-400 font-normal italic mt-0.5">{tutor.lembagaPenugas}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
 
-                    </div>
-                  </div>
+                      <DialogFooter className="border-t border-slate-100 pt-4">
+                        <DialogClose asChild>
+                          <Button className="rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 px-6 w-full sm:w-auto cursor-pointer">
+                            Tutup Profil
+                          </Button>
+                        </DialogClose>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                ))}
+              </div>
+            </div>
 
-                  <DialogFooter className="border-t border-slate-100 pt-4">
-                    <DialogClose asChild>
-                      <Button className="rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 px-6 w-full sm:w-auto cursor-pointer">
-                        Tutup Profil
-                      </Button>
-                    </DialogClose>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            ))}
+            <div className="text-center flex justify-center">
+              <Button
+                onClick={() => {
+                  if (onNavigate) {
+                    onNavigate("/tutor");
+                  } else {
+                    window.history.pushState({}, "", "/tutor");
+                    window.dispatchEvent(new PopStateEvent("popstate"));
+                  }
+                }}
+                className="rounded-full bg-[#280f91] hover:bg-[#ff6105] text-white font-bold px-8 h-12 shadow-md shadow-[#280f91]/10 cursor-pointer"
+              >
+                Lihat Selengkapnya
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="max-w-md mx-auto bg-white border border-slate-200 rounded-3xl p-8 text-center space-y-4 shadow-xl">

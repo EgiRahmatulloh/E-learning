@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,7 +9,7 @@ import {
   DialogFooter,
   DialogClose
 } from "@/components/ui/dialog";
-import { Calendar, ShieldAlert, Search, ChevronRight } from "lucide-react";
+import { Calendar, ShieldAlert, Search, ChevronRight, ChevronLeft } from "lucide-react";
 
 interface NewsItem {
   id: number;
@@ -90,8 +90,16 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
     }
   };
 
-  // Limit homepage news list to 4 items
-  const displayNews = isDetailed ? filteredNews : filteredNews.slice(0, 4);
+  // Limit homepage news list to 5 items
+  const displayNews = isDetailed ? filteredNews : filteredNews.slice(0, 5);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = (direction: "left" | "right") => {
+    if (!scrollRef.current) return;
+    const card = scrollRef.current.querySelector("[data-card]") as HTMLElement | null;
+    const cardWidth = card ? card.offsetWidth + 24 : 280;
+    scrollRef.current.scrollBy({ left: direction === "left" ? -cardWidth : cardWidth, behavior: "smooth" });
+  };
 
   // DETAILED FULL NEWS PAGE VIEW (Halaman Menu Berita)
   if (isDetailed) {
@@ -112,7 +120,8 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
               </span>
             </h2>
             <p className="text-slate-700 font-bold text-xs sm:text-sm leading-relaxed px-4 max-w-2xl mx-auto">
-              Berita PKBM Menuju Makmur menyajikan informasi mengenai kegiatan, program, pencapaian, dan perkembangan terbaru sebagai bagian dari upaya meningkatkan kualitas pendidikan
+              Berita terbaru PKBM Menuju Makmur menyajikan informasi terbaru mengenai kegiatan, program, pencapaian, dan perkembangan terbaru sebagai bagian dari upaya meningkatkan kualitas pendidikan
+
             </p>
           </div>
 
@@ -282,132 +291,154 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
 
   // DEFAULT HOMEPAGE KABAR TERKINI VIEW
   return (
-    <section id="berita" className="pt-8 pb-20 bg-[#cdeff6] border-y border-slate-300 relative overflow-hidden">
+    <section id="berita" className="pt-8 pb-16 bg-white relative overflow-hidden">
+      <div aria-hidden className="absolute top-0 left-1/2 -translate-x-1/2 h-px w-2/3 bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-        
-        {/* Centered purple-green Title */}
-        <div className="text-center max-w-4xl mx-auto space-y-4 mb-12">
-          <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-center leading-none">
-            <span className="text-[#9c27b0] font-black drop-shadow-sm">
-              BERITA
-            </span>{" "}
-            <span className="text-[#0ff60a] font-black drop-shadow-xs">
-              PKBM MENUJU MAKMUR
-            </span>
+
+        {/* Header */}
+        <div className="text-center max-w-3xl mx-auto space-y-3 mb-10">
+          <span className="text-xs font-extrabold uppercase tracking-widest text-[#ff6105] bg-orange-100 rounded-full px-4 py-1.5 inline-block">
+            Berita
+          </span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight uppercase">
+            <span className="text-[#280f91]">BERITA</span>{" "}
+            <span className="text-[#ff6105]">PKBM MENUJU MAKMUR</span>
           </h2>
-          <p className="text-slate-700 font-bold text-xs sm:text-sm leading-relaxed px-4 max-w-2xl mx-auto">
-            Berita PKBM Menuju Makmur menyajikan informasi mengenai kegiatan, program, pencapaian, dan perkembangan terbaru sebagai bagian dari upaya meningkatkan kualitas pendidikan
+          <p className="text-slate-600 font-semibold text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
+            Berita PKBM Menuju Makmur menyajikan informasi mengenai kegiatan, program, pencapaian, dan perkembangan terbaru sebagai bagian dari upaya meningkatkan kualitas pendidikan.
           </p>
         </div>
 
-        {/* Dynamic News Grid on homepage */}
+        {/* Dynamic News Carousel on homepage */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-3">
             <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#280f91] border-t-transparent" />
             <span className="text-sm font-bold text-[#280f91] uppercase tracking-widest">Memuat Berita...</span>
           </div>
         ) : displayNews.length > 0 ? (
-          <div className="space-y-12 max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {displayNews.map((news) => (
-                <Dialog key={news.id}>
-                  <DialogTrigger asChild>
-                    <div 
-                      onClick={() => incrementHits(news.id)}
-                      className="bg-white rounded-3xl overflow-hidden shadow-lg p-4 flex flex-col justify-between border border-slate-100 group hover:border-[#ff6105] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer text-left"
-                    >
-                      {/* Top part: Image + Category overlay */}
-                      <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-slate-50">
-                        {news.foto ? (
-                          <img 
-                            src={news.foto} 
-                            alt={news.judul} 
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-300">
-                            <Calendar className="h-12 w-12" />
+          <div className="space-y-8 max-w-7xl mx-auto">
+            <div className="relative">
+              {displayNews.length > 1 && (
+                <>
+                  <button
+                    onClick={() => handleScroll("left")}
+                    aria-label="Geser kiri"
+                    className="hidden sm:flex absolute -left-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-white border border-slate-200 shadow-lg text-[#280f91] hover:bg-[#280f91] hover:text-white transition-all cursor-pointer"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => handleScroll("right")}
+                    aria-label="Geser kanan"
+                    className="hidden sm:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-white border border-slate-200 shadow-lg text-[#280f91] hover:bg-[#280f91] hover:text-white transition-all cursor-pointer"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
+
+              <div
+                ref={scrollRef}
+                className={`flex gap-6 overflow-x-auto scrollbar-none snap-x snap-mandatory pt-4 pb-4 ${
+                  displayNews.length === 1 ? "justify-center" : ""
+                }`}
+              >
+                {displayNews.map((news) => (
+                  <Dialog key={news.id}>
+                    <DialogTrigger asChild>
+                      <div
+                        data-card
+                        onClick={() => incrementHits(news.id)}
+                        className="snap-start shrink-0 w-[calc(50%-0.75rem)] sm:w-[calc(50%-0.75rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(20%-1.2rem)] bg-white rounded-3xl overflow-hidden p-4 flex flex-col justify-between border border-slate-300 group hover:border-[#ff6105] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer text-left"
+                      >
+                        <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-slate-50">
+                          {news.foto ? (
+                            <img
+                              src={news.foto}
+                              alt={news.judul}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-300">
+                              <Calendar className="h-12 w-12" />
+                            </div>
+                          )}
+
+                          <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[85%] z-10 text-center">
+                            <span className="inline-block w-full bg-[#9c27b0] text-white font-extrabold text-[9px] px-3 py-1.5 rounded-full uppercase shadow-md tracking-wider">
+                              {news.kategori}
+                            </span>
                           </div>
-                        )}
-
-                        {/* Category tag overlay on top left */}
-                        <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[85%] z-10 text-center">
-                          <span className="inline-block w-full bg-[#9c27b0] text-white font-extrabold text-[9px] px-3 py-1.5 rounded-full uppercase shadow-md tracking-wider">
-                            {news.kategori}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Bottom part: Title + Excerpt + link */}
-                      <div className="space-y-3 text-left px-2 flex-1 flex flex-col justify-between">
-                        <div className="space-y-2">
-                          <h3 className="text-sm font-black text-[#280f91] leading-tight uppercase line-clamp-2 group-hover:text-[#ff6105] transition-colors">
-                            {news.judul}
-                          </h3>
-                          <p className="text-slate-600 text-[10px] font-semibold leading-relaxed line-clamp-3">
-                            {news.konten}
-                          </p>
                         </div>
 
-                        <div className="pt-3 border-t border-slate-50 flex items-center justify-between text-[8px] text-slate-400 font-black uppercase tracking-wider mt-2">
-                          <span className="hover:text-[#ff6105] transition-colors uppercase">SELENGKAPNYA &gt;&gt;</span>
-                          <span className="text-slate-300">{news.tanggalPosting}</span>
-                        </div>
-                      </div>
-
-                    </div>
-                  </DialogTrigger>
-
-                  {/* READ NEWS FULL POP-UP */}
-                  <DialogContent className="sm:max-w-lg bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl text-left">
-                    <DialogHeader>
-                      <div className="flex items-center gap-2 text-xs font-extrabold text-[#9c27b0] uppercase tracking-wider mb-2">
-                        <span>{news.kategori}</span>
-                        <span>•</span>
-                        <span>{news.tanggalPosting}</span>
-                      </div>
-                      <DialogTitle className="text-xl sm:text-2xl font-black text-[#280f91] leading-tight uppercase">
-                        {news.judul}
-                      </DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 py-2">
-                      <div className="h-56 w-full rounded-2xl relative overflow-hidden border border-slate-200">
-                        {news.foto ? (
-                          <img 
-                            src={news.foto} 
-                            alt={news.judul}
-                            className="w-full h-full object-cover" 
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
-                            No Photo
+                        <div className="space-y-3 text-left px-1 flex-1 flex flex-col justify-between">
+                          <div className="space-y-2">
+                            <h3 className="text-sm font-black text-[#280f91] leading-tight uppercase line-clamp-2 group-hover:text-[#ff6105] transition-colors">
+                              {news.judul}
+                            </h3>
+                            <p className="text-slate-600 text-[10px] font-semibold leading-relaxed line-clamp-3">
+                              {news.konten}
+                            </p>
                           </div>
-                        )}
+
+                          <div className="pt-3 border-t border-slate-50 flex items-center justify-between text-[8px] text-slate-400 font-black uppercase tracking-wider mt-2">
+                            <span className="hover:text-[#ff6105] transition-colors uppercase">SELENGKAPNYA &gt;&gt;</span>
+                            <span className="text-slate-300">{news.tanggalPosting}</span>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-slate-700 text-sm sm:text-base font-bold leading-relaxed whitespace-pre-line max-h-60 overflow-y-auto pr-1">
-                        {news.konten}
-                      </p>
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-between pt-2 border-t border-slate-100">
-                        <span>Penulis: {news.pembuat}</span>
-                        <span>Dilihat: {news.hits} kali</span>
+                    </DialogTrigger>
+
+                    {/* READ NEWS FULL POP-UP */}
+                    <DialogContent className="sm:max-w-lg bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl text-left">
+                      <DialogHeader>
+                        <div className="flex items-center gap-2 text-xs font-extrabold text-[#9c27b0] uppercase tracking-wider mb-2">
+                          <span>{news.kategori}</span>
+                          <span>•</span>
+                          <span>{news.tanggalPosting}</span>
+                        </div>
+                        <DialogTitle className="text-xl sm:text-2xl font-black text-[#280f91] leading-tight uppercase">
+                          {news.judul}
+                        </DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 py-2">
+                        <div className="h-56 w-full rounded-2xl relative overflow-hidden border border-slate-200">
+                          {news.foto ? (
+                            <img
+                              src={news.foto}
+                              alt={news.judul}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
+                              No Photo
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-slate-700 text-sm sm:text-base font-bold leading-relaxed whitespace-pre-line max-h-60 overflow-y-auto pr-1">
+                          {news.konten}
+                        </p>
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-between pt-2 border-t border-slate-100">
+                          <span>Penulis: {news.pembuat}</span>
+                          <span>Dilihat: {news.hits} kali</span>
+                        </div>
                       </div>
-                    </div>
-                    <DialogFooter className="flex justify-end gap-2 border-t border-slate-100 pt-4 mt-2">
-                      <DialogClose asChild>
-                        <Button className="rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 px-6 cursor-pointer">
-                          Tutup Bacaan
-                        </Button>
-                      </DialogClose>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              ))}
+                      <DialogFooter className="flex justify-end gap-2 border-t border-slate-100 pt-4 mt-2">
+                        <DialogClose asChild>
+                          <Button className="rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 px-6 cursor-pointer">
+                            Tutup Bacaan
+                          </Button>
+                        </DialogClose>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                ))}
+              </div>
             </div>
 
-            {/* Custom pill-style READ MORE button */}
             {newsList.length > 0 && (
-              <div className="text-center mt-12 flex justify-center">
-                <button
+              <div className="text-center flex justify-center">
+                <Button
                   onClick={() => {
                     if (onNavigate) {
                       onNavigate("/news");
@@ -416,23 +447,20 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
                       window.dispatchEvent(new PopStateEvent("popstate"));
                     }
                   }}
-                  className="inline-flex items-center bg-[#a8e0ea] hover:bg-[#8fd0dc] text-black font-black text-lg py-2.5 pl-2.5 pr-8 rounded-full border-4 border-black shadow-lg transition-all active:scale-95 cursor-pointer hover:shadow-black/20"
+                  className="rounded-full bg-[#280f91] hover:bg-[#ff6105] text-white font-bold px-8 h-12 shadow-md shadow-[#280f91]/10 cursor-pointer"
                 >
-                  <div className="h-11 w-11 rounded-full bg-black flex items-center justify-center text-white shrink-0 mr-4">
-                    <ChevronRight className="h-6 w-6 stroke-[3]" />
-                  </div>
-                  <span className="tracking-wide uppercase text-sm font-black">READ MORE</span>
-                </button>
+                  Lihat Selengkapnya
+                </Button>
               </div>
             )}
           </div>
         ) : (
-          <div className="max-w-md mx-auto bg-[#20108a] rounded-3xl p-8 text-center space-y-4 shadow-xl border border-blue-900/30">
-            <div className="h-16 w-16 bg-[#00ff00]/10 rounded-2xl flex items-center justify-center mx-auto">
-              <ShieldAlert className="h-8 w-8 text-[#00ff00]" />
+          <div className="max-w-md mx-auto bg-white rounded-3xl p-8 text-center space-y-4 shadow-xl border border-slate-200">
+            <div className="h-16 w-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto">
+              <ShieldAlert className="h-8 w-8 text-orange-500" />
             </div>
-            <h3 className="text-lg font-black text-white uppercase tracking-wider">Belum Ada Berita</h3>
-            <p className="text-white/70 font-bold text-xs">
+            <h3 className="text-lg font-black text-slate-800 uppercase tracking-wider">Belum Ada Berita</h3>
+            <p className="text-slate-500 font-bold text-xs">
               Kabar berita terbaru saat ini belum tersedia.
             </p>
           </div>
