@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, UserPlus, BookOpen, ClipboardCheck } from "lucide-react";
 
 interface SlideData {
   image: string;
@@ -192,14 +192,14 @@ export default function Hero({ onServiceClick }: HeroProps) {
       </div>
 
       {/* ===== MAIN CONTENT OVERLAY ===== */}
-      <div className="relative z-20 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-full flex items-center pt-20">
-        <div className="w-full flex flex-col lg:flex-row items-center lg:items-center justify-between gap-8 py-12">
-          
+      <div className="relative z-20 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-full flex items-center pt-20 pb-24 lg:pb-12">
+        <div className="w-full flex flex-col lg:flex-row items-center lg:items-end justify-between gap-6 lg:gap-8 py-6 lg:py-12">
+
           {/* ===== LEFT: Welcome Text ===== */}
-          <div className="flex-1 max-w-2xl text-center lg:text-left space-y-4">
+          <div className="flex-1 max-w-2xl text-center lg:text-left space-y-3 lg:space-y-4">
             {/* Decorative "Selamat Datang" */}
             <h2
-              className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl leading-none select-none"
+              className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl leading-none select-none"
               style={{
                 fontFamily: "'Playfair Display', 'Georgia', serif",
                 fontStyle: "italic",
@@ -213,7 +213,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
 
             {/* "Di Website" */}
             <h3
-              className="text-2xl sm:text-3xl lg:text-4xl font-black text-white leading-tight select-none"
+              className="text-xl sm:text-3xl lg:text-4xl font-black text-white leading-tight select-none"
               style={{
                 fontFamily: "'Playfair Display', 'Georgia', serif",
                 fontStyle: "italic",
@@ -225,7 +225,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
 
             {/* "PKBM MENUJU MAKMUR" */}
             <h1
-              className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black leading-none select-none tracking-tight"
+              className="text-2xl sm:text-4xl lg:text-5xl xl:text-6xl font-black leading-none select-none tracking-tight"
               style={{
                 color: "#ff6105",
                 textShadow: "0 3px 15px rgba(255, 97, 5, 0.3), 2px 2px 0px rgba(0,0,0,0.3)",
@@ -234,8 +234,8 @@ export default function Hero({ onServiceClick }: HeroProps) {
               PKBM MENUJU MAKMUR
             </h1>
 
-            {/* Quote */}
-            <blockquote className="relative mt-6 pl-4 border-l-4 border-[#cafc05]/60">
+            {/* Quote — hidden on small mobile, shown on sm+ */}
+            <blockquote className="hidden sm:block relative mt-6 pl-4 border-l-4 border-[#cafc05]/60">
               <p
                 className="text-sm sm:text-base lg:text-lg text-white/90 italic font-medium leading-relaxed"
                 style={{ textShadow: "0 1px 8px rgba(0,0,0,0.4)" }}
@@ -244,9 +244,9 @@ export default function Hero({ onServiceClick }: HeroProps) {
               </p>
             </blockquote>
 
-            {/* Slide Indicator Dots */}
+            {/* Slide Indicator Dots (desktop only — mobile dot ada di bottom) */}
             {slides.length > 1 && (
-              <div className="flex items-center gap-3 mt-8 justify-center lg:justify-start">
+              <div className="hidden lg:flex items-center gap-3 mt-8 justify-center lg:justify-start">
                 {slides.map((_, idx) => (
                   <button
                     key={idx}
@@ -267,40 +267,63 @@ export default function Hero({ onServiceClick }: HeroProps) {
           </div>
 
           {/* ===== RIGHT: Layanan Digital Portal ===== */}
-          <div className="shrink-0 w-full sm:w-auto self-start pt-0 lg:-mt-10">
-            <div className="max-w-[200px] mx-auto lg:mx-0">
-              <h4 
-                className="text-center text-xl sm:text-2xl font-black text-white mb-4 tracking-tight"
-                style={{ textShadow: "0 2px 10px rgba(0,0,0,0.6)" }}
+          <div className="shrink-0 w-full sm:w-auto self-center lg:self-end pt-0 lg:pb-20">
+            <div className="max-w-[260px] mx-auto lg:mx-0">
+              <h4
+                className="text-center text-2xl sm:text-3xl lg:text-4xl font-black mb-3 lg:mb-4 select-none"
+                style={{
+                  fontFamily: "'Playfair Display', 'Georgia', serif",
+                  fontStyle: "italic",
+                  color: "#ffffff",
+                  textShadow: "0 2px 10px rgba(0,0,0,0.6)",
+                }}
               >
                 Layanan Digital
               </h4>
-              <div className="space-y-2">
+              <div className="space-y-2 lg:space-y-3">
                 {/* E-SPMB Button */}
                 <button
                   onClick={() => onServiceClick?.("e-spmb")}
-                  className="w-full group relative overflow-hidden rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-black text-sm sm:text-base tracking-wider py-2.5 px-4 shadow-lg shadow-purple-900/30 hover:shadow-xl hover:shadow-purple-800/40 active:scale-[0.97] transition-all duration-200 cursor-pointer"
+                  className="w-full group relative overflow-hidden rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-black text-sm sm:text-base tracking-wider py-2 lg:py-2.5 px-4 shadow-lg shadow-purple-900/30 hover:shadow-xl hover:shadow-purple-800/40 active:scale-[0.97] transition-all duration-200 cursor-pointer flex flex-col items-center"
                 >
                   <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                  <span className="relative">E-SPMB</span>
+                  <span className="relative flex items-center gap-2">
+                    <UserPlus className="h-5 w-5 shrink-0" />
+                    E-SPMB
+                  </span>
+                  <span className="relative text-[9px] font-bold tracking-wider opacity-90 mt-0.5">
+                    Lihat Selengkapnya
+                  </span>
                 </button>
 
                 {/* E-LEARNING Button */}
                 <button
                   onClick={() => onServiceClick?.("e-learning")}
-                  className="w-full group relative overflow-hidden rounded-xl bg-gradient-to-r from-[#280f91] to-indigo-700 hover:from-indigo-600 hover:to-[#280f91] text-white font-black text-sm sm:text-base tracking-wider py-2.5 px-4 shadow-lg shadow-indigo-900/30 hover:shadow-xl hover:shadow-indigo-800/40 active:scale-[0.97] transition-all duration-200 cursor-pointer"
+                  className="w-full group relative overflow-hidden rounded-xl bg-gradient-to-r from-[#280f91] to-indigo-700 hover:from-indigo-600 hover:to-[#280f91] text-white font-black text-sm sm:text-base tracking-wider py-2 lg:py-2.5 px-4 shadow-lg shadow-indigo-900/30 hover:shadow-xl hover:shadow-indigo-800/40 active:scale-[0.97] transition-all duration-200 cursor-pointer flex flex-col items-center"
                 >
                   <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                  <span className="relative">E-LEARNING</span>
+                  <span className="relative flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 shrink-0" />
+                    E-LEARNING
+                  </span>
+                  <span className="relative text-[9px] font-bold tracking-wider opacity-90 mt-0.5">
+                    Lihat Selengkapnya
+                  </span>
                 </button>
 
                 {/* E-UJIAN Button */}
                 <button
                   onClick={() => onServiceClick?.("e-ujian")}
-                  className="w-full group relative overflow-hidden rounded-xl bg-gradient-to-r from-[#ff6105] to-amber-500 hover:from-amber-500 hover:to-[#ff6105] text-white font-black text-sm sm:text-base tracking-wider py-2.5 px-4 shadow-lg shadow-orange-900/30 hover:shadow-xl hover:shadow-orange-700/40 active:scale-[0.97] transition-all duration-200 cursor-pointer"
+                  className="w-full group relative overflow-hidden rounded-xl bg-gradient-to-r from-[#ff6105] to-amber-500 hover:from-amber-500 hover:to-[#ff6105] text-white font-black text-sm sm:text-base tracking-wider py-2 lg:py-2.5 px-4 shadow-lg shadow-orange-900/30 hover:shadow-xl hover:shadow-orange-700/40 active:scale-[0.97] transition-all duration-200 cursor-pointer flex flex-col items-center"
                 >
                   <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                  <span className="relative">E-UJIAN</span>
+                  <span className="relative flex items-center gap-2">
+                    <ClipboardCheck className="h-5 w-5 shrink-0" />
+                    E-UJIAN
+                  </span>
+                  <span className="relative text-[9px] font-bold tracking-wider opacity-90 mt-0.5">
+                    Lihat Selengkapnya
+                  </span>
                 </button>
               </div>
             </div>
@@ -308,24 +331,60 @@ export default function Hero({ onServiceClick }: HeroProps) {
         </div>
       </div>
 
-      {/* ===== SLIDER NAVIGATION ARROWS ===== */}
+      {/* ===== SLIDER NAVIGATION ARROWS (Desktop) ===== */}
       {slides.length > 1 && (
         <>
           <button
             onClick={prevSlide}
-            className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md hover:bg-white/20 active:scale-90 transition-all cursor-pointer shadow-lg"
+            className="hidden lg:flex absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md hover:bg-white/20 active:scale-90 transition-all cursor-pointer shadow-lg"
             aria-label="Previous slide"
           >
-            <ChevronLeft className="h-6 w-6 sm:h-7 sm:w-7" />
+            <ChevronLeft className="h-7 w-7" />
           </button>
           <button
             onClick={nextSlide}
-            className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md hover:bg-white/20 active:scale-90 transition-all cursor-pointer shadow-lg"
+            className="hidden lg:flex absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md hover:bg-white/20 active:scale-90 transition-all cursor-pointer shadow-lg"
             aria-label="Next slide"
           >
-            <ChevronRight className="h-6 w-6 sm:h-7 sm:w-7" />
+            <ChevronRight className="h-7 w-7" />
           </button>
         </>
+      )}
+
+      {/* ===== MOBILE: Slider controls at bottom ===== */}
+      {slides.length > 1 && (
+        <div className="lg:hidden absolute bottom-6 left-0 right-0 z-30 flex items-center justify-center gap-3 px-4">
+          <button
+            onClick={prevSlide}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md active:scale-90 transition-all cursor-pointer shadow-lg shrink-0"
+            aria-label="Previous slide"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+
+          <div className="flex items-center gap-2">
+            {slides.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => goToSlide(idx)}
+                className={`h-2.5 rounded-full transition-all duration-500 cursor-pointer ${
+                  idx === currentSlide
+                    ? "w-8 bg-[#cafc05] shadow-md shadow-[#cafc05]/30"
+                    : "w-2.5 bg-white/40"
+                }`}
+                aria-label={`Slide ${idx + 1}`}
+              />
+            ))}
+          </div>
+
+          <button
+            onClick={nextSlide}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md active:scale-90 transition-all cursor-pointer shadow-lg shrink-0"
+            aria-label="Next slide"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
       )}
 
       {/* ===== WHATSAPP FLOATING BUTTON ===== */}
@@ -333,11 +392,19 @@ export default function Hero({ onServiceClick }: HeroProps) {
         href="https://wa.me/6282128594025?text=Halo%20Admin%20PKBM%20Menuju%20Makmur"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-16 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-2xl shadow-green-600/40 hover:bg-green-600 hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer animate-bounce"
+        className="fixed bottom-16 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-2xl shadow-green-600/40 hover:bg-[#1ebe5d] hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer animate-bounce"
         style={{ animationDuration: "2s", animationIterationCount: 3 }}
         aria-label="Hubungi via WhatsApp"
       >
-        <MessageCircle className="h-7 w-7" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 32 32"
+          className="h-8 w-8"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d="M27.286 4.65A15.84 15.84 0 0 0 16.029.001C7.214.001.038 7.176.034 15.993a15.95 15.95 0 0 0 2.133 7.994L0 32l8.198-2.151a16 16 0 0 0 7.825 1.994h.007c8.814 0 15.99-7.176 15.994-15.993a15.9 15.9 0 0 0-4.738-11.2M16.03 29.143h-.005a13.3 13.3 0 0 1-6.767-1.853l-.485-.288-5.064 1.328 1.351-4.937-.316-.504a13.27 13.27 0 0 1-2.034-7.096C2.713 8.644 8.679 2.68 16.034 2.68a13.3 13.3 0 0 1 9.412 3.903 13.23 13.23 0 0 1 3.897 9.416c-.003 7.371-5.969 13.144-13.314 13.144m7.298-9.954c-.4-.2-2.366-1.168-2.733-1.301-.367-.133-.633-.2-.9.2s-1.033 1.301-1.267 1.568-.467.3-.866.1c-.4-.2-1.689-.623-3.216-1.985-1.189-1.061-1.992-2.371-2.225-2.772s-.025-.616.175-.815c.18-.179.4-.467.6-.7s.267-.4.4-.667.067-.5-.033-.7-.9-2.169-1.233-2.97c-.325-.78-.655-.674-.9-.687-.233-.011-.5-.014-.766-.014a1.47 1.47 0 0 0-1.067.5c-.367.4-1.399 1.368-1.399 3.336s1.433 3.87 1.633 4.137 2.819 4.305 6.829 6.038c.954.412 1.699.659 2.28.844.957.305 1.829.262 2.518.158.768-.114 2.366-.967 2.7-1.901s.333-1.734.233-1.901-.367-.267-.766-.467" />
+        </svg>
       </a>
     </section>
   );

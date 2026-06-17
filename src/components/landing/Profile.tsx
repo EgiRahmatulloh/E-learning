@@ -174,14 +174,12 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
     };
 
     return (
-      <section id="profil" className="pt-8 pb-24 bg-white relative">
+      <section id="profil" className="pt-8 pb-16 bg-white relative">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Visual Stats Grid */}
             <div className="grid grid-cols-2 gap-6 relative">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-[#cafc05]/20 blur-3xl rounded-full -z-10"></div>
-              
-              <div className="p-6 rounded-2xl border border-slate-100 bg-white shadow-xl hover:-translate-y-1.5 transition-transform flex flex-col items-center text-center gap-3">
+              <div className="p-6 rounded-2xl border border-slate-300 bg-white hover:border-[#ff6105] hover:-translate-y-1.5 transition-all flex flex-col items-center text-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#280f91] to-purple-600 text-white shadow-md">
                   <Users className="h-6 w-6" />
                 </div>
@@ -189,7 +187,7 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                 <span className="text-xs font-black text-slate-400 tracking-wider uppercase">Warga Belajar</span>
               </div>
 
-              <div className="p-6 rounded-2xl border border-slate-100 bg-white shadow-xl hover:-translate-y-1.5 transition-transform flex flex-col items-center text-center gap-3">
+              <div className="p-6 rounded-2xl border border-slate-300 bg-white hover:border-[#ff6105] hover:-translate-y-1.5 transition-all flex flex-col items-center text-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#ff6105] to-orange-400 text-white shadow-md">
                   <Award className="h-6 w-6" />
                 </div>
@@ -197,7 +195,7 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                 <span className="text-xs font-black text-slate-400 tracking-wider uppercase">Lulusan Alumni</span>
               </div>
 
-              <div className="p-6 rounded-2xl border border-slate-100 bg-white shadow-xl hover:-translate-y-1.5 transition-transform flex flex-col items-center text-center gap-3">
+              <div className="p-6 rounded-2xl border border-slate-300 bg-white hover:border-[#ff6105] hover:-translate-y-1.5 transition-all flex flex-col items-center text-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-teal-400 text-white shadow-md">
                   <BookOpen className="h-6 w-6" />
                 </div>
@@ -205,7 +203,7 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                 <span className="text-xs font-black text-slate-400 tracking-wider uppercase">Tutor Kompeten</span>
               </div>
 
-              <div className="p-6 rounded-2xl border border-slate-100 bg-white shadow-xl hover:-translate-y-1.5 transition-transform flex flex-col items-center text-center gap-3">
+              <div className="p-6 rounded-2xl border border-slate-300 bg-white hover:border-[#ff6105] hover:-translate-y-1.5 transition-all flex flex-col items-center text-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-400 text-white shadow-md">
                   <Layers className="h-6 w-6" />
                 </div>
@@ -216,7 +214,7 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
 
             {/* Profile Info */}
             <div className="space-y-6">
-              <span className="text-xs font-extrabold uppercase tracking-widest text-[#280f91] bg-slate-100 rounded-full px-4 py-1.5 inline-block">
+              <span className="text-xs font-extrabold uppercase tracking-widest text-[#ff6105] bg-orange-100 rounded-full px-4 py-1.5 inline-block">
                 Mengenal Sekolah Kami
               </span>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#280f91] tracking-tight leading-tight">
@@ -240,11 +238,11 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                 </div>
               </div>
               <div className="pt-2 flex items-center gap-4">
-                <Button 
+                <Button
                   onClick={handleReadMore}
                   className="rounded-full bg-[#280f91] hover:bg-[#ff6105] text-white font-bold px-8 h-12 shadow-md shadow-[#280f91]/10 cursor-pointer"
                 >
-                  Selengkapnya (Profil Detail)
+                  Lihat Selengkapnya
                 </Button>
                 <a href="#kontak">
                   <Button variant="outline" className="rounded-full border-slate-200 text-slate-700 hover:bg-slate-50 font-bold px-8 h-12 cursor-pointer">
