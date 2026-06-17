@@ -12,7 +12,11 @@ interface AlumniItem {
   foto: string;
 }
 
-export default function Testimonials() {
+interface TestimonialsProps {
+  onNavigate?: (path: string) => void;
+}
+
+export default function Testimonials({ onNavigate }: TestimonialsProps) {
   const [testimonials, setTestimonials] = useState<AlumniItem[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
