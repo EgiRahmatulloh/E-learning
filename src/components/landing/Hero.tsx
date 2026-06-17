@@ -157,6 +157,16 @@ export default function Hero({ onServiceClick }: HeroProps) {
     }, 400);
   }, [startAutoSlide]);
 
+  const nextSlide = useCallback(() => {
+    if (slides.length <= 1) return;
+    goToSlide((currentSlide + 1) % slides.length);
+  }, [currentSlide, slides.length, goToSlide]);
+
+  const prevSlide = useCallback(() => {
+    if (slides.length <= 1) return;
+    goToSlide((currentSlide - 1 + slides.length) % slides.length);
+  }, [currentSlide, slides.length, goToSlide]);
+
 
   return (
     <section id="beranda" className="relative w-full overflow-hidden h-screen min-h-screen">
@@ -341,7 +351,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
             <ChevronRight className="h-7 w-7" />
           </button>
         </>
-      )} */}
+      )}
 
       {/* ===== MOBILE: Slider controls at bottom ===== */}
       {slides.length > 1 && (

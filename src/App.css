@@ -124,6 +124,10 @@
   html, body {
     overflow-x: hidden;
     }
+  html body {
+    padding-right: 0 !important;
+    margin-right: 0 !important;
+    }
   body {
     @apply bg-background text-foreground;
     }
