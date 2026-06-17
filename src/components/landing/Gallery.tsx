@@ -11,7 +11,11 @@ interface GalleryApiItem {
   status: string;
 }
 
-export default function Gallery() {
+interface GalleryProps {
+  onNavigate?: (path: string) => void;
+}
+
+export default function Gallery({ onNavigate }: GalleryProps) {
   const [items, setItems] = useState<GalleryApiItem[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
