@@ -32,6 +32,7 @@ export const TAB_LABELS: Record<string, string> = {
   "titik-layanan": "TITIK LAYANAN",
   "produk-wb": "PRODUK WARGA BELAJAR",
   alumni: "ALUMNI",
+  "e-learning": "DASHBOARD E-LEARNING ADMIN",
   "elearning-dashboard": "DASHBOARD E-LEARNING",
 };
 
@@ -44,8 +45,20 @@ export const getTabLabel = (id: string): string => {
     if (parts[parts.length - 1] === "nilai") {
       return `NILAI – ${parts.slice(0, -1).join(" ").toUpperCase()}`;
     }
+    if (parts[parts.length - 1] === "partisipasi") {
+      return `PARTISIPASI – ${parts.slice(0, -1).join(" ").toUpperCase()}`;
+    }
     if (parts[parts.length - 1] === "pendahuluan") {
       return `PENDAHULUAN – ${parts.slice(0, -1).join(" ").toUpperCase()}`;
+    }
+    if (parts[parts.length - 1] === "sesi") {
+      return `SESI – ${parts.slice(0, -1).join(" ").toUpperCase()}`;
+    }
+    if (parts[parts.length - 1] === "tugas") {
+      return `TUGAS – ${parts.slice(0, -1).join(" ").toUpperCase()}`;
+    }
+    if (parts[parts.length - 2] === "laporan" && parts[parts.length - 1] === "nilai") {
+      return `LAPORAN & NILAI – ${parts.slice(0, -2).join(" ").toUpperCase()}`;
     }
     if (parts[parts.length - 2] === "sesi") {
       const n = parts[parts.length - 1];
@@ -80,7 +93,7 @@ export const getSubjectsSiswa = (program?: string, kelas?: string): string[] => 
 
   if (program === "Paket A") return pA;
   if (program === "Paket B") return pB;
-  if (program === "Paket C") {
+  if (program?.toLowerCase().includes("paket c")) {
     if (kelas === "Kelas 10") return pC10;
     return pC1112;
   }
@@ -159,12 +172,27 @@ export default function DashboardSidebar({
 
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1 custom-scrollbar">
 
+          {/* ── DASHBOARD E-LEARNING */}
+          <button
+            onClick={() => handleLeafClick("elearning-dashboard")}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all cursor-pointer group ${
+              activeTab === "elearning-dashboard"
+                ? "bg-white/20 text-white shadow-lg"
+                : "text-white/70 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            <span className={`transition-colors ${activeTab === "elearning-dashboard" ? "text-cyan-300" : "text-white/50 group-hover:text-cyan-300"}`}>
+              <LayoutDashboard className="h-5 w-5" />
+            </span>
+            <span className="flex-1 text-left tracking-wide">DASHBOARD</span>
+          </button>
+
           {/* ── E-LEARNING (collapsible) */}
           <div>
             <button
               onClick={() => toggleExpand("e-learning")}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all cursor-pointer group ${
-                isAncestorActive("e-learning") || activeTab === "elearning-dashboard"
+                isAncestorActive("e-learning")
                   ? "bg-white/20 text-white shadow-lg"
                   : "text-white/70 hover:bg-white/10 hover:text-white"
               }`}
@@ -180,21 +208,6 @@ export default function DashboardSidebar({
 
             {expandedMenus["e-learning"] && (
               <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-white/10 pl-3 animate-in slide-in-from-top-2 duration-200">
-
-                {/* Dashboard E-Learning */}
-                <button
-                  onClick={() => handleLeafClick("elearning-dashboard")}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-bold text-left transition-all cursor-pointer ${
-                    activeTab === "elearning-dashboard"
-                      ? "bg-white/15 text-cyan-300"
-                      : "text-white/70 hover:bg-white/10 hover:text-white/90"
-                  }`}
-                >
-                  <span className={activeTab === "elearning-dashboard" ? "text-cyan-300" : "text-white/30"}>
-                    <LayoutDashboard className="h-4 w-4" />
-                  </span>
-                  DASHBOARD
-                </button>
 
                 {/* Mata Pelajaran Saya (collapsible) */}
                 <div>
@@ -238,7 +251,7 @@ export default function DashboardSidebar({
                               </span>
                             </button>
 
-                            {/* Sub-menu: Nilai, Pendahuluan, Sesi 1–8 */}
+                            {/* Sub-menu: Partisipasi, Nilai, Pendahuluan, Sesi 1–8 */}
                             {expandedMenus[parentId] && (
                               <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-2 animate-in slide-in-from-top-1 duration-150">
                                 {["nilai", "pendahuluan", ...Array.from({ length: 8 }, (_, i) => `sesi-${i + 1}`)].map((sub) => {
@@ -314,7 +327,6 @@ export default function DashboardSidebar({
   // ─────────────────────────────────────────
   const adminMenuItems = [
     { id: "dashboard", label: "DASHBOARD", icon: <LayoutDashboard className="h-5 w-5" /> },
-    ...(userRole === "tutor" ? [{ id: "kelola-nilai", label: "KELOLA NILAI & KELAS", icon: <GraduationCap className="h-5 w-5" /> }] : []),
     {
       id: "website",
       label: "WEBSITE",
@@ -352,7 +364,26 @@ export default function DashboardSidebar({
               { id: "galeri", label: "GALERI", icon: <Image className="h-4 w-4" /> },
             ],
     },
-    { id: "e-learning", label: "E-LEARNING", icon: <BookOpen className="h-5 w-5" /> },
+    { 
+      id: "e-learning", 
+      label: "E-LEARNING", 
+      icon: <BookOpen className="h-5 w-5" />,
+      children: userRole === "tutor"
+        ? getSubjectsSiswa(user?.program, user?.kelas).map((subject) => {
+            const slug = toSlug(subject);
+            return {
+              id: `mapel-parent-${slug}`,
+              label: subject,
+              icon: <BookMarked className="h-4 w-4" />,
+              children: [
+                { id: `mapel-${slug}-pendahuluan`, label: "Pendahuluan" },
+                { id: `mapel-${slug}-sesi`, label: "Sesi" },
+                { id: `mapel-${slug}-laporan-nilai`, label: "Laporan & Nilai" },
+              ]
+            };
+          })
+        : undefined
+    },
     { id: "e-ujian", label: "E-UJIAN", icon: <FileText className="h-5 w-5" /> },
     { id: "e-spmb", label: "E-SPMB", icon: <ClipboardList className="h-5 w-5" /> },
     { id: "profil", label: "PROFIL SAYA", icon: <User className="h-5 w-5" /> },

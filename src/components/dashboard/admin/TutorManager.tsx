@@ -10,6 +10,7 @@ interface Tutor {
   nama: string;
   tutorMapel: string;
   program: string;
+  kelas?: string;
   nuptk: string;
   tempatTglLahir: string;
   jenisKelamin: string;
@@ -52,6 +53,7 @@ export default function TutorManager() {
     nama: "",
     tutorMapel: "",
     program: "",
+    kelas: "",
     nuptk: "",
     tempatTglLahir: "",
     jenisKelamin: "Laki-laki",
@@ -108,10 +110,9 @@ export default function TutorManager() {
       toast.error("Tidak ada data untuk diekspor!");
       return;
     }
-    const headers = ["NAMA", "TUTOR MAPEL", "PROGRAM", "NUPTK", "TEMPAT TGL LAHIR", "JENIS KELAMIN", "AGAMA", "PENDIDIKAN", "EMAIL", "NIK", "ALAMAT", "FOTO", "TANGGAL MULAI TUGAS", "NOMOR SK PENGANGKATAN", "LEMBAGA PENGANGKAT", "NOMOR SK PENUGASAN", "LEMBAGA PENUGAS"];
+    const headers = ["NAMA", "PROGRAM", "NUPTK", "TEMPAT TGL LAHIR", "JENIS KELAMIN", "AGAMA", "PENDIDIKAN", "EMAIL", "NIK", "ALAMAT", "FOTO", "TANGGAL MULAI TUGAS", "NOMOR SK PENGANGKATAN", "LEMBAGA PENGANGKAT", "NOMOR SK PENUGASAN", "LEMBAGA PENUGAS"];
     const rows = tutors.map(t => [
       `"${(t.nama || "").replace(/"/g, '""')}"`,
-      `"${(t.tutorMapel || "").replace(/"/g, '""')}"`,
       `"${(t.program || "").replace(/"/g, '""')}"`,
       `"${(t.nuptk || "").replace(/"/g, '""')}"`,
       `"${(t.tempatTglLahir || "").replace(/"/g, '""')}"`,
@@ -153,29 +154,27 @@ export default function TutorManager() {
 
       const mapped = mapCsvRows(rows, [
         { key: "nama", aliases: ["nama", "name"], defaultIndex: 0 },
-        { key: "tutorMapel", aliases: ["tutor mapel", "tutor mapel/kelas/program", "mapel", "mata pelajaran", "subject"], defaultIndex: 1 },
-        { key: "program", aliases: ["program", "paket"], defaultIndex: 2 },
-        { key: "nuptk", aliases: ["nuptk"], defaultIndex: 3 },
-        { key: "tempatTglLahir", aliases: ["tempat/tgl lahir", "tempat lahir", "tanggal lahir", "tempat tgllahir", "birth"], defaultIndex: 4 },
-        { key: "jenisKelamin", aliases: ["jenis kelamin", "gender", "jk"], defaultIndex: 5 },
-        { key: "agama", aliases: ["agama", "religion"], defaultIndex: 6 },
-        { key: "pendidikan", aliases: ["pendidikan", "education"], defaultIndex: 7 },
-        { key: "email", aliases: ["email", "e-mail"], defaultIndex: 8 },
-        { key: "nik", aliases: ["nik", "identitas"], defaultIndex: 9 },
-        { key: "alamat", aliases: ["alamat", "address"], defaultIndex: 10 },
-        { key: "foto", aliases: ["foto", "photo", "image", "gambar"], defaultIndex: 11 },
-        { key: "tanggalMulaiTugas", aliases: ["tanggal mulai tugas", "tmt", "start date", "tanggalmulaitugas"], defaultIndex: 12 },
-        { key: "nomorSkPengangkatan", aliases: ["nomor sk pengangkatan", "sk pengangkatan", "skpengangkatan"], defaultIndex: 13 },
-        { key: "lembagaPengangkat", aliases: ["lembaga pengangkat", "lembagapengangkat"], defaultIndex: 14 },
-        { key: "nomorSkPenugasan", aliases: ["nomor sk penugasan", "sk penugasan", "skpenugasan"], defaultIndex: 15 },
-        { key: "lembagaPenugas", aliases: ["lembaga penugas", "lembagapenugas"], defaultIndex: 16 },
+        { key: "program", aliases: ["program", "paket"], defaultIndex: 1 },
+        { key: "nuptk", aliases: ["nuptk"], defaultIndex: 2 },
+        { key: "tempatTglLahir", aliases: ["tempat/tgl lahir", "tempat lahir", "tanggal lahir", "tempat tgllahir", "birth"], defaultIndex: 3 },
+        { key: "jenisKelamin", aliases: ["jenis kelamin", "gender", "jk"], defaultIndex: 4 },
+        { key: "agama", aliases: ["agama", "religion"], defaultIndex: 5 },
+        { key: "pendidikan", aliases: ["pendidikan", "education"], defaultIndex: 6 },
+        { key: "email", aliases: ["email", "e-mail"], defaultIndex: 7 },
+        { key: "nik", aliases: ["nik", "identitas"], defaultIndex: 8 },
+        { key: "alamat", aliases: ["alamat", "address"], defaultIndex: 9 },
+        { key: "foto", aliases: ["foto", "photo", "image", "gambar"], defaultIndex: 10 },
+        { key: "tanggalMulaiTugas", aliases: ["tanggal mulai tugas", "tmt", "start date", "tanggalmulaitugas"], defaultIndex: 11 },
+        { key: "nomorSkPengangkatan", aliases: ["nomor sk pengangkatan", "sk pengangkatan", "skpengangkatan"], defaultIndex: 12 },
+        { key: "lembagaPengangkat", aliases: ["lembaga pengangkat", "lembagapengangkat"], defaultIndex: 13 },
+        { key: "nomorSkPenugasan", aliases: ["nomor sk penugasan", "sk penugasan", "skpenugasan"], defaultIndex: 14 },
+        { key: "lembagaPenugas", aliases: ["lembaga penugas", "lembagapenugas"], defaultIndex: 15 },
       ]);
 
       const importedData = mapped
-        .filter((item) => item.nama && item.tutorMapel)
+        .filter((item) => item.nama)
         .map((item) => ({
           nama: item.nama,
-          tutorMapel: item.tutorMapel,
           program: item.program || "",
           nuptk: item.nuptk || "",
           tempatTglLahir: item.tempatTglLahir || "",
@@ -194,7 +193,7 @@ export default function TutorManager() {
         }));
 
       if (importedData.length === 0) {
-        toast.error("Format data kosong atau tidak valid! Pastikan Nama dan Tutor Mapel tidak kosong.");
+        toast.error("Format data kosong atau tidak valid! Pastikan Nama tidak kosong.");
         return;
       }
 
@@ -227,6 +226,7 @@ export default function TutorManager() {
       nama: "",
       tutorMapel: "",
       program: "",
+      kelas: "",
       nuptk: "",
       tempatTglLahir: "",
       jenisKelamin: "Laki-laki",
@@ -315,8 +315,8 @@ export default function TutorManager() {
   // Save Tutor
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.nama || !formData.tutorMapel) {
-      toast.error("Nama dan Tutor Mapel wajib diisi!");
+    if (!formData.nama) {
+      toast.error("Nama wajib diisi!");
       return;
     }
 
@@ -563,7 +563,7 @@ export default function TutorManager() {
                       <tr className="bg-[#00badb] text-white font-black text-xs uppercase">
                         <th className="p-4 w-16 text-center border-r border-[#009cb9]">No</th>
                         <th className="p-4 border-r border-[#009cb9]">Nama</th>
-                        <th className="p-4 border-r border-[#009cb9] w-48 text-center">Mata Pelajaran</th>
+                        <th className="p-4 border-r border-[#009cb9] w-48 text-center">Program</th>
                         <th className="p-4 border-r border-[#009cb9] w-48 text-center">NUPTK</th>
                         <th className="p-4 border-r border-[#009cb9] w-36 text-center">Pendidikan</th>
                         <th className="p-4 text-center">Email</th>
@@ -578,7 +578,7 @@ export default function TutorManager() {
                         >
                           <td className="p-4 text-center text-slate-500 font-mono border-r border-slate-100">{idx + 1}</td>
                           <td className="p-4 font-bold text-slate-800 border-r border-slate-100">{tutor.nama}</td>
-                          <td className="p-4 text-center border-r border-slate-100 font-bold text-purple-700">{tutor.tutorMapel}</td>
+                          <td className="p-4 text-center border-r border-slate-100 font-bold text-purple-700">{tutor.program}</td>
                           <td className="p-4 text-center border-r border-slate-100 font-mono">{tutor.nuptk || "-"}</td>
                           <td className="p-4 text-center border-r border-slate-100">{tutor.pendidikan || "-"}</td>
                           <td className="p-4 text-center text-slate-500 font-mono">{tutor.email || "-"}</td>
@@ -658,30 +658,64 @@ export default function TutorManager() {
                       />
                     </div>
 
-                    {/* TUTOR MAPEL */}
-                    <div className="flex flex-col md:flex-row md:items-center gap-3">
-                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">TUTOR MAPEL</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Contoh: Tutor Ekonomi / Tutor PJOK"
-                        value={formData.tutorMapel || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, tutorMapel: e.target.value }))}
-                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                      />
-                    </div>
-
                     {/* PROGRAM (TUGAS) */}
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
-                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">PROGRAM (TUGAS)</label>
-                      <input
-                        type="text"
-                        placeholder="Contoh: PAKET B / PAKET C"
+                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">PROGRAM / PAKET</label>
+                      <select
+                        required
                         value={formData.program || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, program: e.target.value }))}
-                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                      />
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, program: e.target.value, kelas: "", tutorMapel: "" }));
+                        }}
+                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                      >
+                        <option value="" disabled>Pilih Program / Paket</option>
+                        <option value="Paket A">Paket A</option>
+                        <option value="Paket B">Paket B</option>
+                        <option value="Paket C">Paket C</option>
+                      </select>
                     </div>
+
+                    {/* KELAS */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">KELAS</label>
+                      <select
+                        required
+                        disabled={!formData.program}
+                        value={formData.kelas || ""}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, kelas: e.target.value, tutorMapel: "" }));
+                        }}
+                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                      >
+                        <option value="" disabled>Pilih Kelas</option>
+                        {formData.program === "Paket A" && (
+                          <>
+                            <option value="Kelas I">Kelas I</option>
+                            <option value="Kelas II">Kelas II</option>
+                            <option value="Kelas III">Kelas III</option>
+                            <option value="Kelas IV">Kelas IV</option>
+                            <option value="Kelas V">Kelas V</option>
+                            <option value="Kelas VI">Kelas VI</option>
+                          </>
+                        )}
+                        {formData.program === "Paket B" && (
+                          <>
+                            <option value="Kelas VII">Kelas VII</option>
+                            <option value="Kelas VIII">Kelas VIII</option>
+                            <option value="Kelas IX">Kelas IX</option>
+                          </>
+                        )}
+                        {formData.program === "Paket C" && (
+                          <>
+                            <option value="Kelas X">Kelas X</option>
+                            <option value="Kelas XI">Kelas XI</option>
+                            <option value="Kelas XII">Kelas XII</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+
 
                     {/* NUPTK */}
                     <div className="flex flex-col md:flex-row md:items-center gap-3">

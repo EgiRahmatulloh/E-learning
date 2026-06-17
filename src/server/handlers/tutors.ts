@@ -84,7 +84,7 @@ export const tutorsHandlers = new Elysia()
           .insert(tutors)
           .values({
             nama,
-            tutorMapel,
+            tutorMapel: tutorMapel || "",
             program: program || "",
             nuptk: nuptk || "",
             tempatTglLahir: tempatTglLahir || "",
@@ -116,7 +116,7 @@ export const tutorsHandlers = new Elysia()
     {
       body: t.Object({
         nama: t.String({ minLength: 1 }),
-        tutorMapel: t.String({ minLength: 1 }),
+        tutorMapel: t.Optional(t.String()),
         program: t.Optional(t.String()),
         nuptk: t.Optional(t.String()),
         tempatTglLahir: t.Optional(t.String()),
@@ -186,7 +186,7 @@ export const tutorsHandlers = new Elysia()
           .update(tutors)
           .set({
             nama,
-            tutorMapel,
+            tutorMapel: tutorMapel || "",
             program: program ?? existing.program,
             nuptk: nuptk ?? existing.nuptk,
             tempatTglLahir: tempatTglLahir ?? existing.tempatTglLahir,
@@ -220,7 +220,7 @@ export const tutorsHandlers = new Elysia()
     {
       body: t.Object({
         nama: t.String({ minLength: 1 }),
-        tutorMapel: t.String({ minLength: 1 }),
+        tutorMapel: t.Optional(t.String()),
         program: t.Optional(t.String()),
         nuptk: t.Optional(t.String()),
         tempatTglLahir: t.Optional(t.String()),
@@ -278,9 +278,7 @@ export const tutorsHandlers = new Elysia()
             item &&
             typeof item === "object" &&
             typeof item.nama === "string" &&
-            item.nama.trim().length > 0 &&
-            typeof item.tutorMapel === "string" &&
-            item.tutorMapel.trim().length > 0
+            item.nama.trim().length > 0
         );
 
         if (validItems.length === 0) {
@@ -291,7 +289,7 @@ export const tutorsHandlers = new Elysia()
         const defaultPassword = await Bun.password.hash("password123");
         const insertValues = validItems.map((item) => ({
           nama: item.nama,
-          tutorMapel: item.tutorMapel,
+          tutorMapel: typeof item.tutorMapel === "string" ? item.tutorMapel : "",
           program: typeof item.program === "string" ? item.program : "",
           nuptk: typeof item.nuptk === "string" ? item.nuptk : "",
           tempatTglLahir: typeof item.tempatTglLahir === "string" ? item.tempatTglLahir : "",
@@ -331,7 +329,7 @@ export const tutorsHandlers = new Elysia()
       body: t.Array(
         t.Object({
           nama: t.String({ minLength: 1 }),
-          tutorMapel: t.String({ minLength: 1 }),
+          tutorMapel: t.Optional(t.String()),
           program: t.Optional(t.String()),
           nuptk: t.Optional(t.String()),
           tempatTglLahir: t.Optional(t.String()),

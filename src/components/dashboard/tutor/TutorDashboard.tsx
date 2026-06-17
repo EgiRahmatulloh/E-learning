@@ -1,79 +1,57 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2 } from "lucide-react";
+import { BookOpen, CalendarDays, FileText, BarChart3, ArrowLeft } from "lucide-react";
 
 export function TutorDashboard() {
-  const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
-
-  const showToast = (message: string) => {
-    setToast({ message, show: true });
-    const timer = setTimeout(() => {
-      setToast({ message: "", show: false });
-    }, 3000);
-    return () => clearTimeout(timer);
-  };
-
   return (
-    <Card className="border-slate-200/60 bg-white p-6 rounded-2xl shadow-sm space-y-6 animate-in fade-in duration-300 relative">
+    <div className="space-y-6 animate-in fade-in duration-300">
       <div>
-        <h3 className="text-lg font-black text-[#280f91]">Penilaian Warga Belajar</h3>
-        <p className="text-xs text-slate-500 font-semibold">Silakan berikan evaluasi nilai tugas mingguan warga belajar Paket B & C.</p>
+        <h2 className="text-2xl font-black text-[#280f91]">E-Learning Ruang Tutor</h2>
+        <p className="text-sm text-slate-500 font-medium mt-1">
+          Pilih mata pelajaran di sidebar sebelah kiri untuk mulai mengelola kelas Anda.
+        </p>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm border-collapse">
-          <thead>
-            <tr className="border-b border-slate-100 text-slate-400 font-black text-xs uppercase tracking-widest">
-              <th className="py-3 px-4">Nama Siswa</th>
-              <th className="py-3 px-4">Mata Pelajaran</th>
-              <th className="py-3 px-4">Tugas Terakhir</th>
-              <th className="py-3 px-4">Nilai Saat Ini</th>
-              <th className="py-3 px-4">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b border-slate-50 font-medium text-slate-700 hover:bg-slate-50/50 transition-colors">
-              <td className="py-4 px-4 font-black text-slate-800">Ahmad Fauzi</td>
-              <td className="py-4 px-4 text-xs">Pendidikan Kewarganegaraan</td>
-              <td className="py-4 px-4 text-xs font-bold text-[#ff6105]">Tugas 3: Integrasi Sosial</td>
-              <td className="py-4 px-4 font-black text-slate-800">85 / 100</td>
-              <td className="py-4 px-4">
-                <Button 
-                  onClick={() => showToast("Nilai Ahmad Fauzi berhasil disimpan!")}
-                  size="sm" 
-                  className="rounded-lg bg-[#280f91] hover:bg-[#ff6105] text-white font-bold text-xs h-8 px-3 cursor-pointer transition-colors"
-                >
-                  Update Nilai
-                </Button>
-              </td>
-            </tr>
-            <tr className="border-b border-slate-50 font-medium text-slate-700 hover:bg-slate-50/50 transition-colors">
-              <td className="py-4 px-4 font-black text-slate-800">Siti Rahma</td>
-              <td className="py-4 px-4 text-xs">Bahasa Indonesia</td>
-              <td className="py-4 px-4 text-xs font-bold text-[#ff6105]">Tugas 4: Artikel Opini</td>
-              <td className="py-4 px-4 font-black text-slate-800">90 / 100</td>
-              <td className="py-4 px-4">
-                <Button 
-                  onClick={() => showToast("Nilai Siti Rahma berhasil disimpan!")}
-                  size="sm" 
-                  className="rounded-lg bg-[#280f91] hover:bg-[#ff6105] text-white font-bold text-xs h-8 px-3 cursor-pointer transition-colors"
-                >
-                  Update Nilai
-                </Button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+        <Card className="p-6 border-slate-200/60 bg-white shadow-sm rounded-2xl flex flex-col items-center text-center hover:shadow-md transition-shadow">
+          <div className="w-12 h-12 rounded-full bg-[#ff6105]/10 text-[#ff6105] flex items-center justify-center mb-4">
+            <BookOpen className="w-6 h-6" />
+          </div>
+          <h3 className="font-bold text-slate-800">Pendahuluan</h3>
+          <p className="text-xs text-slate-500 mt-2">Unggah kontrak kuliah dan perkenalan dengan mahasiswa.</p>
+        </Card>
+
+        <Card className="p-6 border-slate-200/60 bg-white shadow-sm rounded-2xl flex flex-col items-center text-center hover:shadow-md transition-shadow">
+          <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-4">
+            <CalendarDays className="w-6 h-6" />
+          </div>
+          <h3 className="font-bold text-slate-800">Manajemen Sesi</h3>
+          <p className="text-xs text-slate-500 mt-2">Atur kehadiran, materi pengayaan, dan diskusi mingguan.</p>
+        </Card>
+
+        <Card className="p-6 border-slate-200/60 bg-white shadow-sm rounded-2xl flex flex-col items-center text-center hover:shadow-md transition-shadow">
+          <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
+            <FileText className="w-6 h-6" />
+          </div>
+          <h3 className="font-bold text-slate-800">Manajemen Tugas</h3>
+          <p className="text-xs text-slate-500 mt-2">Unggah soal dan berikan nilai pada lembar jawaban mahasiswa.</p>
+        </Card>
+
+        <Card className="p-6 border-slate-200/60 bg-white shadow-sm rounded-2xl flex flex-col items-center text-center hover:shadow-md transition-shadow">
+          <div className="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mb-4">
+            <BarChart3 className="w-6 h-6" />
+          </div>
+          <h3 className="font-bold text-slate-800">Laporan & Nilai</h3>
+          <p className="text-xs text-slate-500 mt-2">Rekapitulasi partisipasi kelas dan ekspor laporan nilai akhir.</p>
+        </Card>
       </div>
 
-      {/* Floating Modern Toast Notification */}
-      {toast.show && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-slate-900/95 backdrop-blur-md text-white px-5 py-4 rounded-2xl shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-6 duration-300">
-          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-          <span className="text-sm font-bold tracking-tight">{toast.message}</span>
-        </div>
-      )}
-    </Card>
+      <Card className="p-8 border-dashed border-2 border-slate-300 bg-slate-50/50 rounded-2xl flex flex-col items-center justify-center text-center mt-8">
+        <ArrowLeft className="w-10 h-10 text-slate-400 mb-3 animate-pulse" />
+        <h3 className="text-lg font-black text-slate-700">Silakan Buka Menu Sidebar</h3>
+        <p className="text-sm text-slate-500 max-w-sm mt-2">
+          Klik tombol navigasi di kiri untuk memilih Mata Pelajaran yang Anda ampu pada semester ini.
+        </p>
+      </Card>
+    </div>
   );
 }

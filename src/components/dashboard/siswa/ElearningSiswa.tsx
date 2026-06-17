@@ -8,8 +8,13 @@ import {
   PlayCircle,
   BookOpen,
   SortAsc,
+  ChevronLeft,
 } from "lucide-react";
 import { getSubjectsSiswa } from "../DashboardSidebar";
+import { MapelPartisipasi } from "./elearning/MapelPartisipasi";
+import { MapelNilai } from "./elearning/MapelNilai";
+import { MapelPendahuluan } from "./elearning/MapelPendahuluan";
+import { MapelSesi } from "./elearning/MapelSesi";
 
 interface ElearningSiswaProps {
   activeTab: string;
@@ -102,49 +107,116 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
     return result;
   }, [allSubjects, hiddenSubjects, filter, searchQuery, sortBy]);
 
+  // Contoh: mapel-matematika-sesi-3 → slug=matematika, sub=sesi-3
+  const withoutPrefix = activeTab.replace("mapel-", "");
+  // Cari slug subjek yang cocok
+  const matchedSubject = allSubjects.find((s) => withoutPrefix === s.slug || withoutPrefix.startsWith(s.slug + "-"));
+  const subPart = matchedSubject
+    ? withoutPrefix.replace(matchedSubject.slug + "-", "")
+    : withoutPrefix;
+
+  const subLabel =
+    subPart === "partisipasi" ? "Partisipasi"
+    : subPart === "nilai" ? "Nilai"
+    : subPart === "pendahuluan" ? "Pendahuluan"
+    : subPart.startsWith("sesi-") ? `Sesi ${subPart.replace("sesi-", "")}`
+    : subPart;
+
+  const mapelContent = useMemo(() => {
+    const subjectName = matchedSubject?.name || "Mata Pelajaran";
+    const tutorName = matchedSubject?.tutor || "Tutor";
+    
+    if (subPart === "partisipasi") return <MapelPartisipasi subjectName={subjectName} tutorName={tutorName} />;
+    if (subPart === "nilai") return <MapelNilai subjectName={subjectName} />;
+    if (subPart === "pendahuluan") return <MapelPendahuluan subjectName={subjectName} user={user} />;
+    if (subPart.startsWith("sesi-")) {
+      const sessionNumber = parseInt(subPart.replace("sesi-", ""), 10);
+      if (!isNaN(sessionNumber)) {
+        return <MapelSesi subjectName={subjectName} sessionNumber={sessionNumber} user={user} />;
+      }
+    }
+    return (
+      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-8 text-center space-y-4">
+        <BookOpen className="h-14 w-14 text-slate-300 mx-auto" />
+        <h3 className="text-lg font-black text-slate-700">Konten sedang disiapkan</h3>
+        <p className="text-sm text-slate-500 max-w-md mx-auto">
+          Halaman <span className="font-bold text-[#280f91]">{subLabel}</span> untuk mata pelajaran{" "}
+          <span className="font-bold text-[#280f91]">{matchedSubject?.name || "terpilih"}</span> sedang dalam pengembangan.
+        </p>
+      </div>
+    );
+  }, [subPart, matchedSubject, subLabel]);
+
   // ──── Halaman Detail (Nilai / Pendahuluan / Sesi)
   if (isMapelDetail) {
-    // Contoh: mapel-matematika-sesi-3 → slug=matematika, sub=sesi-3
-    const withoutPrefix = activeTab.replace("mapel-", "");
-    // Cari slug subjek yang cocok
-    const matchedSubject = allSubjects.find((s) => withoutPrefix.startsWith(s.slug + "-"));
-    const subPart = matchedSubject
-      ? withoutPrefix.replace(matchedSubject.slug + "-", "")
-      : withoutPrefix;
+    const menus = [
+      { id: "partisipasi", label: "Partisipasi" },
+      { id: "nilai", label: "Nilai" },
+      { id: "pendahuluan", label: "Pendahuluan" },
+      { id: "sesi-1", label: "Sesi 1" },
+      { id: "sesi-2", label: "Sesi 2" },
+      { id: "sesi-3", label: "Sesi 3" },
+      { id: "sesi-4", label: "Sesi 4" },
+      { id: "sesi-5", label: "Sesi 5" },
+      { id: "sesi-6", label: "Sesi 6" },
+      { id: "sesi-7", label: "Sesi 7" },
+      { id: "sesi-8", label: "Sesi 8" },
+    ];
+    const currentIndex = menus.findIndex((m) => m.id === subPart);
+    const prevMenu = currentIndex > 0 ? menus[currentIndex - 1] : null;
+    const nextMenu = currentIndex >= 0 && currentIndex < menus.length - 1 ? menus[currentIndex + 1] : null;
 
-    const subLabel =
-      subPart === "nilai" ? "Nilai"
-      : subPart === "pendahuluan" ? "Pendahuluan"
-      : subPart.startsWith("sesi-") ? `Sesi ${subPart.replace("sesi-", "")}`
-      : subPart;
+    const handleNavigate = (menuId: string) => {
+      if (setActiveTab && matchedSubject) {
+        setActiveTab(`mapel-${matchedSubject.slug}-${menuId}`);
+      }
+    };
 
     return (
       <div className="space-y-6 animate-in fade-in duration-300">
         {/* Header card */}
-        <div className={`rounded-3xl bg-gradient-to-br ${matchedSubject?.gradient ?? "from-cyan-500 to-cyan-700"} p-8 text-white shadow-lg`}>
-          <p className="text-sm font-bold text-white/70 mb-1 uppercase tracking-widest">
+        <div className={`rounded-3xl bg-gradient-to-br ${matchedSubject?.gradient ?? "from-cyan-500 to-cyan-700"} p-8 text-white shadow-lg relative`}>
+          {setActiveTab && (
+            <button
+              onClick={() => setActiveTab("elearning-dashboard")}
+              className="absolute top-6 right-6 h-10 px-4 rounded-xl bg-white/20 hover:bg-white/30 transition-all font-bold text-sm flex items-center gap-2 backdrop-blur-sm cursor-pointer"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Kembali
+            </button>
+          )}
+          <p className="text-sm font-bold text-white/70 mb-1 uppercase tracking-widest mt-2 sm:mt-0">
             {matchedSubject?.name}
           </p>
           <h1 className="text-3xl font-black">{subLabel}</h1>
           <p className="text-sm text-white/70 mt-2">{matchedSubject?.tutor}</p>
         </div>
 
-        {/* Placeholder konten */}
-        <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-8 text-center space-y-4">
-          <BookOpen className="h-14 w-14 text-slate-300 mx-auto" />
-          <h3 className="text-lg font-black text-slate-700">Konten sedang disiapkan</h3>
-          <p className="text-sm text-slate-500 max-w-md mx-auto">
-            Halaman <span className="font-bold text-[#280f91]">{subLabel}</span> untuk mata pelajaran{" "}
-            <span className="font-bold text-[#280f91]">{matchedSubject?.name || "terpilih"}</span> sedang dalam pengembangan.
-          </p>
-          {setActiveTab && (
+        {/* Dinamis konten */}
+        {mapelContent}
+
+        {/* Navigasi Bawah */}
+        <div className="flex items-center justify-between mt-8 pt-4">
+          {prevMenu ? (
             <Button
-              onClick={() => setActiveTab("elearning-dashboard")}
-              className="mt-4 rounded-xl bg-gradient-to-r from-[#280f91] to-[#3a1bca] hover:from-[#3a1bca] hover:to-[#4b28e6] text-white font-bold px-6 h-10 shadow-md shadow-[#280f91]/20 cursor-pointer transition-all"
+              onClick={() => handleNavigate(prevMenu.id)}
+              variant="outline"
+              className="rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-bold px-6 h-12"
             >
-              Kembali ke Daftar Mata Pelajaran
+              <ChevronLeft className="h-4 w-4 mr-2" />
+              {prevMenu.label}
             </Button>
-          )}
+          ) : <div />}
+
+          {nextMenu ? (
+            <Button
+              onClick={() => handleNavigate(nextMenu.id)}
+              className="rounded-xl bg-[#280f91] hover:bg-[#3a1bca] text-white font-bold px-6 h-12 shadow-md shadow-[#280f91]/20"
+            >
+              {nextMenu.label}
+              <ChevronLeft className="h-4 w-4 ml-2 rotate-180" />
+            </Button>
+          ) : <div />}
         </div>
       </div>
     );
@@ -266,8 +338,8 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
                   {openMenuId === subject.id && (
                     <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-xl shadow-xl border border-slate-100 z-20 py-1 animate-in fade-in duration-150">
                       <button
-                        onClick={() => { setOpenMenuId(null); }}
-                        className="w-full text-left px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                        onClick={() => { setOpenMenuId(null); setActiveTab?.(`mapel-${subject.slug}-pendahuluan`); }}
+                        className="w-full text-left px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer"
                       >
                         <PlayCircle className="h-3.5 w-3.5 inline mr-2 text-[#280f91]" />
                         Mulai Materi ini
@@ -277,7 +349,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
                           setHiddenSubjects((prev) => new Set([...prev, subject.id]));
                           setOpenMenuId(null);
                         }}
-                        className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50"
+                        className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 cursor-pointer"
                       >
                         Hapus dari tampilan
                       </button>
@@ -316,7 +388,8 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
 
                   {/* CTA Button */}
                   <Button
-                    className={`rounded-xl font-bold bg-[#ff6105] hover:bg-[#e05404] text-white text-xs shadow-md shadow-orange-400/20 transition-all ${
+                    onClick={() => setActiveTab?.(`mapel-${subject.slug}-pendahuluan`)}
+                    className={`rounded-xl font-bold bg-[#ff6105] hover:bg-[#e05404] text-white text-xs shadow-md shadow-orange-400/20 transition-all cursor-pointer ${
                       viewMode === "card" ? "w-full" : ""
                     }`}
                     size="sm"

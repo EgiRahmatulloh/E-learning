@@ -7,7 +7,6 @@ import {
   LogOut,
 } from "lucide-react";
 import { AdminDashboard } from "./admin/AdminDashboard";
-import { TutorDashboard } from "./tutor/TutorDashboard";
 import { ElearningSiswa } from "./siswa/ElearningSiswa";
 import { HeaderManager } from "./admin/HeaderManager";
 import AnnouncementManager from "./admin/AnnouncementManager";
@@ -26,12 +25,20 @@ import DownloadsManager from "./admin/DownloadsManager";
 import ProductsManager from "./admin/ProductsManager";
 import AlumniManager from "./admin/AlumniManager";
 import GalleryManager from "./admin/GalleryManager";
+import ElearningAdminDashboard from "./admin/elearning/ElearningAdminDashboard";
 
 // Dashboard Sub-components
 import DashboardSidebar, { getTabLabel } from "./DashboardSidebar";
 import DashboardRightSidebar from "./DashboardRightSidebar";
 import WelcomeBanner from "./WelcomeBanner";
 import RoleStatsGrid from "./RoleStatsGrid";
+
+// Tutor Sub-components
+import PendahuluanTab from "./tutor/elearning/PendahuluanTab";
+import SesiKelasTab from "./tutor/elearning/SesiKelasTab";
+import ManajemenTugasTab from "./tutor/elearning/ManajemenTugasTab";
+import LaporanNilaiTab from "./tutor/elearning/LaporanNilaiTab";
+import { TutorDashboard } from "./tutor/TutorDashboard";
 
 interface DashboardPageProps {
   user: { id: number; name: string; username: string; role: string; email?: string; noHp?: string; alamat?: string; nik?: string; program?: string; kelas?: string };
@@ -121,6 +128,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
         <div className="space-y-6 animate-in fade-in duration-500">
           <WelcomeBanner userName={user.name} userRole={user.role} />
           <RoleStatsGrid userRole={user.role} />
+          {user.role === "tutor" && <TutorDashboard />}
         </div>
       );
     }
@@ -128,11 +136,10 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       return (
         <div className="space-y-6">
           {user.role === "admin" && <AdminDashboard />}
-          {user.role === "tutor" && <TutorDashboard />}
         </div>
       );
     }
-    if (activeTab === "elearning-dashboard" || activeTab.startsWith("mapel-")) {
+    if (activeTab === "elearning-dashboard" || activeTab === "e-learning" || activeTab.startsWith("mapel-")) {
       if (user.role === "siswa") {
         return (
           <div className="space-y-6 animate-in fade-in duration-300">
@@ -140,7 +147,29 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
           </div>
         );
       }
-      // Placeholder for tutor or admin e-learning can go here later
+      
+      if (user.role === "admin" || user.role === "super_admin") {
+        return (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <ElearningAdminDashboard />
+          </div>
+        );
+      }
+      
+      if (user.role === "tutor") {
+        if (activeTab.endsWith("-pendahuluan")) {
+          return <div className="space-y-6 animate-in fade-in duration-300"><PendahuluanTab activeTab={activeTab} user={user} /></div>;
+        }
+        if (activeTab.endsWith("-sesi")) {
+          return <div className="space-y-6 animate-in fade-in duration-300"><SesiKelasTab activeTab={activeTab} user={user} /></div>;
+        }
+        if (activeTab.endsWith("-tugas")) {
+          return <div className="space-y-6 animate-in fade-in duration-300"><ManajemenTugasTab activeTab={activeTab} user={user} /></div>;
+        }
+        if (activeTab.endsWith("-laporan-nilai")) {
+          return <div className="space-y-6 animate-in fade-in duration-300"><LaporanNilaiTab activeTab={activeTab} user={user} /></div>;
+        }
+      }
     }
     if (activeTab === "profil") {
       return (
@@ -598,7 +627,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
 
               {/* Page Title */}
               <h1 className="text-xl sm:text-2xl font-black text-cyan-900 tracking-tight uppercase">
-                {getTabLabel(activeTab)}
+                PKBM MENUJU MAKMUR
               </h1>
             </div>
 

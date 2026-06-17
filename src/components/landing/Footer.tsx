@@ -98,9 +98,9 @@ export default function Footer() {
           <div className="space-y-4">
             <h4 className="text-xs font-black text-white uppercase tracking-wider">Layanan Pintar</h4>
             <ul className="space-y-2 text-xs font-semibold text-slate-500">
-              <li><a href="#beranda" className="hover:text-white transition-colors">Pendaftaran (E-SPMB)</a></li>
-              <li><a href="#beranda" className="hover:text-white transition-colors">E-Learning Siswa</a></li>
-              <li><a href="#beranda" className="hover:text-white transition-colors">Ujian & Evaluasi</a></li>
+              <li><a href="#beranda" className="hover:text-white transition-colors">E-SPMB</a></li>
+              <li><a href="#beranda" className="hover:text-white transition-colors">E-LEARNING</a></li>
+              <li><a href="#beranda" className="hover:text-white transition-colors">E-UJIAN</a></li>
             </ul>
           </div>
 

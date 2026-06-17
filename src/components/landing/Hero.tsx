@@ -157,13 +157,6 @@ export default function Hero({ onServiceClick }: HeroProps) {
     }, 400);
   }, [startAutoSlide]);
 
-  const prevSlide = useCallback(() => {
-    goToSlide((currentSlide - 1 + slides.length) % slides.length);
-  }, [currentSlide, slides.length, goToSlide]);
-
-  const nextSlide = useCallback(() => {
-    goToSlide((currentSlide + 1) % slides.length);
-  }, [currentSlide, slides.length, goToSlide]);
 
   return (
     <section id="beranda" className="relative w-full overflow-hidden h-screen min-h-screen">
@@ -173,7 +166,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
           <div
             key={idx}
             className="absolute inset-0 transition-opacity duration-700 ease-in-out bg-slate-950"
-            style={{ 
+            style={{
               opacity: idx === currentSlide && !isTransitioning ? 1 : 0,
               zIndex: idx === currentSlide ? 1 : 0
             }}
@@ -251,11 +244,10 @@ export default function Hero({ onServiceClick }: HeroProps) {
                   <button
                     key={idx}
                     onClick={() => goToSlide(idx)}
-                    className={`h-3 rounded-full transition-all duration-500 cursor-pointer ${
-                      idx === currentSlide
+                    className={`h-3 rounded-full transition-all duration-500 cursor-pointer ${idx === currentSlide
                         ? "w-10 bg-[#cafc05] shadow-md shadow-[#cafc05]/30"
                         : "w-3 bg-white/40 hover:bg-white/70"
-                    }`}
+                      }`}
                     aria-label={`Slide ${idx + 1}`}
                   />
                 ))}
@@ -349,7 +341,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
             <ChevronRight className="h-7 w-7" />
           </button>
         </>
-      )}
+      )} */}
 
       {/* ===== MOBILE: Slider controls at bottom ===== */}
       {slides.length > 1 && (

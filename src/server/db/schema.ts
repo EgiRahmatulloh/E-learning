@@ -353,3 +353,99 @@ export const gallery = sqliteTable('gallery', {
 
 export type GalleryItemType = typeof gallery.$inferSelect;
 export type NewGalleryItem = typeof gallery.$inferInsert;
+
+// ==========================================
+// E-LEARNING TABLES
+// ==========================================
+
+export const elearningCourses = sqliteTable('elearning_courses', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  namaMapel: text('nama_mapel').notNull().default(''),
+  program: text('program').notNull().default(''),
+  kelas: text('kelas').notNull().default(''),
+  deskripsi: text('deskripsi').notNull().default(''),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at')
+    .$defaultFn(() => new Date().toISOString())
+    .$onUpdate(() => new Date().toISOString()),
+});
+
+export type ElearningCourse = typeof elearningCourses.$inferSelect;
+export type NewElearningCourse = typeof elearningCourses.$inferInsert;
+
+export const elearningCourseTutors = sqliteTable('elearning_course_tutors', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  courseId: integer('course_id').notNull().references(() => elearningCourses.id, { onDelete: 'cascade' }),
+  tutorId: integer('tutor_id').notNull().references(() => tutors.id, { onDelete: 'cascade' }),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+});
+
+export const elearningCourseStudents = sqliteTable('elearning_course_students', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  courseId: integer('course_id').notNull().references(() => elearningCourses.id, { onDelete: 'cascade' }),
+  studentId: integer('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+});
+
+export const elearningSessions = sqliteTable('elearning_sessions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  courseId: integer('course_id').notNull().references(() => elearningCourses.id, { onDelete: 'cascade' }),
+  sessionNumber: integer('session_number').notNull(), // 1 - 8
+  title: text('title').notNull().default(''),
+  description: text('description').notNull().default(''),
+  startDate: text('start_date'),
+  endDate: text('end_date'),
+  isEvaluation: integer('is_evaluation', { mode: 'boolean' }).notNull().default(false),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at')
+    .$defaultFn(() => new Date().toISOString())
+    .$onUpdate(() => new Date().toISOString()),
+});
+
+export type ElearningSession = typeof elearningSessions.$inferSelect;
+export type NewElearningSession = typeof elearningSessions.$inferInsert;
+
+export const elearningMaterials = sqliteTable('elearning_materials', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  sessionId: integer('session_id').notNull().references(() => elearningSessions.id, { onDelete: 'cascade' }),
+  title: text('title').notNull().default(''),
+  type: text('type').notNull().default('PPT'), // PPT, Video, PDF
+  fileUrl: text('file_url').notNull().default(''),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+});
+
+export const elearningAssignments = sqliteTable('elearning_assignments', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  sessionId: integer('session_id').notNull(),
+  title: text('title').notNull().default(''),
+  description: text('description').notNull().default(''),
+  dueDate: text('due_date'),
+  fileUrl: text('file_url').notNull().default(''),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+});
+
+export const elearningEvaluations = sqliteTable('elearning_evaluations', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  sessionId: integer('session_id').notNull(), // normally session 7
+  question: text('question').notNull().default(''),
+  scaleMax: integer('scale_max').notNull().default(5),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+});
+
+export const elearningDiscussions = sqliteTable('elearning_discussions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  sessionId: integer('session_id').notNull(),
+  question: text('question').notNull().default(''),
+  creatorId: integer('creator_id').notNull(),
+  creatorRole: text('creator_role').notNull().default('tutor'),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+});
+
+export const elearningLogs = sqliteTable('elearning_logs', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  action: text('action').notNull(), // e.g., 'LOGIN', 'SUBMIT_ASSIGNMENT', 'GRADE_ASSIGNMENT'
+  userId: integer('user_id'),
+  userRole: text('user_role'),
+  details: text('details').notNull().default(''),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+});
