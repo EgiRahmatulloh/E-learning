@@ -67,12 +67,12 @@ export default function WargaBelajar(_props: WargaBelajarProps) {
   const filteredStudents = studentsList.filter((student) => {
     // Only display active or graduated students, but hide details based on search
     const matchesSearch = student.nama.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     let matchesProgram = true;
     if (selectedProgramFilter) {
       matchesProgram = student.program.toUpperCase() === selectedProgramFilter.toUpperCase();
     }
-    
+
     return matchesSearch && matchesProgram;
   });
 
@@ -85,14 +85,14 @@ export default function WargaBelajar(_props: WargaBelajarProps) {
   return (
     <section id="warga-belajar" className="pt-6 pb-12 bg-white border-y border-slate-300 relative overflow-hidden min-h-[85vh]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-        
+
 
 
         {/* Centered Title */}
         <div className="text-center max-w-4xl mx-auto space-y-4 mb-10">
           <span className="text-xs font-black uppercase tracking-widest text-[#280f91] bg-slate-200/60 rounded-full px-5 py-2 inline-block mb-2">WARGA BELAJAR</span>
           <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-center leading-none drop-shadow-sm">
-            <span className="text-[#280f91]">Warga Belajar</span> <span className="text-[#ff6105]">PKBM MENUJU MAKMUR</span>
+            <span className="text-[#280f91]">WARGA BELAJAR</span> <span className="text-[#ff6105]">PKBM MENUJU MAKMUR</span>
           </h2>
           <p className="text-slate-700 font-bold text-xs sm:text-sm leading-relaxed px-4 max-w-2xl mx-auto">
             Warga Belajar PKBM Menuju Makmur merupakan peserta didik yang bersemangat dalam menempuh pendidikan non-formal guna mencapai cita-cita, meningkatkan kompetensi, dan berkontribusi bagi masyarakat.
@@ -105,41 +105,37 @@ export default function WargaBelajar(_props: WargaBelajarProps) {
           <div className="flex gap-2.5 flex-wrap justify-center w-full md:w-auto">
             <button
               onClick={() => setSelectedProgramFilter(null)}
-              className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wider transition-all uppercase cursor-pointer ${
-                selectedProgramFilter === null
+              className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wider transition-all uppercase cursor-pointer ${selectedProgramFilter === null
                   ? "bg-[#280f91] text-white shadow-md shadow-[#280f91]/20"
                   : "bg-slate-100 text-slate-655 hover:bg-slate-200"
-              }`}
+                }`}
             >
               Semua Paket
             </button>
             <button
               onClick={() => setSelectedProgramFilter("PAKET A")}
-              className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wider transition-all uppercase cursor-pointer ${
-                selectedProgramFilter === "PAKET A"
+              className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wider transition-all uppercase cursor-pointer ${selectedProgramFilter === "PAKET A"
                   ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
                   : "bg-slate-100 text-slate-655 hover:bg-slate-200"
-              }`}
+                }`}
             >
               Paket A
             </button>
             <button
               onClick={() => setSelectedProgramFilter("PAKET B")}
-              className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wider transition-all uppercase cursor-pointer ${
-                selectedProgramFilter === "PAKET B"
+              className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wider transition-all uppercase cursor-pointer ${selectedProgramFilter === "PAKET B"
                   ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
                   : "bg-slate-100 text-slate-655 hover:bg-slate-200"
-              }`}
+                }`}
             >
               Paket B
             </button>
             <button
               onClick={() => setSelectedProgramFilter("PAKET C")}
-              className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wider transition-all uppercase cursor-pointer ${
-                selectedProgramFilter === "PAKET C"
+              className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wider transition-all uppercase cursor-pointer ${selectedProgramFilter === "PAKET C"
                   ? "bg-amber-500 text-white shadow-md shadow-amber-500/20"
                   : "bg-slate-100 text-slate-655 hover:bg-slate-200"
-              }`}
+                }`}
             >
               Paket C
             </button>
@@ -170,35 +166,34 @@ export default function WargaBelajar(_props: WargaBelajarProps) {
               {currentStudents.map((student) => (
                 <Dialog key={student.id}>
                   <DialogTrigger asChild>
-                    <div 
+                    <div
                       className="bg-white rounded-2xl overflow-hidden shadow-sm p-3 flex flex-col justify-between border border-slate-200 group hover:-translate-y-1.5 hover:shadow-md transition-all duration-300 cursor-pointer"
                     >
                       {/* Photo Frame */}
                       <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-slate-100 mb-3 border border-slate-100">
                         {student.foto ? (
-                          <img 
-                            src={student.foto} 
-                            alt={student.nama} 
+                          <img
+                            src={student.foto}
+                            alt={student.nama}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         ) : (
                           <div className="w-full h-full bg-slate-100 flex flex-col items-center justify-center text-slate-300">
                             <svg className="w-16 h-16 opacity-30" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                             </svg>
                           </div>
                         )}
 
                         {/* Program overlay tag (top-left) */}
                         <div className="absolute top-2 left-2 z-10">
-                          <span className={`inline-block text-white font-extrabold text-[7px] px-2 py-0.5 rounded-full uppercase shadow-md tracking-wider ${
-                            student.program.includes("C") ? "bg-[#ffb300]" : student.program.includes("B") ? "bg-blue-600" : "bg-emerald-600"
-                          }`}>
+                          <span className={`inline-block text-white font-extrabold text-[7px] px-2 py-0.5 rounded-full uppercase shadow-md tracking-wider ${student.program.includes("C") ? "bg-[#ffb300]" : student.program.includes("B") ? "bg-blue-600" : "bg-emerald-600"
+                            }`}>
                             {student.program}
                           </span>
                         </div>
                       </div>
-                      
+
                       <div className="text-center px-1 pb-1">
                         <h3 className="text-[10px] font-black text-[#280f91] uppercase tracking-tight line-clamp-1">
                           {student.nama}
@@ -224,10 +219,10 @@ export default function WargaBelajar(_props: WargaBelajarProps) {
                       <div className="sm:col-span-1 space-y-4">
                         <div className="aspect-[3/4] w-full rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm">
                           {student.foto ? (
-                            <img 
-                              src={student.foto} 
+                            <img
+                              src={student.foto}
                               alt={student.nama}
-                              className="w-full h-full object-cover" 
+                              className="w-full h-full object-cover"
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-400">
@@ -330,16 +325,15 @@ export default function WargaBelajar(_props: WargaBelajarProps) {
                 >
                   Sebelumnya
                 </Button>
-                
+
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`h-10 w-10 rounded-xl text-xs font-black transition-all ${
-                      currentPage === page
+                    className={`h-10 w-10 rounded-xl text-xs font-black transition-all ${currentPage === page
                         ? "bg-[#280f91] text-white shadow-md shadow-[#280f91]/20"
                         : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
-                    }`}
+                      }`}
                   >
                     {page}
                   </button>
