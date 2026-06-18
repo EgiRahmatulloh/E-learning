@@ -270,11 +270,8 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
   ] as const;
 
   return (
-    <section id="profil" className="py-16 bg-gradient-to-b from-[#f3f9fc] to-white relative overflow-hidden">
-      
-      {/* Background Decorative Blur circles */}
-      <div className="absolute top-20 right-[-10%] w-96 h-96 bg-[#00badb]/10 blur-3xl rounded-full -z-10"></div>
-      <div className="absolute bottom-20 left-[-10%] w-96 h-96 bg-[#9c27b0]/10 blur-3xl rounded-full -z-10"></div>
+    <section id="profil" className="pt-6 pb-12 bg-white relative overflow-hidden">
+
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         

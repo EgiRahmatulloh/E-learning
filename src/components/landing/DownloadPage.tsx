@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Search, Download, ShieldAlert, Home } from "lucide-react";
+import { Search, Download, ShieldAlert, BookOpen, Layers, UserCheck, Users, Landmark } from "lucide-react";
 
 interface DownloadItem {
   id: number;
@@ -72,13 +72,14 @@ export default function DownloadPage(_props: DownloadPageProps) {
   const currentItems = filteredDownloads.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
-    <section id="downloads-landing" className="pt-8 pb-20 bg-[#cdeff6] border-y border-slate-300 relative overflow-hidden min-h-[85vh] text-left">
+    <section id="downloads-landing" className="pt-6 pb-12 bg-white border-y border-slate-300 relative overflow-hidden min-h-[85vh] text-left">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         
 
 
         {/* Centered Title */}
         <div className="text-center max-w-4xl mx-auto space-y-4 mb-10">
+          <span className="text-xs font-black uppercase tracking-widest text-[#280f91] bg-slate-200/60 rounded-full px-5 py-2 inline-block mb-2">DOWNLOAD</span>
           <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-center leading-none text-[#280f91] uppercase drop-shadow-sm">
             DOWNLOAD
           </h2>
@@ -91,21 +92,33 @@ export default function DownloadPage(_props: DownloadPageProps) {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 max-w-5xl mx-auto mb-10">
           {STATIC_CATEGORIES.map((cat) => {
             const isActive = selectedCategoryFilter === cat.key;
+            
+            const getIcon = (key: string) => {
+              switch (key) {
+                case "MODUL PEMBELAJARAN": return <BookOpen className="h-5 w-5" />;
+                case "ADMINISTRASI KURIKULUM": return <Layers className="h-5 w-5" />;
+                case "ADMINISTRASI TUTOR": return <UserCheck className="h-5 w-5" />;
+                case "ADMINISTRASI WB": return <Users className="h-5 w-5" />;
+                case "ADMINISTRASI KELEMBAGAAN": return <Landmark className="h-5 w-5" />;
+                default: return <BookOpen className="h-5 w-5" />;
+              }
+            };
+
             return (
               <button
                 key={cat.key}
                 onClick={() => setSelectedCategoryFilter(isActive ? null : cat.key)}
-                className={`rounded-2xl p-4 flex flex-col items-center justify-center text-center transition-all duration-300 shadow-md border cursor-pointer ${
+                className={`rounded-2xl p-4 flex flex-col items-center justify-center text-center transition-all duration-300 shadow-sm border cursor-pointer ${
                   isActive
-                    ? "bg-emerald-600 text-white border-emerald-500 scale-102"
-                    : "bg-[#00ff00] text-emerald-950 hover:bg-emerald-400 border-emerald-300"
+                    ? "bg-white text-[#280f91] border-[#280f91] ring-2 ring-[#280f91]/20 scale-102"
+                    : "bg-white text-slate-700 hover:bg-slate-50 border-slate-200"
                 }`}
               >
-                {/* Home/Icon style overlay */}
-                <div className={`h-11 w-11 rounded-full flex items-center justify-center mb-3 shadow-inner ${
-                  isActive ? "bg-emerald-700 text-white" : "bg-emerald-800 text-[#00ff00]"
+                {/* Icon style overlay */}
+                <div className={`h-11 w-11 rounded-full flex items-center justify-center mb-3 ${
+                  isActive ? "bg-[#280f91] text-white" : "bg-slate-100 text-slate-500"
                 }`}>
-                  <Home className="h-5 w-5" />
+                  {getIcon(cat.key)}
                 </div>
                 <span className="text-[10px] font-black tracking-wider uppercase leading-snug">
                   {cat.name}

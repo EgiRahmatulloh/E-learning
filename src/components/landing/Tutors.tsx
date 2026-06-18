@@ -88,7 +88,7 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
     const currentTutors = filteredTutors.slice(indexOfFirstItem, indexOfLastItem);
 
     return (
-      <section id="tutor" className="py-16 bg-white relative overflow-hidden min-h-[85vh]">
+      <section id="tutor" className="pt-6 pb-12 bg-white relative overflow-hidden min-h-[85vh]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
 
           {/* HEADER SECTION */}

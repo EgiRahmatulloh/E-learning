@@ -28,6 +28,8 @@ export default function ProductsPage() {
   const [searchTerm, setSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [itemsPerPage, setItemsPerPage] = useState("Semua");
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetch("/api/products")
@@ -45,6 +47,10 @@ export default function ProductsPage() {
     p.namaProduk.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.deskripsi.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const perPageNum = itemsPerPage === "Semua" ? filteredProducts.length : parseInt(itemsPerPage);
+  const totalPages = Math.ceil(filteredProducts.length / (perPageNum || 1)) || 1;
+  const paginatedProducts = itemsPerPage === "Semua" ? filteredProducts : filteredProducts.slice((currentPage - 1) * perPageNum, currentPage * perPageNum);
 
   const formatWaNumber = (num: string) => {
     if (!num) return "";
@@ -67,35 +73,50 @@ export default function ProductsPage() {
   };
 
   return (
-    <section id="products-landing" className="pt-8 pb-20 bg-[#f0f9ff] border-y border-slate-200 relative overflow-hidden min-h-[85vh] text-left">
-      {/* Dynamic Background Blob elements */}
-      <div className="absolute top-0 right-0 -translate-y-12 translate-x-12 w-96 h-96 bg-cyan-200/40 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 translate-y-12 -translate-x-12 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl pointer-events-none"></div>
-
+    <section id="products-landing" className="pt-6 pb-12 bg-white border-y border-slate-200 relative overflow-hidden min-h-[60vh] text-left">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Centered Title */}
         <div className="text-center max-w-4xl mx-auto space-y-4 mb-12">
-          <span className="text-xs font-extrabold uppercase tracking-widest text-emerald-600 bg-emerald-100 rounded-full px-4 py-1.5 inline-block">
-            Karya & Kreativitas Warga Belajar
+          <span className="text-xs font-black uppercase tracking-widest text-[#280f91] bg-slate-200/60 rounded-full px-5 py-2 inline-block mb-2">
+            KARYA & KREATIVITAS WARGA BELAJAR
           </span>
-          <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-center leading-none text-[#280f91] uppercase drop-shadow-sm">
-            PRODUK WARGA BELAJAR
+          <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-center leading-none uppercase drop-shadow-sm">
+            <span className="text-[#280f91]">PRODUK HASIL</span> <span className="text-[#ff6105]">WARGA BELAJAR</span>
           </h2>
           <p className="text-slate-600 font-bold text-xs sm:text-sm leading-relaxed px-4 max-w-3xl mx-auto">
             Dukung karya dan kreativitas warga belajar dengan membeli produk mereka karena Setiap karya adalah bukti semangat, kreativitas, dan kemampuan warga belajar dalam mengembangkan potensi menuju masa depan yang lebih baik
           </p>
         </div>
 
-        {/* Search Bar */}
-        <div className="max-w-xl mx-auto mb-12 relative">
-          <div className="relative">
+        {/* Search & Filter Bar */}
+        <div className="max-w-3xl mx-auto mb-12 relative flex flex-col sm:flex-row gap-4">
+          <div className="w-full sm:w-1/3">
+            <select
+              className="w-full bg-white text-slate-700 text-sm font-semibold px-4 py-3.5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#280f91] shadow-sm appearance-none cursor-pointer"
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(e.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="Semua">Semua</option>
+              <option value="5">5 Data</option>
+              <option value="10">10 Data</option>
+              <option value="15">15 Data</option>
+              <option value="20">20 Data</option>
+            </select>
+          </div>
+          <div className="relative w-full sm:w-2/3">
             <input
               type="text"
-              className="w-full bg-white/95 text-slate-700 text-sm font-semibold pl-12 pr-4 py-3.5 rounded-2xl border border-cyan-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-md placeholder-slate-400"
+              className="w-full bg-white text-slate-700 text-sm font-semibold pl-12 pr-4 py-3.5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#280f91] shadow-sm placeholder-slate-400"
               placeholder="Cari produk warga belajar..."
               value={searchTerm}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
             />
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 h-5 w-5" />
           </div>
@@ -116,57 +137,92 @@ export default function ProductsPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-            {filteredProducts.map((product) => (
-              <div 
-                key={product.id} 
-                onClick={() => {
-                  setSelectedProduct(product);
-                  setDetailModalVisible(true);
-                }}
-                className="bg-[#20108a] rounded-3xl overflow-hidden border border-blue-900/30 group hover:-translate-y-1.5 transition-all duration-300 flex flex-col shadow-2xl cursor-pointer"
-              >
-                
-                {/* Image Container with Hover glow */}
-                <div className="h-52 w-full relative overflow-hidden bg-blue-950">
-                  {product.gambar ? (
-                    <img 
-                      src={product.gambar} 
-                      alt={product.namaProduk}
-                      loading="lazy"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-white/20 bg-slate-100/50">
-                      <ShoppingBag className="h-10 w-10 mb-1" />
-                      <span className="text-xs font-semibold">Foto Produk</span>
-                    </div>
-                  )}
+          <div className="space-y-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+              {paginatedProducts.map((product) => (
+                <div 
+                  key={product.id} 
+                  onClick={() => {
+                    setSelectedProduct(product);
+                    setDetailModalVisible(true);
+                  }}
+                  className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 group hover:-translate-y-1 hover:shadow-md transition-all duration-300 flex flex-col cursor-pointer p-3"
+                >
                   
-                  {/* Floating Price Tag */}
-                  <span className="absolute bottom-3 right-3 inline-flex items-center rounded-lg bg-[#ff6105] px-2.5 py-1.5 text-[11px] font-black text-white shadow-md">
-                    Rp {product.harga.toLocaleString("id-ID")}
-                  </span>
-                </div>
-
-                {/* Card Body */}
-                <div className="p-5 flex-1 space-y-3 flex flex-col justify-between">
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-black text-[#00ff00] leading-tight line-clamp-2 uppercase group-hover:text-white transition-colors">
-                      {product.namaProduk}
-                    </h3>
-                    <p className="text-white/80 text-[10px] font-semibold leading-relaxed line-clamp-2">
-                      {product.deskripsi}
-                    </p>
+                  {/* Image Container */}
+                  <div className="h-52 w-full relative rounded-xl overflow-hidden bg-slate-100 border border-slate-100 mb-3">
+                    {product.gambar ? (
+                      <img 
+                        src={product.gambar} 
+                        alt={product.namaProduk}
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-100">
+                        <ShoppingBag className="h-10 w-10 mb-1" />
+                        <span className="text-xs font-semibold">Foto Produk</span>
+                      </div>
+                    )}
+                    
+                    {/* Floating Price Tag */}
+                    <span className="absolute bottom-3 right-3 inline-flex items-center rounded-lg bg-[#ff6105] px-2.5 py-1.5 text-[11px] font-black text-white shadow-md">
+                      Rp {product.harga.toLocaleString("id-ID")}
+                    </span>
                   </div>
 
-                  <div className="pt-3 border-t border-white/10 flex items-center justify-between text-[8px] text-[#00ff00] font-black uppercase tracking-wider">
-                    <span>PENJUAL: {product.penjual}</span>
-                    <span className="text-white/50">{product.satuan}</span>
+                  {/* Card Body */}
+                  <div className="flex-1 space-y-3 flex flex-col justify-between px-1">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-black text-[#280f91] leading-tight line-clamp-2 uppercase">
+                        {product.namaProduk}
+                      </h3>
+                      <p className="text-slate-600 text-[10px] font-semibold leading-relaxed line-clamp-2">
+                        {product.deskripsi}
+                      </p>
+                    </div>
+
+                    <div className="pt-2 flex items-center justify-between text-[9px] font-black uppercase tracking-wider">
+                      <span className="text-slate-800">PENJUAL: {product.penjual}</span>
+                      <span className="text-slate-500">{product.satuan}</span>
+                    </div>
                   </div>
                 </div>
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-8">
+                <Button
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="rounded-xl bg-white text-purple-900 border border-slate-200 font-bold text-xs h-10 px-4 cursor-pointer"
+                >
+                  Sebelumnya
+                </Button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`h-10 w-10 rounded-xl text-xs font-black transition-all ${
+                      currentPage === page
+                        ? "bg-[#280f91] text-white shadow-md"
+                        : "bg-white text-slate-700 border border-slate-200"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <Button
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="rounded-xl bg-white text-purple-900 border border-slate-200 font-bold text-xs h-10 px-4 cursor-pointer"
+                >
+                  Selanjutnya
+                </Button>
               </div>
-            ))}
+            )}
           </div>
         )}
 

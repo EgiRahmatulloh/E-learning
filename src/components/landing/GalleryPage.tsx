@@ -28,9 +28,9 @@ interface GalleryPageProps {
 }
 
 // Placeholder cloud SVG for categories with no photo
-function PlaceholderImage({ label, colorClass }: { label: string; colorClass: string }) {
+function PlaceholderImage({ colorClass }: { label: string; colorClass: string }) {
   return (
-    <div className={`w-full h-full flex flex-col items-end justify-end bg-gradient-to-br ${colorClass} relative`}>
+    <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br ${colorClass} relative overflow-hidden`} title="Belum Ada Foto">
       {/* Sky */}
       <svg className="absolute inset-0 w-full h-full opacity-30" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid slice">
         <rect width="200" height="200" fill="#87CEEB" />
@@ -44,12 +44,6 @@ function PlaceholderImage({ label, colorClass }: { label: string; colorClass: st
         <ellipse cx="60" cy="210" rx="80" ry="60" fill="#4a7c59" />
         <ellipse cx="160" cy="220" rx="80" ry="55" fill="#5a9e6f" />
       </svg>
-      {/* Overlay for text */}
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3">
-        <h3 className="text-[10px] sm:text-xs font-black text-[#0ff60a] uppercase tracking-wide text-center leading-tight">
-          {label}
-        </h3>
-      </div>
     </div>
   );
 }
@@ -121,15 +115,16 @@ export default function GalleryPage(_props: GalleryPageProps) {
   };
 
   return (
-    <section id="galeri-landing" className="pt-8 pb-20 bg-[#b2ebf2] border-y border-slate-300 relative overflow-hidden min-h-[85vh] text-left">
+    <section id="galeri-landing" className="pt-6 pb-12 bg-white border-y border-slate-300 relative overflow-hidden min-h-[85vh] text-left">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
 
 
 
         {/* Title */}
         <div className="text-center max-w-4xl mx-auto space-y-4 mb-12">
-          <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-center leading-none text-[#280f91] uppercase drop-shadow-sm">
-            GALERI
+          <span className="text-xs font-black uppercase tracking-widest text-[#280f91] bg-slate-200/60 rounded-full px-5 py-2 inline-block mb-2">GALERI</span>
+          <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-center leading-none uppercase drop-shadow-sm">
+            <span className="text-[#280f91]">GALERI</span> <span className="text-[#ff6105]">PKBM MENUJU MAKMUR</span>
           </h2>
           {viewMode === "categories" ? (
             <p className="text-slate-700 font-bold text-xs sm:text-sm leading-relaxed px-4 max-w-3xl mx-auto text-center">
@@ -158,29 +153,27 @@ export default function GalleryPage(_props: GalleryPageProps) {
                   <div
                     key={cat.id}
                     onClick={() => handleCategoryClick(cat.id)}
-                    className="rounded-3xl overflow-hidden border-4 border-[#280f91]/60 bg-[#20108a] shadow-2xl cursor-pointer group hover:-translate-y-1 transition-all duration-300 relative"
-                    style={{ aspectRatio: "3/4" }}
+                    className="rounded-3xl overflow-hidden border border-slate-200 bg-white p-3 shadow-sm cursor-pointer group hover:-translate-y-1 hover:shadow-md transition-all duration-300 relative flex flex-col"
                   >
-                    {photo ? (
-                      <div className="w-full h-full relative">
+                    <div className="w-full relative aspect-[3/4] rounded-2xl overflow-hidden bg-slate-100 border border-slate-100 mb-3">
+                      {photo ? (
                         <img
                           src={photo}
                           alt={cat.label}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
-                        {/* Overlay */}
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3">
-                          <p className="text-[10px] font-black text-[#0ff60a] uppercase tracking-wide text-center leading-tight">
-                            {cat.label}
-                          </p>
-                          {count > 0 && (
-                            <p className="text-[9px] text-white/60 font-bold text-center mt-0.5">{count} foto</p>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <PlaceholderImage label={cat.label} colorClass={cat.color} />
-                    )}
+                      ) : (
+                        <PlaceholderImage label={cat.label} colorClass={cat.color} />
+                      )}
+                    </div>
+                    <div className="text-center px-1 pb-2">
+                      <p className="text-[10px] font-black text-[#280f91] uppercase tracking-wide leading-tight">
+                        {cat.label}
+                      </p>
+                      {count > 0 && (
+                        <p className="text-[9px] text-[#ff6105] font-bold mt-1">{count} foto</p>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -231,10 +224,9 @@ export default function GalleryPage(_props: GalleryPageProps) {
                     <div
                       key={item.id}
                       onClick={() => setLightboxPhoto(item)}
-                      className="bg-[#20108a] rounded-2xl overflow-hidden shadow-xl border border-blue-900/30 group hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-                      style={{ aspectRatio: "3/4" }}
+                      className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 p-3 flex flex-col justify-between group hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer"
                     >
-                      <div className="relative w-full h-full">
+                      <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-slate-100 mb-2 border border-slate-100">
                         {item.foto ? (
                           <img
                             src={item.foto}
@@ -242,19 +234,18 @@ export default function GalleryPage(_props: GalleryPageProps) {
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-indigo-900 to-purple-900 flex items-center justify-center text-white/20">
+                          <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-300">
                             <svg className="w-12 h-12 opacity-30" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
                             </svg>
                           </div>
                         )}
-                        {/* Text overlay */}
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-2.5">
-                          <p className="text-[10px] font-black text-[#0ff60a] uppercase tracking-wide line-clamp-2 leading-tight">
-                            {item.namaFile}
-                          </p>
-                          <p className="text-[9px] text-white/60 mt-0.5">{item.tanggalPosting}</p>
-                        </div>
+                      </div>
+                      <div className="text-center px-1 pb-1">
+                        <p className="text-[10px] font-black text-[#280f91] uppercase tracking-wide line-clamp-2 leading-tight">
+                          {item.namaFile}
+                        </p>
+                        <p className="text-[9px] text-slate-500 font-bold mt-0.5">{item.tanggalPosting}</p>
                       </div>
                     </div>
                   ))}
@@ -262,23 +253,33 @@ export default function GalleryPage(_props: GalleryPageProps) {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-center gap-1.5 mt-6">
+                  <div className="flex items-center justify-center gap-2 mt-8">
                     <Button
                       onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                       disabled={currentPage === 1}
-                      className="rounded-xl bg-purple-600 hover:bg-[#ff6105] text-white font-bold text-xs h-9 cursor-pointer"
+                      className="rounded-xl bg-white text-purple-900 border border-slate-200 font-bold text-xs h-10 px-4 cursor-pointer"
                     >
-                      <ChevronLeft className="h-4 w-4" /> Previous
+                      Sebelumnya
                     </Button>
-                    <span className="bg-white/80 border border-purple-100 text-[#280f91] font-black text-xs px-3.5 py-2 rounded-xl">
-                      {currentPage} / {totalPages}
-                    </span>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`h-10 w-10 rounded-xl text-xs font-black transition-all ${
+                          currentPage === page
+                            ? "bg-[#280f91] text-white shadow-md"
+                            : "bg-white text-slate-700 border border-slate-200"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
                     <Button
                       onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                       disabled={currentPage === totalPages}
-                      className="rounded-xl bg-purple-600 hover:bg-[#ff6105] text-white font-bold text-xs h-9 cursor-pointer"
+                      className="rounded-xl bg-white text-purple-900 border border-slate-200 font-bold text-xs h-10 px-4 cursor-pointer"
                     >
-                      Next
+                      Selanjutnya
                     </Button>
                   </div>
                 )}
