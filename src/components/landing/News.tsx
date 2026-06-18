@@ -115,7 +115,7 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
     const currentNews = filteredNews.slice(indexOfFirstItem, indexOfLastItem);
 
     return (
-      <section id="berita" className="py-16 bg-white relative overflow-hidden min-h-[85vh]">
+      <section id="berita" className="pt-6 pb-12 bg-white relative overflow-hidden min-h-[85vh]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
 
           {/* HEADER SECTION */}

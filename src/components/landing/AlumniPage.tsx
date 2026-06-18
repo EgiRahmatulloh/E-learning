@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,6 +29,12 @@ export default function AlumniPage(_props: AlumniPageProps) {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedAlumni, setSelectedAlumni] = useState<Alumni | null>(null);
+  const [selectedYear, setSelectedYear] = useState("Semua");
+
+  // Get unique years for filter
+  const uniqueYears = useMemo(() => Array.from(new Set(alumniList.map(a => a.lulusTahun).filter(Boolean))).sort().reverse(), [alumniList]);
+  const yearOptions = useMemo(() => ["Semua", ...uniqueYears.length > 0 ? uniqueYears : ["2023", "2022", "2021", "2020"]], [uniqueYears]);
+
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -46,9 +52,11 @@ export default function AlumniPage(_props: AlumniPageProps) {
       .finally(() => setLoading(false));
   }, []);
 
-  const filteredAlumni = alumniList.filter((a) =>
-    a.nama.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredAlumni = useMemo(() => alumniList.filter((a) => {
+    const matchName = a.nama.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchYear = selectedYear === "Semua" || a.lulusTahun === selectedYear;
+    return matchName && matchYear;
+  }), [alumniList, searchTerm, selectedYear]);
 
   const totalPages = Math.ceil(filteredAlumni.length / itemsPerPage) || 1;
   const currentAlumni = filteredAlumni.slice(
@@ -57,25 +65,40 @@ export default function AlumniPage(_props: AlumniPageProps) {
   );
 
   return (
-    <section id="alumni-landing" className="pt-8 pb-20 bg-[#cdeff6] border-y border-slate-300 relative overflow-hidden min-h-[85vh] text-left">
+    <section id="alumni-landing" className="pt-6 pb-12 bg-white border-y border-slate-300 relative overflow-hidden min-h-[60vh] text-left">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Centered Title */}
         <div className="text-center max-w-4xl mx-auto space-y-4 mb-10">
-          <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-center leading-none text-[#280f91] uppercase drop-shadow-sm">
-            ALUMNI PKBM MENUJU MAKMUR
+          <span className="text-xs font-black uppercase tracking-widest text-[#280f91] bg-slate-200/60 rounded-full px-5 py-2 inline-block mb-2">ALUMNI</span>
+          <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-center leading-none uppercase drop-shadow-sm">
+            <span className="text-[#280f91]">ALUMNI</span> <span className="text-[#ff6105]">PKBM MENUJU MAKMUR</span>
           </h2>
           <p className="text-slate-700 font-bold text-xs sm:text-sm leading-relaxed px-4 max-w-3xl mx-auto text-center">
             Alumni PKBM Menuju Makmur adalah bukti nyata bahwa pendidikan membuka jalan menuju masa depan yang lebih baik.
           </p>
         </div>
 
-        {/* Search Bar */}
-        <div className="max-w-xl mx-auto mb-12 relative">
-          <div className="relative">
+        {/* Search & Filter Bar */}
+        <div className="max-w-3xl mx-auto mb-12 relative flex flex-col sm:flex-row gap-4">
+          <div className="w-full sm:w-1/3">
+            <select
+              className="w-full bg-white text-slate-700 text-sm font-semibold px-4 py-3.5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#280f91] shadow-sm cursor-pointer"
+              value={selectedYear}
+              onChange={(e) => {
+                setSelectedYear(e.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              {yearOptions.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+          <div className="relative w-full sm:w-2/3">
             <input
               type="text"
-              className="w-full bg-white text-slate-700 text-sm font-semibold pl-12 pr-4 py-3.5 rounded-2xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-md placeholder-slate-400"
+              className="w-full bg-white text-slate-700 text-sm font-semibold pl-12 pr-4 py-3.5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#280f91] shadow-sm placeholder-slate-400"
               placeholder="Cari nama alumni..."
               value={searchTerm}
               onChange={(e) => {
@@ -108,9 +131,9 @@ export default function AlumniPage(_props: AlumniPageProps) {
                 <div
                   key={item.id}
                   onClick={() => setSelectedAlumni(item)}
-                  className="bg-[#20108a] rounded-2xl overflow-hidden shadow-xl p-3 flex flex-col justify-between border border-blue-900/30 group hover:-translate-y-1.5 transition-all duration-300 cursor-pointer"
+                  className="bg-white rounded-2xl overflow-hidden shadow-sm p-3 flex flex-col justify-between border border-slate-200 group hover:-translate-y-1.5 hover:shadow-md transition-all duration-300 cursor-pointer"
                 >
-                  <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-blue-950 mb-1 border border-blue-900/20">
+                  <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-slate-100 mb-3 border border-slate-100">
                     {item.foto ? (
                       <img 
                         src={item.foto} 
@@ -118,20 +141,20 @@ export default function AlumniPage(_props: AlumniPageProps) {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-tr from-indigo-900 to-purple-850 flex flex-col items-center justify-center text-white/20">
+                      <div className="w-full h-full bg-slate-100 flex flex-col items-center justify-center text-slate-300">
                         <svg className="w-12 h-12 opacity-30" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                         </svg>
                       </div>
                     )}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-2.5 text-left">
-                      <h3 className="text-[10px] font-black text-[#0ff60a] uppercase tracking-tight line-clamp-1">
-                        {item.nama}
-                      </h3>
-                      <p className="text-[8px] font-bold text-[#0ff60a] uppercase tracking-wider line-clamp-1 mt-0.5 opacity-80">
-                        {item.pekerjaan || "Alumni"}
-                      </p>
-                    </div>
+                  </div>
+                  <div className="text-center px-1 pb-1">
+                    <h3 className="text-[10px] font-black text-[#280f91] uppercase tracking-tight line-clamp-1">
+                      {item.nama}
+                    </h3>
+                    <p className="text-[8px] font-bold text-[#ff6105] uppercase tracking-wider line-clamp-1 mt-0.5">
+                      {item.pekerjaan || "Alumni"}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -147,18 +170,22 @@ export default function AlumniPage(_props: AlumniPageProps) {
                 >
                   Sebelumnya
                 </Button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`h-10 w-10 rounded-xl text-xs font-black transition-all ${
-                      currentPage === page
-                        ? "bg-[#280f91] text-white shadow-md"
-                        : "bg-white text-slate-700 border border-slate-200"
-                    }`}
-                  >
-                    {page}
-                  </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+                  .map((page, index, array) => (
+                  <div key={page} className="flex items-center gap-1">
+                    {index > 0 && array[index - 1] !== page - 1 && <span className="text-slate-400 px-1">...</span>}
+                    <button
+                      onClick={() => setCurrentPage(page)}
+                      className={`h-10 w-10 rounded-xl text-xs font-black transition-all ${
+                        currentPage === page
+                          ? "bg-[#280f91] text-white shadow-md"
+                          : "bg-white text-slate-700 border border-slate-200"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  </div>
                 ))}
                 <Button
                   onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}

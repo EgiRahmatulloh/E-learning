@@ -67,7 +67,7 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
   // If detailed page view (halaman menu agenda)
   if (isDetailed) {
     return (
-      <section id="agenda" className="py-16 bg-white relative overflow-hidden min-h-[85vh]">
+      <section id="agenda" className="pt-6 pb-12 bg-white relative overflow-hidden min-h-[85vh]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
 
           {/* HEADER SECTION */}

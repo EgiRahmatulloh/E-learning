@@ -199,7 +199,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
 
       {/* ===== MAIN CONTENT OVERLAY ===== */}
       <div className="relative z-20 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-full flex items-center pt-20 pb-24 lg:pb-12">
-        <div className="w-full flex flex-col lg:flex-row items-center lg:items-end justify-between gap-6 lg:gap-8 py-6 lg:py-12">
+        <div className="w-full flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8 py-6 lg:py-12">
 
           {/* ===== LEFT: Welcome Text ===== */}
           <div className="flex-1 max-w-2xl text-center lg:text-left space-y-3 lg:space-y-4">
@@ -272,7 +272,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
           </div>
 
           {/* ===== RIGHT: Layanan Digital Portal ===== */}
-          <div className="shrink-0 w-full lg:w-auto self-center lg:self-end pt-0 lg:pb-20">
+          <div className="shrink-0 w-full lg:w-auto self-center">
             <div className="w-full sm:w-[280px] lg:w-[300px] mx-auto lg:mx-0">
               <h4
                 className="text-center lg:text-left text-2xl sm:text-3xl font-black mb-4 select-none"
