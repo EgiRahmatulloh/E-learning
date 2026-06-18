@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,8 +32,8 @@ export default function AlumniPage(_props: AlumniPageProps) {
   const [selectedYear, setSelectedYear] = useState("Semua");
 
   // Get unique years for filter
-  const uniqueYears = Array.from(new Set(alumniList.map(a => a.lulusTahun).filter(Boolean))).sort().reverse();
-  const yearOptions = ["Semua", ...uniqueYears.length > 0 ? uniqueYears : ["2023", "2022", "2021", "2020"]];
+  const uniqueYears = useMemo(() => Array.from(new Set(alumniList.map(a => a.lulusTahun).filter(Boolean))).sort().reverse(), [alumniList]);
+  const yearOptions = useMemo(() => ["Semua", ...uniqueYears.length > 0 ? uniqueYears : ["2023", "2022", "2021", "2020"]], [uniqueYears]);
 
 
   // Pagination
@@ -52,11 +52,11 @@ export default function AlumniPage(_props: AlumniPageProps) {
       .finally(() => setLoading(false));
   }, []);
 
-  const filteredAlumni = alumniList.filter((a) => {
+  const filteredAlumni = useMemo(() => alumniList.filter((a) => {
     const matchName = a.nama.toLowerCase().includes(searchTerm.toLowerCase());
     const matchYear = selectedYear === "Semua" || a.lulusTahun === selectedYear;
     return matchName && matchYear;
-  });
+  }), [alumniList, searchTerm, selectedYear]);
 
   const totalPages = Math.ceil(filteredAlumni.length / itemsPerPage) || 1;
   const currentAlumni = filteredAlumni.slice(
@@ -83,7 +83,7 @@ export default function AlumniPage(_props: AlumniPageProps) {
         <div className="max-w-3xl mx-auto mb-12 relative flex flex-col sm:flex-row gap-4">
           <div className="w-full sm:w-1/3">
             <select
-              className="w-full bg-white text-slate-700 text-sm font-semibold px-4 py-3.5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#280f91] shadow-sm appearance-none cursor-pointer"
+              className="w-full bg-white text-slate-700 text-sm font-semibold px-4 py-3.5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#280f91] shadow-sm cursor-pointer"
               value={selectedYear}
               onChange={(e) => {
                 setSelectedYear(e.target.value);
@@ -170,18 +170,22 @@ export default function AlumniPage(_props: AlumniPageProps) {
                 >
                   Sebelumnya
                 </Button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`h-10 w-10 rounded-xl text-xs font-black transition-all ${
-                      currentPage === page
-                        ? "bg-[#280f91] text-white shadow-md"
-                        : "bg-white text-slate-700 border border-slate-200"
-                    }`}
-                  >
-                    {page}
-                  </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+                  .map((page, index, array) => (
+                  <div key={page} className="flex items-center gap-1">
+                    {index > 0 && array[index - 1] !== page - 1 && <span className="text-slate-400 px-1">...</span>}
+                    <button
+                      onClick={() => setCurrentPage(page)}
+                      className={`h-10 w-10 rounded-xl text-xs font-black transition-all ${
+                        currentPage === page
+                          ? "bg-[#280f91] text-white shadow-md"
+                          : "bg-white text-slate-700 border border-slate-200"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  </div>
                 ))}
                 <Button
                   onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}

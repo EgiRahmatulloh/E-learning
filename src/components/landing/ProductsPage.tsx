@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Search, MessageCircle, Sparkles, ShoppingBag } from "lucide-react";
 import {
@@ -43,10 +43,10 @@ export default function ProductsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filteredProducts = products.filter((p) =>
+  const filteredProducts = useMemo(() => products.filter((p) =>
     p.namaProduk.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.deskripsi.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ), [products, searchTerm]);
 
   const perPageNum = itemsPerPage === "Semua" ? filteredProducts.length : parseInt(itemsPerPage);
   const totalPages = Math.ceil(filteredProducts.length / (perPageNum || 1)) || 1;
@@ -93,7 +93,7 @@ export default function ProductsPage() {
         <div className="max-w-3xl mx-auto mb-12 relative flex flex-col sm:flex-row gap-4">
           <div className="w-full sm:w-1/3">
             <select
-              className="w-full bg-white text-slate-700 text-sm font-semibold px-4 py-3.5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#280f91] shadow-sm appearance-none cursor-pointer"
+              className="w-full bg-white text-slate-700 text-sm font-semibold px-4 py-3.5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#280f91] shadow-sm cursor-pointer"
               value={itemsPerPage}
               onChange={(e) => {
                 setItemsPerPage(e.target.value);
@@ -167,7 +167,7 @@ export default function ProductsPage() {
                     
                     {/* Floating Price Tag */}
                     <span className="absolute bottom-3 right-3 inline-flex items-center rounded-lg bg-[#ff6105] px-2.5 py-1.5 text-[11px] font-black text-white shadow-md">
-                      Rp {product.harga.toLocaleString("id-ID")}
+                      Rp {(product.harga || 0).toLocaleString("id-ID")}
                     </span>
                   </div>
 
@@ -201,18 +201,22 @@ export default function ProductsPage() {
                 >
                   Sebelumnya
                 </Button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`h-10 w-10 rounded-xl text-xs font-black transition-all ${
-                      currentPage === page
-                        ? "bg-[#280f91] text-white shadow-md"
-                        : "bg-white text-slate-700 border border-slate-200"
-                    }`}
-                  >
-                    {page}
-                  </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+                  .map((page, index, array) => (
+                  <div key={page} className="flex items-center gap-1">
+                    {index > 0 && array[index - 1] !== page - 1 && <span className="text-slate-400 px-1">...</span>}
+                    <button
+                      onClick={() => setCurrentPage(page)}
+                      className={`h-10 w-10 rounded-xl text-xs font-black transition-all ${
+                        currentPage === page
+                          ? "bg-[#280f91] text-white shadow-md"
+                          : "bg-white text-slate-700 border border-slate-200"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  </div>
                 ))}
                 <Button
                   onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
@@ -234,7 +238,7 @@ export default function ProductsPage() {
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-black text-[#280f91] uppercase">{selectedProduct.namaProduk}</DialogTitle>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-sm font-bold text-[#ff6105]">Rp {selectedProduct.harga.toLocaleString("id-ID")}</span>
+                    <span className="text-sm font-bold text-[#ff6105]">Rp {(selectedProduct.harga || 0).toLocaleString("id-ID")}</span>
                     <span className="text-slate-300">|</span>
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedProduct.satuan}</span>
                   </div>

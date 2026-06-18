@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Search, Download, ShieldAlert, BookOpen, Layers, UserCheck, Users, Landmark } from "lucide-react";
 
@@ -17,11 +17,11 @@ interface DownloadPageProps {
 }
 
 const STATIC_CATEGORIES = [
-  { name: "MODUL PEMBELAJARAN", key: "MODUL PEMBELAJARAN" },
-  { name: "ADMINISTRASI KURIKULUM", key: "ADMINISTRASI KURIKULUM" },
-  { name: "ADMINISTRASI TUTOR", key: "ADMINISTRASI TUTOR" },
-  { name: "ADMINISTRASI WB", key: "ADMINISTRASI WB" },
-  { name: "ADMINISTRASI KELEMBAGAAN", key: "ADMINISTRASI KELEMBAGAAN" }
+  { name: "MODUL PEMBELAJARAN", key: "MODUL PEMBELAJARAN", icon: BookOpen },
+  { name: "ADMINISTRASI KURIKULUM", key: "ADMINISTRASI KURIKULUM", icon: Layers },
+  { name: "ADMINISTRASI TUTOR", key: "ADMINISTRASI TUTOR", icon: UserCheck },
+  { name: "ADMINISTRASI WB", key: "ADMINISTRASI WB", icon: Users },
+  { name: "ADMINISTRASI KELEMBAGAAN", key: "ADMINISTRASI KELEMBAGAAN", icon: Landmark }
 ];
 
 export default function DownloadPage(_props: DownloadPageProps) {
@@ -54,7 +54,7 @@ export default function DownloadPage(_props: DownloadPageProps) {
   }, [searchTerm, selectedCategoryFilter, itemsPerPage]);
 
   // Filter downloads
-  const filteredDownloads = downloadsList.filter((item) => {
+  const filteredDownloads = useMemo(() => downloadsList.filter((item) => {
     const matchesSearch = item.namaFile.toLowerCase().includes(searchTerm.toLowerCase());
     
     let matchesCategory = true;
@@ -63,7 +63,7 @@ export default function DownloadPage(_props: DownloadPageProps) {
     }
     
     return matchesSearch && matchesCategory;
-  });
+  }), [downloadsList, searchTerm, selectedCategoryFilter]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredDownloads.length / itemsPerPage) || 1;
@@ -92,17 +92,7 @@ export default function DownloadPage(_props: DownloadPageProps) {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 max-w-5xl mx-auto mb-10">
           {STATIC_CATEGORIES.map((cat) => {
             const isActive = selectedCategoryFilter === cat.key;
-            
-            const getIcon = (key: string) => {
-              switch (key) {
-                case "MODUL PEMBELAJARAN": return <BookOpen className="h-5 w-5" />;
-                case "ADMINISTRASI KURIKULUM": return <Layers className="h-5 w-5" />;
-                case "ADMINISTRASI TUTOR": return <UserCheck className="h-5 w-5" />;
-                case "ADMINISTRASI WB": return <Users className="h-5 w-5" />;
-                case "ADMINISTRASI KELEMBAGAAN": return <Landmark className="h-5 w-5" />;
-                default: return <BookOpen className="h-5 w-5" />;
-              }
-            };
+            const Icon = cat.icon;
 
             return (
               <button
@@ -118,7 +108,7 @@ export default function DownloadPage(_props: DownloadPageProps) {
                 <div className={`h-11 w-11 rounded-full flex items-center justify-center mb-3 ${
                   isActive ? "bg-[#280f91] text-white" : "bg-slate-100 text-slate-500"
                 }`}>
-                  {getIcon(cat.key)}
+                  <Icon className="h-5 w-5" />
                 </div>
                 <span className="text-[10px] font-black tracking-wider uppercase leading-snug">
                   {cat.name}
@@ -239,18 +229,22 @@ export default function DownloadPage(_props: DownloadPageProps) {
                       Previous
                     </Button>
                     
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`h-9 w-9 rounded-xl text-xs font-black transition-all ${
-                          currentPage === page
-                            ? "bg-amber-400 text-slate-900 shadow-md shadow-amber-400/20"
-                            : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
-                        }`}
-                      >
-                        {page}
-                      </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+                      .map((page, index, array) => (
+                      <div key={page} className="flex items-center gap-1.5">
+                        {index > 0 && array[index - 1] !== page - 1 && <span className="text-slate-400">...</span>}
+                        <button
+                          onClick={() => setCurrentPage(page)}
+                          className={`h-9 w-9 rounded-xl text-xs font-black transition-all ${
+                            currentPage === page
+                              ? "bg-amber-400 text-slate-900 shadow-md shadow-amber-400/20"
+                              : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      </div>
                     ))}
 
                     <Button
