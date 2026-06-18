@@ -9,7 +9,7 @@ import {
   DialogFooter,
   DialogClose
 } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, ShieldAlert, Award, Mail } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShieldAlert, Award, Mail, Search } from "lucide-react";
 
 interface Tutor {
   id: number;
@@ -39,6 +39,14 @@ interface TutorsProps {
 export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) {
   const [tutorsList, setTutorsList] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProgramFilter, setSelectedProgramFilter] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedProgramFilter]);
 
   useEffect(() => {
     fetch("/api/tutors")
@@ -63,45 +71,113 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
     scrollRef.current.scrollBy({ left: direction === "left" ? -cardWidth : cardWidth, behavior: "smooth" });
   };
 
-  // DETAILED VIEW (Menu Tutor - Mockup 1)
+  // DETAILED VIEW (Menu Tutor)
   if (isDetailed) {
+    const filteredTutors = tutorsList.filter((tutor) => {
+      const matchesSearch = tutor.nama.toLowerCase().includes(searchTerm.toLowerCase());
+      let matchesProgram = true;
+      if (selectedProgramFilter) {
+        matchesProgram = tutor.program?.toUpperCase() === selectedProgramFilter.toUpperCase();
+      }
+      return matchesSearch && matchesProgram;
+    });
+
+    const totalPages = Math.ceil(filteredTutors.length / itemsPerPage) || 1;
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentTutors = filteredTutors.slice(indexOfFirstItem, indexOfLastItem);
+
     return (
-      <section id="tutor" className="pt-8 pb-20 bg-[#cdeff6] border-y border-slate-300 relative overflow-hidden min-h-[85vh]">
+      <section id="tutor" className="py-16 bg-white relative overflow-hidden min-h-[85vh]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-          
 
-
-          {/* Centered Title */}
-          <div className="text-center max-w-4xl mx-auto space-y-4 mb-14">
-            <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-center leading-none">
-              <span className="text-[#9c27b0] font-black drop-shadow-sm">
-                TUTOR
-              </span>{" "}
-              <span className="text-[#0ff60a] font-black drop-shadow-xs">
-                PKBM MENUJU MAKMUR
-              </span>
+          {/* HEADER SECTION */}
+          <div className="text-center max-w-3xl mx-auto mb-8 space-y-4 animate-in fade-in duration-700">
+            <span className="text-xs font-black uppercase tracking-widest text-[#280f91] bg-slate-200/60 rounded-full px-5 py-2 inline-block">
+              TENAGA PENDIDIK
+            </span>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#280f91] tracking-tight leading-tight uppercase">
+              TUTOR <span className="text-[#ff6105]">PKBM MENUJU MAKMUR</span>
             </h2>
-            <p className="text-slate-700 font-bold text-xs sm:text-sm leading-relaxed px-4 max-w-2xl mx-auto">
+            <p className="text-slate-500 font-semibold text-sm leading-relaxed max-w-2xl mx-auto">
               Tutor PKBM Menuju Makmur merupakan tenaga pendidik yang berdedikasi dalam membimbing, mendampingi, dan memberikan ilmu pengetahuan kepada warga belajar guna meningkatkan kualitas pendidikan dan keterampilan
             </p>
           </div>
 
-          {/* TUTORS GRID (4-Column Grid) */}
+          {/* SEARCH & FILTER BAR */}
+          <div className="max-w-4xl mx-auto mb-8 bg-white/90 backdrop-blur-md p-6 rounded-3xl shadow-lg border border-slate-200 flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="flex gap-2.5 flex-wrap justify-center w-full md:w-auto">
+              <button
+                onClick={() => { setSelectedProgramFilter(null); setCurrentPage(1); }}
+                className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wider transition-all uppercase cursor-pointer ${
+                  selectedProgramFilter === null
+                    ? "bg-[#280f91] text-white shadow-md shadow-[#280f91]/20"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                Semua Paket
+              </button>
+              <button
+                onClick={() => { setSelectedProgramFilter("PAKET A"); setCurrentPage(1); }}
+                className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wider transition-all uppercase cursor-pointer ${
+                  selectedProgramFilter === "PAKET A"
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                Paket A
+              </button>
+              <button
+                onClick={() => { setSelectedProgramFilter("PAKET B"); setCurrentPage(1); }}
+                className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wider transition-all uppercase cursor-pointer ${
+                  selectedProgramFilter === "PAKET B"
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                Paket B
+              </button>
+              <button
+                onClick={() => { setSelectedProgramFilter("PAKET C"); setCurrentPage(1); }}
+                className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wider transition-all uppercase cursor-pointer ${
+                  selectedProgramFilter === "PAKET C"
+                    ? "bg-amber-500 text-white shadow-md shadow-amber-500/20"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                Paket C
+              </button>
+            </div>
+
+            <div className="relative w-full md:w-80">
+              <input
+                type="text"
+                placeholder="Cari nama tutor..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full h-11 pl-4 pr-10 text-xs font-bold border border-slate-200 rounded-xl bg-slate-50 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#280f91]/30"
+              />
+              <Search className="absolute right-3.5 top-3.5 h-4 w-4 text-slate-400" />
+            </div>
+          </div>
+
+          {/* TUTORS GRID */}
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-3">
-              <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#9c27b0] border-t-transparent" />
-              <span className="text-sm font-bold text-[#9c27b0] uppercase tracking-widest">Memuat data tutor...</span>
+              <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#280f91] border-t-transparent" />
+              <span className="text-sm font-bold text-[#280f91] uppercase tracking-widest">Memuat data tutor...</span>
             </div>
-          ) : displayTutors.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-7xl mx-auto">
-              {displayTutors.map((tutor) => (
+          ) : currentTutors.length > 0 ? (
+            <div className="space-y-10">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-7xl mx-auto">
+              {currentTutors.map((tutor) => (
                 <Dialog key={tutor.id}>
                   <DialogTrigger asChild>
                     <div 
-                      className="bg-[#20108a] rounded-2xl overflow-hidden shadow-xl p-3 flex flex-col justify-between border border-blue-900/30 group hover:-translate-y-1.5 transition-all duration-300 cursor-pointer"
+                      className="bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-200 group hover:-translate-y-1.5 hover:shadow-xl transition-all duration-300 cursor-pointer"
                     >
-                      {/* Photo Frame */}
-                      <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-blue-950 mb-2 border border-blue-900/20">
+                      {/* Photo */}
+                      <div className="aspect-[3/4] w-full overflow-hidden bg-slate-100">
                         {tutor.foto ? (
                           <img 
                             src={tutor.foto} 
@@ -109,24 +185,23 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-tr from-indigo-900 to-purple-800 flex flex-col items-center justify-center text-white/20">
+                          <div className="w-full h-full flex items-center justify-center text-slate-300">
                             <svg className="w-12 h-12 opacity-30" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                             </svg>
                           </div>
                         )}
-
-                        {/* Text Overlay inside photo at the bottom */}
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-2 text-left">
-                          <h3 className="text-[10px] font-black text-[#0ff60a] uppercase tracking-tight line-clamp-1">
-                            {tutor.nama}
-                          </h3>
-                          <p className="text-[8px] font-bold text-[#0ff60a] uppercase tracking-wider line-clamp-1 mt-0.5 opacity-80">
-                            {tutor.tutorMapel}
-                          </p>
-                        </div>
                       </div>
 
+                      {/* Name & mapel below photo */}
+                      <div className="p-3 text-center space-y-1.5">
+                        <h3 className="text-xs font-black text-slate-900 group-hover:text-[#280f91] transition-colors uppercase leading-tight line-clamp-2">
+                          {tutor.nama}
+                        </h3>
+                        <span className="inline-block text-[9px] font-black text-white bg-[#9c27b0] rounded-full px-2.5 py-0.5 uppercase tracking-wider truncate max-w-full">
+                          {tutor.tutorMapel}
+                        </span>
+                      </div>
                     </div>
                   </DialogTrigger>
 
@@ -216,8 +291,8 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                         </div>
 
                         {/* SK Details */}
-                        <div className="bg-[#cdeff6]/40 border border-[#a6e5f3] p-3.5 rounded-2xl space-y-2.5 text-xs text-slate-800">
-                          <span className="block text-[9px] font-black text-[#280f91] uppercase tracking-wider border-b border-[#a6e5f3] pb-1">Keterangan SK SK Pengangkatan / Penugasan</span>
+                        <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl space-y-2.5 text-xs text-slate-800">
+                          <span className="block text-[9px] font-black text-[#280f91] uppercase tracking-wider border-b border-slate-200 pb-1">Keterangan SK Pengangkatan / Penugasan</span>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-bold">
                             <div>
                               <p className="text-[9px] text-slate-400 font-black uppercase">SK PENGANGKATAN</p>
@@ -246,13 +321,49 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                 </Dialog>
               ))}
             </div>
+
+              {/* PAGINATION CONTROLS */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-2">
+                  <Button
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="rounded-xl bg-white text-[#280f91] hover:bg-[#280f91] hover:text-white border border-slate-200 font-extrabold text-xs h-10 px-4 cursor-pointer disabled:opacity-50"
+                  >
+                    Sebelumnya
+                  </Button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`h-10 w-10 rounded-xl text-xs font-black transition-all ${
+                        currentPage === page
+                          ? "bg-[#280f91] text-white shadow-md shadow-[#280f91]/20"
+                          : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  <Button
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="rounded-xl bg-white text-[#280f91] hover:bg-[#280f91] hover:text-white border border-slate-200 font-extrabold text-xs h-10 px-4 cursor-pointer disabled:opacity-50"
+                  >
+                    Selanjutnya
+                  </Button>
+                </div>
+              )}
+            </div>
           ) : (
-            <div className="max-w-md mx-auto bg-[#20108a] rounded-3xl p-8 text-center space-y-4 shadow-xl border border-blue-900/30">
-              <div className="h-16 w-16 bg-[#00ff00]/10 rounded-2xl flex items-center justify-center mx-auto">
-                <ShieldAlert className="h-8 w-8 text-[#00ff00]" />
+            <div className="max-w-md mx-auto bg-white border border-slate-200 rounded-3xl p-8 text-center space-y-4 shadow-lg">
+              <div className="h-16 w-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto">
+                <ShieldAlert className="h-8 w-8 text-slate-400" />
               </div>
-              <h3 className="text-lg font-black text-white uppercase tracking-wider">Belum Ada Tutor</h3>
-              <p className="text-white/70 font-bold text-xs">
+              <h3 className="text-lg font-black text-slate-700 uppercase tracking-wider">Belum Ada Tutor</h3>
+              <p className="text-slate-400 font-bold text-xs">
                 Data tenaga pendidik saat ini belum tersedia.
               </p>
             </div>

@@ -93,6 +93,8 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
 
   // Loading state
   const [loading, setLoading] = useState(true);
+  const [showAllManagers, setShowAllManagers] = useState(false);
+  const [showAllAchievements, setShowAllAchievements] = useState(false);
 
   useEffect(() => {
     if (!isDetailed) return;
@@ -268,7 +270,7 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
   ] as const;
 
   return (
-    <section id="profil" className="py-24 bg-gradient-to-b from-[#f3f9fc] to-white relative overflow-hidden">
+    <section id="profil" className="py-16 bg-gradient-to-b from-[#f3f9fc] to-white relative overflow-hidden">
       
       {/* Background Decorative Blur circles */}
       <div className="absolute top-20 right-[-10%] w-96 h-96 bg-[#00badb]/10 blur-3xl rounded-full -z-10"></div>
@@ -277,7 +279,7 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
         {/* HEADER SECTION */}
-        <div className="text-center max-w-3xl mx-auto mb-14 space-y-4 animate-in fade-in duration-700">
+        <div className="text-center max-w-3xl mx-auto mb-8 space-y-4 animate-in fade-in duration-700">
           <span className="text-xs font-black uppercase tracking-widest text-[#280f91] bg-slate-200/60 rounded-full px-5 py-2 inline-block">
             INFORMASI PROFIL LEMBAGA
           </span>
@@ -290,8 +292,8 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
         </div>
 
         {/* TAB BAR NAVIGATION (Mockup-inspired Circle Tab Items) */}
-        <div className="flex justify-center mb-16 overflow-x-auto pb-4 custom-scrollbar">
-          <div className="flex bg-white/80 backdrop-blur-md p-2 rounded-full border border-slate-100/90 shadow-xl gap-2 min-w-max">
+        <div className="flex justify-center mb-10 overflow-x-auto pb-4 custom-scrollbar">
+          <div className="flex bg-white/80 backdrop-blur-md p-2 rounded-full border border-slate-200 gap-2 min-w-max">
             {tabs.map((tab) => {
               const active = activeTab === tab.id;
               return (
@@ -325,7 +327,7 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
             
             {/* 1. TAB CONTENT: IDENTITAS LEMBAGA */}
             {activeTab === "identitas" && (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start bg-white p-6 sm:p-10 rounded-3xl border border-slate-100 shadow-2xl">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start bg-white p-6 sm:p-10 rounded-3xl border border-slate-100 shadow-lg">
                 
                 {/* Left side details */}
                 <div className="lg:col-span-7 space-y-8">
@@ -443,42 +445,54 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
 
             {/* 2. TAB CONTENT: DATA PENGELOLA */}
             {activeTab === "pengelola" && (
-              <div className="bg-white p-6 sm:p-10 rounded-3xl border border-slate-100 shadow-2xl space-y-10">
+              <div className="bg-white p-6 sm:p-10 rounded-3xl border border-slate-100 shadow-lg space-y-8">
                 <div>
                   <h3 className="text-2xl font-black text-[#280f91] border-b-4 border-[#00badb] pb-2 inline-block uppercase tracking-wide">
-                    Struktur Pengelola
+                    Data Pengelola
                   </h3>
                 </div>
 
                 {managers.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    {managers.map((m) => (
-                      <div 
-                        key={m.id} 
-                        className="p-6 rounded-2xl border border-slate-50 bg-slate-50/40 hover:bg-white hover:border-[#280f91]/15 hover:shadow-xl hover:-translate-y-1.5 transition-all text-center flex flex-col items-center gap-4 group"
-                      >
-                        <div className="h-24 w-24 rounded-full overflow-hidden shadow-md border-4 border-white bg-slate-200 flex items-center justify-center">
-                          {m.foto ? (
-                            <img 
-                              src={m.foto} 
-                              alt={m.nama}
-                              className="h-full w-full object-cover group-hover:scale-110 transition-transform"
-                            />
-                          ) : (
-                            <Users className="h-10 w-10 text-slate-400" />
-                          )}
+                  <>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                      {(showAllManagers ? managers : managers.slice(0, 8)).map((m) => (
+                        <div 
+                          key={m.id} 
+                          className="p-6 rounded-2xl border border-slate-50 bg-slate-50/40 hover:bg-white hover:border-[#280f91]/15 hover:shadow-xl hover:-translate-y-1.5 transition-all text-center flex flex-col items-center gap-4 group"
+                        >
+                          <div className="h-24 w-24 rounded-full overflow-hidden shadow-md border-4 border-white bg-slate-200 flex items-center justify-center">
+                            {m.foto ? (
+                              <img 
+                                src={m.foto} 
+                                alt={m.nama}
+                                className="h-full w-full object-cover group-hover:scale-110 transition-transform"
+                              />
+                            ) : (
+                              <Users className="h-10 w-10 text-slate-400" />
+                            )}
+                          </div>
+                          <div className="space-y-1 text-center min-w-0 w-full">
+                            <h4 className="text-xs font-black text-slate-900 group-hover:text-[#280f91] transition-colors truncate">
+                              {m.nama}
+                            </h4>
+                            <span className="inline-block text-[9px] font-black text-white bg-[#9c27b0] rounded-full px-3 py-1 uppercase tracking-wider truncate max-w-full">
+                              {m.jabatan}
+                            </span>
+                          </div>
                         </div>
-                        <div className="space-y-1 text-center min-w-0 w-full">
-                          <h4 className="text-xs font-black text-slate-900 group-hover:text-[#280f91] transition-colors truncate">
-                            {m.nama}
-                          </h4>
-                          <span className="inline-block text-[9px] font-black text-white bg-[#9c27b0] rounded-full px-3 py-1 uppercase tracking-wider truncate max-w-full">
-                            {m.jabatan}
-                          </span>
-                        </div>
+                      ))}
+                    </div>
+                    {managers.length > 8 && !showAllManagers && (
+                      <div className="text-center">
+                        <button
+                          onClick={() => setShowAllManagers(true)}
+                          className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#280f91] hover:bg-[#ff6105] text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                        >
+                          Selanjutnya
+                        </button>
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  </>
                 ) : (
                   <div className="text-center py-12 text-slate-400 font-bold uppercase">
                     Tidak ada data pengelola saat ini
@@ -489,39 +503,38 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
 
             {/* 3. TAB CONTENT: VISI & MISI */}
             {activeTab === "visi-misi" && (
-              <div className="bg-[#9c27b0] text-white p-6 sm:p-10 rounded-3xl border-4 border-purple-400 shadow-2xl space-y-10">
-                <div className="text-center">
-                  <span className="inline-block bg-white text-[#9c27b0] font-black text-[11px] px-6 py-2 rounded-full uppercase tracking-widest shadow-sm">
-                    VISI & MISI LEMBAGA
-                  </span>
+              <div className="bg-white p-6 sm:p-10 rounded-3xl border border-slate-200 shadow-lg space-y-8">
+                <div>
+                  <h3 className="text-2xl font-black text-[#280f91] border-b-4 border-[#00badb] pb-2 inline-block uppercase tracking-wide">
+                    Visi & Misi
+                  </h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-14 items-start">
+                <div className="space-y-8">
                   {/* Visi */}
-                  <div className="space-y-4 bg-white/10 p-6 sm:p-8 rounded-2xl border border-white/10 backdrop-blur-xs">
-                    <h3 className="text-2xl font-black uppercase tracking-wider text-[#cafc05] flex items-center gap-2">
-                      <Target className="h-6 w-6" /> VISI
-                    </h3>
-                    <p className="text-sm font-black leading-relaxed tracking-wide text-justify uppercase">
+                  <div className="space-y-4 p-6 sm:p-8 rounded-2xl bg-slate-50 border border-slate-100">
+                    <h4 className="text-lg font-black text-[#280f91] uppercase tracking-wider flex items-center gap-2">
+                      <Target className="h-5 w-5" /> VISI
+                    </h4>
+                    <p className="text-sm font-semibold text-slate-700 leading-relaxed text-justify">
                       {visionMission?.visi || "TERWUJUDNYA MASYARAKAT YANG BERAKHLAK MULIA, CERDAS, KREATIF, INOVATIF, TERAMPIL, MANDIRI, DAN BERDAYA SAING"}
                     </p>
                   </div>
 
                   {/* Misi */}
-                  <div className="space-y-4 bg-white/10 p-6 sm:p-8 rounded-2xl border border-white/10 backdrop-blur-xs">
-                    <h3 className="text-2xl font-black uppercase tracking-wider text-[#cafc05] flex items-center gap-2">
-                      <Layers className="h-6 w-6" /> MISI
-                    </h3>
+                  <div className="space-y-4 p-6 sm:p-8 rounded-2xl bg-slate-50 border border-slate-100">
+                    <h4 className="text-lg font-black text-[#280f91] uppercase tracking-wider flex items-center gap-2">
+                      <Layers className="h-5 w-5" /> MISI
+                    </h4>
                     {visionMission?.misi ? (
-                      <ol className="list-decimal pl-5 space-y-3.5 text-xs font-black tracking-wide leading-relaxed uppercase">
+                      <ol className="list-decimal pl-5 space-y-2.5 text-sm font-semibold text-slate-700 leading-relaxed">
                         {visionMission.misi.split("\n").filter(Boolean).map((line, idx) => {
-                          // Strip index markers if present
                           const cleanLine = line.replace(/^\d+[\.\-\s]*/, "");
                           return <li key={idx}>{cleanLine}</li>;
                         })}
                       </ol>
                     ) : (
-                      <ol className="list-decimal pl-5 space-y-3.5 text-xs font-black tracking-wide leading-relaxed uppercase">
+                      <ol className="list-decimal pl-5 space-y-2.5 text-sm font-semibold text-slate-700 leading-relaxed">
                         <li>MEWULJUDKAN PROGRAM PENDIDIKAN LUAR SEKOLAH YANG BERBASIS PADA MASYARAKAT DAN BERORIENTASI PADA KECAKAPAN HIDUP (LIFE SKILLS);</li>
                         <li>MEMPERLUAS AKSES DAN PEMERATAAN PENINGKATAN PENDIDIKAN;</li>
                         <li>MELAKSANAKAN PROGRAM PENDIDIKAN KEWIRAUSAHAAN DEMI TERWUJUDNYA MASYARAKAT MANDIRI;</li>
@@ -650,7 +663,7 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
 
             {/* 6. TAB CONTENT: PRESTASI */}
             {activeTab === "prestasi" && (
-              <div className="bg-white p-6 sm:p-10 rounded-3xl border border-slate-100 shadow-2xl space-y-10">
+              <div className="bg-white p-6 sm:p-10 rounded-3xl border border-slate-100 shadow-lg space-y-8">
                 <div>
                   <h3 className="text-2xl font-black text-[#280f91] border-b-4 border-[#00badb] pb-2 inline-block uppercase tracking-wide">
                     Daftar Prestasi
@@ -658,56 +671,68 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                 </div>
 
                 {achievements.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-                    {achievements.map((item) => (
-                      <div 
-                        key={item.id} 
-                        className="rounded-3xl border border-slate-100 bg-[#fdfaf7] shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all flex flex-col group"
-                      >
-                        {/* Image Frame */}
-                        <div className="h-44 w-full bg-slate-100 overflow-hidden relative">
-                          {item.foto ? (
-                            <img 
-                              src={item.foto} 
-                              alt={item.nama}
-                              className="h-full w-full object-cover group-hover:scale-105 transition-all"
-                            />
-                          ) : (
-                            <div className="h-full w-full flex items-center justify-center text-slate-350 bg-slate-100">
-                              <Award className="h-10 w-10" />
-                            </div>
-                          )}
-                          <div className="absolute top-4 left-4">
-                            <span className="bg-[#9c27b0] text-white text-[9px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md">
-                              Tahun {item.tahun}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Details */}
-                        <div className="p-5 text-left space-y-2 flex-1 flex flex-col min-w-0">
-                          <h4 className="text-sm font-black text-slate-900 group-hover:text-[#280f91] transition-all line-clamp-2">
-                            {item.nama}
-                          </h4>
-                          
-                          <div className="text-[9px] font-black text-slate-400 uppercase tracking-wide space-y-0.5 border-b border-slate-100 pb-2">
-                            <div className="flex items-center gap-1">
-                              <span className="text-[#ff6105]">Tingkat:</span>
-                              <span className="text-slate-800 font-black">{item.tingkat}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <span className="text-[#ff6105]">Penyelenggara:</span>
-                              <span className="text-slate-800 font-bold truncate max-w-full">{item.penyelenggara}</span>
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+                      {(showAllAchievements ? achievements : achievements.slice(0, 6)).map((item) => (
+                        <div 
+                          key={item.id} 
+                          className="rounded-3xl border border-slate-100 bg-[#fdfaf7] shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all flex flex-col group"
+                        >
+                          {/* Image Frame */}
+                          <div className="h-44 w-full bg-slate-100 overflow-hidden relative">
+                            {item.foto ? (
+                              <img 
+                                src={item.foto} 
+                                alt={item.nama}
+                                className="h-full w-full object-cover group-hover:scale-105 transition-all"
+                              />
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center text-slate-350 bg-slate-100">
+                                <Award className="h-10 w-10" />
+                              </div>
+                            )}
+                            <div className="absolute top-4 left-4">
+                              <span className="bg-[#9c27b0] text-white text-[9px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md">
+                                Tahun {item.tahun}
+                              </span>
                             </div>
                           </div>
 
-                          <p className="text-xs font-semibold text-slate-550 leading-relaxed text-justify line-clamp-3 mt-1.5 flex-1">
-                            {item.keterangan}
-                          </p>
+                          {/* Details */}
+                          <div className="p-5 text-left space-y-2 flex-1 flex flex-col min-w-0">
+                            <h4 className="text-sm font-black text-slate-900 group-hover:text-[#280f91] transition-all line-clamp-2">
+                              {item.nama}
+                            </h4>
+                            
+                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-wide space-y-0.5 border-b border-slate-100 pb-2">
+                              <div className="flex items-center gap-1">
+                                <span className="text-[#ff6105]">Tingkat:</span>
+                                <span className="text-slate-800 font-black">{item.tingkat}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="text-[#ff6105]">Penyelenggara:</span>
+                                <span className="text-slate-800 font-bold truncate max-w-full">{item.penyelenggara}</span>
+                              </div>
+                            </div>
+
+                            <p className="text-xs font-semibold text-slate-550 leading-relaxed text-justify line-clamp-3 mt-1.5 flex-1">
+                              {item.keterangan}
+                            </p>
+                          </div>
                         </div>
+                      ))}
+                    </div>
+                    {achievements.length > 6 && !showAllAchievements && (
+                      <div className="text-center">
+                        <button
+                          onClick={() => setShowAllAchievements(true)}
+                          className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#280f91] hover:bg-[#ff6105] text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                        >
+                          Selanjutnya
+                        </button>
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  </>
                 ) : (
                   <div className="text-center py-12 text-slate-400 font-bold uppercase">
                     Tidak ada data prestasi saat ini
