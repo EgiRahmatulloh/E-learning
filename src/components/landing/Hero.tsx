@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { ChevronLeft, ChevronRight, UserPlus, BookOpen, ClipboardCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import eSpmbImg from "@/assets/E-SPMB.jpeg";
+import eLearningImg from "@/assets/E-LEARNING.jpeg";
+import eUjianImg from "@/assets/E-UJIAN.jpeg";
 
 interface SlideData {
   image: string;
@@ -269,10 +272,10 @@ export default function Hero({ onServiceClick }: HeroProps) {
           </div>
 
           {/* ===== RIGHT: Layanan Digital Portal ===== */}
-          <div className="shrink-0 w-full sm:w-auto self-center lg:self-end pt-0 lg:pb-20">
-            <div className="max-w-[260px] mx-auto lg:mx-0">
+          <div className="shrink-0 w-full lg:w-auto self-center lg:self-end pt-0 lg:pb-20">
+            <div className="w-full sm:w-[280px] lg:w-[300px] mx-auto lg:mx-0">
               <h4
-                className="text-center text-2xl sm:text-3xl lg:text-4xl font-black mb-3 lg:mb-4 select-none"
+                className="text-center lg:text-left text-2xl sm:text-3xl font-black mb-4 select-none"
                 style={{
                   fontFamily: "'Playfair Display', 'Georgia', serif",
                   fontStyle: "italic",
@@ -282,51 +285,57 @@ export default function Hero({ onServiceClick }: HeroProps) {
               >
                 Layanan Digital
               </h4>
-              <div className="space-y-2 lg:space-y-3">
-                {/* E-SPMB Button */}
-                <button
+              <div className="space-y-3">
+                {/* E-SPMB Card */}
+                <div
                   onClick={() => onServiceClick?.("e-spmb")}
-                  className="w-full group relative overflow-hidden rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-black text-sm sm:text-base tracking-wider py-2 lg:py-2.5 px-4 shadow-lg shadow-purple-900/30 hover:shadow-xl hover:shadow-purple-800/40 active:scale-[0.97] transition-all duration-200 cursor-pointer flex flex-col items-center"
+                  className="group p-4 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-md hover:bg-white/20 hover:-translate-y-1 transition duration-300 cursor-pointer shadow-lg flex items-center gap-4"
                 >
-                  <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                  <span className="relative flex items-center gap-2">
-                    <UserPlus className="h-5 w-5 shrink-0" />
-                    E-SPMB
-                  </span>
-                  <span className="relative text-[9px] font-bold tracking-wider opacity-90 mt-0.5">
-                    Lihat Selengkapnya
-                  </span>
-                </button>
+                  <div className="bg-white/15 p-1.5 rounded-xl h-20 w-20 flex items-center justify-center overflow-hidden shrink-0">
+                    <img src={eSpmbImg} alt="E-SPMB" className="h-full w-full object-cover rounded-lg" />
+                  </div>
+                  <div className="text-left flex-1 min-w-0">
+                    <h3 className="text-white font-bold text-sm leading-snug">E-SPMB</h3>
+                    <p className="text-gray-300 text-[11px] mt-0.5 leading-normal truncate">Pendaftaran Siswa Baru</p>
+                    <span className="text-[11px] text-[#cafc05] underline mt-1.5 inline-block font-semibold group-hover:text-white transition-colors">
+                      Lihat Selengkapnya &rarr;
+                    </span>
+                  </div>
+                </div>
 
-                {/* E-LEARNING Button */}
-                <button
+                {/* E-LEARNING Card */}
+                <div
                   onClick={() => onServiceClick?.("e-learning")}
-                  className="w-full group relative overflow-hidden rounded-xl bg-gradient-to-r from-[#280f91] to-indigo-700 hover:from-indigo-600 hover:to-[#280f91] text-white font-black text-sm sm:text-base tracking-wider py-2 lg:py-2.5 px-4 shadow-lg shadow-indigo-900/30 hover:shadow-xl hover:shadow-indigo-800/40 active:scale-[0.97] transition-all duration-200 cursor-pointer flex flex-col items-center"
+                  className="group p-4 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-md hover:bg-white/20 hover:-translate-y-1 transition duration-300 cursor-pointer shadow-lg flex items-center gap-4"
                 >
-                  <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                  <span className="relative flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 shrink-0" />
-                    E-LEARNING
-                  </span>
-                  <span className="relative text-[9px] font-bold tracking-wider opacity-90 mt-0.5">
-                    Lihat Selengkapnya
-                  </span>
-                </button>
+                  <div className="bg-white/15 p-1.5 rounded-xl h-20 w-20 flex items-center justify-center overflow-hidden shrink-0">
+                    <img src={eLearningImg} alt="E-LEARNING" className="h-full w-full object-cover rounded-lg" />
+                  </div>
+                  <div className="text-left flex-1 min-w-0">
+                    <h3 className="text-white font-bold text-sm leading-snug">E-LEARNING</h3>
+                    <p className="text-gray-300 text-[11px] mt-0.5 leading-normal truncate">Portal Pembelajaran & Modul</p>
+                    <span className="text-[11px] text-[#cafc05] underline mt-1.5 inline-block font-semibold group-hover:text-white transition-colors">
+                      Lihat Selengkapnya &rarr;
+                    </span>
+                  </div>
+                </div>
 
-                {/* E-UJIAN Button */}
-                <button
+                {/* E-UJIAN Card */}
+                <div
                   onClick={() => onServiceClick?.("e-ujian")}
-                  className="w-full group relative overflow-hidden rounded-xl bg-gradient-to-r from-[#ff6105] to-amber-500 hover:from-amber-500 hover:to-[#ff6105] text-white font-black text-sm sm:text-base tracking-wider py-2 lg:py-2.5 px-4 shadow-lg shadow-orange-900/30 hover:shadow-xl hover:shadow-orange-700/40 active:scale-[0.97] transition-all duration-200 cursor-pointer flex flex-col items-center"
+                  className="group p-4 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-md hover:bg-white/20 hover:-translate-y-1 transition duration-300 cursor-pointer shadow-lg flex items-center gap-4"
                 >
-                  <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                  <span className="relative flex items-center gap-2">
-                    <ClipboardCheck className="h-5 w-5 shrink-0" />
-                    E-UJIAN
-                  </span>
-                  <span className="relative text-[9px] font-bold tracking-wider opacity-90 mt-0.5">
-                    Lihat Selengkapnya
-                  </span>
-                </button>
+                  <div className="bg-white/15 p-1.5 rounded-xl h-20 w-20 flex items-center justify-center overflow-hidden shrink-0">
+                    <img src={eUjianImg} alt="E-UJIAN" className="h-full w-full object-cover rounded-lg" />
+                  </div>
+                  <div className="text-left flex-1 min-w-0">
+                    <h3 className="text-white font-bold text-sm leading-snug">E-UJIAN</h3>
+                    <p className="text-gray-300 text-[11px] mt-0.5 leading-normal truncate">Ujian Pendidikan Kesetaraan</p>
+                    <span className="text-[11px] text-[#cafc05] underline mt-1.5 inline-block font-semibold group-hover:text-white transition-colors">
+                      Lihat Selengkapnya &rarr;
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
