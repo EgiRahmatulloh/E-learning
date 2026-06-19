@@ -254,7 +254,8 @@ export function AchievementsManager() {
     
     try {
       let rows: string[][] = [];
-      if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
+      const lowerName = file.name.toLowerCase();
+      if (lowerName.endsWith(".xlsx") || lowerName.endsWith(".xls")) {
         rows = await parseExcel(file);
       } else {
         const text = await new Promise<string>((resolve, reject) => {

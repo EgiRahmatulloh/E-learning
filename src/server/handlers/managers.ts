@@ -243,17 +243,18 @@ export const managersHandlers = new Elysia()
         }));
 
         const chunkSize = 100;
-        await db.transaction(async (tx) => {
+        db.transaction((tx) => {
           for (let i = 0; i < insertValues.length; i += chunkSize) {
             const chunk = insertValues.slice(i, i + chunkSize);
-            await tx.insert(managers).values(chunk).run();
+            tx.insert(managers).values(chunk).run();
           }
         });
         return {
           success: true,
           message: `Berhasil mengimpor ${insertValues.length} data pengelola`,
         };
-      } catch {
+      } catch (err) {
+        console.error("Gagal mengimpor data pengelola:", err);
         set.status = 500;
         return { success: false, message: "Gagal mengimpor data pengelola" };
       }

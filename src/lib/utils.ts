@@ -13,10 +13,25 @@ export async function parseExcel(file: File): Promise<string[][]> {
       try {
         const data = e.target?.result;
         const workbook = XLSX.read(data, { type: "array" });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const sheetData = XLSX.utils.sheet_to_json<unknown[]>(worksheet, { header: 1, defval: "" });
-        const rows = sheetData.map(row => 
+        // Pilih sheet pertama yang memiliki data (lewati sheet kosong di depan).
+        let worksheet: XLSX.WorkSheet | undefined;
+        for (const name of workbook.SheetNames) {
+          const ws = workbook.Sheets[name];
+          if (ws && ws["!ref"]) {
+            worksheet = ws;
+            break;
+          }
+        }
+        if (!worksheet) {
+          resolve([]);
+          return;
+        }
+        const sheetData = XLSX.utils.sheet_to_json<unknown[]>(worksheet, {
+          header: 1,
+          defval: "",
+          blankrows: false,
+        });
+        const rows = sheetData.map(row =>
           Array.isArray(row) ? row.map(cell => String(cell ?? "")) : []
         );
         resolve(rows);
@@ -103,32 +118,44 @@ export function mapCsvRows<T extends string>(
 ): Record<T, string>[] {
   if (rows.length === 0) return [];
 
-  const firstRow = rows[0];
-  
-  // Check if first row looks like a header
-  const matchedIndices = new Map<T, number>();
-  let matchCount = 0;
+  const clean = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const threshold = Math.min(2, mappingConfig.length);
 
-  const cleanFirstRow = firstRow.map(cell => cell.toLowerCase().replace(/[^a-z0-9]/g, ''));
+  // Cari baris header di antara beberapa baris pertama. Ini menangani file yang
+  // memiliki baris judul (mis. "DAFTAR WARGA BELAJAR ...") di atas tabel, sehingga
+  // baris judul & header tidak ikut terimpor sebagai data.
+  const scanLimit = Math.min(rows.length, 8);
+  let headerRowIdx = -1;
+  let matchedIndices = new Map<T, number>();
+  let bestCount = 0;
 
-  for (const item of mappingConfig) {
-    const key = item.key;
-    const aliases = item.aliases.map(a => a.toLowerCase().replace(/[^a-z0-9]/g, ''));
-    
-    // Find index in header
-    const idx = cleanFirstRow.findIndex(cell => 
-      aliases.some(alias => cell === alias)
-    );
-    
-    if (idx !== -1) {
-      matchedIndices.set(key, idx);
-      matchCount++;
+  for (let r = 0; r < scanLimit; r++) {
+    const cells = rows[r];
+    if (!cells || cells.every(c => !c.trim())) continue;
+    const cleaned = cells.map(clean);
+
+    const matched = new Map<T, number>();
+    for (const item of mappingConfig) {
+      const aliases = item.aliases.map(clean);
+      const idx = cleaned.findIndex(cell => cell !== "" && aliases.includes(cell));
+      if (idx !== -1) matched.set(item.key, idx);
+    }
+
+    if (matched.size > bestCount) {
+      bestCount = matched.size;
+      matchedIndices = matched;
+      headerRowIdx = r;
     }
   }
 
-  // If we match at least 2 headers (or 1 if configuration only has 1 key), we assume it has a header row.
-  const hasHeader = matchCount >= Math.min(2, mappingConfig.length);
-  const startIdx = hasHeader ? 1 : 0;
+  const hasHeader = bestCount >= threshold;
+  if (!hasHeader) matchedIndices = new Map<T, number>();
+
+  // Kolom yang sudah diklaim header, agar fallback posisi tidak menyerobotnya.
+  const usedIdx = new Set<number>(matchedIndices.values());
+
+  // Tanpa header: mapping posisional mulai baris 0. Dengan header: mulai setelahnya.
+  const startIdx = hasHeader ? headerRowIdx + 1 : 0;
 
   const results: Record<T, string>[] = [];
 
@@ -140,15 +167,21 @@ export function mapCsvRows<T extends string>(
     const record = {} as Record<T, string>;
     for (const item of mappingConfig) {
       const key = item.key;
-      let colIdx = item.defaultIndex;
-      
+      let colIdx: number;
+
       if (hasHeader) {
         const foundIdx = matchedIndices.get(key);
         if (foundIdx !== undefined) {
           colIdx = foundIdx;
+        } else if (!usedIdx.has(item.defaultIndex)) {
+          // Header dikenali sebagian: untuk kolom yang headernya tak terdaftar,
+          // jatuh kembali ke posisi default selama posisi itu belum dipakai.
+          colIdx = item.defaultIndex;
         } else {
           colIdx = -1;
         }
+      } else {
+        colIdx = item.defaultIndex;
       }
 
       record[key] = colIdx !== -1 && cols[colIdx] !== undefined ? cols[colIdx].trim() : "";

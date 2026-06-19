@@ -467,17 +467,18 @@ export const studentsHandlers = new Elysia()
         }));
 
         const chunkSize = 100;
-        await db.transaction(async (tx) => {
+        db.transaction((tx) => {
           for (let i = 0; i < insertValues.length; i += chunkSize) {
             const chunk = insertValues.slice(i, i + chunkSize);
-            await tx.insert(students).values(chunk).run();
+            tx.insert(students).values(chunk).run();
           }
         });
         return {
           success: true,
           message: `Berhasil mengimpor ${insertValues.length} data warga belajar`,
         };
-      } catch {
+      } catch (err) {
+        console.error("Gagal mengimpor data warga belajar:", err);
         set.status = 500;
         return { success: false, message: "Gagal mengimpor data warga belajar" };
       }

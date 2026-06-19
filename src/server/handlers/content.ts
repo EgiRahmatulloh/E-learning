@@ -621,17 +621,18 @@ export const contentHandlers = new Elysia()
         }));
 
         const chunkSize = 100;
-        await db.transaction(async (tx) => {
+        db.transaction((tx) => {
           for (let i = 0; i < insertValues.length; i += chunkSize) {
             const chunk = insertValues.slice(i, i + chunkSize);
-            await tx.insert(facilities).values(chunk).run();
+            tx.insert(facilities).values(chunk).run();
           }
         });
         return {
           success: true,
           message: `Berhasil mengimpor ${insertValues.length} sarana dan fasilitas`,
         };
-      } catch {
+      } catch (err) {
+        console.error("Gagal mengimpor data sarana dan fasilitas:", err);
         set.status = 500;
         return { success: false, message: "Gagal mengimpor data sarana dan fasilitas" };
       }
@@ -823,17 +824,18 @@ export const contentHandlers = new Elysia()
         }));
 
         const chunkSize = 100;
-        await db.transaction(async (tx) => {
+        db.transaction((tx) => {
           for (let i = 0; i < insertValues.length; i += chunkSize) {
             const chunk = insertValues.slice(i, i + chunkSize);
-            await tx.insert(achievements).values(chunk).run();
+            tx.insert(achievements).values(chunk).run();
           }
         });
         return {
           success: true,
           message: `Berhasil mengimpor ${insertValues.length} data prestasi`,
         };
-      } catch {
+      } catch (err) {
+        console.error("Gagal mengimpor data prestasi:", err);
         set.status = 500;
         return { success: false, message: "Gagal mengimpor data prestasi" };
       }
@@ -1030,17 +1032,18 @@ export const contentHandlers = new Elysia()
         }));
 
         const chunkSize = 100;
-        await db.transaction(async (tx) => {
+        db.transaction((tx) => {
           for (let i = 0; i < insertValues.length; i += chunkSize) {
             const chunk = insertValues.slice(i, i + chunkSize);
-            await tx.insert(servicePoints).values(chunk).run();
+            tx.insert(servicePoints).values(chunk).run();
           }
         });
         return {
           success: true,
           message: `Berhasil mengimpor ${insertValues.length} data titik layanan`,
         };
-      } catch {
+      } catch (err) {
+        console.error("Gagal mengimpor data titik layanan:", err);
         set.status = 500;
         return { success: false, message: "Gagal mengimpor data titik layanan" };
       }
@@ -1258,14 +1261,15 @@ export const contentHandlers = new Elysia()
         }));
 
         const chunkSize = 100;
-        await db.transaction(async (tx) => {
+        db.transaction((tx) => {
           for (let i = 0; i < insertValues.length; i += chunkSize) {
             const chunk = insertValues.slice(i, i + chunkSize);
-            await tx.insert(agendas).values(chunk).run();
+            tx.insert(agendas).values(chunk).run();
           }
         });
         return { success: true, message: `Berhasil mengimpor ${insertValues.length} data agenda` };
-      } catch {
+      } catch (err) {
+        console.error("Gagal mengimpor data agenda:", err);
         set.status = 500;
         return { success: false, message: "Gagal mengimpor data agenda" };
       }
@@ -1741,17 +1745,18 @@ export const contentHandlers = new Elysia()
         }
 
         const chunkSize = 100;
-        await db.transaction(async (tx) => {
+        db.transaction((tx) => {
           for (let i = 0; i < validItems.length; i += chunkSize) {
             const chunk = validItems.slice(i, i + chunkSize);
-            await tx.insert(alumni).values(chunk).run();
+            tx.insert(alumni).values(chunk).run();
           }
         });
         return {
           success: true,
           message: `Berhasil mengimpor ${validItems.length} data alumni`,
         };
-      } catch {
+      } catch (err) {
+        console.error("Gagal mengimpor data alumni:", err);
         set.status = 500;
         return { success: false, message: "Gagal mengimpor data alumni" };
       }

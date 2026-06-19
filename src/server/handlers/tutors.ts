@@ -313,14 +313,15 @@ export const tutorsHandlers = new Elysia()
         }));
 
         const chunkSize = 100;
-        await db.transaction(async (tx) => {
+        db.transaction((tx) => {
           for (let i = 0; i < insertValues.length; i += chunkSize) {
             const chunk = insertValues.slice(i, i + chunkSize);
-            await tx.insert(tutors).values(chunk).run();
+            tx.insert(tutors).values(chunk).run();
           }
         });
         return { success: true, message: `Berhasil mengimpor ${insertValues.length} data tutor` };
-      } catch {
+      } catch (err) {
+        console.error("Gagal mengimpor data tutor:", err);
         set.status = 500;
         return { success: false, message: "Gagal mengimpor data tutor" };
       }
