@@ -17,4 +17,8 @@ export {
   products,
   alumni,
   gallery,
+  elearningCourses,
+  elearningSessions,
+  elearningMaterials,
+  elearningEvaluations,
 } from "../db/schema";

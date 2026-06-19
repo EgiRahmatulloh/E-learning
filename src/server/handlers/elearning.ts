@@ -1,20 +1,66 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Elysia, t } from "elysia";
-import { db } from "../db";
+import { db } from "../config/db";
 import {
   elearningCourses,
   elearningSessions,
   elearningMaterials,
-} from "../db/schema";
+  elearningEvaluations,
+} from "../models";
 import { eq, and } from "drizzle-orm";
 import { jwt } from "@elysia/jwt";
 import { finalJwtSecret } from "../config/jwt";
+import { verifyAdmin } from "../middleware/auth";
 import sanitizeHtml from "sanitize-html";
+
+// Helper: verify any authenticated user (siswa, tutor, admin, super_admin)
+const verifyUser = async (headers: Record<string, string | undefined>, jwt: any, set: any) => {
+  const authHeader = headers["authorization"];
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    set.status = 401;
+    return { success: false, message: "Akses ditolak, token hilang" };
+  }
+  const token = authHeader.split(" ")[1];
+  const payload = await jwt.verify(token);
+  if (!payload) {
+    set.status = 401;
+    return { success: false, message: "Sesi Anda telah kedaluwarsa, silakan masuk kembali" };
+  }
+  return null; // valid
+};
+
+// Helper: verify admin or tutor only
+const verifyAdminOrTutor = async (headers: Record<string, string | undefined>, jwt: any, set: any) => {
+  const authHeader = headers["authorization"];
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    set.status = 401;
+    return { success: false, message: "Akses ditolak, token hilang" };
+  }
+  const token = authHeader.split(" ")[1];
+  const payload = await jwt.verify(token);
+  if (!payload) {
+    set.status = 401;
+    return { success: false, message: "Sesi Anda telah kedaluwarsa, silakan masuk kembali" };
+  }
+  if (payload.role !== "admin" && payload.role !== "super_admin" && payload.role !== "tutor") {
+    set.status = 403;
+    return { success: false, message: "Akses ditolak, hanya tutor atau admin yang diizinkan" };
+  }
+  return null; // valid
+};
 
 export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
   .use(
     jwt({
       name: "jwt",
       secret: finalJwtSecret,
+      schema: t.Object({
+        id: t.Numeric(),
+        username: t.String(),
+        role: t.String(),
+        name: t.String(),
+        email: t.String(),
+      }),
     })
   )
 
@@ -22,10 +68,15 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
   .post(
     "/course",
     async (context: any) => {
-      const { body, set } = context;
+      const { headers, jwt, body, set } = context;
+
+      // Auth: admin atau tutor saja yang boleh buat course
+      const authError = await verifyAdminOrTutor(headers, jwt, set);
+      if (authError) return authError;
+
       try {
         const { subjectName, program, kelas } = body;
-        
+
         let course = await db
           .select()
           .from(elearningCourses)
@@ -68,12 +119,17 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
   .get(
     "/session",
     async (context: any) => {
-      const { query, set } = context;
+      const { headers, jwt, query, set } = context;
+
+      // Auth: semua user yang login boleh baca sesi
+      const authError = await verifyUser(headers, jwt, set);
+      if (authError) return authError;
+
       try {
         const courseId = query.courseId;
         const sessionNumber = query.sessionNumber;
 
-        let session = await db
+        const session = await db
           .select()
           .from(elearningSessions)
           .where(
@@ -85,16 +141,8 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           .get();
 
         if (!session) {
-          const inserted = await db
-            .insert(elearningSessions)
-            .values({
-              courseId,
-              sessionNumber,
-              title: sessionNumber === 0 ? "Pendahuluan" : `Sesi ${sessionNumber}`,
-              description: "", // Teks Pembuka
-            })
-            .returning();
-          session = inserted[0];
+          set.status = 404;
+          return { success: false, message: "Sesi tidak ditemukan" };
         }
 
         // Ambil Material terkait
@@ -122,7 +170,12 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
   .put(
     "/session/:id",
     async (context: any) => {
-      const { params: { id }, body, set } = context;
+      const { headers, jwt, params: { id }, body, set } = context;
+
+      // Auth: admin atau tutor saja
+      const authError = await verifyAdminOrTutor(headers, jwt, set);
+      if (authError) return authError;
+
       try {
         await db
           .update(elearningSessions)
@@ -146,7 +199,12 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
   .post(
     "/material",
     async (context: any) => {
-      const { body, set } = context;
+      const { headers, jwt, body, set } = context;
+
+      // Auth: admin atau tutor saja
+      const authError = await verifyAdminOrTutor(headers, jwt, set);
+      if (authError) return authError;
+
       try {
         const { sessionId, title, type, fileUrl } = body;
 
@@ -198,10 +256,13 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
   .get(
     "/evaluations",
     async (context: any) => {
-      const { set } = context;
+      const { headers, jwt, set } = context;
+
+      // Auth: semua user yang login boleh baca evaluasi
+      const authError = await verifyUser(headers, jwt, set);
+      if (authError) return authError;
+
       try {
-        // Ambil data evaluasi dari schema, pastikan import elearningEvaluations sudah ada di schema yang di-import
-        const { elearningEvaluations } = require("../db/schema");
         const evaluations = await db.select().from(elearningEvaluations).all();
         return { success: true, data: evaluations };
       } catch (error: any) {
@@ -211,13 +272,17 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
     }
   )
 
-  // Simpan daftar pertanyaan angket
+  // Simpan daftar pertanyaan angket (admin only — destructive delete-all)
   .post(
     "/evaluations",
     async (context: any) => {
-      const { body, set } = context;
+      const { headers, jwt, set, body } = context;
+
+      // Auth: admin atau super_admin saja (operasi destructif)
+      const authError = await verifyAdmin(headers, jwt, set);
+      if (authError) return authError;
+
       try {
-        const { elearningEvaluations } = require("../db/schema");
         // Hapus semua lalu insert ulang
         await db.delete(elearningEvaluations);
         if (body.questions && body.questions.length > 0) {
