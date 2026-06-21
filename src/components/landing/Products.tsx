@@ -68,7 +68,7 @@ export default function Products() {
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3 mb-10">
           <span className="text-xs font-extrabold uppercase tracking-widest text-[#ff6105] bg-orange-100 rounded-full px-4 py-1.5 inline-block">
-            Produk
+            KARYA & KREATIVITAS
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight uppercase">
             <span className="text-[#280f91]">PRODUK HASIL</span>{" "}

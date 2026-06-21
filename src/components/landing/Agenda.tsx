@@ -73,10 +73,10 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
           {/* HEADER SECTION */}
           <div className="text-center max-w-3xl mx-auto mb-8 space-y-4 animate-in fade-in duration-700">
             <span className="text-xs font-black uppercase tracking-widest text-[#280f91] bg-slate-200/60 rounded-full px-5 py-2 inline-block">
-              AGENDA
+              PROGRAM KEGIATAN SEKOLAH
             </span>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#280f91] tracking-tight leading-tight uppercase">
-              AGENDA <span className="text-[#ff6105]">PKBM MENUJU MAKMUR</span>
+              AGENDA <span className="text-[#ff6105]">KEGIATAN</span>
             </h2>
             <p className="text-slate-500 font-semibold text-sm leading-relaxed max-w-2xl mx-auto">
               Agenda kegiatan disusun sebagai informasi mengenai rangkaian kegiatan yang akan dilaksanakan di PKBM Menuju Makmur agar seluruh kegiatan dapat berjalan dengan tertib, terarah, dan sesuai tujuan
@@ -237,11 +237,11 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3 mb-10">
           <span className="text-xs font-extrabold uppercase tracking-widest text-[#ff6105] bg-orange-100 rounded-full px-4 py-1.5 inline-block">
-            Agenda
+            PROGRAM KEGIATAN SEKOLAH
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight uppercase">
             <span className="text-[#280f91]">AGENDA</span>{" "}
-            <span className="text-[#ff6105]">PKBM MENUJU MAKMUR</span>
+            <span className="text-[#ff6105]">KEGIATAN</span>
           </h2>
           <p className="text-slate-600 font-semibold text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
             Agenda kegiatan disusun sebagai informasi mengenai rangkaian kegiatan yang akan dilaksanakan di PKBM Menuju Makmur agar seluruh kegiatan dapat berjalan dengan tertib, terarah, dan sesuai tujuan.

@@ -49,11 +49,11 @@ export default function Gallery(_props: GalleryProps) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto space-y-3 mb-10">
           <span className="text-xs font-extrabold uppercase tracking-widest text-[#ff6105] bg-orange-100 rounded-full px-4 py-1.5 inline-block">
-            Galeri Kegiatan
+            DOKUMENTASI KEGIATAN
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight uppercase">
             <span className="text-[#280f91]">GALERI</span>{" "}
-            <span className="text-[#ff6105]">PKBM MENUJU MAKMUR</span>
+            <span className="text-[#ff6105]">KEGIATAN</span>
           </h2>
           <p className="text-slate-600 font-semibold text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
             Galeri PKBM Menuju Makmur menjadi tempat tersimpannya berbagai momen berharga yang menggambarkan semangat belajar, kebersamaan, dan perjalanan menuju masa depan yang lebih baik

@@ -97,7 +97,7 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
               TENAGA PENDIDIK
             </span>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#280f91] tracking-tight leading-tight uppercase">
-              TUTOR <span className="text-[#ff6105]">PKBM MENUJU MAKMUR</span>
+              MENGENAL <span className="text-[#ff6105]">TUTOR KAMI</span>
             </h2>
             <p className="text-slate-500 font-semibold text-sm leading-relaxed max-w-2xl mx-auto">
               Tutor PKBM Menuju Makmur merupakan tenaga pendidik yang berdedikasi dalam membimbing, mendampingi, dan memberikan ilmu pengetahuan kepada warga belajar guna meningkatkan kualitas pendidikan dan keterampilan
@@ -385,8 +385,8 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
             Tenaga Pendidik
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight uppercase">
-            <span className="text-[#280f91]">TUTOR</span>{" "}
-            <span className="text-[#ff6105]">PKBM MENUJU MAKMUR</span>
+            <span className="text-[#280f91]">MENGENAL</span>{" "}
+            <span className="text-[#ff6105]">TUTOR KAMI</span>
           </h2>
           <p className="text-slate-600 font-semibold text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
             Tutor PKBM Menuju Makmur merupakan tenaga pendidik yang berdedikasi dalam membimbing, mendampingi, dan memberikan ilmu pengetahuan kepada warga belajar guna meningkatkan kualitas pendidikan dan keterampilan.

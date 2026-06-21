@@ -79,7 +79,7 @@ export default function ProductsPage() {
         {/* Centered Title */}
         <div className="text-center max-w-4xl mx-auto space-y-4 mb-12">
           <span className="text-xs font-black uppercase tracking-widest text-[#280f91] bg-slate-200/60 rounded-full px-5 py-2 inline-block mb-2">
-            KARYA & KREATIVITAS WARGA BELAJAR
+            KARYA & KREATIVITAS
           </span>
           <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-center leading-none uppercase drop-shadow-sm">
             <span className="text-[#280f91]">PRODUK HASIL</span> <span className="text-[#ff6105]">WARGA BELAJAR</span>
