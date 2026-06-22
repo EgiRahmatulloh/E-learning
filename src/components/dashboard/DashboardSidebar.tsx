@@ -131,7 +131,7 @@ export default function DashboardSidebar({
         })
         .catch((err) => console.error("Failed to load tutor setups:", err));
     }
-  }, [user]);
+  }, [user?.id, user?.role]);
 
   const toggleExpand = (id: string) => {
     setExpandedMenus((prev) => ({ ...prev, [id]: !prev[id] }));

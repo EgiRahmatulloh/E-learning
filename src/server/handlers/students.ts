@@ -24,7 +24,11 @@ export const studentsHandlers = new Elysia()
   // Ambil semua rombel unik berdasarkan program dan kelas warga belajar
   .get("/api/rombels", async ({ set }) => {
     try {
-      const list = await db.select().from(students).all();
+      const list = await db
+        .select({ program: students.program, kelas: students.kelas })
+        .from(students)
+        .all();
+        
       const uniqueRombels = Array.from(
         new Set(
           list

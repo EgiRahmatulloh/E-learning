@@ -334,7 +334,13 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
 
       try {
         let condition = undefined;
-        if (query.tutorId) {
+        const authHeader = headers["authorization"];
+        const token = authHeader!.split(" ")[1];
+        const payload = await jwt.verify(token);
+
+        if (payload.role === "tutor") {
+          condition = eq(elearningSetups.tutorId, payload.id as number);
+        } else if (query.tutorId) {
           condition = eq(elearningSetups.tutorId, parseInt(query.tutorId));
         }
 
@@ -416,6 +422,11 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           })
           .where(eq(elearningSetups.id, parseInt(id)))
           .returning();
+
+        if (updated.length === 0) {
+          set.status = 404;
+          return { success: false, message: "Setup tidak ditemukan" };
+        }
 
         return { success: true, data: updated[0] };
       } catch (error: any) {
