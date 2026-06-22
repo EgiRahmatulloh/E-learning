@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Save, HelpCircle, Image, X, Edit3, Filter, RotateCcw, Loader2 } from "lucide-react";
+import { Plus, Trash2, Save, HelpCircle, Image, X, Edit3, Filter, RotateCcw, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
 
@@ -235,7 +235,7 @@ export default function GalleryManager() {
   const currentItems = filteredList.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 relative pb-16 animate-in fade-in duration-300">
       {/* HEADER SECTION */}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
         <div>
@@ -245,15 +245,6 @@ export default function GalleryManager() {
           <p className="text-xs text-slate-500 font-semibold mt-1">
             Kelola foto kegiatan PKBM Menuju Makmur berdasarkan kategori.
           </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            onClick={startAdd}
-            className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
-          >
-            <Plus className="h-4 w-4" /> TAMBAH BARU
-          </Button>
-
         </div>
       </div>
 
@@ -285,6 +276,12 @@ export default function GalleryManager() {
               className="flex-1 h-10 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
             >
               <RotateCcw className="h-4 w-4" /> RESET
+            </Button>
+            <Button
+              onClick={startAdd}
+              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 h-10 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
+            >
+              <Plus className="h-4 w-4" /> TAMBAH BARU
             </Button>
           </div>
         </div>
@@ -387,15 +384,24 @@ export default function GalleryManager() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between p-5 border-t border-slate-100 bg-slate-50/50">
-            <span className="text-xs text-slate-400 font-semibold">
-              Menampilkan {indexOfFirstItem + 1}–{Math.min(indexOfLastItem, totalItems)} dari {totalItems} data
+          <div className="flex justify-end items-center gap-2.5 p-4 border-t border-slate-100">
+            <Button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className="bg-[#ffb300] hover:bg-[#ffa000] text-black font-extrabold text-xs h-9 px-4 rounded-xl cursor-pointer disabled:opacity-50 transition-all"
+            >
+              <ChevronLeft className="h-4 w-4 mr-0.5" /> Previous
+            </Button>
+            <span className="h-9 w-9 flex items-center justify-center bg-[#ffb300] text-black font-black text-sm rounded-xl">
+              {currentPage}
             </span>
-            <div className="flex items-center gap-1">
-              <Button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} disabled={currentPage === 1} variant="outline" size="sm" className="rounded-lg text-xs font-bold text-slate-500">Previous</Button>
-              <span className="text-xs font-black px-3 py-1 bg-white border border-slate-200 rounded-lg shadow-xs">{currentPage}</span>
-              <Button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} variant="outline" size="sm" className="rounded-lg text-xs font-bold text-slate-500">Next</Button>
-            </div>
+            <Button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="bg-[#ffb300] hover:bg-[#ffa000] text-black font-extrabold text-xs h-9 px-4 rounded-xl cursor-pointer disabled:opacity-50 transition-all"
+            >
+              Next <ChevronRight className="h-4 w-4 ml-0.5" />
+            </Button>
           </div>
         )}
       </div>
@@ -527,7 +533,7 @@ export default function GalleryManager() {
                   <Button
                     type="submit"
                     disabled={saving || uploading}
-                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
+                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
                   >
                     {saving ? (
                       <>
@@ -543,7 +549,7 @@ export default function GalleryManager() {
                     <Button
                       type="button"
                       onClick={() => handleDelete()}
-                      className="bg-rose-600 hover:bg-rose-700 text-white border-0 font-extrabold text-sm px-6 h-11 rounded-full cursor-pointer shadow-md shadow-rose-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
+                      className="bg-rose-600 hover:bg-rose-700 text-white border-0 font-extrabold text-sm px-6 h-11 rounded-xl cursor-pointer shadow-md shadow-rose-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
                     >
                       <Trash2 size={15} /> HAPUS
                     </Button>

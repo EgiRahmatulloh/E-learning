@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { parseCSV, downloadCSV, mapCsvRows, parseExcel } from "@/lib/utils";
-import { Upload, Plus, Trash2, Save, HelpCircle, Download, LayoutGrid, List, Search, X, Loader2 } from "lucide-react";
+import { Upload, Plus, Trash2, Save, HelpCircle, Download, LayoutGrid, List, Search, X, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
 
@@ -436,7 +436,7 @@ export default function AlumniManager() {
   const currentItems = filteredAlumni.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
-    <div className="space-y-6 pb-24 relative animate-in fade-in duration-300">
+    <div className="space-y-6 relative pb-16 animate-in fade-in duration-300">
       
       {/* HEADER */}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
@@ -447,24 +447,6 @@ export default function AlumniManager() {
           <p className="text-xs text-slate-500 font-semibold mt-1">
             Kelola data lulusan pendidikan kesetaraan PKBM Menuju Makmur.
           </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <input
-            type="file"
-            ref={importInputRef}
-            className="hidden"
-            accept=".csv, .xlsx, .xls"
-            onChange={handleImportCSV}
-          />
-          <Button onClick={() => importInputRef.current?.click()} className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 py-2.5 rounded-xl cursor-pointer tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md shadow-purple-200 uppercase">
-            <Upload size={16} /> Upload CSV / Excel
-          </Button>
-          <Button onClick={handleExportCSV} className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl cursor-pointer tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md shadow-emerald-200 uppercase">
-            <Download size={16} /> Download CSV
-          </Button>
-          <Button onClick={startAddAlumni} className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md shadow-purple-200 uppercase">
-            <Plus className="h-4 w-4" /> TAMBAH DATA
-          </Button>
         </div>
       </div>
 
@@ -521,8 +503,24 @@ export default function AlumniManager() {
             </select>
           </div>
         </div>
-        <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-slate-100">
-          <Button onClick={handleReset} className="bg-slate-500 hover:bg-slate-650 text-white text-xs font-bold rounded-xl h-10 px-6 active:scale-95 transition-all">
+        <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-slate-100 flex-wrap">
+          <input
+            type="file"
+            ref={importInputRef}
+            className="hidden"
+            accept=".csv, .xlsx, .xls"
+            onChange={handleImportCSV}
+          />
+          <Button onClick={() => importInputRef.current?.click()} className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 py-2.5 rounded-xl cursor-pointer tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md shadow-purple-200 uppercase">
+            <Upload size={16} /> Upload CSV / Excel
+          </Button>
+          <Button onClick={handleExportCSV} className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl cursor-pointer tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md shadow-emerald-200 uppercase">
+            <Download size={16} /> Download CSV
+          </Button>
+          <Button onClick={startAddAlumni} className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md shadow-purple-200 uppercase">
+            <Plus className="h-4 w-4" /> TAMBAH DATA
+          </Button>
+          <Button onClick={handleReset} className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl h-10 px-6 active:scale-95 transition-all">
             Reset
           </Button>
           <Button onClick={handleFilter} className="bg-[#00badb] hover:bg-[#009cb9] text-white text-xs font-bold rounded-xl h-10 px-6 active:scale-95 transition-all">
@@ -611,7 +609,7 @@ export default function AlumniManager() {
               <div className="overflow-x-auto rounded-xl border border-slate-100">
                 <table className="w-full text-left border-collapse min-w-[700px]">
                   <thead>
-                    <tr className="bg-[#00badb] text-white font-black text-xs uppercase">
+                    <tr className="bg-[#00badb] text-white font-black text-sm uppercase">
                       <th className="p-4 w-16 text-center border-r border-[#009cb9]">No</th>
                       <th className="p-4 border-r border-[#009cb9]">Nama</th>
                       <th className="p-4 border-r border-[#009cb9] w-48 text-center">Tahun Lulus</th>
@@ -644,42 +642,26 @@ export default function AlumniManager() {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="p-4 border-t border-slate-50 flex items-center justify-between mt-4">
-                <span className="text-xs text-slate-400 font-bold uppercase">
-                  Halaman {currentPage} dari {totalPages}
+              <div className="flex justify-end items-center gap-2.5 p-4 border-t border-slate-100">
+                <Button
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="bg-[#ffb300] hover:bg-[#ffa000] text-black font-extrabold text-xs h-9 px-4 rounded-xl cursor-pointer disabled:opacity-50 transition-all"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-0.5" /> Previous
+                </Button>
+
+                <span className="h-9 w-9 flex items-center justify-center bg-[#ffb300] text-black font-black text-sm rounded-xl">
+                  {currentPage}
                 </span>
 
-                <div className="flex gap-1">
-                  <Button
-                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                    disabled={currentPage === 1}
-                    variant="outline"
-                    size="sm"
-                    className="rounded-lg text-xs"
-                  >
-                    Previous
-                  </Button>
-                  {Array.from({ length: totalPages }, (_, pIdx) => (
-                    <Button
-                      key={pIdx}
-                      onClick={() => setCurrentPage(pIdx + 1)}
-                      variant={currentPage === pIdx + 1 ? "default" : "outline"}
-                      size="sm"
-                      className="rounded-lg text-xs"
-                    >
-                      {pIdx + 1}
-                    </Button>
-                  ))}
-                  <Button
-                    onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    variant="outline"
-                    size="sm"
-                    className="rounded-lg text-xs"
-                  >
-                    Next
-                  </Button>
-                </div>
+                <Button
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="bg-[#ffb300] hover:bg-[#ffa000] text-black font-extrabold text-xs h-9 px-4 rounded-xl cursor-pointer disabled:opacity-50 transition-all"
+                >
+                  Next <ChevronRight className="h-4 w-4 ml-0.5" />
+                </Button>
               </div>
             )}
           </div>
@@ -957,7 +939,7 @@ export default function AlumniManager() {
                   <Button
                     type="submit"
                     disabled={saving || uploading}
-                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
+                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
                   >
                     {saving ? (
                       <>
@@ -974,7 +956,7 @@ export default function AlumniManager() {
                       type="button"
                       disabled={saving}
                       onClick={handleDelete}
-                      className="bg-rose-600 hover:bg-rose-700 text-white border-0 font-extrabold text-sm px-6 h-11 rounded-full cursor-pointer shadow-md shadow-rose-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
+                      className="bg-rose-600 hover:bg-rose-700 text-white border-0 font-extrabold text-sm px-6 h-11 rounded-xl cursor-pointer shadow-md shadow-rose-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
                     >
                       <Trash2 size={15} /> HAPUS
                     </Button>

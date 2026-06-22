@@ -363,43 +363,43 @@ export default function NewsManager() {
             Atur dan publikasikan berita kegiatan, artikel pendidikan, serta info penting lainnya.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button
-            onClick={() => setCategoryModalVisible(true)}
-            className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
-          >
-            <Plus className="h-4 w-4" /> KATEGORI BERITA
-          </Button>
-          <Button
-            onClick={() => {
-              resetNewsForm();
-              setNewsModalVisible(true);
-            }}
-            className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
-          >
-            <Plus className="h-4 w-4" /> TAMBAH BERITA
-          </Button>
-        </div>
       </div>
 
       {/* TABLE CONTAINER */}
       <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
-        {/* Table Search Bar */}
+        {/* Table Search Bar + Action Buttons */}
         <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-50/50">
           <span className="text-xs font-black text-slate-500 uppercase tracking-widest">
             Daftar Berita ({filteredNews.length})
           </span>
-          <div className="relative w-full sm:w-64">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-              <Search className="h-4 w-4" />
-            </span>
-            <input
-              type="text"
-              placeholder="cari"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner"
-            />
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <Search className="h-4 w-4" />
+              </span>
+              <input
+                type="text"
+                placeholder="cari"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full sm:w-64 h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner"
+              />
+            </div>
+            <Button
+              onClick={() => setCategoryModalVisible(true)}
+              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
+            >
+              <Plus className="h-4 w-4" /> KATEGORI BERITA
+            </Button>
+            <Button
+              onClick={() => {
+                resetNewsForm();
+                setNewsModalVisible(true);
+              }}
+              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
+            >
+              <Plus className="h-4 w-4" /> TAMBAH BERITA
+            </Button>
           </div>
         </div>
 

@@ -19,6 +19,7 @@ import {
   Award,
   Image,
   BookMarked,
+  Building2,
 } from "lucide-react";
 
 export const TAB_LABELS: Record<string, string> = {
@@ -136,7 +137,15 @@ export default function DashboardSidebar({
   const subjects = userRole === "siswa" ? getSubjectsSiswa(user?.program, user?.kelas) : [];
 
   // ── Menentukan apakah suatu tab aktif berada di dalam pohon sebuah menu
+  const dataPkbmTabs = ["identitas-lembaga", "data-pengelola", "visi-misi", "program-pendidikan", "sarana-fasilitas", "prestasi", "titik-layanan", "tutor", "warga-belajar", "alumni"];
+
   const isAncestorActive = (id: string): boolean => {
+    if (id === "data-pkbm") {
+      return dataPkbmTabs.includes(activeTab);
+    }
+    if (id === "profil-group") {
+      return dataPkbmTabs.includes(activeTab);
+    }
     if (id === "e-learning") {
       return activeTab === "elearning-dashboard" ||
         activeTab.startsWith("mapel-");
@@ -336,25 +345,10 @@ export default function DashboardSidebar({
           ? [
               { id: "header", label: "HEADER", icon: <Type className="h-4 w-4" /> },
               { id: "pengumuman", label: "PENGUMUMAN", icon: <Megaphone className="h-4 w-4" /> },
-              {
-                id: "profil-group", label: "PROFIL", icon: <User className="h-4 w-4" />,
-                children: [
-                  { id: "identitas-lembaga", label: "IDENTITAS LEMBAGA" },
-                  { id: "data-pengelola", label: "DATA PENGELOLA" },
-                  { id: "visi-misi", label: "VISI DAN MISI" },
-                  { id: "program-pendidikan", label: "PROGRAM PENDIDIKAN" },
-                  { id: "sarana-fasilitas", label: "SARANA DAN FASILITAS" },
-                  { id: "prestasi", label: "PRESTASI" },
-                  { id: "titik-layanan", label: "TITIK LAYANAN" },
-                ],
-              },
               { id: "agenda", label: "AGENDA", icon: <CalendarDays className="h-4 w-4" /> },
               { id: "berita", label: "BERITA", icon: <Newspaper className="h-4 w-4" /> },
-              { id: "tutor", label: "TUTOR", icon: <GraduationCap className="h-4 w-4" /> },
-              { id: "warga-belajar", label: "WARGA BELAJAR", icon: <Users className="h-4 w-4" /> },
               { id: "download", label: "DOWNLOAD", icon: <Download className="h-4 w-4" /> },
               { id: "produk-wb", label: "PRODUK WB", icon: <ShoppingBag className="h-4 w-4" /> },
-              { id: "alumni", label: "ALUMNI", icon: <Award className="h-4 w-4" /> },
               { id: "galeri", label: "GALERI", icon: <Image className="h-4 w-4" /> },
             ]
           : [
@@ -364,6 +358,30 @@ export default function DashboardSidebar({
               { id: "galeri", label: "GALERI", icon: <Image className="h-4 w-4" /> },
             ],
     },
+    ...(userRole === "super_admin"
+      ? [{
+          id: "data-pkbm",
+          label: "DATA PKBM",
+          icon: <Building2 className="h-5 w-5" />,
+          children: [
+            {
+              id: "profil-group", label: "PROFIL", icon: <User className="h-4 w-4" />,
+              children: [
+                { id: "identitas-lembaga", label: "IDENTITAS LEMBAGA" },
+                { id: "data-pengelola", label: "DATA PENGELOLA" },
+                { id: "visi-misi", label: "VISI DAN MISI" },
+                { id: "program-pendidikan", label: "PROGRAM PENDIDIKAN" },
+                { id: "sarana-fasilitas", label: "SARANA DAN FASILITAS" },
+                { id: "prestasi", label: "PRESTASI" },
+                { id: "titik-layanan", label: "TITIK LAYANAN" },
+              ],
+            },
+            { id: "tutor", label: "TUTOR", icon: <GraduationCap className="h-4 w-4" /> },
+            { id: "warga-belajar", label: "WARGA BELAJAR", icon: <Users className="h-4 w-4" /> },
+            { id: "alumni", label: "ALUMNI", icon: <Award className="h-4 w-4" /> },
+          ],
+        }]
+      : []),
     { 
       id: "e-learning", 
       label: "E-LEARNING", 

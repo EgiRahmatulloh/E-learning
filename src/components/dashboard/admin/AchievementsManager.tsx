@@ -342,52 +342,52 @@ export function AchievementsManager() {
             Atur data prestasi dan penghargaan yang diraih oleh warga belajar maupun lembaga PKBM.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <label className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95">
-            <Upload className="h-4 w-4" /> UPLOAD CSV / EXCEL
-            <input
-              type="file"
-              accept=".csv, .xlsx, .xls"
-              onChange={handleImportCSV}
-              className="hidden"
-            />
-          </label>
-          <Button
-            onClick={handleExportCSV}
-            className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center gap-1.5 transition-all active:scale-95"
-          >
-            <Download className="h-4 w-4" /> EKSPOR CSV
-          </Button>
-          <Button
-            onClick={() => {
-              resetForm();
-              setFormVisible(true);
-            }}
-            className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
-          >
-            <Plus className="h-4 w-4" /> TAMBAH BARU
-          </Button>
-        </div>
       </div>
 
       {/* TABLE CONTAINER */}
       <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
-        {/* Table Search Bar */}
+        {/* Table Search Bar + Action Buttons */}
         <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-50/50">
           <span className="text-xs font-black text-slate-500 uppercase tracking-widest">
             Daftar Prestasi ({filteredAchievements.length})
           </span>
-          <div className="relative w-full sm:w-64">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-              <Search className="h-4 w-4" />
-            </span>
-            <input
-              type="text"
-              placeholder="cari"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner"
-            />
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <Search className="h-4 w-4" />
+              </span>
+              <input
+                type="text"
+                placeholder="cari"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full sm:w-64 h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner"
+              />
+            </div>
+            <label className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95">
+              <Upload className="h-4 w-4" /> UPLOAD CSV / EXCEL
+              <input
+                type="file"
+                accept=".csv, .xlsx, .xls"
+                onChange={handleImportCSV}
+                className="hidden"
+              />
+            </label>
+            <Button
+              onClick={handleExportCSV}
+              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center gap-1.5 transition-all active:scale-95"
+            >
+              <Download className="h-4 w-4" /> EKSPOR CSV
+            </Button>
+            <Button
+              onClick={() => {
+                resetForm();
+                setFormVisible(true);
+              }}
+              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
+            >
+              <Plus className="h-4 w-4" /> TAMBAH BARU
+            </Button>
           </div>
         </div>
 
@@ -671,7 +671,7 @@ export function AchievementsManager() {
                 <Button
                   type="button"
                   onClick={resetForm}
-                  className="bg-slate-200 hover:bg-slate-350 text-slate-700 font-extrabold text-xs px-8 h-11 rounded-full cursor-pointer uppercase tracking-widest transition-all"
+                  className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                 >
                   BATAL
                 </Button>
@@ -680,7 +680,7 @@ export function AchievementsManager() {
                   type="button"
                   onClick={handleSave}
                   disabled={saving || uploading}
-                  className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                  className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
                 >
                   {saving ? (
                     <>

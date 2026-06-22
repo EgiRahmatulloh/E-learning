@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { parseCSV, downloadCSV, mapCsvRows, parseExcel } from "@/lib/utils";
-import { ShieldAlert, Search, Upload, Download, Sparkles, Plus, Trash2, Save, X, Eye, EyeOff, GraduationCap, ArrowUpCircle, RefreshCw, List, LayoutGrid, Filter, RotateCcw, Loader2 } from "lucide-react";
+import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, GraduationCap, ArrowUpCircle, RefreshCw, List, LayoutGrid, Filter, RotateCcw, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
 
@@ -507,45 +507,17 @@ export default function WargaBelajarManager() {
   });
 
   return (
-    <div className="space-y-6">
-      
-      {/* Top Header Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-xs">
-        <div className="space-y-1 text-left">
-          <h1 className="text-2xl font-black text-[#1a0b70] uppercase flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-[#9c27b0]" /> Manajemen Warga Belajar
-          </h1>
-          <p className="text-slate-500 text-xs font-semibold">
+    <div className="space-y-6 relative pb-16 animate-in fade-in duration-300">
+
+      {/* HEADER SECTION */}
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
+        <div>
+          <h2 className="text-xl font-black text-cyan-900 tracking-tight flex items-center gap-2">
+            <span>🎓</span> KELOLA WARGA BELAJAR
+          </h2>
+          <p className="text-xs text-slate-500 font-semibold mt-1">
             Kelola warga belajar (siswa), kelas, kenaikan tingkat kelas, status kelulusan, dan penugasan program.
           </p>
-        </div>
-
-        <div className="flex gap-2 flex-wrap">
-          <input
-            type="file"
-            ref={importInputRef}
-            className="hidden"
-            accept=".csv, .xlsx, .xls"
-            onChange={handleImportCSV}
-          />
-          <Button
-            onClick={() => importInputRef.current?.click()}
-            className="rounded-xl bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 h-11 cursor-pointer transition-all shadow-md flex items-center gap-1.5 active:scale-95"
-          >
-            <Upload className="h-4 w-4" /> UPLOAD CSV / EXCEL
-          </Button>
-          <Button
-            onClick={handleExportCSV}
-            className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] px-4 h-11 cursor-pointer transition-all shadow-md flex items-center gap-1.5 active:scale-95"
-          >
-            <Download className="h-4 w-4" /> DOWNLOAD CSV
-          </Button>
-          <Button
-            onClick={openAddForm}
-            className="rounded-xl bg-[#9c27b0] hover:bg-[#ff6105] text-white font-extrabold text-xs px-5 h-11 cursor-pointer transition-all shadow-md flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" /> TAMBAH WB
-          </Button>
         </div>
       </div>
 
@@ -595,10 +567,35 @@ export default function WargaBelajarManager() {
             />
           </div>
 
-          <div className="flex gap-2 md:col-span-4 justify-end">
+          <div className="flex gap-2 md:col-span-4 justify-end items-center flex-wrap">
+            <input
+              type="file"
+              ref={importInputRef}
+              className="hidden"
+              accept=".csv, .xlsx, .xls"
+              onChange={handleImportCSV}
+            />
+            <Button
+              onClick={() => importInputRef.current?.click()}
+              className="rounded-xl bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 h-10 cursor-pointer transition-all shadow-md flex items-center gap-1.5 active:scale-95"
+            >
+              <Upload className="h-4 w-4" /> UPLOAD CSV / EXCEL
+            </Button>
+            <Button
+              onClick={handleExportCSV}
+              className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] px-4 h-10 cursor-pointer transition-all shadow-md flex items-center gap-1.5 active:scale-95"
+            >
+              <Download className="h-4 w-4" /> DOWNLOAD CSV
+            </Button>
+            <Button
+              onClick={openAddForm}
+              className="rounded-xl bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 h-10 cursor-pointer transition-all shadow-md shadow-purple-200 flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" /> TAMBAH WB
+            </Button>
             <Button
               onClick={handleSearch}
-              className="w-32 h-10 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
+              className="w-32 h-10 rounded-xl bg-[#00badb] hover:bg-[#009cb9] text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
             >
               <Filter className="h-4 w-4" /> FILTER
             </Button>
@@ -693,7 +690,7 @@ export default function WargaBelajarManager() {
                 <div className="overflow-x-auto rounded-xl border border-slate-100">
                   <table className="w-full text-left border-collapse min-w-[700px]">
                     <thead>
-                      <tr className="bg-[#00badb] text-white font-black text-xs uppercase">
+                      <tr className="bg-[#00badb] text-white font-black text-sm uppercase">
                         <th className="p-4 w-16 text-center border-r border-[#009cb9]">No</th>
                         <th className="p-4 border-r border-[#009cb9]">Nama</th>
                         <th className="p-4 border-r border-[#009cb9] w-48 text-center">NIK</th>
@@ -1118,7 +1115,7 @@ export default function WargaBelajarManager() {
                     <Button
                       type="button"
                       onClick={() => handleDelete(selectedStudent.id)}
-                      className="bg-rose-600 hover:bg-rose-700 text-white border-0 font-extrabold text-sm px-6 h-11 rounded-full cursor-pointer shadow-md shadow-rose-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
+                      className="bg-rose-600 hover:bg-rose-700 text-white border-0 font-extrabold text-sm px-6 h-11 rounded-xl cursor-pointer shadow-md shadow-rose-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
                     >
                       <Trash2 className="h-4 w-4" /> HAPUS
                     </Button>
@@ -1126,7 +1123,7 @@ export default function WargaBelajarManager() {
                   <Button
                     type="submit"
                     disabled={saving || uploading}
-                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
+                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
                   >
                     {saving ? (
                       <>
@@ -1209,7 +1206,7 @@ export default function WargaBelajarManager() {
                 <div className="border-t border-white/20 pt-4 flex justify-end gap-2 mt-4">
                   <Button
                     type="submit"
-                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-6 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
+                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-6 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
                   >
                     Pindahkan Program
                   </Button>

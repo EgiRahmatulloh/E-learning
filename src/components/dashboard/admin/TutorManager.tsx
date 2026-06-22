@@ -393,8 +393,8 @@ export default function TutorManager() {
   });
 
   return (
-    <div className="space-y-6">
-      
+    <div className="space-y-6 relative pb-16 animate-in fade-in duration-300">
+
       {/* HEADER SECTION */}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
         <div>
@@ -404,33 +404,6 @@ export default function TutorManager() {
           <p className="text-xs text-slate-500 font-semibold mt-1">
             Kelola tenaga pendidik, bidang keahlian, tugas mengajar, NIK, dan kredensial tutor.
           </p>
-        </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <input
-            type="file"
-            ref={importInputRef}
-            className="hidden"
-            accept=".csv, .xlsx, .xls"
-            onChange={handleImportCSV}
-          />
-          <Button
-            onClick={() => importInputRef.current?.click()}
-            className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95"
-          >
-            <Upload className="h-4 w-4" /> UPLOAD CSV / EXCEL
-          </Button>
-          <Button
-            onClick={handleExportCSV}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md flex items-center gap-1.5 transition-all active:scale-95"
-          >
-            <Download className="h-4 w-4" /> DOWNLOAD CSV
-          </Button>
-          <Button
-            onClick={openAddForm}
-            className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
-          >
-            <Plus className="h-4 w-4" /> TAMBAH TUTOR
-          </Button>
         </div>
       </div>
 
@@ -463,7 +436,32 @@ export default function TutorManager() {
             />
           </div>
 
-          <div className="flex gap-2 col-span-1 sm:col-span-2">
+          <div className="flex gap-2 col-span-1 sm:col-span-2 items-center flex-wrap">
+            <input
+              type="file"
+              ref={importInputRef}
+              className="hidden"
+              accept=".csv, .xlsx, .xls"
+              onChange={handleImportCSV}
+            />
+            <Button
+              onClick={() => importInputRef.current?.click()}
+              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95"
+            >
+              <Upload className="h-4 w-4" /> UPLOAD CSV / EXCEL
+            </Button>
+            <Button
+              onClick={handleExportCSV}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md flex items-center gap-1.5 transition-all active:scale-95"
+            >
+              <Download className="h-4 w-4" /> DOWNLOAD CSV
+            </Button>
+            <Button
+              onClick={openAddForm}
+              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
+            >
+              <Plus className="h-4 w-4" /> TAMBAH TUTOR
+            </Button>
             <Button
               onClick={handleSearch}
               className="flex-1 h-10 rounded-xl bg-[#00badb] hover:bg-[#009cb9] text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
@@ -472,7 +470,7 @@ export default function TutorManager() {
             </Button>
             <Button
               onClick={handleReset}
-              className="flex-1 h-10 rounded-xl bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
+              className="flex-1 h-10 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
             >
               <RotateCcw className="h-4 w-4" /> RESET
             </Button>
@@ -561,7 +559,7 @@ export default function TutorManager() {
                 <div className="overflow-x-auto rounded-xl border border-slate-100">
                   <table className="w-full text-left border-collapse min-w-[700px]">
                     <thead>
-                      <tr className="bg-[#00badb] text-white font-black text-xs uppercase">
+                      <tr className="bg-[#00badb] text-white font-black text-sm uppercase">
                         <th className="p-4 w-16 text-center border-r border-[#009cb9]">No</th>
                         <th className="p-4 border-r border-[#009cb9]">Nama</th>
                         <th className="p-4 border-r border-[#009cb9] w-48 text-center">Program</th>
@@ -958,7 +956,7 @@ export default function TutorManager() {
                     <Button
                       type="button"
                       onClick={() => handleDelete(selectedTutor.id)}
-                      className="bg-rose-600 hover:bg-rose-700 text-white border-0 font-extrabold text-sm px-6 h-11 rounded-full cursor-pointer shadow-md shadow-rose-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
+                      className="bg-rose-600 hover:bg-rose-700 text-white border-0 font-extrabold text-sm px-6 h-11 rounded-xl cursor-pointer shadow-md shadow-rose-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
                     >
                       <Trash2 className="h-4 w-4" /> HAPUS
                     </Button>
@@ -966,7 +964,7 @@ export default function TutorManager() {
                   <Button
                     type="submit"
                     disabled={saving || uploading}
-                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
+                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
                   >
                     {saving ? (
                       <>
