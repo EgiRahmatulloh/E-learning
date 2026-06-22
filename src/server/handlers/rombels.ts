@@ -30,30 +30,41 @@ export const rombelHandlers = new Elysia()
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
 
-      const list = await db.select().from(rombels).all();
-
-      // Ambil info wali kelas & jumlah siswa untuk setiap rombel
-      const result = await Promise.all(
-        list.map(async (rombel) => {
-          let waliKelas: any = null;
-          if (rombel.waliKelasId) {
-            const t = await db
-              .select({ id: tutors.id, nama: tutors.nama, foto: tutors.foto, tutorMapel: tutors.tutorMapel })
-              .from(tutors)
-              .where(eq(tutors.id, rombel.waliKelasId))
-              .get();
-            waliKelas = t || null;
-          }
-
-          const [{ count }] = await db
-            .select({ count: sql<number>`count(*)` })
-            .from(rombelStudents)
-            .where(eq(rombelStudents.rombelId, rombel.id))
-            .all();
-
-          return { ...rombel, waliKelas, jumlahSiswa: Number(count) };
+      const list = await db
+        .select({
+          id: rombels.id,
+          nama: rombels.nama,
+          waliKelasId: rombels.waliKelasId,
+          createdAt: rombels.createdAt,
+          updatedAt: rombels.updatedAt,
+          tutorId: tutors.id,
+          tutorNama: tutors.nama,
+          tutorFoto: tutors.foto,
+          tutorMapel: tutors.tutorMapel,
+          jumlahSiswa: sql<number>`count(${rombelStudents.id})`,
         })
-      );
+        .from(rombels)
+        .leftJoin(tutors, eq(rombels.waliKelasId, tutors.id))
+        .leftJoin(rombelStudents, eq(rombels.id, rombelStudents.rombelId))
+        .groupBy(rombels.id)
+        .all();
+
+      const result = list.map((r) => ({
+        id: r.id,
+        nama: r.nama,
+        waliKelasId: r.waliKelasId,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
+        waliKelas: r.tutorId
+          ? {
+              id: r.tutorId,
+              nama: r.tutorNama,
+              foto: r.tutorFoto,
+              tutorMapel: r.tutorMapel,
+            }
+          : null,
+        jumlahSiswa: Number(r.jumlahSiswa),
+      }));
 
       return { success: true, data: result };
     } catch (err) {
@@ -230,31 +241,35 @@ export const rombelHandlers = new Elysia()
         return { success: false, message: "Rombel tidak ditemukan" };
       }
 
-      const relasi = await db
-        .select({ studentId: rombelStudents.studentId })
-        .from(rombelStudents)
+      const siswaList = await db
+        .select({
+          id: students.id,
+          nama: students.nama,
+          nik: students.nik,
+          program: students.program,
+          kelas: students.kelas,
+          nisn: students.nisn,
+          nis: students.nis,
+          tempatTglLahir: students.tempatTglLahir,
+          titikLayanan: students.titikLayanan,
+          jenisKelamin: students.jenisKelamin,
+          noHp: students.noHp,
+          agama: students.agama,
+          namaAyah: students.namaAyah,
+          email: students.email,
+          namaIbu: students.namaIbu,
+          alamat: students.alamat,
+          foto: students.foto,
+          status: students.status,
+          createdAt: students.createdAt,
+          updatedAt: students.updatedAt,
+        })
+        .from(students)
+        .innerJoin(rombelStudents, eq(students.id, rombelStudents.studentId))
         .where(eq(rombelStudents.rombelId, id))
         .all();
 
-      if (relasi.length === 0) {
-        return { success: true, data: [] };
-      }
-
-      const studentIds = relasi.map((r) => r.studentId);
-      const siswaList = await db
-        .select()
-        .from(students)
-        .where(inArray(students.id, studentIds))
-        .all();
-
-      // Sanitize
-      const sanitized = siswaList.map((s) => {
-        const rest = { ...s };
-        delete (rest as any).password;
-        return rest;
-      });
-
-      return { success: true, data: sanitized };
+      return { success: true, data: siswaList };
     } catch (err) {
       console.error("GET /api/rombels/:id/students error:", err);
       set.status = 500;
@@ -286,12 +301,13 @@ export const rombelHandlers = new Elysia()
           return { success: false, message: "Rombel tidak ditemukan" };
         }
 
-        const ids: number[] = [];
+        const rawIds: number[] = [];
         if (studentIds && Array.isArray(studentIds)) {
-          ids.push(...studentIds.map(Number));
+          rawIds.push(...studentIds.map(Number));
         } else if (studentId) {
-          ids.push(Number(studentId));
+          rawIds.push(Number(studentId));
         }
+        const ids = Array.from(new Set(rawIds));
 
         if (ids.length === 0) {
           set.status = 400;
@@ -388,6 +404,7 @@ export const rombelHandlers = new Elysia()
       const kelasGroups = new Map<string, number[]>();
       for (const s of allStudents) {
         const kelas = s.kelas.trim();
+        if (!kelas) continue;
         if (!kelasGroups.has(kelas)) {
           kelasGroups.set(kelas, []);
         }
@@ -401,34 +418,37 @@ export const rombelHandlers = new Elysia()
       let created = 0;
       let assigned = 0;
 
+      // Bulk insert rombel baru
+      const newRombelNames = Array.from(kelasGroups.keys()).filter((nama) => !existingNames.has(nama));
+      if (newRombelNames.length > 0) {
+        await db.insert(rombels).values(newRombelNames.map((nama) => ({ nama }))).run();
+        created = newRombelNames.length;
+      }
+
+      // Ambil semua rombel untuk mendapatkan ID terbaru
+      const allRombels = await db.select().from(rombels).all();
+      const rombelMap = new Map<string, number>(allRombels.map((r) => [r.nama, r.id]));
+
+      // Ambil semua relasi yang sudah ada untuk menghindari duplikat
+      const allExistingRelasi = await db.select().from(rombelStudents).all();
+      const existingRelasiSet = new Set(allExistingRelasi.map((r) => `${r.rombelId}-${r.studentId}`));
+
+      const relasiToInsert: { rombelId: number; studentId: number }[] = [];
+
       for (const [nama, studentIds] of kelasGroups) {
-        // Buat rombel jika belum ada
-        if (!existingNames.has(nama)) {
-          await db.insert(rombels).values({ nama }).run();
-          created++;
+        const rombelId = rombelMap.get(nama);
+        if (!rombelId) continue;
+
+        for (const studentId of studentIds) {
+          if (!existingRelasiSet.has(`${rombelId}-${studentId}`)) {
+            relasiToInsert.push({ rombelId, studentId });
+          }
         }
+      }
 
-        // Cari rombel id
-        const rombel = await db.select().from(rombels).where(eq(rombels.nama, nama)).get();
-        if (!rombel) continue;
-
-        // Cek siswa yang sudah ter-assign
-        const existingRelasi = await db
-          .select({ studentId: rombelStudents.studentId })
-          .from(rombelStudents)
-          .where(eq(rombelStudents.rombelId, rombel.id))
-          .all();
-        const assignedIds = new Set(existingRelasi.map((r) => r.studentId));
-
-        // Insert yang belum ada
-        const newIds = studentIds.filter((id) => !assignedIds.has(id));
-        if (newIds.length > 0) {
-          await db
-            .insert(rombelStudents)
-            .values(newIds.map((sid) => ({ rombelId: rombel.id, studentId: sid })))
-            .run();
-          assigned += newIds.length;
-        }
+      if (relasiToInsert.length > 0) {
+        await db.insert(rombelStudents).values(relasiToInsert).run();
+        assigned = relasiToInsert.length;
       }
 
       return {

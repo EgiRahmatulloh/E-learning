@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, unique } from 'drizzle-orm/sqlite-core';
 
 export const sliders = sqliteTable('sliders', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -472,7 +472,9 @@ export const rombelStudents = sqliteTable('rombel_students', {
   rombelId: integer('rombel_id').notNull().references(() => rombels.id, { onDelete: 'cascade' }),
   studentId: integer('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
-});
+}, (t) => ({
+  unq: unique().on(t.rombelId, t.studentId),
+}));
 
 export type RombelStudent = typeof rombelStudents.$inferSelect;
 export type NewRombelStudent = typeof rombelStudents.$inferInsert;

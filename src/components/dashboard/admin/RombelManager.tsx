@@ -315,7 +315,7 @@ export default function RombelManager() {
         s.kelas.toLowerCase().includes(studentSearch.toLowerCase())
     );
     const allIds = filtered.map((s) => s.id);
-    setSelectedStudentIds(allIds);
+    setSelectedStudentIds((prev) => Array.from(new Set([...prev, ...allIds])));
   };
 
   const handleAddStudents = async () => {
