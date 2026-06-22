@@ -442,66 +442,48 @@ export async function seedDatabase() {
       console.log("🌱 Database students kosong, seeding default students...");
 
       await db.insert(students).values([
-        {
-          nama: "ADITYA NUGRAHA",
-          nik: "3207123456789201",
-          program: "PAKET C",
-          kelas: "KELAS X (SEPULUH)",
-          nisn: "0081234561",
-          nis: "20261001",
-          tempatTglLahir: "Ciamis, 05-02-2008",
-          titikLayanan: "PKBM MENUJU MAKMUR",
-          jenisKelamin: "Laki-laki",
-          noHp: "081234567891",
-          agama: "Islam",
-          namaAyah: "Suparman",
-          email: "siswa@elearning.org",
-          namaIbu: "Aminah",
-          alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
-          password: await Bun.password.hash("siswa123"),
-          foto: "/images/633df6f47c394ce2b67bd54e4808301b.jpg",
-          status: "AKTIF"
-        },
-        {
-          nama: "BELLA PUTRI",
-          nik: "3207123456789202",
-          program: "PAKET B",
-          kelas: "KELAS VIII (DELAPAN)",
-          nisn: "0091234562",
-          nis: "20262001",
-          tempatTglLahir: "Ciamis, 12-09-2009",
-          titikLayanan: "BALE DESA MULYASARI",
-          jenisKelamin: "Perempuan",
-          noHp: "081234567892",
-          agama: "Islam",
-          namaAyah: "Nasihin",
-          email: "bella@elearning.org",
-          namaIbu: "Siti",
-          alamat: "Dusun Sembawa, Mulyasari, Jatinagara, Ciamis",
-          password: await Bun.password.hash("password123"),
-          foto: "/images/7ccf08e706410fd4d0cde0c04b95b108.png",
-          status: "AKTIF"
-        },
-        {
-          nama: "CHANDRA WIJAYA",
-          nik: "3207123456789203",
-          program: "PAKET A",
-          kelas: "KELAS V (LIMA)",
-          nisn: "0101234563",
-          nis: "20263001",
-          tempatTglLahir: "Ciamis, 24-04-2010",
-          titikLayanan: "PKBM MENUJU MAKMUR",
-          jenisKelamin: "Laki-laki",
-          noHp: "081234567893",
-          agama: "Islam",
-          namaAyah: "Kurniawan",
-          email: "chandra@elearning.org",
-          namaIbu: "Dewi",
-          alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis",
-          password: await Bun.password.hash("password123"),
-          foto: "/images/b8600352865365e6216298c1b2bcb4ce.png",
-          status: "AKTIF"
-        }
+        // ── PAKET C: Kelas X ──
+        { nama: "ADITYA NUGRAHA", nik: "3207123456789201", program: "PAKET C", kelas: "XA", nisn: "0081234561", nis: "20261001", tempatTglLahir: "Ciamis, 05-02-2008", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Laki-laki", noHp: "081234567891", agama: "Islam", namaAyah: "Suparman", email: "aditya@elearning.org", namaIbu: "Aminah", alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis", password: await Bun.password.hash("siswa123"), foto: "/images/633df6f47c394ce2b67bd54e4808301b.jpg", status: "AKTIF" },
+        { nama: "RINA SARI", nik: "3207123456789210", program: "PAKET C", kelas: "XA", nisn: "0081234570", nis: "20261002", tempatTglLahir: "Ciamis, 14-03-2008", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Perempuan", noHp: "081234567801", agama: "Islam", namaAyah: "Hendra", email: "rina@elearning.org", namaIbu: "Yanti", alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        { nama: "FAJAR RAMADHAN", nik: "3207123456789211", program: "PAKET C", kelas: "XA", nisn: "0081234571", nis: "20261003", tempatTglLahir: "Ciamis, 20-06-2008", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Laki-laki", noHp: "081234567802", agama: "Islam", namaAyah: "Rahmat", email: "fajar@elearning.org", namaIbu: "Siti", alamat: "Dusun Sembawa, Mulyasari, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        { nama: "DIAZ PRATAMA", nik: "3207123456789212", program: "PAKET C", kelas: "XA", nisn: "0081234572", nis: "20261004", tempatTglLahir: "Ciamis, 08-11-2008", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Laki-laki", noHp: "081234567803", agama: "Islam", namaAyah: "Agus", email: "diaz@elearning.org", namaIbu: "Rina", alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        // ── PAKET C: Kelas X B ──
+        { nama: "BUNGA MAESARA", nik: "3207123456789202", program: "PAKET C", kelas: "XB", nisn: "0081234562", nis: "20261010", tempatTglLahir: "Ciamis, 12-09-2008", titikLayanan: "BALE DESA MULYASARI", jenisKelamin: "Perempuan", noHp: "081234567892", agama: "Islam", namaAyah: "Nasihin", email: "bunga@elearning.org", namaIbu: "Siti", alamat: "Dusun Sembawa, Mulyasari, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "/images/7ccf08e706410fd4d0cde0c04b95b108.png", status: "AKTIF" },
+        { nama: "YUSUF MAULANA", nik: "3207123456789213", program: "PAKET C", kelas: "XB", nisn: "0081234573", nis: "20261011", tempatTglLahir: "Ciamis, 17-04-2008", titikLayanan: "BALE DESA MULYASARI", jenisKelamin: "Laki-laki", noHp: "081234567804", agama: "Islam", namaAyah: "Dedi", email: "yusuf@elearning.org", namaIbu: "Emi", alamat: "Dusun Sembawa, Mulyasari, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        { nama: "TIARA SYAFITRI", nik: "3207123456789214", program: "PAKET C", kelas: "XB", nisn: "0081234574", nis: "20261012", tempatTglLahir: "Ciamis, 03-08-2008", titikLayanan: "BALE DESA MULYASARI", jenisKelamin: "Perempuan", noHp: "081234567805", agama: "Islam", namaAyah: "Wahyu", email: "tiara@elearning.org", namaIbu: "Neng", alamat: "Dusun Sembawa, Mulyasari, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        { nama: "REZA FAUZI", nik: "3207123456789215", program: "PAKET C", kelas: "XB", nisn: "0081234575", nis: "20261013", tempatTglLahir: "Ciamis, 25-12-2008", titikLayanan: "BALE DESA MULYASARI", jenisKelamin: "Laki-laki", noHp: "081234567806", agama: "Islam", namaAyah: "Odang", email: "reza@elearning.org", namaIbu: "Anih", alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        // ── PAKET C: Kelas X C ──
+        { nama: "SAFIKA AMALIA", nik: "3207123456789216", program: "PAKET C", kelas: "XC", nisn: "0081234576", nis: "20261020", tempatTglLahir: "Ciamis, 09-05-2008", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Perempuan", noHp: "081234567807", agama: "Islam", namaAyah: "Asep", email: "safika@elearning.org", namaIbu: "Elin", alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        { nama: "ALDI SAPUTRA", nik: "3207123456789217", program: "PAKET C", kelas: "XC", nisn: "0081234577", nis: "20261021", tempatTglLahir: "Ciamis, 30-01-2008", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Laki-laki", noHp: "081234567808", agama: "Islam", namaAyah: "Ujang", email: "aldi@elearning.org", namaIbu: "Imas", alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        // ── PAKET C: Kelas XI A ──
+        { nama: "CITRA AYU", nik: "3207123456789220", program: "PAKET C", kelas: "XIA", nisn: "0081234580", nis: "20261101", tempatTglLahir: "Ciamis, 11-07-2007", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Perempuan", noHp: "081234567810", agama: "Islam", namaAyah: "Ganda", email: "citra@elearning.org", namaIbu: "Tati", alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "/images/633df6f47c394ce2b67bd54e4808301b.jpg", status: "AKTIF" },
+        { nama: "DIMAS PERMANA", nik: "3207123456789221", program: "PAKET C", kelas: "XIA", nisn: "0081234581", nis: "20261102", tempatTglLahir: "Ciamis, 22-02-2007", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Laki-laki", noHp: "081234567811", agama: "Islam", namaAyah: "Koko", email: "dimas@elearning.org", namaIbu: "Iis", alamat: "Dusun Sembawa, Mulyasari, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        { nama: "NADIA OKTAVIANI", nik: "3207123456789222", program: "PAKET C", kelas: "XIA", nisn: "0081234582", nis: "20261103", tempatTglLahir: "Ciamis, 15-10-2007", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Perempuan", noHp: "081234567812", agama: "Islam", namaAyah: "Usep", email: "nadia@elearning.org", namaIbu: "Nani", alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        // ── PAKET C: Kelas XI B ──
+        { nama: "EKY KURNIAWAN", nik: "3207123456789223", program: "PAKET C", kelas: "XIB", nisn: "0081234583", nis: "20261110", tempatTglLahir: "Ciamis, 04-06-2007", titikLayanan: "BALE DESA MULYASARI", jenisKelamin: "Laki-laki", noHp: "081234567813", agama: "Islam", namaAyah: "Ayi", email: "eky@elearning.org", namaIbu: "Ai", alamat: "Dusun Sembawa, Mulyasari, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        { nama: "SALSABILA PUTRI", nik: "3207123456789224", program: "PAKET C", kelas: "XIB", nisn: "0081234584", nis: "20261111", tempatTglLahir: "Ciamis, 19-09-2007", titikLayanan: "BALE DESA MULYASARI", jenisKelamin: "Perempuan", noHp: "081234567814", agama: "Islam", namaAyah: "Dede", email: "salsabila@elearning.org", namaIbu: "Imas", alamat: "Dusun Sembawa, Mulyasari, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        // ── PAKET C: Kelas XII A ──
+        { nama: "CHANDRA WIJAYA", nik: "3207123456789203", program: "PAKET C", kelas: "XIIA", nisn: "0081234563", nis: "20261201", tempatTglLahir: "Ciamis, 24-04-2006", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Laki-laki", noHp: "081234567893", agama: "Islam", namaAyah: "Kurniawan", email: "chandra@elearning.org", namaIbu: "Dewi", alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "/images/b8600352865365e6216298c1b2bcb4ce.png", status: "AKTIF" },
+        { nama: "MELATI SARI", nik: "3207123456789225", program: "PAKET C", kelas: "XIIA", nisn: "0081234585", nis: "20261202", tempatTglLahir: "Ciamis, 07-03-2006", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Perempuan", noHp: "081234567815", agama: "Islam", namaAyah: "Sutarman", email: "melati@elearning.org", namaIbu: "Enok", alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        { nama: "RIZKY FIRMANSYAH", nik: "3207123456789226", program: "PAKET C", kelas: "XIIA", nisn: "0081234586", nis: "20261203", tempatTglLahir: "Ciamis, 28-08-2006", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Laki-laki", noHp: "081234567816", agama: "Islam", namaAyah: "Atang", email: "rizky@elearning.org", namaIbu: "Cucu", alamat: "Dusun Sembawa, Mulyasari, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        // ── PAKET C: Kelas XII B ──
+        { nama: "NISA AULIA", nik: "3207123456789227", program: "PAKET C", kelas: "XIIB", nisn: "0081234587", nis: "20261210", tempatTglLahir: "Ciamis, 16-12-2006", titikLayanan: "BALE DESA MULYASARI", jenisKelamin: "Perempuan", noHp: "081234567817", agama: "Islam", namaAyah: "Saepudin", email: "nisa@elearning.org", namaIbu: "Yayah", alamat: "Dusun Sembawa, Mulyasari, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        { nama: "BIMO ADI", nik: "3207123456789228", program: "PAKET C", kelas: "XIIB", nisn: "0081234588", nis: "20261211", tempatTglLahir: "Ciamis, 02-05-2006", titikLayanan: "BALE DESA MULYASARI", jenisKelamin: "Laki-laki", noHp: "081234567818", agama: "Islam", namaAyah: "Endang", email: "bimo@elearning.org", namaIbu: "Rusmiati", alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        // ── PAKET B: Kelas VII A ──
+        { nama: "AZKA RAHMA", nik: "3207123456789230", program: "PAKET B", kelas: "VIIA", nisn: "0091234590", nis: "20262701", tempatTglLahir: "Ciamis, 10-01-2011", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Perempuan", noHp: "081234567820", agama: "Islam", namaAyah: "Dedi", email: "azka@elearning.org", namaIbu: "Neng", alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        { nama: "GILANG SAPUTRA", nik: "3207123456789231", program: "PAKET B", kelas: "VIIA", nisn: "0091234591", nis: "20262702", tempatTglLahir: "Ciamis, 23-07-2011", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Laki-laki", noHp: "081234567821", agama: "Islam", namaAyah: "Asep", email: "gilang@elearning.org", namaIbu: "Iin", alamat: "Dusun Sembawa, Mulyasari, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        // ── PAKET B: Kelas VII B ──
+        { nama: "HANA NURAINI", nik: "3207123456789232", program: "PAKET B", kelas: "VIIB", nisn: "0091234592", nis: "20262710", tempatTglLahir: "Ciamis, 05-11-2011", titikLayanan: "BALE DESA MULYASARI", jenisKelamin: "Perempuan", noHp: "081234567822", agama: "Islam", namaAyah: "Ujang", email: "hana@elearning.org", namaIbu: "Tati", alamat: "Dusun Sembawa, Mulyasari, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        { nama: "IRFAN HIDAYAT", nik: "3207123456789233", program: "PAKET B", kelas: "VIIB", nisn: "0091234593", nis: "20262711", tempatTglLahir: "Ciamis, 18-04-2011", titikLayanan: "BALE DESA MULYASARI", jenisKelamin: "Laki-laki", noHp: "081234567823", agama: "Islam", namaAyah: "Hendi", email: "irfan@elearning.org", namaIbu: "Wati", alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        // ── PAKET B: Kelas VIII A ──
+        { nama: "JESSICA LIM", nik: "3207123456789234", program: "PAKET B", kelas: "VIIIA", nisn: "0091234594", nis: "20262801", tempatTglLahir: "Ciamis, 09-09-2010", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Perempuan", noHp: "081234567824", agama: "Islam", namaAyah: "Hendra", email: "jessica@elearning.org", namaIbu: "Meli", alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        { nama: "KHALIF ALFARIZI", nik: "3207123456789235", program: "PAKET B", kelas: "VIIIA", nisn: "0091234595", nis: "20262802", tempatTglLahir: "Ciamis, 26-06-2010", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Laki-laki", noHp: "081234567825", agama: "Islam", namaAyah: "Rohman", email: "khalif@elearning.org", namaIbu: "Rohmah", alamat: "Dusun Sembawa, Mulyasari, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        // ── PAKET B: Kelas IX A ──
+        { nama: "LUNA MAYA", nik: "3207123456789236", program: "PAKET B", kelas: "IXA", nisn: "0091234596", nis: "20262901", tempatTglLahir: "Ciamis, 14-02-2009", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Perempuan", noHp: "081234567826", agama: "Islam", namaAyah: "Ahmad", email: "luna@elearning.org", namaIbu: "Ratna", alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        { nama: "MAULANA MALIK", nik: "3207123456789237", program: "PAKET B", kelas: "IXA", nisn: "0091234597", nis: "20262902", tempatTglLahir: "Ciamis, 30-10-2009", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Laki-laki", noHp: "081234567827", agama: "Islam", namaAyah: "Karim", email: "maulana@elearning.org", namaIbu: "Karimah", alamat: "Dusun Sembawa, Mulyasari, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        // ── PAKET A: Kelas III ──
+        { nama: "NOVAL ADITYA", nik: "3207123456789240", program: "PAKET A", kelas: "IIIA", nisn: "0101234600", nis: "20263301", tempatTglLahir: "Ciamis, 21-03-2014", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Laki-laki", noHp: "081234567830", agama: "Islam", namaAyah: "Budi", email: "noval@elearning.org", namaIbu: "Sri", alamat: "Dusun Pangrumasan, Cintanagara, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
+        { nama: "OLIVIA PUTRI", nik: "3207123456789241", program: "PAKET A", kelas: "IIIA", nisn: "0101234601", nis: "20263302", tempatTglLahir: "Ciamis, 08-12-2014", titikLayanan: "PKBM MENUJU MAKMUR", jenisKelamin: "Perempuan", noHp: "081234567831", agama: "Islam", namaAyah: "Rudi", email: "olivia@elearning.org", namaIbu: "Sari", alamat: "Dusun Sembawa, Mulyasari, Jatinagara, Ciamis", password: await Bun.password.hash("password123"), foto: "", status: "AKTIF" },
       ]);
       console.log("✅ Seeding students berhasil!");
     } else {

@@ -8,6 +8,7 @@ import { authHandlers } from "./server/handlers/auth";
 import { managersHandlers } from "./server/handlers/managers";
 import { tutorsHandlers } from "./server/handlers/tutors";
 import { studentsHandlers } from "./server/handlers/students";
+import { rombelHandlers } from "./server/handlers/rombels";
 import { newsHandlers } from "./server/handlers/news";
 import { contentHandlers } from "./server/handlers/content";
 import { elearningHandlers } from "./server/handlers/elearning";
@@ -27,6 +28,7 @@ const app = new Elysia()
   .use(managersHandlers)
   .use(tutorsHandlers)
   .use(studentsHandlers)
+  .use(rombelHandlers)
   .use(newsHandlers)
   .use(contentHandlers)
   .use(elearningHandlers)

@@ -22,4 +22,6 @@ export {
   elearningMaterials,
   elearningEvaluations,
   elearningSetups,
+  rombels,
+  rombelStudents,
 } from "../db/schema";

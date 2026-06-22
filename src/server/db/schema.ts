@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, unique } from 'drizzle-orm/sqlite-core';
 
 export const sliders = sqliteTable('sliders', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -449,6 +449,35 @@ export const elearningLogs = sqliteTable('elearning_logs', {
   details: text('details').notNull().default(''),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
 });
+
+// ==========================================
+// ROMBEL (Rombongan Belajar / Kelas)
+// ==========================================
+
+export const rombels = sqliteTable('rombels', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  nama: text('nama').notNull(), // e.g. "10A", "10B", "11A"
+  waliKelasId: integer('wali_kelas_id'), // FK → tutors.id (nullable)
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at')
+    .$defaultFn(() => new Date().toISOString())
+    .$onUpdate(() => new Date().toISOString()),
+});
+
+export type Rombel = typeof rombels.$inferSelect;
+export type NewRombel = typeof rombels.$inferInsert;
+
+export const rombelStudents = sqliteTable('rombel_students', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  rombelId: integer('rombel_id').notNull().references(() => rombels.id, { onDelete: 'cascade' }),
+  studentId: integer('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+}, (t) => ({
+  unq: unique().on(t.rombelId, t.studentId),
+}));
+
+export type RombelStudent = typeof rombelStudents.$inferSelect;
+export type NewRombelStudent = typeof rombelStudents.$inferInsert;
 
 export const elearningSetups = sqliteTable('elearning_setups', {
   id: integer('id').primaryKey({ autoIncrement: true }),
