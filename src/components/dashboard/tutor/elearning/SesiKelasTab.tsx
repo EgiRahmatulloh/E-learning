@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, UploadCloud, Save, Upload, Users, MessageSquare, PenTool, FileText, PlayCircle } from "lucide-react";
+import { CheckCircle, UploadCloud, Save, Upload, Users, MessageSquare, PenTool, FileText, PlayCircle, DownloadCloud } from "lucide-react";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { toast } from "sonner";
-import { getSubjectsSiswa } from "../../DashboardSidebar";
+// Removed getSubjectsSiswa import
 
 interface Props {
   activeTab?: string;
@@ -12,21 +12,35 @@ interface Props {
 }
 
 export default function SesiKelasTab({ activeTab, user }: Props) {
-  const [activeSesi, setActiveSesi] = useState<number>(1);
   const [courseId, setCourseId] = useState<number | null>(null);
 
-  const subjectSlug = activeTab?.split("-").slice(1, -1).join("-");
-  const allMapels = getSubjectsSiswa(user?.program, user?.kelas);
-  const subjectName = allMapels.find((m: string) => m.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "") === subjectSlug) || subjectSlug;
+  const parts = activeTab?.split("-") || [];
+  // Format: mapel-setup-{setupId}-sesi-{n}
+  const setupId = parts[1] === "setup" ? parseInt(parts[2], 10) : null;
+  const activeSesi = parts[3] === "sesi" ? parseInt(parts[4], 10) : 1;
 
   useEffect(() => {
     async function fetchCourse() {
-      if (!subjectName) return;
+      if (!setupId) return;
       try {
+        const setupRes = await fetch(`/api/elearning/setups?tutorId=${user?.id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+        const setupData = await setupRes.json();
+        const setup = setupData?.data?.find((s: any) => s.id === setupId);
+        if (!setup) throw new Error("Setup E-Learning tidak ditemukan");
+
+        const actualSubject = setup.mapel;
+        const actualKelas = setup.kelas;
+        const actualProgram = setup.kelas.includes("Paket A") ? "Paket A" : setup.kelas.includes("Paket B") ? "Paket B" : "Paket C";
+
         const res = await fetch("/api/elearning/course", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ subjectName, program: user?.program, kelas: user?.kelas })
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("token")}`
+          },
+          body: JSON.stringify({ subjectName: actualSubject, program: actualProgram, kelas: actualKelas })
         });
         const data = await res.json();
         if (data.success) {
@@ -35,23 +49,10 @@ export default function SesiKelasTab({ activeTab, user }: Props) {
       } catch (err) {}
     }
     fetchCourse();
-  }, [subjectName, user]);
+  }, [setupId, user]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex overflow-x-auto gap-2 pb-2 custom-scrollbar">
-        {[1, 2, 3, 4, 5, 6, 7, 8].map((sesi) => (
-          <Button 
-            key={sesi}
-            variant={activeSesi === sesi ? "default" : "outline"}
-            onClick={() => setActiveSesi(sesi)}
-            className={`whitespace-nowrap shrink-0 ${activeSesi === sesi ? "bg-[#280f91] text-white" : "bg-white text-slate-500 border-slate-200"}`}
-          >
-            Sesi {sesi}
-          </Button>
-        ))}
-      </div>
-
       {courseId ? (
         <SesiContent courseId={courseId} sessionNumber={activeSesi} />
       ) : (
@@ -74,7 +75,9 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
     async function fetchSession() {
       try {
         setLoading(true);
-        const res = await fetch(`/api/elearning/session?courseId=${courseId}&sessionNumber=${sessionNumber}`);
+        const res = await fetch(`/api/elearning/session?courseId=${courseId}&sessionNumber=${sessionNumber}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
         const data = await res.json();
         if (data.success) {
           setSessionId(data.data.session.id);
@@ -98,7 +101,10 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
       setSaving(true);
       await fetch(`/api/elearning/session/${sessionId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({ description: teksPembuka })
       });
       toast.success(`Teks Pembuka Sesi ${sessionNumber} tersimpan!`);
@@ -114,7 +120,10 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
     try {
       await fetch("/api/elearning/material", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({
           sessionId,
           title: "Video Pengayaan",
@@ -129,7 +138,11 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
   const uploadFileAPI = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
-    const res = await fetch("/api/upload", { method: "POST", body: formData });
+    const res = await fetch("/api/upload", { 
+      method: "POST", 
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      body: formData 
+    });
     const data = await res.json();
     if (!data.success) throw new Error(data.message);
     return data.url;
@@ -143,7 +156,10 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
       const fileUrl = await uploadFileAPI(file);
       await fetch("/api/elearning/material", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({
           sessionId,
           title: file.name,
@@ -277,27 +293,98 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
             Kelola Bank Soal Latihan
           </Button>
         </Card>
+      </div>
 
-        {/* SECTION: Tugas Khusus Sesi */}
-        <Card className="p-6 border-slate-200/60 shadow-sm rounded-2xl flex flex-col justify-between bg-gradient-to-br from-[#280f91] to-[#401bbd] text-white">
+      {/* SEKSI TUGAS FORMAL (Digabungkan dari ManajemenTugasTab) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6 border-t border-slate-100">
+        
+        {/* Kolom Kiri: Pengaturan Tugas */}
+        <Card className="p-6 border-slate-200/60 bg-white shadow-sm rounded-2xl lg:col-span-1 h-fit space-y-6">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white shrink-0 shadow-inner">
-                <Upload className="w-5 h-5" />
-              </div>
-              <h4 className="font-black text-white text-lg leading-tight">Tugas Formal Sesi {sessionNumber}</h4>
-            </div>
-            <p className="text-sm text-white/80 mb-6 mt-2">Kelola dokumen soal tugas, atur batas waktu pengumpulan, dan berikan penilaian pada lembar jawaban warga belajar.</p>
+            <h3 className="text-lg font-black text-[#280f91] mb-1">Pengaturan Tugas {sessionNumber}</h3>
+            <p className="text-xs font-semibold text-slate-500">Unggah soal dan atur batas waktu.</p>
           </div>
-          <div className="space-y-3 mt-auto">
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button variant="secondary" className="w-full flex-1 font-bold bg-white text-[#280f91] hover:bg-slate-100">
-                Pengaturan Soal
-              </Button>
-              <Button variant="secondary" className="w-full flex-1 font-bold bg-[#ff6105] text-white border-none hover:bg-[#e05200]">
-                Buka Gradebook
-              </Button>
+
+          <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 cursor-pointer transition-colors">
+            <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+            <p className="text-sm font-bold text-slate-600">Unggah File Soal</p>
+            <p className="text-xs text-slate-400">.PDF / .DOCX</p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1">
+                Due Date
+              </label>
+              <input type="datetime-local" className="w-full text-sm border-slate-200 rounded-lg p-2 bg-slate-50" />
             </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1">
+                <span className="text-rose-500">Cut-off Date</span>
+              </label>
+              <input type="datetime-local" className="w-full text-sm border-slate-200 rounded-lg p-2 bg-slate-50" />
+            </div>
+          </div>
+          
+          <Button className="w-full bg-[#ff6105] hover:bg-[#e05200] text-white font-bold">Simpan Pengaturan</Button>
+        </Card>
+
+        {/* Kolom Kanan: Gradebook */}
+        <Card className="p-0 border-slate-200/60 bg-white shadow-sm rounded-2xl lg:col-span-2 overflow-hidden">
+          <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <div>
+              <h3 className="text-lg font-black text-[#280f91]">Gradebook Assignment</h3>
+              <p className="text-xs font-semibold text-slate-500">24/30 Mahasiswa telah mengumpulkan.</p>
+            </div>
+            <Button size="sm" variant="outline" className="border-[#280f91] text-[#280f91] hover:bg-[#280f91] hover:text-white font-bold h-9">
+              <DownloadCloud className="w-4 h-4 mr-2" /> Bulk Download (.ZIP)
+            </Button>
+          </div>
+
+          <div className="overflow-x-auto p-4">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="text-slate-400 font-black text-xs uppercase tracking-widest border-b border-slate-100">
+                  <th className="pb-3 px-4">Nama Siswa</th>
+                  <th className="pb-3 px-4">File Terkirim</th>
+                  <th className="pb-3 px-4 text-center">Nilai</th>
+                  <th className="pb-3 px-4">Feedback</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                <tr className="hover:bg-slate-50/50 transition-colors">
+                  <td className="py-4 px-4 font-bold text-slate-800">Budi Santoso</td>
+                  <td className="py-4 px-4">
+                    <span className="text-xs font-bold text-[#280f91] bg-[#280f91]/10 px-2 py-1 rounded cursor-pointer hover:underline">
+                      Tugas3_Budi.pdf
+                    </span>
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    <input type="number" defaultValue={85} className="w-16 text-center border-slate-200 rounded p-1 text-sm font-bold focus:border-[#ff6105] outline-none" />
+                  </td>
+                  <td className="py-4 px-4">
+                    <div className="flex gap-2 items-center">
+                      <input type="text" placeholder="Catatan..." className="w-full text-xs border-slate-200 rounded p-1.5 focus:border-[#280f91] outline-none" />
+                      <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0 cursor-pointer" />
+                    </div>
+                  </td>
+                </tr>
+                <tr className="hover:bg-slate-50/50 transition-colors">
+                  <td className="py-4 px-4 font-bold text-slate-800">Siti Aisyah</td>
+                  <td className="py-4 px-4">
+                    <span className="text-xs font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded">
+                      Belum Kirim
+                    </span>
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    <input type="number" placeholder="-" disabled className="w-16 text-center border-slate-100 bg-slate-50 rounded p-1 text-sm font-bold" />
+                  </td>
+                  <td className="py-4 px-4">
+                    <input type="text" placeholder="-" disabled className="w-full text-xs border-slate-100 bg-slate-50 rounded p-1.5" />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </Card>
       </div>

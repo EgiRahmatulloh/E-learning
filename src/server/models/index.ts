@@ -21,4 +21,5 @@ export {
   elearningSessions,
   elearningMaterials,
   elearningEvaluations,
+  elearningSetups,
 } from "../db/schema";

@@ -6,6 +6,7 @@ import {
   elearningSessions,
   elearningMaterials,
   elearningEvaluations,
+  elearningSetups,
 } from "../models";
 import { eq, and } from "drizzle-orm";
 import { jwt } from "@elysia/jwt";
@@ -129,7 +130,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         const courseId = query.courseId;
         const sessionNumber = query.sessionNumber;
 
-        const session = await db
+        let session = await db
           .select()
           .from(elearningSessions)
           .where(
@@ -141,8 +142,17 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           .get();
 
         if (!session) {
-          set.status = 404;
-          return { success: false, message: "Sesi tidak ditemukan" };
+          const inserted = await db
+            .insert(elearningSessions)
+            .values({
+              courseId,
+              sessionNumber,
+              title: `Sesi ${sessionNumber}`,
+              description: "",
+              isEvaluation: false,
+            })
+            .returning();
+          session = inserted[0];
         }
 
         // Ambil Material terkait
@@ -307,5 +317,148 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           })
         ),
       }),
+    }
+  )
+
+  // ==========================================
+  // ELEARNING SETUPS (ADMIN & TUTOR)
+  // ==========================================
+
+  // GET all setups (admin) or filtered by tutorId (tutor)
+  .get(
+    "/setups",
+    async (context: any) => {
+      const { headers, jwt, query, set } = context;
+      const authError = await verifyAdminOrTutor(headers, jwt, set);
+      if (authError) return authError;
+
+      try {
+        let condition = undefined;
+        const authHeader = headers["authorization"];
+        const token = authHeader!.split(" ")[1];
+        const payload = await jwt.verify(token);
+
+        if (payload.role === "tutor") {
+          condition = eq(elearningSetups.tutorId, payload.id as number);
+        } else if (query.tutorId) {
+          condition = eq(elearningSetups.tutorId, parseInt(query.tutorId));
+        }
+
+        const setups = await db
+          .select()
+          .from(elearningSetups)
+          .where(condition)
+          .all();
+
+        return { success: true, data: setups };
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
+    },
+    {
+      query: t.Object({
+        tutorId: t.Optional(t.String()),
+      }),
+    }
+  )
+
+  // POST new setup (admin only)
+  .post(
+    "/setups",
+    async (context: any) => {
+      const { headers, jwt, body, set } = context;
+      const authError = await verifyAdmin(headers, jwt, set);
+      if (authError) return authError;
+
+      try {
+        const { kelas, mapel, tutorId, skk, jumlahSesi } = body;
+        const inserted = await db
+          .insert(elearningSetups)
+          .values({
+            kelas,
+            mapel,
+            tutorId,
+            skk,
+            jumlahSesi,
+          })
+          .returning();
+
+        return { success: true, data: inserted[0] };
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
+    },
+    {
+      body: t.Object({
+        kelas: t.String(),
+        mapel: t.String(),
+        tutorId: t.Number(),
+        skk: t.Number(),
+        jumlahSesi: t.Number(),
+      }),
+    }
+  )
+
+  // PUT update setup (admin only)
+  .put(
+    "/setups/:id",
+    async (context: any) => {
+      const { headers, jwt, params: { id }, body, set } = context;
+      const authError = await verifyAdmin(headers, jwt, set);
+      if (authError) return authError;
+
+      try {
+        const { kelas, mapel, tutorId, skk, jumlahSesi } = body;
+        const updated = await db
+          .update(elearningSetups)
+          .set({
+            kelas,
+            mapel,
+            tutorId,
+            skk,
+            jumlahSesi,
+          })
+          .where(eq(elearningSetups.id, parseInt(id)))
+          .returning();
+
+        if (updated.length === 0) {
+          set.status = 404;
+          return { success: false, message: "Setup tidak ditemukan" };
+        }
+
+        return { success: true, data: updated[0] };
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
+    },
+    {
+      body: t.Object({
+        kelas: t.String(),
+        mapel: t.String(),
+        tutorId: t.Number(),
+        skk: t.Number(),
+        jumlahSesi: t.Number(),
+      }),
+    }
+  )
+
+  // DELETE setup (admin only)
+  .delete(
+    "/setups/:id",
+    async (context: any) => {
+      const { headers, jwt, params: { id }, set } = context;
+      const authError = await verifyAdmin(headers, jwt, set);
+      if (authError) return authError;
+
+      try {
+        await db.delete(elearningSetups).where(eq(elearningSetups.id, parseInt(id)));
+        return { success: true, message: "Berhasil menghapus setup" };
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
     }
   );

@@ -15,11 +15,11 @@ export default function TutorMonitoring() {
 
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h3 className="text-lg font-black text-slate-800 tracking-tight">Dashboard Kepatuhan Tutor</h3>
-          <p className="text-sm text-slate-500">Lacak performa dan aktivitas mengajar tutor.</p>
+          <h3 className="text-lg font-black text-cyan-900">Pemantauan Tutor</h3>
+          <p className="text-sm text-slate-500 font-medium">Lacak performa dan aktivitas mengajar tutor.</p>
         </div>
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -28,12 +28,12 @@ export default function TutorMonitoring() {
             placeholder="Cari tutor atau mapel..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:border-cyan-500"
+            className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-[#280f91] shadow-xs"
           />
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-slate-200 text-xs font-black text-slate-400 uppercase tracking-wider">
