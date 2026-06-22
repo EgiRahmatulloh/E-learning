@@ -21,6 +21,49 @@ export const studentsHandlers = new Elysia()
       }),
     })
   )
+  // Ambil semua rombel unik berdasarkan program dan kelas warga belajar
+  .get("/api/rombels", async ({ set }) => {
+    try {
+      const list = await db.select().from(students).all();
+      const uniqueRombels = Array.from(
+        new Set(
+          list
+            .filter((s) => s.program && s.kelas)
+            .map((s) => {
+              let prog = s.program.trim();
+              let kls = s.kelas.trim();
+              
+              // Standardize kelas formatting to match dummy (e.g. Paket C - Kelas 10)
+              const klsUpper = kls.toUpperCase();
+              if (klsUpper.includes("KELAS X ") || klsUpper === "KELAS X" || klsUpper.includes("(SEPULUH)")) kls = "Kelas 10";
+              else if (klsUpper.includes("KELAS XI ") || klsUpper === "KELAS XI" || klsUpper.includes("(SEBELAS)")) kls = "Kelas 11";
+              else if (klsUpper.includes("KELAS XII ") || klsUpper === "KELAS XII" || klsUpper.includes("(DUABELAS)")) kls = "Kelas 12";
+              else if (klsUpper.includes("KELAS VII ") || klsUpper === "KELAS VII" || klsUpper.includes("(TUJUH)")) kls = "Kelas 7";
+              else if (klsUpper.includes("KELAS VIII ") || klsUpper === "KELAS VIII" || klsUpper.includes("(DELAPAN)")) kls = "Kelas 8";
+              else if (klsUpper.includes("KELAS IX ") || klsUpper === "KELAS IX" || klsUpper.includes("(SEMBILAN)")) kls = "Kelas 9";
+              else if (klsUpper.includes("KELAS IV ") || klsUpper === "KELAS IV" || klsUpper.includes("(EMPAT)")) kls = "Kelas 4";
+              else if (klsUpper.includes("KELAS V ") || klsUpper === "KELAS V" || klsUpper.includes("(LIMA)")) kls = "Kelas 5";
+              else if (klsUpper.includes("KELAS VI ") || klsUpper === "KELAS VI" || klsUpper.includes("(ENAM)")) kls = "Kelas 6";
+              else if (klsUpper.includes("KELAS I ") || klsUpper === "KELAS I" || klsUpper.includes("(SATU)")) kls = "Kelas 1";
+              else if (klsUpper.includes("KELAS II ") || klsUpper === "KELAS II" || klsUpper.includes("(DUA)")) kls = "Kelas 2";
+              else if (klsUpper.includes("KELAS III ") || klsUpper === "KELAS III" || klsUpper.includes("(TIGA)")) kls = "Kelas 3";
+              
+              // Standardize program formatting (e.g. PAKET C -> Paket C)
+              if (prog.toUpperCase().startsWith("PAKET ")) {
+                prog = "Paket " + prog.substring(6).toUpperCase();
+              }
+              
+              return `${prog} - ${kls}`;
+            })
+            .filter(Boolean)
+        )
+      ).sort();
+      return { success: true, data: uniqueRombels };
+    } catch {
+      set.status = 500;
+      return { success: false, message: "Gagal mengambil data rombel" };
+    }
+  })
   // Ambil semua warga belajar
   .get("/api/students", async ({ headers, jwt, set }) => {
     try {
@@ -77,7 +120,7 @@ export const studentsHandlers = new Elysia()
         password,
         foto,
         status,
-      } = body;
+      } = body as any;
 
       try {
         const hashedPassword = await Bun.password.hash(password || "password123");
@@ -169,7 +212,7 @@ export const studentsHandlers = new Elysia()
         password,
         foto,
         status,
-      } = body;
+      } = body as any;
 
       try {
         const existing = await db.select().from(students).where(eq(students.id, id)).get();
@@ -372,7 +415,7 @@ export const studentsHandlers = new Elysia()
         return { success: false, message: "ID parameter tidak valid" };
       }
 
-      const { program, kelas } = body;
+      const { program, kelas } = body as any;
       try {
         const updated = await db
           .update(students)

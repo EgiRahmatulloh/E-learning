@@ -1,25 +1,17 @@
-import { useState } from "react";
-import {
-  LayoutDashboard,
+import { useState, useEffect } from "react";
+import { 
+  Users, User, FileText, ChevronDown, Award, Building2,
+  GraduationCap, LayoutDashboard, Megaphone,
+  BookOpen, BookMarked, Layers,
   Globe,
-  BookOpen,
-  FileText,
   ClipboardList,
-  ChevronDown,
   ChevronRight,
   Type,
-  Megaphone,
-  User,
   CalendarDays,
   Newspaper,
-  Users,
-  GraduationCap,
   Download,
   ShoppingBag,
-  Award,
   Image,
-  BookMarked,
-  Building2,
 } from "lucide-react";
 
 export const TAB_LABELS: Record<string, string> = {
@@ -35,6 +27,7 @@ export const TAB_LABELS: Record<string, string> = {
   alumni: "ALUMNI",
   "e-learning": "DASHBOARD E-LEARNING ADMIN",
   "elearning-dashboard": "DASHBOARD E-LEARNING",
+  rombel: "ROMBEL",
 };
 
 export const getTabLabel = (id: string): string => {
@@ -123,6 +116,22 @@ export default function DashboardSidebar({
 }: DashboardSidebarProps) {
   const userRole = user?.role;
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
+  const [tutorSetups, setTutorSetups] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user?.role === "tutor") {
+      fetch(`/api/elearning/setups?tutorId=${user.id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.data) {
+            setTutorSetups(data.data);
+          }
+        })
+        .catch((err) => console.error("Failed to load tutor setups:", err));
+    }
+  }, [user]);
 
   const toggleExpand = (id: string) => {
     setExpandedMenus((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -137,7 +146,7 @@ export default function DashboardSidebar({
   const subjects = userRole === "siswa" ? getSubjectsSiswa(user?.program, user?.kelas) : [];
 
   // ── Menentukan apakah suatu tab aktif berada di dalam pohon sebuah menu
-  const dataPkbmTabs = ["identitas-lembaga", "data-pengelola", "visi-misi", "program-pendidikan", "sarana-fasilitas", "prestasi", "titik-layanan", "tutor", "warga-belajar", "alumni"];
+  const dataPkbmTabs = ["identitas-lembaga", "data-pengelola", "visi-misi", "program-pendidikan", "sarana-fasilitas", "prestasi", "titik-layanan", "rombel", "tutor", "warga-belajar", "alumni"];
 
   const isAncestorActive = (id: string): boolean => {
     if (id === "data-pkbm") {
@@ -358,7 +367,7 @@ export default function DashboardSidebar({
               { id: "galeri", label: "GALERI", icon: <Image className="h-4 w-4" /> },
             ],
     },
-    ...(userRole === "super_admin"
+    ...(userRole === "super_admin" || userRole === "admin"
       ? [{
           id: "data-pkbm",
           label: "DATA PKBM",
@@ -367,18 +376,23 @@ export default function DashboardSidebar({
             {
               id: "profil-group", label: "PROFIL", icon: <User className="h-4 w-4" />,
               children: [
-                { id: "identitas-lembaga", label: "IDENTITAS LEMBAGA" },
-                { id: "data-pengelola", label: "DATA PENGELOLA" },
-                { id: "visi-misi", label: "VISI DAN MISI" },
-                { id: "program-pendidikan", label: "PROGRAM PENDIDIKAN" },
-                { id: "sarana-fasilitas", label: "SARANA DAN FASILITAS" },
-                { id: "prestasi", label: "PRESTASI" },
-                { id: "titik-layanan", label: "TITIK LAYANAN" },
+                ...(userRole === "super_admin" ? [
+                  { id: "identitas-lembaga", label: "IDENTITAS LEMBAGA" },
+                  { id: "data-pengelola", label: "DATA PENGELOLA" },
+                  { id: "visi-misi", label: "VISI DAN MISI" },
+                  { id: "program-pendidikan", label: "PROGRAM PENDIDIKAN" },
+                  { id: "sarana-fasilitas", label: "SARANA DAN FASILITAS" },
+                  { id: "prestasi", label: "PRESTASI" },
+                  { id: "titik-layanan", label: "TITIK LAYANAN" },
+                ] : []),
+                { id: "rombel", label: "ROMBEL" },
               ],
             },
-            { id: "tutor", label: "TUTOR", icon: <GraduationCap className="h-4 w-4" /> },
-            { id: "warga-belajar", label: "WARGA BELAJAR", icon: <Users className="h-4 w-4" /> },
-            { id: "alumni", label: "ALUMNI", icon: <Award className="h-4 w-4" /> },
+            ...(userRole === "super_admin" ? [
+              { id: "tutor", label: "TUTOR", icon: <GraduationCap className="h-4 w-4" /> },
+              { id: "warga-belajar", label: "WARGA BELAJAR", icon: <Users className="h-4 w-4" /> },
+              { id: "alumni", label: "ALUMNI", icon: <Award className="h-4 w-4" /> },
+            ] : []),
           ],
         }]
       : []),
@@ -387,17 +401,31 @@ export default function DashboardSidebar({
       label: "E-LEARNING", 
       icon: <BookOpen className="h-5 w-5" />,
       children: userRole === "tutor"
-        ? getSubjectsSiswa(user?.program, user?.kelas).map((subject) => {
-            const slug = toSlug(subject);
+        ? Array.from(new Set(tutorSetups.map(s => s.kelas))).map((kelasName) => {
+            const classSetups = tutorSetups.filter(s => s.kelas === kelasName);
+            const kelasSlug = toSlug(kelasName);
+            const displayKelasName = kelasName.includes(" - ") ? kelasName.split(" - ")[1].toUpperCase() : kelasName.toUpperCase();
             return {
-              id: `mapel-parent-${slug}`,
-              label: subject,
-              icon: <BookMarked className="h-4 w-4" />,
-              children: [
-                { id: `mapel-${slug}-pendahuluan`, label: "Pendahuluan" },
-                { id: `mapel-${slug}-sesi`, label: "Sesi" },
-                { id: `mapel-${slug}-laporan-nilai`, label: "Laporan & Nilai" },
-              ]
+              id: `elearning-kelas-${kelasSlug}`,
+              label: displayKelasName,
+              icon: <Layers className="h-4 w-4" />,
+              children: classSetups.map(setup => {
+                const mapelSlug = toSlug(setup.mapel);
+                const setupId = setup.id;
+                return {
+                  id: `mapel-setup-${setupId}-${mapelSlug}`,
+                  label: setup.mapel,
+                  icon: <BookMarked className="h-4 w-4" />,
+                  children: [
+                    { id: `mapel-setup-${setupId}-pendahuluan`, label: "Pendahuluan" },
+                    ...Array.from({ length: setup.jumlahSesi }, (_, i) => ({
+                      id: `mapel-setup-${setupId}-sesi-${i + 1}`,
+                      label: `Sesi ${i + 1}`
+                    })),
+                    { id: `mapel-setup-${setupId}-laporan-nilai`, label: "Laporan & Nilai" },
+                  ]
+                };
+              })
             };
           })
         : undefined
@@ -471,18 +499,52 @@ export default function DashboardSidebar({
                         </button>
                         {expandedMenus[child.id] && (
                           <div className="ml-3 mt-1 space-y-0.5 border-l border-white/10 pl-3">
-                            {child.children.map((sub: any) => (
-                              <button
-                                key={sub.id}
-                                onClick={() => handleLeafClick(sub.id)}
-                                className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-left transition-all cursor-pointer ${
-                                  activeTab === sub.id ? "bg-white/15 text-cyan-300" : "text-white/50 hover:bg-white/10 hover:text-white/85"
-                                }`}
-                              >
-                                <span className="h-1.5 w-1.5 rounded-full bg-cyan-300"></span>
-                                {sub.label}
-                              </button>
-                            ))}
+                            {child.children.map((sub: any) => {
+                              if (sub.children) {
+                                return (
+                                  <div key={sub.id} className="space-y-0.5 mt-1">
+                                    <button
+                                      onClick={() => toggleExpand(sub.id)}
+                                      className="w-full flex items-center gap-2.5 py-1.5 px-3 rounded-lg text-[11px] font-bold transition-all cursor-pointer text-white/60 hover:bg-white/10 hover:text-white/90"
+                                    >
+                                      <span className="text-white/30">{sub.icon}</span>
+                                      <span className="flex-1 text-left uppercase">{sub.label}</span>
+                                      <span className="text-white/40">
+                                        {expandedMenus[sub.id] ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                                      </span>
+                                    </button>
+                                    {expandedMenus[sub.id] && (
+                                      <div className="ml-3 mt-1 space-y-0.5 border-l border-white/10 pl-3">
+                                        {sub.children.map((leaf: any) => (
+                                          <button
+                                            key={leaf.id}
+                                            onClick={() => handleLeafClick(leaf.id)}
+                                            className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[10px] font-bold text-left transition-all cursor-pointer ${
+                                              activeTab === leaf.id ? "bg-white/15 text-cyan-300" : "text-white/50 hover:bg-white/10 hover:text-white/85"
+                                            }`}
+                                          >
+                                            <span className="h-1 w-1 rounded-full bg-cyan-300"></span>
+                                            {leaf.label}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              }
+                              return (
+                                <button
+                                  key={sub.id}
+                                  onClick={() => handleLeafClick(sub.id)}
+                                  className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-left transition-all cursor-pointer ${
+                                    activeTab === sub.id ? "bg-white/15 text-cyan-300" : "text-white/50 hover:bg-white/10 hover:text-white/85"
+                                  }`}
+                                >
+                                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-300"></span>
+                                  {sub.label}
+                                </button>
+                              );
+                            })}
                           </div>
                         )}
                       </div>

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { UploadCloud, Users, CheckCircle, FileText, Save } from "lucide-react";
 import { toast } from "sonner";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
-import { getSubjectsSiswa } from "../../DashboardSidebar";
+// Removed getSubjectsSiswa
 
 interface Props {
   activeTab?: string;
@@ -24,28 +24,45 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
   const ratInputRef = useRef<HTMLInputElement>(null);
   const tertibInputRef = useRef<HTMLInputElement>(null);
 
-  // Ambil Mapel asli berdasarkan slug (karena activeTab e.g. "mapel-matematika-pendahuluan")
-  const subjectSlug = activeTab?.split("-").slice(1, -1).join("-");
-  const allMapels = getSubjectsSiswa(user?.program, user?.kelas);
-  const subjectName = allMapels.find(m => m.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "") === subjectSlug) || subjectSlug;
+  const parts = activeTab?.split("-") || [];
+  // Format: mapel-setup-{setupId}-{mapelSlug}-pendahuluan
+  const setupId = parts[1] === "setup" ? parseInt(parts[2], 10) : null;
 
   useEffect(() => {
     async function fetchData() {
-      if (!subjectName) return;
+      if (!setupId) return;
       try {
         setLoading(true);
+
+        // Fetch setup details to get actual mapel and kelas
+        const setupRes = await fetch(`/api/elearning/setups?tutorId=${user?.id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+        const setupData = await setupRes.json();
+        const setup = setupData?.data?.find((s: any) => s.id === setupId);
+        if (!setup) throw new Error("Setup E-Learning tidak ditemukan");
+
+        const actualSubject = setup.mapel;
+        const actualKelas = setup.kelas;
+        const actualProgram = setup.kelas.includes("Paket A") ? "Paket A" : setup.kelas.includes("Paket B") ? "Paket B" : "Paket C";
+
         // 1. Get Course
         const courseRes = await fetch("/api/elearning/course", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ subjectName, program: user?.program, kelas: user?.kelas })
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("token")}`
+          },
+          body: JSON.stringify({ subjectName: actualSubject, program: actualProgram, kelas: actualKelas })
         });
         const courseData = await courseRes.json();
         if (!courseData.success) throw new Error(courseData.message);
         setCourseId(courseData.data.id);
 
         // 2. Get Session 0 (Pendahuluan)
-        const sessionRes = await fetch(`/api/elearning/session?courseId=${courseData.data.id}&sessionNumber=0`);
+        const sessionRes = await fetch(`/api/elearning/session?courseId=${courseData.data.id}&sessionNumber=0`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
         const sessionData = await sessionRes.json();
         if (!sessionData.success) throw new Error(sessionData.message);
         
@@ -66,7 +83,7 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
       }
     }
     fetchData();
-  }, [subjectName, user]);
+  }, [setupId, user]);
 
   const saveTeksPembuka = async () => {
     if (!sessionId) return;
@@ -74,7 +91,10 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
       setSaving(true);
       const res = await fetch(`/api/elearning/session/${sessionId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({ description: teksPembuka })
       });
       const data = await res.json();
@@ -90,7 +110,11 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
   const uploadFileAPI = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
-    const res = await fetch("/api/upload", { method: "POST", body: formData });
+    const res = await fetch("/api/upload", { 
+      method: "POST", 
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      body: formData 
+    });
     const data = await res.json();
     if (!data.success) throw new Error(data.message);
     return data.url;
@@ -107,7 +131,10 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
       // Save material
       const res = await fetch("/api/elearning/material", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({
           sessionId,
           title: file.name,

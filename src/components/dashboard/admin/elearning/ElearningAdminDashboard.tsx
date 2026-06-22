@@ -1,23 +1,17 @@
 import { useState } from "react";
-import { Users, BookOpen, CalendarDays, Activity, FileQuestion, RefreshCw, LayoutTemplate } from "lucide-react";
-import SyncMasterData from "./SyncMasterData";
-import BlueprintManager from "./BlueprintManager";
-import GlobalTimelineManager from "./GlobalTimelineManager";
+import { Users, Activity, FileQuestion, Layers } from "lucide-react";
+import KelolaElearning from "./KelolaElearning";
 import TutorMonitoring from "./TutorMonitoring";
 import SiswaMonitoring from "./SiswaMonitoring";
-import MasterMapel from "./MasterMapel";
 import AngketEvaluasiTutor from "./AngketEvaluasiTutor";
 
 export default function ElearningAdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"sync" | "mapel" | "blueprint" | "timeline" | "monitoring" | "siswa" | "angket">("sync");
+  const [activeTab, setActiveTab] = useState<"kelola" | "monitoring" | "siswa" | "angket">("kelola");
 
   const tabs = [
-    { id: "sync", label: "Sinkronisasi Data", icon: <RefreshCw className="w-4 h-4" /> },
-    { id: "mapel", label: "Mata Pelajaran", icon: <BookOpen className="w-4 h-4" /> },
-    { id: "blueprint", label: "Kelola Sesi Kelas", icon: <LayoutTemplate className="w-4 h-4" /> },
-    { id: "timeline", label: "Kelola Timeline", icon: <CalendarDays className="w-4 h-4" /> },
+    { id: "kelola", label: "Kelola Elearning", icon: <Layers className="w-4 h-4" /> },
     { id: "monitoring", label: "Tutor", icon: <Activity className="w-4 h-4" /> },
-    { id: "siswa", label: "Siswa/Warga Belajar", icon: <Users className="w-4 h-4" /> },
+    { id: "siswa", label: "Warga Belajar", icon: <Users className="w-4 h-4" /> },
     { id: "angket", label: "Angket Evaluasi Tutor", icon: <FileQuestion className="w-4 h-4" /> },
   ] as const;
 
@@ -51,10 +45,7 @@ export default function ElearningAdminDashboard() {
 
       {/* Active Tab Content */}
       <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-        {activeTab === "sync" && <SyncMasterData />}
-        {activeTab === "mapel" && <MasterMapel />}
-        {activeTab === "blueprint" && <BlueprintManager />}
-        {activeTab === "timeline" && <GlobalTimelineManager />}
+        {activeTab === "kelola" && <KelolaElearning />}
         {activeTab === "monitoring" && <TutorMonitoring />}
         {activeTab === "siswa" && <SiswaMonitoring />}
         {activeTab === "angket" && <AngketEvaluasiTutor />}
@@ -62,3 +53,4 @@ export default function ElearningAdminDashboard() {
     </div>
   );
 }
+

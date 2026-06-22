@@ -25,6 +25,7 @@ import DownloadsManager from "./admin/DownloadsManager";
 import ProductsManager from "./admin/ProductsManager";
 import AlumniManager from "./admin/AlumniManager";
 import GalleryManager from "./admin/GalleryManager";
+import RombelManager from "./admin/RombelManager";
 import ElearningAdminDashboard from "./admin/elearning/ElearningAdminDashboard";
 
 // Dashboard Sub-components
@@ -36,7 +37,6 @@ import RoleStatsGrid from "./RoleStatsGrid";
 // Tutor Sub-components
 import PendahuluanTab from "./tutor/elearning/PendahuluanTab";
 import SesiKelasTab from "./tutor/elearning/SesiKelasTab";
-import ManajemenTugasTab from "./tutor/elearning/ManajemenTugasTab";
 import LaporanNilaiTab from "./tutor/elearning/LaporanNilaiTab";
 import { TutorDashboard } from "./tutor/TutorDashboard";
 
@@ -160,11 +160,8 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
         if (activeTab.endsWith("-pendahuluan")) {
           return <div className="space-y-6 animate-in fade-in duration-300"><PendahuluanTab activeTab={activeTab} user={user} /></div>;
         }
-        if (activeTab.endsWith("-sesi")) {
+        if (activeTab.includes("-sesi-")) {
           return <div className="space-y-6 animate-in fade-in duration-300"><SesiKelasTab activeTab={activeTab} user={user} /></div>;
-        }
-        if (activeTab.endsWith("-tugas")) {
-          return <div className="space-y-6 animate-in fade-in duration-300"><ManajemenTugasTab activeTab={activeTab} user={user} /></div>;
         }
         if (activeTab.endsWith("-laporan-nilai")) {
           return <div className="space-y-6 animate-in fade-in duration-300"><LaporanNilaiTab activeTab={activeTab} user={user} /></div>;
@@ -424,6 +421,20 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       return (
         <div className="animate-in fade-in duration-300">
           <ServicePointsManager />
+        </div>
+      );
+    }
+    if (activeTab === "rombel") {
+      if (user.role !== "admin" && user.role !== "super_admin") {
+        return (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center font-bold text-red-700 max-w-lg mx-auto mt-10">
+            🔒 Akses Ditolak: Anda tidak memiliki wewenang untuk membuka Rombel.
+          </div>
+        );
+      }
+      return (
+        <div className="animate-in fade-in duration-300">
+          <RombelManager />
         </div>
       );
     }

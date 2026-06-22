@@ -387,4 +387,16 @@ CREATE TABLE IF NOT EXISTS elearning_materials (
 );
 `);
 
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS elearning_setups (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  kelas TEXT NOT NULL,
+  mapel TEXT NOT NULL,
+  tutor_id INTEGER NOT NULL,
+  skk INTEGER NOT NULL DEFAULT 1,
+  jumlah_sesi INTEGER NOT NULL DEFAULT 8,
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+`);
+
 export const db = drizzle(sqlite, { schema });

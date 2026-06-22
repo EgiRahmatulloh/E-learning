@@ -449,3 +449,13 @@ export const elearningLogs = sqliteTable('elearning_logs', {
   details: text('details').notNull().default(''),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
 });
+
+export const elearningSetups = sqliteTable('elearning_setups', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  kelas: text('kelas').notNull(),
+  mapel: text('mapel').notNull(),
+  tutorId: integer('tutor_id').notNull(),
+  skk: integer('skk').notNull().default(1),
+  jumlahSesi: integer('jumlah_sesi').notNull().default(8),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+});
