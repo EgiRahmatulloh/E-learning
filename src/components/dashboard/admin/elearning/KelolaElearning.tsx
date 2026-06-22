@@ -83,7 +83,9 @@ export default function KelolaElearning() {
       .then((res) => res.json())
       .then((data) => {
         if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-          setRombels(data.data);
+          // New format: array of objects with nama field; old format: array of strings
+          const names = data.data.map((r: any) => typeof r === "string" ? r : r.nama);
+          setRombels(names);
         }
       })
       .catch((err) => console.log("Rombel API not available yet, using dummy data.", err));

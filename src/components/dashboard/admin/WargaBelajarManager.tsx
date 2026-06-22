@@ -28,9 +28,9 @@ interface Student {
 }
 
 const KELAS_BY_PROGRAM: Record<string, string[]> = {
-  "PAKET A": ["KELAS I (SATU)", "KELAS II (DUA)", "KELAS III (TIGA)", "KELAS IV (EMPAT)", "KELAS V (LIMA)", "KELAS VI (ENAM)"],
-  "PAKET B": ["KELAS VII (TUJUH)", "KELAS VIII (DELAPAN)", "KELAS IX (SEMBILAN)"],
-  "PAKET C": ["KELAS X (SEPULUH)", "KELAS XI (SEBELAS)", "KELAS XII (DUABELAS)"],
+  "PAKET A": ["KELAS I", "KELAS II", "KELAS III", "KELAS IV", "KELAS V", "KELAS VI"],
+  "PAKET B": ["KELAS VII", "KELAS VIII", "KELAS IX"],
+  "PAKET C": ["KELAS X", "KELAS XI", "KELAS XII"],
 };
 
 export default function WargaBelajarManager() {

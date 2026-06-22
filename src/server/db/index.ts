@@ -387,6 +387,33 @@ CREATE TABLE IF NOT EXISTS elearning_materials (
 );
 `);
 
+// ==========================================
+// ROMBEL TABLES
+// ==========================================
+
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS rombels (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nama TEXT NOT NULL,
+  wali_kelas_id INTEGER,
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  FOREIGN KEY (wali_kelas_id) REFERENCES tutors(id) ON DELETE SET NULL
+);
+`);
+
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS rombel_students (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  rombel_id INTEGER NOT NULL,
+  student_id INTEGER NOT NULL,
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  UNIQUE(rombel_id, student_id),
+  FOREIGN KEY (rombel_id) REFERENCES rombels(id) ON DELETE CASCADE,
+  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+);
+`);
+
 sqlite.exec(`
 CREATE TABLE IF NOT EXISTS elearning_setups (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
