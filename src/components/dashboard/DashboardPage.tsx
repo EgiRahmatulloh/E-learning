@@ -30,7 +30,6 @@ import ElearningAdminDashboard from "./admin/elearning/ElearningAdminDashboard";
 
 // Dashboard Sub-components
 import DashboardSidebar, { getTabLabel } from "./DashboardSidebar";
-import DashboardRightSidebar from "./DashboardRightSidebar";
 import WelcomeBanner from "./WelcomeBanner";
 import RoleStatsGrid from "./RoleStatsGrid";
 
@@ -616,7 +615,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
         </div>
       )}
 
-      {/* ========== MAIN AREA (Header + Content + Right Sidebar) ========== */}
+      {/* ========== MAIN AREA (Header + Content) ========== */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header Bar */}
         <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-cyan-200/60 shadow-sm">
@@ -674,26 +673,12 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
           </div>
         </header>
 
-        {/* Content Area with optional right sidebar */}
+        {/* Content Area */}
         <div className="flex-1 flex min-h-0">
           {/* Main Content */}
           <main className="flex-1 overflow-y-auto p-4 sm:p-6">
             {renderActiveContent()}
-
-            {/* Right Sidebar Mobile (below main content on smaller screens) */}
-            {activeTab === "dashboard" && (
-              <div className="xl:hidden mt-6">
-                <DashboardRightSidebar />
-              </div>
-            )}
           </main>
-
-          {/* Right Sidebar (only on dashboard tab, desktop) */}
-          {activeTab === "dashboard" && (
-            <aside className="hidden xl:block w-72 shrink-0 overflow-y-auto p-4 pr-5 border-l border-cyan-200/40">
-              <DashboardRightSidebar />
-            </aside>
-          )}
         </div>
       </div>
     </div>

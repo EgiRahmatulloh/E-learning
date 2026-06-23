@@ -1062,9 +1062,9 @@ export default function WargaBelajarManager() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setFormOpen(false)} />
 
           {/* Form Container */}
-          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10 max-h-[90vh] flex flex-col">
+          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
             {/* Form Column (Cyan Background) */}
-            <div className="bg-[#00badb] p-6 relative text-white flex-1 overflow-y-auto">
+            <div className="bg-[#00badb] p-3 relative text-white">
               {/* Close Button */}
               <button
                 onClick={() => setFormOpen(false)}
@@ -1117,261 +1117,247 @@ export default function WargaBelajarManager() {
               )}
 
               <form onSubmit={handleSave} className="py-4 space-y-6 text-slate-800">
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                  
-                  {/* LEFT 3 COLS: FORM INPUT PANEL */}
-                  <div className="lg:col-span-3 space-y-4">
-                    
-                    {/* NAMA */}
-                    <div className="flex flex-col md:flex-row md:items-center gap-3">
-                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">NAMA</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Nama lengkap warga belajar"
-                        value={formData.nama || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, nama: e.target.value }))}
-                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                      />
-                    </div>
+                <div className="flex flex-col lg:flex-row gap-4">
 
-                    {/* NIK */}
-                    <div className="flex flex-col md:flex-row md:items-center gap-3">
-                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">NIK</label>
-                      <input
-                        type="text"
-                        placeholder="Nomor Induk Kependudukan (16 digit)"
-                        value={formData.nik || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, nik: e.target.value }))}
-                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                      />
-                    </div>
+                  {/* LEFT COLUMN: FORM INPUT PANEL */}
+                  <div className="flex-1 lg:min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1.5">
 
-                    {/* PROGRAM */}
-                    <div className="flex flex-col md:flex-row md:items-center gap-3">
-                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">PROGRAM</label>
-                      <select
-                        value={formData.program || "PAKET C"}
-                        onChange={(e) => {
-                          const prog = e.target.value;
-                          const kelasList = KELAS_BY_PROGRAM[prog];
-                          setFormData(prev => ({ ...prev, program: prog, kelas: kelasList[0] }));
-                        }}
-                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
-                      >
-                        <option value="PAKET A">PAKET A</option>
-                        <option value="PAKET B">PAKET B</option>
-                        <option value="PAKET C">PAKET C</option>
-                      </select>
-                    </div>
-
-                    {/* KELAS */}
-                    <div className="flex flex-col md:flex-row md:items-center gap-3">
-                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">KELAS</label>
-                      <select
-                        value={formData.kelas || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, kelas: e.target.value }))}
-                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
-                      >
-                        {(KELAS_BY_PROGRAM[formData.program || "PAKET C"] || []).map((k) => (
-                          <option key={k} value={k}>{k}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* NISN */}
-                    <div className="flex flex-col md:flex-row md:items-center gap-3">
-                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">NISN</label>
-                      <input
-                        type="text"
-                        placeholder="Nomor Induk Siswa Nasional"
-                        value={formData.nisn || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, nisn: e.target.value }))}
-                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                      />
-                    </div>
-
-                    {/* NIS */}
-                    <div className="flex flex-col md:flex-row md:items-center gap-3">
-                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">NIS</label>
-                      <input
-                        type="text"
-                        placeholder="Nomor Induk Siswa"
-                        value={formData.nis || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, nis: e.target.value }))}
-                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                      />
-                    </div>
-
-                    {/* TEMPAT, TGL. LAHIR */}
-                    <div className="flex flex-col md:flex-row md:items-center gap-3">
-                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">TEMPAT, TGL. LAHIR</label>
-                      <input
-                        type="text"
-                        placeholder="Contoh: Ciamis, 05-02-2008"
-                        value={formData.tempatTglLahir || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, tempatTglLahir: e.target.value }))}
-                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
-                      />
-                    </div>
-
-                    {/* JENIS KELAMIN */}
-                    <div className="flex flex-col md:flex-row md:items-center gap-3">
-                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">JENIS KELAMIN</label>
-                      <select
-                        value={formData.jenisKelamin || "Laki-laki"}
-                        onChange={(e) => setFormData(prev => ({ ...prev, jenisKelamin: e.target.value }))}
-                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
-                      >
-                        <option value="Laki-laki">Laki-laki</option>
-                        <option value="Perempuan">Perempuan</option>
-                      </select>
-                    </div>
-
-                    {/* AGAMA */}
-                    <div className="flex flex-col md:flex-row md:items-center gap-3">
-                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">AGAMA</label>
-                      <input
-                        type="text"
-                        placeholder="Agama"
-                        value={formData.agama || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, agama: e.target.value }))}
-                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-850 placeholder-slate-400 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                      />
-                    </div>
-
-                    {/* EMAIL */}
-                    <div className="flex flex-col md:flex-row md:items-center gap-3">
-                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">EMAIL</label>
-                      <input
-                        type="email"
-                        placeholder="Alamat email warga belajar"
-                        value={formData.email || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-850 placeholder-slate-400 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                      />
-                    </div>
-
-                    {/* ALAMAT */}
-                    <div className="flex flex-col md:flex-row md:items-start gap-3">
-                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0 md:pt-2">ALAMAT</label>
-                      <textarea
-                        placeholder="Alamat tempat tinggal lengkap warga belajar"
-                        value={formData.alamat || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, alamat: e.target.value }))}
-                        className="flex-1 p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
-                        rows={2}
-                      />
-                    </div>
-
-                    {/* TITIK LAYANAN */}
-                    <div className="flex flex-col md:flex-row md:items-center gap-3">
-                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">TITIK LAYANAN</label>
-                      <input
-                        type="text"
-                        placeholder="Titik layanan belajar"
-                        value={formData.titikLayanan || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, titikLayanan: e.target.value }))}
-                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                      />
-                    </div>
-
-                    {/* NO. HP */}
-                    <div className="flex flex-col md:flex-row md:items-center gap-3">
-                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">NO. HP</label>
-                      <input
-                        type="text"
-                        placeholder="Nomor Handphone aktif"
-                        value={formData.noHp || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, noHp: e.target.value }))}
-                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                      />
-                    </div>
-
-                    {/* NAMA AYAH */}
-                    <div className="flex flex-col md:flex-row md:items-center gap-3">
-                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">NAMA AYAH</label>
-                      <input
-                        type="text"
-                        placeholder="Nama lengkap ayah kandung"
-                        value={formData.namaAyah || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, namaAyah: e.target.value }))}
-                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                      />
-                    </div>
-
-                    {/* NAMA IBU */}
-                    <div className="flex flex-col md:flex-row md:items-center gap-3">
-                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">NAMA IBU</label>
-                      <input
-                        type="text"
-                        placeholder="Nama lengkap ibu kandung"
-                        value={formData.namaIbu || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, namaIbu: e.target.value }))}
-                        className="flex-1 h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                      />
-                    </div>
-
-                    {/* PASSWORD */}
-                    <div className="flex flex-col md:flex-row md:items-center gap-3">
-                      <label className="text-xs sm:text-sm font-black text-cyan-950 uppercase tracking-wide md:w-72 shrink-0">
-                        PASSWORD AKUN LOGIN {!isAdding && "(KOSONGKAN JIKA TIDAK INGIN MENGUBAH)"}
-                      </label>
-                      <div className="flex-1 relative">
+                      {/* Row 1: NAMA | NIK */}
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA</label>
                         <input
-                          type={showPassword ? "text" : "password"}
-                          placeholder={isAdding ? "Buat password login warga belajar" : "Masukkan password baru jika ingin diubah"}
-                          value={formData.password || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                          className="w-full h-9 pl-3 pr-10 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                          type="text"
+                          required
+                          placeholder="Nama lengkap warga belajar"
+                          value={formData.nama || ""}
+                          onChange={(e) => setFormData(prev => ({ ...prev, nama: e.target.value }))}
+                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                        >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
                       </div>
-                    </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIK</label>
+                        <input
+                          type="text"
+                          placeholder="Nomor Induk Kependudukan (16 digit)"
+                          value={formData.nik || ""}
+                          onChange={(e) => setFormData(prev => ({ ...prev, nik: e.target.value }))}
+                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        />
+                      </div>
+
+                      {/* Row 2: PROGRAM | KELAS */}
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PROGRAM</label>
+                        <select
+                          value={formData.program || "PAKET C"}
+                          onChange={(e) => {
+                            const prog = e.target.value;
+                            const kelasList = KELAS_BY_PROGRAM[prog];
+                            setFormData(prev => ({ ...prev, program: prog, kelas: kelasList[0] }));
+                          }}
+                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                        >
+                          <option value="PAKET A">PAKET A</option>
+                          <option value="PAKET B">PAKET B</option>
+                          <option value="PAKET C">PAKET C</option>
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KELAS</label>
+                        <select
+                          value={formData.kelas || ""}
+                          onChange={(e) => setFormData(prev => ({ ...prev, kelas: e.target.value }))}
+                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                        >
+                          {(KELAS_BY_PROGRAM[formData.program || "PAKET C"] || []).map((k) => (
+                            <option key={k} value={k}>{k}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Row 3: NISN | NIS */}
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NISN</label>
+                        <input
+                          type="text"
+                          placeholder="Nomor Induk Siswa Nasional"
+                          value={formData.nisn || ""}
+                          onChange={(e) => setFormData(prev => ({ ...prev, nisn: e.target.value }))}
+                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIS</label>
+                        <input
+                          type="text"
+                          placeholder="Nomor Induk Siswa"
+                          value={formData.nis || ""}
+                          onChange={(e) => setFormData(prev => ({ ...prev, nis: e.target.value }))}
+                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        />
+                      </div>
+
+                      {/* Row 4: TEMPAT, TGL. LAHIR | JENIS KELAMIN */}
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TEMPAT, TGL. LAHIR</label>
+                        <input
+                          type="text"
+                          placeholder="Contoh: Ciamis, 05-02-2008"
+                          value={formData.tempatTglLahir || ""}
+                          onChange={(e) => setFormData(prev => ({ ...prev, tempatTglLahir: e.target.value }))}
+                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">JENIS KELAMIN</label>
+                        <select
+                          value={formData.jenisKelamin || "Laki-laki"}
+                          onChange={(e) => setFormData(prev => ({ ...prev, jenisKelamin: e.target.value }))}
+                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                        >
+                          <option value="Laki-laki">Laki-laki</option>
+                          <option value="Perempuan">Perempuan</option>
+                        </select>
+                      </div>
+
+                      {/* Row 5: AGAMA | EMAIL */}
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">AGAMA</label>
+                        <input
+                          type="text"
+                          placeholder="Agama"
+                          value={formData.agama || ""}
+                          onChange={(e) => setFormData(prev => ({ ...prev, agama: e.target.value }))}
+                          className="w-full h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-850 placeholder-slate-400 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">EMAIL</label>
+                        <input
+                          type="email"
+                          placeholder="Alamat email warga belajar"
+                          value={formData.email || ""}
+                          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                          className="w-full h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-850 placeholder-slate-400 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        />
+                      </div>
+
+                      {/* Row 6: ALAMAT (full width) */}
+                      <div className="flex flex-col gap-0.5 sm:col-span-2">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">ALAMAT</label>
+                        <textarea
+                          placeholder="Alamat tempat tinggal lengkap warga belajar"
+                          value={formData.alamat || ""}
+                          onChange={(e) => setFormData(prev => ({ ...prev, alamat: e.target.value }))}
+                          className="w-full p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
+                          rows={2}
+                        />
+                      </div>
+
+                      {/* Row 7: TITIK LAYANAN | NO. HP */}
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TITIK LAYANAN</label>
+                        <input
+                          type="text"
+                          placeholder="Titik layanan belajar"
+                          value={formData.titikLayanan || ""}
+                          onChange={(e) => setFormData(prev => ({ ...prev, titikLayanan: e.target.value }))}
+                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NO. HP</label>
+                        <input
+                          type="text"
+                          placeholder="Nomor Handphone aktif"
+                          value={formData.noHp || ""}
+                          onChange={(e) => setFormData(prev => ({ ...prev, noHp: e.target.value }))}
+                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        />
+                      </div>
+
+                      {/* Row 8: NAMA AYAH | NAMA IBU */}
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA AYAH</label>
+                        <input
+                          type="text"
+                          placeholder="Nama lengkap ayah kandung"
+                          value={formData.namaAyah || ""}
+                          onChange={(e) => setFormData(prev => ({ ...prev, namaAyah: e.target.value }))}
+                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA IBU</label>
+                        <input
+                          type="text"
+                          placeholder="Nama lengkap ibu kandung"
+                          value={formData.namaIbu || ""}
+                          onChange={(e) => setFormData(prev => ({ ...prev, namaIbu: e.target.value }))}
+                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        />
+                      </div>
+
+                      {/* Row 9: PASSWORD (full width) */}
+                      <div className="flex flex-col gap-0.5 sm:col-span-2">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                          PASSWORD AKUN LOGIN {!isAdding && "(KOSONGKAN JIKA TIDAK INGIN MENGUBAH)"}
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            placeholder={isAdding ? "Buat password login warga belajar" : "Masukkan password baru jika ingin diubah"}
+                            value={formData.password || ""}
+                            onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                            className="w-full h-9 pl-3 pr-10 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
 
                   </div>
 
-                  {/* RIGHT 1 COL: Drag & Drop Photo + Additional Status info */}
-                  <div className="lg:col-span-1 flex flex-col items-center gap-6">
-                    
+                  {/* RIGHT COLUMN: Drag & Drop Photo + Additional Status info */}
+                  <div className="lg:w-[240px] lg:shrink-0 w-full flex flex-col gap-4">
+
                     {/* PHOTO UPLOADER */}
-                    <div className="space-y-2 text-left">
+                    <div className="space-y-1.5">
                       <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wider block">FOTO PROFIL WB</label>
                       <div
                         onDragEnter={handleDrag}
                         onDragOver={handleDrag}
                         onDragLeave={handleDrag}
                         onDrop={handleDrop}
-                        className={`border-2 border-dashed rounded-2xl p-4 text-center transition-all ${
+                        className={`border-2 border-dashed rounded-xl p-2.5 text-center transition-all ${
                           dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
-                        } h-56 flex flex-col justify-center items-center relative overflow-hidden`}
+                        } h-44 flex flex-col justify-center items-center relative overflow-hidden`}
                       >
                         {formData.foto ? (
                           <div className="w-full h-full relative group">
                             <img
                               src={formData.foto}
                               alt="Student Preview"
-                              className="w-full h-full object-cover rounded-xl"
+                              className="w-full h-full object-cover rounded-lg"
                             />
                             <button
                               type="button"
                               onClick={() => setFormData((prev) => ({ ...prev, foto: "" }))}
-                              className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 shadow-md opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                              className="absolute top-1.5 right-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full p-0.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                             >
                               <X className="h-3 w-3" />
                             </button>
                           </div>
                         ) : (
                           <>
-                            <Upload className="h-8 w-8 text-white/60 mb-2" />
-                            <p className="text-[10px] font-black text-white uppercase tracking-wider">DRAG AND DROP A FILE</p>
-                            <p className="text-[9px] text-white/70 font-semibold uppercase mt-0.5">HERE OR CLICK</p>
+                            <Upload className="h-6 w-6 text-white/50 mb-1" />
+                            <p className="text-[9px] font-black text-white uppercase tracking-wider">DRAG AND DROP</p>
+                            <p className="text-[8px] text-white/70 font-semibold uppercase mt-0.5">CLICK TO BROWSE</p>
                             <input
                               type="file"
                               accept="image/*"
@@ -1387,22 +1373,22 @@ export default function WargaBelajarManager() {
                           </div>
                         )}
                       </div>
-                      <p className="text-[10px] font-bold text-white/80 mt-1 italic text-center">
-                        * Batas maksimal ukuran foto adalah 5MB.
+                      <p className="text-[9px] font-medium text-white/70 italic text-center">
+                        * Maks 5MB
                       </p>
-                      <input type="text" placeholder="Masukkan URL foto..."
+                      <input type="text" placeholder="atau masukkan URL foto..."
                         value={formData.foto || ""}
                         onChange={(e) => setFormData((prev) => ({ ...prev, foto: e.target.value }))}
-                        className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white text-slate-800 mt-2"
+                        className="w-full text-[11px] font-semibold border border-transparent rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-purple-400 focus:outline-none bg-white text-slate-800"
                       />
                     </div>
 
                     {/* Additional Info / Status */}
-                    <div className="bg-white/10 p-4 rounded-2xl border border-white/10 space-y-3.5 text-left text-white">
-                      <span className="block text-[10px] font-black text-yellow-300 tracking-wider uppercase border-b border-white/20 pb-1.5">Info Akademik & Status</span>
-                      
+                    <div className="bg-white/10 p-3 rounded-xl border border-white/10 space-y-2.5 text-left text-white">
+                      <span className="block text-[9px] font-black text-yellow-300 tracking-wider uppercase border-b border-white/20 pb-1.5">Info Akademik & Status</span>
+
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black text-cyan-100 uppercase">STATUS WARGA BELAJAR</label>
+                        <label className="text-[8px] font-black text-cyan-100 uppercase">STATUS WARGA BELAJAR</label>
                         <select
                           value={formData.status || "AKTIF"}
                           onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
@@ -1413,8 +1399,8 @@ export default function WargaBelajarManager() {
                         </select>
                       </div>
 
-                      <div className="text-[9px] text-cyan-100/85 leading-relaxed font-semibold pt-1 border-t border-white/15 space-y-1">
-                        <span className="block font-black text-[9px] text-yellow-300 uppercase tracking-wide">Catatan Penting:</span>
+                      <div className="text-[8px] text-cyan-100/85 leading-relaxed font-semibold pt-1 border-t border-white/15 space-y-1">
+                        <span className="block font-black text-[8px] text-yellow-300 uppercase tracking-wide">Catatan Penting:</span>
                         <p>NIK, No. HP, dan Password hanya dapat dilihat di Admin Panel ini.</p>
                         <p>Status LULUS otomatis menyembunyikan warga belajar dari halaman publik sekolah.</p>
                       </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { parseCSV, downloadCSV, mapCsvRows, parseExcel } from "@/lib/utils";
-import { Upload, Plus, Trash2, Save, HelpCircle, Download, LayoutGrid, List, Search, X, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Upload, Plus, Trash2, Save, HelpCircle, Download, LayoutGrid, List, Search, X, Loader2, ChevronLeft, ChevronRight, Filter, RotateCcw } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
 
@@ -451,9 +451,9 @@ export default function AlumniManager() {
       </div>
 
       {/* FILTER PANEL */}
-      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5">
-        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Filter Pencarian Alumni</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm space-y-4">
+        {/* Row 1: Search inputs + Filter/Reset */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 items-center">
           <div className="relative">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
               <Search className="h-4 w-4" />
@@ -487,23 +487,29 @@ export default function AlumniManager() {
               placeholder="CARI TAHUN LULUS"
               value={searchTahun}
               onChange={(e) => setSearchTahun(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner"
+              className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner uppercase"
             />
           </div>
-          <div>
-            <select
-              className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-cyan-500 font-bold bg-white text-slate-700 shadow-inner"
-              value={searchProgram}
-              onChange={(e) => setSearchProgram(e.target.value)}
-            >
-              <option value="">Semua Program</option>
-              <option value="PAKET A">PAKET A (Setara SD)</option>
-              <option value="PAKET B">PAKET B (Setara SMP)</option>
-              <option value="PAKET C">PAKET C (Setara SMA)</option>
-            </select>
-          </div>
+          <select
+            className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-cyan-500 font-bold bg-white text-slate-700 shadow-inner"
+            value={searchProgram}
+            onChange={(e) => setSearchProgram(e.target.value)}
+          >
+            <option value="">Semua Program</option>
+            <option value="PAKET A">PAKET A (Setara SD)</option>
+            <option value="PAKET B">PAKET B (Setara SMP)</option>
+            <option value="PAKET C">PAKET C (Setara SMA)</option>
+          </select>
+          <Button
+            onClick={handleFilter}
+            className="h-10 rounded-xl bg-[#00badb] hover:bg-[#009cb9] text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase shadow-sm"
+          >
+            <Filter className="h-4 w-4" /> FILTER
+          </Button>
         </div>
-        <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-slate-100 flex-wrap">
+
+        {/* Row 2: Action buttons + Reset */}
+        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
           <input
             type="file"
             ref={importInputRef}
@@ -511,20 +517,29 @@ export default function AlumniManager() {
             accept=".csv, .xlsx, .xls"
             onChange={handleImportCSV}
           />
-          <Button onClick={() => importInputRef.current?.click()} className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 py-2.5 rounded-xl cursor-pointer tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md shadow-purple-200 uppercase">
-            <Upload size={16} /> Upload CSV / Excel
+          <Button
+            onClick={() => importInputRef.current?.click()}
+            className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 h-9 rounded-xl cursor-pointer uppercase tracking-wider shadow-sm flex items-center gap-1.5 transition-all select-none active:scale-95"
+          >
+            <Upload className="h-3.5 w-3.5" /> UPLOAD CSV / EXCEL
           </Button>
-          <Button onClick={handleExportCSV} className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl cursor-pointer tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md shadow-emerald-200 uppercase">
-            <Download size={16} /> Download CSV
+          <Button
+            onClick={handleExportCSV}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] px-4 h-9 rounded-xl cursor-pointer uppercase tracking-wider shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
+          >
+            <Download className="h-3.5 w-3.5" /> DOWNLOAD CSV
           </Button>
-          <Button onClick={startAddAlumni} className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md shadow-purple-200 uppercase">
-            <Plus className="h-4 w-4" /> TAMBAH DATA
+          <Button
+            onClick={startAddAlumni}
+            className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 h-9 rounded-xl cursor-pointer shadow-sm uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
+          >
+            <Plus className="h-3.5 w-3.5" /> TAMBAH DATA
           </Button>
-          <Button onClick={handleReset} className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl h-10 px-6 active:scale-95 transition-all">
-            Reset
-          </Button>
-          <Button onClick={handleFilter} className="bg-[#00badb] hover:bg-[#009cb9] text-white text-xs font-bold rounded-xl h-10 px-6 active:scale-95 transition-all">
-            Filter
+          <Button
+            onClick={handleReset}
+            className="h-9 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-[10px] px-4 cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase shadow-sm ml-auto"
+          >
+            <RotateCcw className="h-3.5 w-3.5" /> RESET
           </Button>
         </div>
       </div>
@@ -675,9 +690,9 @@ export default function AlumniManager() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={closeForm} />
 
           {/* Form Container */}
-          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-2xl animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10 max-h-[90vh] flex flex-col">
+          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10 flex flex-col">
             {/* Form Column (Cyan Background) */}
-            <div className="bg-[#00badb] p-6 relative text-white flex-1 overflow-y-auto">
+            <div className="bg-[#00badb] p-3 relative text-white flex-1">
               {/* Close Button */}
               <button
                 onClick={closeForm}
@@ -692,250 +707,260 @@ export default function AlumniManager() {
                 </span>
               </div>
 
-              <form onSubmit={handleSave} className="space-y-4 text-slate-800">
-                {/* Row 1: Nama & NIK */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Nama Lengkap</label>
-                    <input
-                      type="text"
-                      required
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                      placeholder="Contoh: Ageng LS Suhendi"
-                      value={nama}
-                      onChange={(e) => setNama(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">NIK (16 Digit)</label>
-                    <input
-                      type="text"
-                      required
-                      maxLength={16}
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                      placeholder="Contoh: 320712..."
-                      value={nik}
-                      onChange={(e) => setNik(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Row 2: Program & Tahun Lulus */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Program Pendidikan</label>
-                    <select
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                      value={program}
-                      onChange={(e) => setProgram(e.target.value)}
-                    >
-                      <option value="PAKET A">PAKET A (Setara SD)</option>
-                      <option value="PAKET B">PAKET B (Setara SMP)</option>
-                      <option value="PAKET C">PAKET C (Setara SMA)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Tahun Lulus</label>
-                    <input
-                      type="text"
-                      required
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                      placeholder="Contoh: 2020"
-                      value={tahunLulus}
-                      onChange={(e) => setTahunLulus(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Row 3: NISN, NIS */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">NISN</label>
-                    <input
-                      type="text"
-                      required
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                      placeholder="Masukkan NISN..."
-                      value={nisn}
-                      onChange={(e) => setNisn(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">NIS</label>
-                    <input
-                      type="text"
-                      required
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                      placeholder="Masukkan NIS..."
-                      value={nis}
-                      onChange={(e) => setNis(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Row 4: Tempat, Tgl. Lahir & Jenis Kelamin */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Tempat, Tgl. Lahir</label>
-                    <input
-                      type="text"
-                      required
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                      placeholder="Contoh: Ciamis, 15-08-2002"
-                      value={tempatTglLahir}
-                      onChange={(e) => setTempatTglLahir(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Jenis Kelamin</label>
-                    <select
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                      value={jenisKelamin}
-                      onChange={(e) => setJenisKelamin(e.target.value)}
-                    >
-                      <option value="Laki-laki">Laki-laki</option>
-                      <option value="Perempuan">Perempuan</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Row 5: No HP, Email, Agama */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">No. HP / WA</label>
-                    <input
-                      type="text"
-                      required
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                      placeholder="Contoh: 0821..."
-                      value={noHp}
-                      onChange={(e) => setNoHp(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Agama</label>
-                    <input
-                      type="text"
-                      required
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                      placeholder="Contoh: Islam"
-                      value={agama}
-                      onChange={(e) => setAgama(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Email</label>
-                    <input
-                      type="email"
-                      required
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                      placeholder="Contoh: aceng@mail.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Row 6: Nama Ayah & Nama Ibu */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Nama Ayah</label>
-                    <input
-                      type="text"
-                      required
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                      placeholder="Nama ayah kandung..."
-                      value={namaAyah}
-                      onChange={(e) => setNamaAyah(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Nama Ibu</label>
-                    <input
-                      type="text"
-                      required
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white"
-                      placeholder="Nama ibu kandung..."
-                      value={namaIbu}
-                      onChange={(e) => setNamaIbu(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Row 7: Alamat */}
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Alamat Lengkap</label>
-                  <textarea
-                    required
-                    rows={2}
-                    className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white resize-none"
-                    placeholder="Tulis alamat rumah lengkap alumni..."
-                    value={alamat}
-                    onChange={(e) => setAlamat(e.target.value)}
-                  />
-                </div>
-
-                {/* Row 8: Cerita Sukses */}
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Cerita Sukses Alumni</label>
-                  <textarea
-                    required
-                    rows={3}
-                    className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white resize-none"
-                    placeholder="Bagikan cerita sukses, kesan pesan, atau kutipan motivasi dari alumni..."
-                    value={cerita}
-                    onChange={(e) => setCerita(e.target.value)}
-                  />
-                </div>
-
-                {/* Row 9: Foto Upload & URL */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">URL Foto Alumni</label>
-                    <input
-                      type="text"
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-slate-50 text-slate-500"
-                      placeholder="URL Foto..."
-                      value={foto}
-                      onChange={(e) => setFoto(e.target.value)}
-                      readOnly
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-cyan-50 mb-1">Unggah Foto Fisik</label>
-                    <p className="text-[10px] font-semibold text-white/60 mb-2">* Maksimal ukuran foto adalah 5MB.</p>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      className="hidden"
-                      accept="image/*"
-                      onChange={async (e) => {
-                        if (e.target.files && e.target.files[0]) {
-                          await handleImageUpload(e.target.files[0]);
-                        }
-                      }}
-                    />
-                    <div
-                      className={`border-2 border-dashed rounded-xl p-3 text-center transition cursor-pointer text-xs ${
-                        dragActive ? "border-purple-600 bg-white/20" : "border-white/40 hover:border-white hover:bg-white/10"
-                      }`}
-                      onDragEnter={handleDrag}
-                      onDragOver={handleDrag}
-                      onDragLeave={handleDrag}
-                      onDrop={handleDrop}
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <span className="font-bold text-white block">
-                        {uploading ? "Mengunggah..." : "Tarik Foto / Klik di sini"}
-                      </span>
-                      <span className="text-[10px] text-cyan-100 block mt-0.5">Mendukung format JPG, PNG, WEBP (Maksimal 5MB)</span>
+              <form onSubmit={handleSave} className="text-slate-800">
+                <div className="flex flex-col lg:flex-row gap-4">
+                  {/* LEFT COLUMN: All Form Fields */}
+                  <div className="flex-1 lg:min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1.5">
+                    {/* Row 1: NAMA | NIK */}
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">NAMA</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Nama lengkap alumni"
+                        value={nama}
+                        onChange={(e) => setNama(e.target.value)}
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                      />
                     </div>
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">NIK</label>
+                      <input
+                        type="text"
+                        required
+                        maxLength={16}
+                        placeholder="Masukkan 16 digit NIK"
+                        value={nik}
+                        onChange={(e) => setNik(e.target.value)}
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                      />
+                    </div>
+
+                    {/* Row 2: PROGRAM PENDIDIKAN | TAHUN LULUS */}
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">PROGRAM / PAKET</label>
+                      <select
+                        value={program}
+                        onChange={(e) => setProgram(e.target.value)}
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                      >
+                        <option value="PAKET A">PAKET A (Setara SD)</option>
+                        <option value="PAKET B">PAKET B (Setara SMP)</option>
+                        <option value="PAKET C">PAKET C (Setara SMA)</option>
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">TAHUN LULUS</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Contoh: 2020"
+                        value={tahunLulus}
+                        onChange={(e) => setTahunLulus(e.target.value)}
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                      />
+                    </div>
+
+                    {/* Row 3: NISN | NIS */}
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">NISN</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Masukkan NISN"
+                        value={nisn}
+                        onChange={(e) => setNisn(e.target.value)}
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">NIS</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Masukkan NIS"
+                        value={nis}
+                        onChange={(e) => setNis(e.target.value)}
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                      />
+                    </div>
+
+                    {/* Row 4: TEMPAT/TGL LAHIR | JK */}
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">TEMPAT, TGL. LAHIR</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Contoh: Ciamis, 15-08-2002"
+                        value={tempatTglLahir}
+                        onChange={(e) => setTempatTglLahir(e.target.value)}
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">JENIS KELAMIN</label>
+                      <select
+                        value={jenisKelamin}
+                        onChange={(e) => setJenisKelamin(e.target.value)}
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                      >
+                        <option value="Laki-laki">Laki-laki</option>
+                        <option value="Perempuan">Perempuan</option>
+                      </select>
+                    </div>
+
+                    {/* Row 5: NO.HP/WA | AGAMA */}
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">NO. HP / WA</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Contoh: 0821..."
+                        value={noHp}
+                        onChange={(e) => setNoHp(e.target.value)}
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">AGAMA</label>
+                      <input
+                        type="text"
+                        placeholder="Contoh: Islam"
+                        value={agama}
+                        onChange={(e) => setAgama(e.target.value)}
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                      />
+                    </div>
+
+                    {/* Row 6: EMAIL | NAMA AYAH */}
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">EMAIL</label>
+                      <input
+                        type="email"
+                        placeholder="Contoh: alumni@mail.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">NAMA AYAH</label>
+                      <input
+                        type="text"
+                        placeholder="Nama ayah kandung"
+                        value={namaAyah}
+                        onChange={(e) => setNamaAyah(e.target.value)}
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                      />
+                    </div>
+
+                    {/* Row 7: NAMA IBU */}
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">NAMA IBU</label>
+                      <input
+                        type="text"
+                        placeholder="Nama ibu kandung"
+                        value={namaIbu}
+                        onChange={(e) => setNamaIbu(e.target.value)}
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                      />
+                    </div>
+
+                    {/* Row 8: ALAMAT (full width) */}
+                    <div className="sm:col-span-2 flex flex-col gap-0.5">
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">ALAMAT LENGKAP</label>
+                      <textarea
+                        rows={2}
+                        placeholder="Tulis alamat rumah lengkap alumni..."
+                        value={alamat}
+                        onChange={(e) => setAlamat(e.target.value)}
+                        className="p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 resize-none transition-colors"
+                      />
+                    </div>
+
+                    {/* Row 9: CERITA SUKSES ALUMNI (full width) */}
+                    <div className="sm:col-span-2 flex flex-col gap-0.5">
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">CERITA SUKSES ALUMNI</label>
+                      <textarea
+                        rows={3}
+                        placeholder="Bagikan cerita sukses, kesan pesan, atau kutipan motivasi dari alumni..."
+                        value={cerita}
+                        onChange={(e) => setCerita(e.target.value)}
+                        className="p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 resize-none transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* RIGHT COLUMN: Photo Uploader — compact sidebar */}
+                  <div className="lg:w-[220px] lg:shrink-0 w-full flex flex-col gap-4">
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wider block">FOTO ALUMNI</label>
+                      <div
+                        onDragEnter={handleDrag}
+                        onDragOver={handleDrag}
+                        onDragLeave={handleDrag}
+                        onDrop={handleDrop}
+                        className={`border-2 border-dashed rounded-xl p-2.5 text-center transition-all ${
+                          dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
+                        } h-44 flex flex-col justify-center items-center relative overflow-hidden`}
+                      >
+                        {foto ? (
+                          <div className="w-full h-full relative group">
+                            <img
+                              src={foto}
+                              alt="Alumni Preview"
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setFoto("")}
+                              className="absolute top-1.5 right-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full p-0.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <Upload className="h-6 w-6 text-white/50 mb-1" />
+                            <p className="text-[9px] font-black text-white uppercase tracking-wider">DRAG AND DROP</p>
+                            <p className="text-[8px] text-white/70 font-semibold uppercase mt-0.5">CLICK TO BROWSE</p>
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept="image/*"
+                              onChange={async (e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  await handleImageUpload(e.target.files[0]);
+                                  if (e.target) e.target.value = "";
+                                }
+                              }}
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                              disabled={uploading}
+                            />
+                          </>
+                        )}
+                        {uploading && (
+                          <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#9c27b0] border-t-transparent" />
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-[9px] font-medium text-white/70 italic text-center">
+                        * Maks 5MB
+                      </p>
+                      <input type="text" placeholder="atau masukkan URL foto..."
+                        value={foto || ""}
+                        onChange={(e) => setFoto(e.target.value)}
+                        className="w-full text-[11px] font-black border border-transparent rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-purple-400 focus:outline-none bg-white text-slate-800"
+                      />
+                    </div>
+
                   </div>
                 </div>
 
                 {/* Buttons Footer Form */}
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/20">
+                <div className="flex items-center justify-end gap-3 pt-4 mt-4 border-t border-white/20">
                   <Button
                     type="submit"
                     disabled={saving || uploading}

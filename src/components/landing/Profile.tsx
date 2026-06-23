@@ -91,6 +91,16 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [servicePoints, setServicePoints] = useState<ServicePoint[]>([]);
 
+  // Counts for homepage stats
+  const [homeStats, setHomeStats] = useState({
+    students: 0,
+    alumni: 0,
+    tutors: 0,
+    rombel: 0,
+    managers: 0,
+    servicePoints: 0,
+  });
+
   // Loading state
   const [loading, setLoading] = useState(true);
   const [showAllManagers, setShowAllManagers] = useState(false);
@@ -162,6 +172,23 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
     };
   }, [isDetailed]);
 
+  // Fetch counts for homepage stats (non-detailed view)
+  useEffect(() => {
+    if (isDetailed) return;
+
+    const fetchStats = async () => {
+      try {
+        const res = await fetch("/api/public-stats").then(r => r.json());
+        if (res?.success && res.data) {
+          setHomeStats(res.data);
+        }
+      } catch {
+        // fallback to static numbers if fetch fails
+      }
+    };
+    fetchStats();
+  }, [isDetailed]);
+
   // If isDetailed is false, render original homepage profile overview:
   if (!isDetailed) {
     const handleReadMore = (e: React.MouseEvent) => {
@@ -180,12 +207,12 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Visual Stats Grid */}
-            <div className="grid grid-cols-2 gap-6 relative">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 relative">
               <div className="p-6 rounded-2xl border border-slate-300 bg-white hover:border-[#ff6105] hover:-translate-y-1.5 transition-all flex flex-col items-center text-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#280f91] to-purple-600 text-white shadow-md">
                   <Users className="h-6 w-6" />
                 </div>
-                <span className="text-3xl font-black text-[#280f91]">350+</span>
+                <span className="text-3xl font-black text-[#280f91]">{homeStats.students || "350"}</span>
                 <span className="text-xs font-black text-slate-400 tracking-wider uppercase">Warga Belajar</span>
               </div>
 
@@ -193,7 +220,7 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#ff6105] to-orange-400 text-white shadow-md">
                   <Award className="h-6 w-6" />
                 </div>
-                <span className="text-3xl font-black text-[#280f91]">500+</span>
+                <span className="text-3xl font-black text-[#280f91]">{homeStats.alumni || "500"}</span>
                 <span className="text-xs font-black text-slate-400 tracking-wider uppercase">Lulusan Alumni</span>
               </div>
 
@@ -201,7 +228,7 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-teal-400 text-white shadow-md">
                   <BookOpen className="h-6 w-6" />
                 </div>
-                <span className="text-3xl font-black text-[#280f91]">18</span>
+                <span className="text-3xl font-black text-[#280f91]">{homeStats.tutors || "18"}</span>
                 <span className="text-xs font-black text-slate-400 tracking-wider uppercase">Tutor Kompeten</span>
               </div>
 
@@ -209,8 +236,24 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-400 text-white shadow-md">
                   <Layers className="h-6 w-6" />
                 </div>
-                <span className="text-3xl font-black text-[#280f91]">12</span>
+                <span className="text-3xl font-black text-[#280f91]">{homeStats.rombel || "12"}</span>
                 <span className="text-xs font-black text-slate-400 tracking-wider uppercase">Rombel Kelas</span>
+              </div>
+
+              <div className="p-6 rounded-2xl border border-slate-300 bg-white hover:border-[#ff6105] hover:-translate-y-1.5 transition-all flex flex-col items-center text-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-700 text-white shadow-md">
+                  <UserCheck className="h-6 w-6" />
+                </div>
+                <span className="text-3xl font-black text-[#280f91]">{homeStats.managers || "5"}</span>
+                <span className="text-xs font-black text-slate-400 tracking-wider uppercase">Pengelola</span>
+              </div>
+
+              <div className="p-6 rounded-2xl border border-slate-300 bg-white hover:border-[#ff6105] hover:-translate-y-1.5 transition-all flex flex-col items-center text-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 text-white shadow-md">
+                  <MapPin className="h-6 w-6" />
+                </div>
+                <span className="text-3xl font-black text-[#280f91]">{homeStats.servicePoints || "4"}</span>
+                <span className="text-xs font-black text-slate-400 tracking-wider uppercase">Titik Layanan</span>
               </div>
             </div>
 
