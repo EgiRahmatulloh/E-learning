@@ -2,8 +2,8 @@
 import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { db } from "../config/db";
-import { students, alumni } from "../models";
-import { eq } from "drizzle-orm";
+import { students, alumni, rombels, rombelStudents } from "../models";
+import { eq, and, inArray, sql } from "drizzle-orm";
 import { verifyAdmin } from "../middleware/auth";
 import { finalJwtSecret } from "../config/jwt";
 
@@ -26,6 +26,23 @@ export const studentsHandlers = new Elysia()
     try {
       const list = await db.select().from(students).all();
 
+      // Fetch rombel membership for all students in one query
+      const allRombelMembers = await db
+        .select({
+          studentId: rombelStudents.studentId,
+          rombelId: rombels.id,
+          rombelNama: rombels.nama,
+        })
+        .from(rombelStudents)
+        .innerJoin(rombels, eq(rombelStudents.rombelId, rombels.id))
+        .all();
+
+      const rombelMap = new Map<number, { id: number; nama: string }[]>();
+      for (const row of allRombelMembers) {
+        if (!rombelMap.has(row.studentId)) rombelMap.set(row.studentId, []);
+        rombelMap.get(row.studentId)!.push({ id: row.rombelId, nama: row.rombelNama });
+      }
+
       const authHeader = headers["authorization"];
       let isAdmin = false;
       if (authHeader && authHeader.startsWith("Bearer ")) {
@@ -43,6 +60,7 @@ export const studentsHandlers = new Elysia()
           delete (rest as any).nik;
           delete (rest as any).noHp;
         }
+        (rest as any).rombels = rombelMap.get(item.id) || [];
         return rest;
       });
       return { success: true, data: sanitized };
@@ -259,45 +277,34 @@ export const studentsHandlers = new Elysia()
         return { success: false, message: "Data warga belajar tidak ditemukan" };
       }
 
-      const currentGrade = existing.kelas.toUpperCase();
-      let nextGrade = currentGrade;
-      if (currentGrade.includes("DUABELAS")) {
-        set.status = 400;
-        return {
-          success: false,
-          message: "Warga belajar sudah berada di kelas tertinggi (Kelas XII)",
-        };
-      } else if (currentGrade.includes("SEBELAS")) {
-        nextGrade = "KELAS XII (DUABELAS)";
-      } else if (currentGrade.includes("SEPULUH")) {
-        nextGrade = "KELAS XI (SEBELAS)";
-      } else if (currentGrade.includes("SEMBILAN")) {
-        set.status = 400;
-        return {
-          success: false,
-          message: "Warga belajar sudah berada di kelas tertinggi untuk Paket B (Kelas IX)",
-        };
-      } else if (currentGrade.includes("DELAPAN")) {
-        nextGrade = "KELAS IX (SEMBILAN)";
-      } else if (currentGrade.includes("TUJUH")) {
-        nextGrade = "KELAS VIII (DELAPAN)";
-      } else if (currentGrade.includes("ENAM")) {
-        set.status = 400;
-        return {
-          success: false,
-          message: "Warga belajar sudah berada di kelas tertinggi untuk Paket A (Kelas VI)",
-        };
-      } else if (currentGrade.includes("LIMA")) {
-        nextGrade = "KELAS VI (ENAM)";
-      } else if (currentGrade.includes("EMPAT")) {
-        nextGrade = "KELAS V (LIMA)";
-      } else if (currentGrade.includes("TIGA")) {
-        nextGrade = "KELAS IV (EMPAT)";
-      } else if (currentGrade.includes("DUA")) {
-        nextGrade = "KELAS III (TIGA)";
-      } else if (currentGrade.includes("SATU")) {
-        nextGrade = "KELAS II (DUA)";
+      const GRADE_NUMS_S = ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"];
+      const ROMAN_TO_NUM_S: Record<string, number> = {}; GRADE_NUMS_S.forEach((r,i) => ROMAN_TO_NUM_S[r] = i+1);
+      const NUM_TO_ROMAN_S: Record<string, string> = { "1":"I","2":"II","3":"III","4":"IV","5":"V","6":"VI","7":"VII","8":"VIII","9":"IX","10":"X","11":"XI","12":"XII" };
+      const MAX_BY_PROGRAM_S: Record<string, number> = { "PAKET A": 6, "PAKET B": 9, "PAKET C": 12 };
+
+      const g = existing.kelas.toUpperCase().trim();
+      let gradeNum = 0;
+      const numMatchS = g.match(/KELAS\s+(\d{1,2})/);
+      if (numMatchS) { gradeNum = parseInt(numMatchS[1]); }
+      else {
+        for (const [roman, n] of Object.entries(ROMAN_TO_NUM_S).sort((a,b) => b[0].length - a[0].length)) {
+          if (g.startsWith(`KELAS ${roman}`) || g.startsWith(roman) || g.includes(`(${roman})`)) {
+            gradeNum = n; break;
+          }
+        }
       }
+      if (gradeNum <= 0 || gradeNum >= 12) {
+        set.status = 400;
+        return { success: false, message: "Tidak dapat menentukan kelas saat ini" };
+      }
+      const maxGradeS = MAX_BY_PROGRAM_S[existing.program?.toUpperCase().trim()] || 12;
+      if (gradeNum >= maxGradeS) {
+        set.status = 400;
+        return { success: false, message: `Warga belajar sudah berada di kelas tertinggi (Kelas ${NUM_TO_ROMAN_S[String(gradeNum)]})` };
+      }
+
+      const nextRoman = NUM_TO_ROMAN_S[String(gradeNum + 1)];
+      const nextGrade = `KELAS ${nextRoman}`;
 
       const updated = await db
         .update(students)
@@ -305,6 +312,47 @@ export const studentsHandlers = new Elysia()
         .where(eq(students.id, id))
         .returning()
         .get();
+
+      // Move student to new rombel: preserve section letter (e.g. XB → XIB)
+      const allRombelsList = await db.select().from(rombels).all();
+      const currentRel = await db
+        .select({ rombelId: rombelStudents.rombelId })
+        .from(rombelStudents)
+        .where(eq(rombelStudents.studentId, id))
+        .get();
+      const currentRombelObj = currentRel ? allRombelsList.find(r => r.id === currentRel.rombelId) : null;
+      const currentRombelName = currentRombelObj?.nama.toUpperCase() || "";
+      const sectionLetter = currentRombelName.length > 0 ? currentRombelName.slice(-1) : "";
+      const targetRombelName = `${nextRoman}${sectionLetter}`;
+
+      // Find or create target rombel
+      let targetRombel = allRombelsList.find(r => r.nama.toUpperCase() === targetRombelName);
+      if (!targetRombel) {
+        targetRombel = await db.insert(rombels)
+          .values({ nama: targetRombelName })
+          .returning()
+          .get();
+      }
+
+      if (currentRel) {
+        await db.delete(rombelStudents)
+          .where(and(eq(rombelStudents.studentId, id), eq(rombelStudents.rombelId, currentRel.rombelId)))
+          .run();
+        // Delete old rombel if empty
+        const count = await db
+          .select({ cnt: sql<number>`count(*)` })
+          .from(rombelStudents)
+          .where(eq(rombelStudents.rombelId, currentRel.rombelId))
+          .get();
+        if (count && count.cnt === 0) {
+          await db.delete(rombels).where(eq(rombels.id, currentRel.rombelId)).run();
+        }
+      }
+      try {
+        await db.insert(rombelStudents)
+          .values({ rombelId: targetRombel.id, studentId: id })
+          .run();
+      } catch { /* already in rombel */ }
 
       return { success: true, data: updated };
     } catch {
@@ -351,6 +399,28 @@ export const studentsHandlers = new Elysia()
           cerita: `Lulusan program ${updated.program}`,
           foto: updated.foto,
         });
+
+        // Hapus dari rombel + hapus rombel kosong
+        const relasi = await db
+          .select({ rombelId: rombelStudents.rombelId })
+          .from(rombelStudents)
+          .where(eq(rombelStudents.studentId, id))
+          .all();
+
+        for (const rel of relasi) {
+          await db.delete(rombelStudents)
+            .where(and(eq(rombelStudents.studentId, id), eq(rombelStudents.rombelId, rel.rombelId)))
+            .run();
+
+          const cnt = await db
+            .select({ cnt: sql<number>`count(*)` })
+            .from(rombelStudents)
+            .where(eq(rombelStudents.rombelId, rel.rombelId))
+            .get();
+          if (cnt && Number(cnt.cnt) === 0) {
+            await db.delete(rombels).where(eq(rombels.id, rel.rombelId)).run();
+          }
+        }
       }
 
       return { success: true, data: updated };
@@ -385,6 +455,40 @@ export const studentsHandlers = new Elysia()
           .where(eq(students.id, id))
           .returning()
           .get();
+
+        // Move to new rombel based on new kelas
+        const kelasUpper = kelas?.toUpperCase()?.trim() || "";
+        if (kelasUpper) {
+          // Remove from current rombel
+          const currentRel = await db
+            .select({ rombelId: rombelStudents.rombelId })
+            .from(rombelStudents)
+            .where(eq(rombelStudents.studentId, id))
+            .get();
+          if (currentRel) {
+            await db.delete(rombelStudents)
+              .where(and(eq(rombelStudents.studentId, id), eq(rombelStudents.rombelId, currentRel.rombelId)))
+              .run();
+            // Delete old rombel if empty
+            const count = await db
+              .select({ cnt: sql<number>`count(*)` })
+              .from(rombelStudents)
+              .where(eq(rombelStudents.rombelId, currentRel.rombelId))
+              .get();
+            if (count && count.cnt === 0) {
+              await db.delete(rombels).where(eq(rombels.id, currentRel.rombelId)).run();
+            }
+          }
+          // Find or create target rombel
+          let targetRombel = await db.select().from(rombels).where(eq(rombels.nama, kelasUpper)).get();
+          if (!targetRombel) {
+            targetRombel = await db.insert(rombels).values({ nama: kelasUpper }).returning().get();
+          }
+          try {
+            await db.insert(rombelStudents).values({ rombelId: targetRombel.id, studentId: id }).run();
+          } catch { /* already assigned */ }
+        }
+
         return { success: true, data: updated };
       } catch {
         set.status = 500;
@@ -473,6 +577,7 @@ export const studentsHandlers = new Elysia()
             tx.insert(students).values(chunk).run();
           }
         });
+
         return {
           success: true,
           message: `Berhasil mengimpor ${insertValues.length} data warga belajar`,
@@ -505,5 +610,307 @@ export const studentsHandlers = new Elysia()
           status: t.Optional(t.String()),
         })
       ),
+    }
+  )
+  // Bulk naikkan kelas
+  .post(
+    "/api/students/bulk/promote",
+    async ({ body, headers, jwt, set }) => {
+      const authError = await verifyAdmin(headers, jwt, set);
+      if (authError) return authError;
+
+      const { studentIds } = body as any;
+      if (!Array.isArray(studentIds) || studentIds.length === 0) {
+        set.status = 400;
+        return { success: false, message: "studentIds harus berupa array dan tidak boleh kosong" };
+      }
+
+      try {
+        const existing = await db.select().from(students).where(inArray(students.id, studentIds)).all();
+        let promoted = 0;
+        let skipped = 0;
+
+        const GRADE_NUMS = ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"];
+        const NUM_TO_ROMAN: Record<string, string> = { "1":"I","2":"II","3":"III","4":"IV","5":"V","6":"VI","7":"VII","8":"VIII","9":"IX","10":"X","11":"XI","12":"XII" };
+        const ROMAN_TO_NUM: Record<string, number> = {}; GRADE_NUMS.forEach((r,i) => ROMAN_TO_NUM[r] = i+1);
+        const MAX_BY_PROGRAM: Record<string, number> = { "PAKET A": 6, "PAKET B": 9, "PAKET C": 12 };
+
+        // Pre-fetch all rombels and current rombel assignments for affected students
+        const targetStudentIds = existing.map(s => s.id);
+        const allRombels = await db.select().from(rombels).all();
+        const currentRelations = await db
+          .select({ studentId: rombelStudents.studentId, rombelId: rombelStudents.rombelId })
+          .from(rombelStudents)
+          .where(inArray(rombelStudents.studentId, targetStudentIds))
+          .all();
+        const currentRombelMap = new Map<number, number>();
+        currentRelations.forEach(r => currentRombelMap.set(r.studentId, r.rombelId));
+
+        // Track old rombels that may become empty after moving students
+        const emptiedRombelIds = new Set<number>();
+
+        db.transaction((tx) => {
+          for (const s of existing) {
+            const g = s.kelas.toUpperCase().trim();
+            let gradeNum = 0;
+            const numMatch = g.match(/KELAS\s+(\d{1,2})/);
+            if (numMatch) { gradeNum = parseInt(numMatch[1]); }
+            else {
+              for (const [roman, n] of Object.entries(ROMAN_TO_NUM).sort((a,b) => b[0].length - a[0].length)) {
+                if (g.startsWith(`KELAS ${roman}`) || g.startsWith(roman) || g.includes(`(${roman})`)) {
+                  gradeNum = n; break;
+                }
+              }
+            }
+            if (gradeNum <= 0 || gradeNum >= 12) { skipped++; continue; }
+            const maxGrade = MAX_BY_PROGRAM[s.program?.toUpperCase().trim()] || 12;
+            if (gradeNum >= maxGrade) { skipped++; continue; }
+            const nextRoman = NUM_TO_ROMAN[String(gradeNum + 1)];
+            const newKelas = `KELAS ${nextRoman}`;
+
+            // Update kelas field
+            tx.update(students)
+              .set({ kelas: newKelas, updatedAt: new Date().toISOString() })
+              .where(eq(students.id, s.id))
+              .run();
+
+            // Move student to new rombel: preserve section letter (e.g. XB → XIB)
+            const currentRombelObj = allRombels.find(r => currentRombelMap.get(s.id) === r.id);
+            const currentRombelName = currentRombelObj?.nama.toUpperCase() || "";
+            // Section is always the last character (A, B, C, etc.)
+            const sectionLetter = currentRombelName.length > 0 ? currentRombelName.slice(-1) : "";
+            const targetRombelName = `${nextRoman}${sectionLetter}`;
+
+            // Find or create target rombel
+            let targetRombel = allRombels.find(r => r.nama.toUpperCase() === targetRombelName);
+            if (!targetRombel) {
+              // Create new rombel
+              const newRombel = tx.insert(rombels)
+                .values({ nama: targetRombelName })
+                .returning()
+                .get();
+              allRombels.push(newRombel);
+              targetRombel = newRombel;
+            }
+
+            const currentRombelId = currentRombelMap.get(s.id);
+            // Remove from current rombel
+            if (currentRombelId) {
+              tx.delete(rombelStudents)
+                .where(and(eq(rombelStudents.studentId, s.id), eq(rombelStudents.rombelId, currentRombelId)))
+                .run();
+              emptiedRombelIds.add(currentRombelId);
+            }
+            // Add to target rombel (ignore duplicate)
+            try {
+              tx.insert(rombelStudents)
+                .values({ rombelId: targetRombel.id, studentId: s.id })
+                .run();
+            } catch { /* already in rombel, skip */ }
+
+            promoted++;
+          }
+        });
+
+        // After transaction: delete old rombels that have 0 students left
+        for (const rid of emptiedRombelIds) {
+          const count = await db
+            .select({ cnt: sql<number>`count(*)` })
+            .from(rombelStudents)
+            .where(eq(rombelStudents.rombelId, rid))
+            .get();
+          if (count && count.cnt === 0) {
+            await db.delete(rombels).where(eq(rombels.id, rid)).run();
+          }
+        }
+
+        return { success: true, promoted, skipped };
+      } catch {
+        set.status = 500;
+        return { success: false, message: "Gagal menaikkan kelas secara bulk" };
+      }
+    },
+    {
+      body: t.Object({
+        studentIds: t.Array(t.Numeric()),
+      }),
+    }
+  )
+  // Bulk luluskan
+  .post(
+    "/api/students/bulk/graduate",
+    async ({ body, headers, jwt, set }) => {
+      const authError = await verifyAdmin(headers, jwt, set);
+      if (authError) return authError;
+
+      const { studentIds } = body as any;
+      if (!Array.isArray(studentIds) || studentIds.length === 0) {
+        set.status = 400;
+        return { success: false, message: "studentIds harus berupa array dan tidak boleh kosong" };
+      }
+
+      try {
+        const existing = await db.select().from(students).where(inArray(students.id, studentIds)).all();
+        let graduated = 0;
+        const year = new Date().getFullYear().toString();
+
+        // Collect rombel IDs affected by graduation
+        const affectedRombelIds = new Set<number>();
+
+        db.transaction((tx) => {
+          for (const s of existing) {
+            tx.update(students)
+              .set({ status: "LULUS", updatedAt: new Date().toISOString() })
+              .where(eq(students.id, s.id))
+              .run();
+            tx.insert(alumni).values({
+              nama: s.nama,
+              nik: s.nik,
+              program: s.program,
+              tahunLulus: year,
+              nisn: s.nisn,
+              nis: s.nis,
+              tempatTglLahir: s.tempatTglLahir,
+              noHp: s.noHp,
+              namaAyah: s.namaAyah,
+              namaIbu: s.namaIbu,
+              jenisKelamin: s.jenisKelamin,
+              agama: s.agama,
+              email: s.email,
+              alamat: s.alamat,
+              cerita: `Lulusan program ${s.program}`,
+              foto: s.foto,
+            }).run();
+
+            // Hapus dari rombel
+            const relasi = tx
+              .select({ rombelId: rombelStudents.rombelId })
+              .from(rombelStudents)
+              .where(eq(rombelStudents.studentId, s.id))
+              .all();
+            for (const rel of relasi) {
+              affectedRombelIds.add(rel.rombelId);
+              tx.delete(rombelStudents)
+                .where(and(eq(rombelStudents.studentId, s.id), eq(rombelStudents.rombelId, rel.rombelId)))
+                .run();
+            }
+
+            graduated++;
+          }
+        });
+
+        // Hapus rombel yang kosong setelah luluskan
+        for (const rombelId of affectedRombelIds) {
+          const cnt = await db
+            .select({ cnt: sql<number>`count(*)` })
+            .from(rombelStudents)
+            .where(eq(rombelStudents.rombelId, rombelId))
+            .get();
+          if (cnt && Number(cnt.cnt) === 0) {
+            await db.delete(rombels).where(eq(rombels.id, rombelId)).run();
+          }
+        }
+
+        return { success: true, graduated };
+      } catch {
+        set.status = 500;
+        return { success: false, message: "Gagal meluluskan secara bulk" };
+      }
+    },
+    {
+      body: t.Object({
+        studentIds: t.Array(t.Numeric()),
+      }),
+    }
+  )
+  // Bulk melanjutkan program
+  .post(
+    "/api/students/bulk/continue",
+    async ({ body, headers, jwt, set }) => {
+      const authError = await verifyAdmin(headers, jwt, set);
+      if (authError) return authError;
+
+      const { studentIds, program, kelas } = body as any;
+      if (!Array.isArray(studentIds) || studentIds.length === 0) {
+        set.status = 400;
+        return { success: false, message: "studentIds harus berupa array dan tidak boleh kosong" };
+      }
+
+      try {
+        const now = new Date().toISOString();
+        let continued = 0;
+
+        // Pre-fetch rombel data
+        const allRombels = await db.select().from(rombels).all();
+        const currentRelations = await db
+          .select({ studentId: rombelStudents.studentId, rombelId: rombelStudents.rombelId })
+          .from(rombelStudents)
+          .where(inArray(rombelStudents.studentId, studentIds))
+          .all();
+        const currentRombelMap = new Map<number, number>();
+        currentRelations.forEach(r => currentRombelMap.set(r.studentId, r.rombelId));
+        const emptiedRombelIds = new Set<number>();
+
+        const kelasUpper = kelas?.toUpperCase()?.trim() || "";
+
+        db.transaction((tx) => {
+          for (const id of studentIds) {
+            tx.update(students)
+              .set({ program, kelas, status: "AKTIF", updatedAt: now })
+              .where(eq(students.id, id))
+              .run();
+
+            // Move to new rombel based on new kelas
+            if (kelasUpper) {
+              let targetRombel = allRombels.find(r => r.nama.toUpperCase() === kelasUpper);
+              if (!targetRombel) {
+                targetRombel = tx.insert(rombels)
+                  .values({ nama: kelasUpper })
+                  .returning()
+                  .get();
+                allRombels.push(targetRombel);
+              }
+              const currentRombelId = currentRombelMap.get(id);
+              if (currentRombelId) {
+                tx.delete(rombelStudents)
+                  .where(and(eq(rombelStudents.studentId, id), eq(rombelStudents.rombelId, currentRombelId)))
+                  .run();
+                emptiedRombelIds.add(currentRombelId);
+              }
+              try {
+                tx.insert(rombelStudents)
+                  .values({ rombelId: targetRombel.id, studentId: id })
+                  .run();
+              } catch { /* already assigned */ }
+            }
+
+            continued++;
+          }
+        });
+
+        // Delete empty old rombels
+        for (const rid of emptiedRombelIds) {
+          const count = await db
+            .select({ cnt: sql<number>`count(*)` })
+            .from(rombelStudents)
+            .where(eq(rombelStudents.rombelId, rid))
+            .get();
+          if (count && count.cnt === 0) {
+            await db.delete(rombels).where(eq(rombels.id, rid)).run();
+          }
+        }
+
+        return { success: true, continued };
+      } catch {
+        set.status = 500;
+        return { success: false, message: "Gagal memproses kelanjutan program secara bulk" };
+      }
+    },
+    {
+      body: t.Object({
+        studentIds: t.Array(t.Numeric()),
+        program: t.String(),
+        kelas: t.String(),
+      }),
     }
   );

@@ -25,12 +25,24 @@ interface Student {
   password?: string;
   foto: string;
   status: string; // 'AKTIF', 'LULUS'
+  rombels?: { id: number; nama: string }[];
+}
+
+interface Rombel {
+  id: number;
+  nama: string;
+  jumlahSiswa: number;
 }
 
 const KELAS_BY_PROGRAM: Record<string, string[]> = {
   "PAKET A": ["KELAS I", "KELAS II", "KELAS III", "KELAS IV", "KELAS V", "KELAS VI"],
   "PAKET B": ["KELAS VII", "KELAS VIII", "KELAS IX"],
   "PAKET C": ["KELAS X", "KELAS XI", "KELAS XII"],
+};
+
+const NEXT_PROGRAM: Record<string, string> = {
+  "PAKET A": "PAKET B",
+  "PAKET B": "PAKET C",
 };
 
 export default function WargaBelajarManager() {
@@ -60,8 +72,15 @@ export default function WargaBelajarManager() {
 
   // Continuation program dialog states
   const [continueOpen, setContinueOpen] = useState(false);
-  const [newProgram, setNewProgram] = useState("PAKET B");
-  const [newKelas, setNewKelas] = useState("KELAS VII (TUJUH)");
+
+  // Rombel filter
+  const [rombels, setRombels] = useState<Rombel[]>([]);
+  const [selectedRombelId, setSelectedRombelId] = useState<number | null>(null);
+
+  // Multi-select & bulk actions
+  const [selectedStudentIds, setSelectedStudentIds] = useState<number[]>([]);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [bulkContinueOpen, setBulkContinueOpen] = useState(false);
 
   // Form Fields
   const [formData, setFormData] = useState<Partial<Student>>({
@@ -91,6 +110,11 @@ export default function WargaBelajarManager() {
 
   useEffect(() => {
     fetchStudents();
+    const token = localStorage.getItem("token");
+    fetch("/api/rombels", { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => res.json())
+      .then((data) => { if (data.success && data.data) setRombels(data.data); })
+      .catch((err) => console.error("Failed to load rombels:", err));
   }, []);
 
   const fetchStudents = () => {
@@ -122,6 +146,36 @@ export default function WargaBelajarManager() {
     setFilterNik("");
     setFilterKelas("");
     setFilterProgram("");
+    setSelectedRombelId(null);
+    setSelectedStudentIds([]);
+  };
+
+  // Cek apakah siswa sudah di akhir program (untuk sembunyikan "Melanjutkan Program")
+  const MAX_GRADE: Record<string, number> = { "PAKET A": 6, "PAKET B": 9, "PAKET C": 12 };
+  const romanKeys = ["XII","XI","X","IX","VIII","VII","VI","V","IV","III","II","I"];
+  const romanMap: Record<string, number> = { I:1,II:2,III:3,IV:4,V:5,VI:6,VII:7,VIII:8,IX:9,X:10,XI:11,XII:12 };
+
+  const getGradeFromKelas = (kelas: string): number => {
+    const upper = (kelas || "").toUpperCase().trim();
+    for (const r of romanKeys) {
+      if (upper.startsWith(r) || upper.includes(r)) return romanMap[r];
+    }
+    return 0;
+  };
+
+  const isAtEndOfProgram = (student: Student): boolean => {
+    const program = (student.program || "").toUpperCase().trim();
+    const maxGrade = MAX_GRADE[program];
+    if (!maxGrade) return false;
+    // Cek dari field kelas student atau dari rombel name
+    const gradeFromClass = getGradeFromKelas(student.kelas || "");
+    if (gradeFromClass > 0) return gradeFromClass >= maxGrade;
+    // Fallback: cek dari rombel
+    if (student.rombels && student.rombels.length > 0) {
+      const gradeFromRombel = getGradeFromKelas(student.rombels[0].nama || "");
+      return gradeFromRombel >= maxGrade;
+    }
+    return false;
   };
 
   // CSV Export
@@ -465,6 +519,14 @@ export default function WargaBelajarManager() {
     e.preventDefault();
     if (!selectedStudent) return;
 
+    const currentProg = (selectedStudent.program || "").toUpperCase().trim();
+    const targetProg = NEXT_PROGRAM[currentProg];
+    const targetKelas = KELAS_BY_PROGRAM[targetProg]?.[0] || "";
+    if (!targetProg) {
+      toast.error("Program saat ini sudah maksimal (Paket C)");
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`/api/students/${selectedStudent.id}/continue`, {
@@ -474,8 +536,8 @@ export default function WargaBelajarManager() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          program: newProgram,
-          kelas: newKelas,
+          program: targetProg,
+          kelas: targetKelas,
         }),
       });
       const data = await res.json();
@@ -495,16 +557,152 @@ export default function WargaBelajarManager() {
 
   // Filtered students based on search criteria
   const filteredStudents = students.filter((student) => {
-    const matchesName = 
+    const matchesName =
       !filterName || student.nama.toLowerCase().includes(filterName.toLowerCase());
-    const matchesNik = 
+    const matchesNik =
       !filterNik || student.nik.includes(filterNik);
-    const matchesKelas = 
+    const matchesKelas =
       !filterKelas || student.kelas.toLowerCase().includes(filterKelas.toLowerCase());
-    const matchesProgram = 
+    const matchesProgram =
       !filterProgram || student.program.toLowerCase().includes(filterProgram.toLowerCase());
-    return matchesName && matchesNik && matchesKelas && matchesProgram;
+    const matchesRombel =
+      !selectedRombelId || (student.rombels && student.rombels.some((r) => r.id === selectedRombelId));
+    const matchesStatus = student.status !== "LULUS";
+    return matchesName && matchesNik && matchesKelas && matchesProgram && matchesRombel && matchesStatus;
   });
+
+  // Multi-select helpers
+  const toggleStudentSelection = (id: number) => {
+    setSelectedStudentIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const isAllFilteredSelected = filteredStudents.length > 0 &&
+    filteredStudents.every((s) => selectedStudentIds.includes(s.id));
+
+  const toggleSelectAllFiltered = () => {
+    const allIds = filteredStudents.map((s) => s.id);
+    if (isAllFilteredSelected) {
+      setSelectedStudentIds((prev) => prev.filter((id) => !allIds.includes(id)));
+    } else {
+      setSelectedStudentIds((prev) => Array.from(new Set([...prev, ...allIds])));
+    }
+  };
+
+  // Bulk action handlers
+  const handleBulkPromote = async () => {
+    if (!await confirm({
+      title: "Konfirmasi Kenaikan Kelas",
+      message: `Apakah Anda yakin ingin menaikkan kelas ${selectedStudentIds.length} warga belajar?`,
+    })) return;
+
+    setBulkActionLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/students/bulk/promote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ studentIds: selectedStudentIds }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Berhasil menaikkan kelas ${data.promoted} siswa${data.skipped > 0 ? ` (${data.skipped} dilewati)` : ""}`);
+        setSelectedStudentIds([]);
+        fetchStudents();
+      } else {
+        toast.error(data.message || "Gagal menaikkan kelas");
+      }
+    } catch {
+      toast.error("Terjadi kesalahan saat memproses kenaikan kelas");
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkGraduate = async () => {
+    if (!await confirm({
+      title: "Konfirmasi Kelulusan",
+      message: `Apakah Anda yakin ingin meluluskan ${selectedStudentIds.length} warga belajar?`,
+      variant: "danger",
+    })) return;
+
+    setBulkActionLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/students/bulk/graduate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ studentIds: selectedStudentIds }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Berhasil meluluskan ${data.graduated} warga belajar`);
+        setSelectedStudentIds([]);
+        fetchStudents();
+      } else {
+        toast.error(data.message || "Gagal meluluskan");
+      }
+    } catch {
+      toast.error("Terjadi kesalahan saat meluluskan");
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkContinue = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // Filter hanya siswa yang di akhir program
+    const eligibleIds = selectedStudentIds.filter((id) => {
+      const s = students.find((st) => st.id === id);
+      return s && isAtEndOfProgram(s) && s.status !== "LULUS";
+    });
+    if (eligibleIds.length === 0) {
+      toast.error("Tidak ada siswa yang berada di akhir program");
+      return;
+    }
+    // Auto-compute program & kelas dari eligible students
+    const eligibleStudents = eligibleIds
+      .map((id) => students.find((st) => st.id === id))
+      .filter((s): s is Student => !!s);
+    const currentPrograms = [...new Set(eligibleStudents.map((s) => (s.program || "").toUpperCase().trim()))];
+    if (currentPrograms.length > 1) {
+      toast.error("Tidak bisa melanjutkan program campuran. Pastikan semua siswa yang dipilih berada di program yang sama.");
+      return;
+    }
+    const targetProgram = NEXT_PROGRAM[currentPrograms[0]];
+    const targetKelas = KELAS_BY_PROGRAM[targetProgram]?.[0] || "";
+    if (!targetProgram) {
+      toast.error("Program saat ini sudah maksimal (Paket C)");
+      return;
+    }
+    setBulkActionLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/students/bulk/continue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          studentIds: eligibleIds,
+          program: targetProgram,
+          kelas: targetKelas,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Berhasil memproses ${data.continued} warga belajar`);
+        setBulkContinueOpen(false);
+        setSelectedStudentIds([]);
+        fetchStudents();
+      } else {
+        toast.error(data.message || "Gagal memproses");
+      }
+    } catch {
+      toast.error("Terjadi kesalahan saat memproses kelanjutan program");
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6 relative pb-16 animate-in fade-in duration-300">
@@ -522,7 +720,7 @@ export default function WargaBelajarManager() {
       </div>
 
       <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 items-center">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
@@ -567,7 +765,42 @@ export default function WargaBelajarManager() {
             />
           </div>
 
-          <div className="flex gap-2 md:col-span-4 justify-end items-center flex-wrap">
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+            <select
+              value={selectedRombelId || ""}
+              onChange={(e) => setSelectedRombelId(e.target.value ? Number(e.target.value) : null)}
+              className="w-full h-10 pl-9 pr-4 text-xs font-bold border border-slate-200 rounded-xl bg-white text-slate-850 focus:outline-none focus:ring-2 focus:ring-purple-400 uppercase appearance-none cursor-pointer"
+            >
+              <option value="">SEMUA ROMBEL</option>
+              {rombels.slice().sort((a, b) => {
+                const roman: Record<string, number> = { I:1, II:2, III:3, IV:4, V:5, VI:6, VII:7, VIII:8, IX:9, X:10, XI:11, XII:12 };
+                const romanKeys = Object.keys(roman).sort((a, b) => b.length - a.length);
+                const getGrade = (n: string) => {
+                  const upper = n.toUpperCase();
+                  for (const r of romanKeys) {
+                    if (upper.startsWith(r)) return roman[r];
+                  }
+                  return 0;
+                };
+                const getSection = (n: string) => {
+                  const upper = n.toUpperCase();
+                  for (const r of romanKeys) {
+                    if (upper.startsWith(r)) return upper.slice(r.length);
+                  }
+                  return upper;
+                };
+                const ga = getGrade(a.nama), gb = getGrade(b.nama);
+                if (ga !== gb) return ga - gb;
+                const sa = getSection(a.nama), sb = getSection(b.nama);
+                return sa.localeCompare(sb);
+              }).map((r) => (
+                <option key={r.id} value={r.id}>{r.nama} ({r.jumlahSiswa} siswa)</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex gap-2 md:col-span-5 justify-end items-center flex-wrap">
             <input
               type="file"
               ref={importInputRef}
@@ -613,8 +846,16 @@ export default function WargaBelajarManager() {
       <div className="space-y-6">
         {/* Warga Belajar List/Grid Card */}
         <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 flex-wrap gap-3">
             <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 cursor-pointer" title="Pilih semua">
+                <input
+                  type="checkbox"
+                  checked={isAllFilteredSelected}
+                  onChange={toggleSelectAllFiltered}
+                  className="h-4 w-4 rounded border-slate-300 cursor-pointer accent-[#9c27b0]"
+                />
+              </label>
               <h3 className="font-black text-slate-500 uppercase text-xs tracking-widest">
                 Daftar Warga Belajar ({filteredStudents.length})
               </h3>
@@ -635,6 +876,47 @@ export default function WargaBelajarManager() {
                 </button>
               </div>
             </div>
+            {selectedStudentIds.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-extrabold text-cyan-700 uppercase tracking-wider bg-cyan-100 px-2.5 py-1 rounded-full">
+                  {selectedStudentIds.length} dipilih
+                </span>
+                <Button
+                  onClick={() => setSelectedStudentIds([])}
+                  className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold text-[10px] px-3 h-8 rounded-xl cursor-pointer"
+                >
+                  BATAL
+                </Button>
+                <Button
+                  onClick={handleBulkPromote}
+                  disabled={bulkActionLoading}
+                  className="rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold text-[10px] px-3 h-8 flex items-center gap-1 shadow-sm cursor-pointer disabled:opacity-50"
+                >
+                  <ArrowUpCircle className="h-3.5 w-3.5" /> NAIKKAN KELAS
+                </Button>
+                {(() => {
+                  const selectedEndStudents = filteredStudents.filter(
+                    (s) => selectedStudentIds.includes(s.id) && isAtEndOfProgram(s) && s.status !== "LULUS"
+                  );
+                  return selectedEndStudents.length > 0 ? (
+                    <Button
+                      onClick={() => setBulkContinueOpen(true)}
+                      disabled={bulkActionLoading}
+                      className="rounded-xl bg-[#ffb300] hover:bg-amber-600 text-white font-extrabold text-[10px] px-3 h-8 flex items-center gap-1 shadow-sm cursor-pointer disabled:opacity-50"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" /> MELANJUTKAN PROGRAM
+                    </Button>
+                  ) : null;
+                })()}
+                <Button
+                  onClick={handleBulkGraduate}
+                  disabled={bulkActionLoading}
+                  className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] px-3 h-8 flex items-center gap-1 shadow-sm cursor-pointer disabled:opacity-50"
+                >
+                  <GraduationCap className="h-3.5 w-3.5" /> LULUSKAN
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="p-6">
@@ -671,6 +953,19 @@ export default function WargaBelajarManager() {
                             {student.program}
                           </span>
                         </div>
+                        {/* Selection Checkbox */}
+                        <div
+                          className="absolute top-3 right-3 z-10"
+                          onClick={(e) => { e.stopPropagation(); toggleStudentSelection(student.id); }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedStudentIds.includes(student.id)}
+                            onChange={() => toggleStudentSelection(student.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-4 w-4 rounded border-slate-300 cursor-pointer accent-cyan-600"
+                          />
+                        </div>
                       </div>
 
                       {/* Name info */}
@@ -691,6 +986,14 @@ export default function WargaBelajarManager() {
                   <table className="w-full text-left border-collapse min-w-[700px]">
                     <thead>
                       <tr className="bg-[#00badb] text-white font-black text-sm uppercase">
+                        <th className="p-4 w-12 text-center border-r border-[#009cb9]">
+                          <input
+                            type="checkbox"
+                            checked={isAllFilteredSelected}
+                            onChange={toggleSelectAllFiltered}
+                            className="h-4 w-4 rounded border-slate-300 cursor-pointer accent-white"
+                          />
+                        </th>
                         <th className="p-4 w-16 text-center border-r border-[#009cb9]">No</th>
                         <th className="p-4 border-r border-[#009cb9]">Nama</th>
                         <th className="p-4 border-r border-[#009cb9] w-48 text-center">NIK</th>
@@ -708,6 +1011,15 @@ export default function WargaBelajarManager() {
                           onClick={() => openEditForm(student)}
                           className="hover:bg-cyan-50/20 cursor-pointer transition"
                         >
+                          <td className="p-4 text-center border-r border-slate-100">
+                            <input
+                              type="checkbox"
+                              checked={selectedStudentIds.includes(student.id)}
+                              onChange={() => toggleStudentSelection(student.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="h-4 w-4 rounded border-slate-300 cursor-pointer accent-cyan-600"
+                            />
+                          </td>
                           <td className="p-4 text-center text-slate-500 font-mono border-r border-slate-100">{idx + 1}</td>
                           <td className="p-4 font-bold text-slate-800 border-r border-slate-100">{student.nama}</td>
                           <td className="p-4 text-center text-slate-600 font-mono border-r border-slate-100">{student.nik || "-"}</td>
@@ -782,13 +1094,16 @@ export default function WargaBelajarManager() {
                     >
                       <ArrowUpCircle className="h-3.5 w-3.5" /> NAIKKAN KELAS
                     </Button>
-                    <Button
-                      type="button"
-                      onClick={() => setContinueOpen(true)}
-                      className="rounded-xl bg-[#ffb300] hover:bg-amber-600 text-white font-extrabold text-[10px] px-3.5 h-9 flex items-center gap-1.5 shadow-sm cursor-pointer"
-                    >
-                      <RefreshCw className="h-3.5 w-3.5" /> MELANJUTKAN PROGRAM
-                    </Button>
+                    {isAtEndOfProgram(selectedStudent) && (
+                      <Button
+                        type="button"
+                        onClick={() => setContinueOpen(true)}
+                        disabled={selectedStudent.status === "LULUS"}
+                        className="rounded-xl bg-[#ffb300] hover:bg-amber-600 text-white font-extrabold text-[10px] px-3.5 h-9 flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" /> MELANJUTKAN PROGRAM
+                      </Button>
+                    )}
                     <Button
                       type="button"
                       onClick={() => handleGraduate(selectedStudent.id)}
@@ -1168,40 +1483,33 @@ export default function WargaBelajarManager() {
 
               <form onSubmit={handleContinue} className="space-y-4 text-slate-800">
                 <p className="text-xs font-semibold text-white/80 leading-normal">
-                  Pindahkan warga belajar ini ke program yang lebih tinggi (contoh: Lulus Paket B lalu melanjutkan ke Paket C).
+                  Pindahkan warga belajar ini ke program yang lebih tinggi.
                 </p>
 
-                <div className="space-y-3.5 text-white">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-cyan-50 uppercase">PROGRAM BARU</label>
-                    <select
-                      value={newProgram}
-                      onChange={(e) => {
-                        const prog = e.target.value;
-                        setNewProgram(prog);
-                        setNewKelas(KELAS_BY_PROGRAM[prog]?.[0] || "");
-                      }}
-                      className="w-full h-11 px-4 text-xs border border-transparent rounded-xl focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white text-slate-800 font-bold"
-                    >
-                      <option value="PAKET B">PAKET B (Setara SMP)</option>
-                      <option value="PAKET C">PAKET C (Setara SMA)</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-cyan-50 uppercase">KELAS TUJUAN</label>
-                    <select
-                      required
-                      value={newKelas}
-                      onChange={(e) => setNewKelas(e.target.value)}
-                      className="w-full h-11 px-4 text-xs border border-transparent rounded-xl focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white text-slate-800 font-bold"
-                    >
-                      {(KELAS_BY_PROGRAM[newProgram] || []).map((k) => (
-                        <option key={k} value={k}>{k}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+                {selectedStudent && (() => {
+                  const currentProg = (selectedStudent.program || "").toUpperCase().trim();
+                  const targetProg = NEXT_PROGRAM[currentProg];
+                  const targetKelas = targetProg ? KELAS_BY_PROGRAM[targetProg]?.[0] : null;
+                  return (
+                    <div className="bg-white/10 rounded-xl px-4 py-3 space-y-2 text-white">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black text-cyan-50 uppercase">Program Saat Ini</span>
+                        <span className="text-xs font-black">{currentProg}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <ArrowUpCircle className="h-4 w-4 text-emerald-400" />
+                        <span className="text-[10px] font-black text-cyan-50 uppercase">Program Baru</span>
+                        <span className="text-xs font-black text-emerald-300">{targetProg || "Maksimal"}</span>
+                      </div>
+                      {targetKelas && (
+                        <div className="flex items-center gap-2 pl-6">
+                          <span className="text-[10px] font-black text-cyan-50 uppercase">Kelas Awal</span>
+                          <span className="text-xs font-black">{targetKelas}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 <div className="border-t border-white/20 pt-4 flex justify-end gap-2 mt-4">
                   <Button
@@ -1209,6 +1517,101 @@ export default function WargaBelajarManager() {
                     className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-6 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
                   >
                     Pindahkan Program
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BULK CONTINUATION DIALOG */}
+      {bulkContinueOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setBulkContinueOpen(false)} />
+          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
+            <div className="bg-[#00badb] p-6 relative text-white text-left">
+              <button
+                onClick={() => setBulkContinueOpen(false)}
+                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="mb-4">
+                <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                  Melanjutkan Program
+                </span>
+              </div>
+
+              <form onSubmit={handleBulkContinue} className="space-y-4 text-slate-800">
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-white/80 leading-normal">
+                    Pindahkan warga belajar yang eligible ke program baru.
+                  </p>
+                  {(() => {
+                    const eligibleCount = selectedStudentIds.filter((id) => {
+                      const s = students.find((st) => st.id === id);
+                      return s && isAtEndOfProgram(s) && s.status !== "LULUS";
+                    }).length;
+                    const skipped = selectedStudentIds.length - eligibleCount;
+                    return (
+                      <div className="bg-white/10 rounded-xl px-3 py-2 space-y-1">
+                        <p className="text-[11px] font-bold text-emerald-300">
+                          ✅ {eligibleCount} siswa eligible (di akhir program)
+                        </p>
+                        {skipped > 0 && (
+                          <p className="text-[11px] font-bold text-amber-300">
+                            ⚠️ {skipped} siswa dilewati (belum di akhir program)
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {(() => {
+                  const eligibleStudents = selectedStudentIds
+                    .map((id) => students.find((st) => st.id === id))
+                    .filter((s): s is Student => !!s && isAtEndOfProgram(s) && s.status !== "LULUS");
+                  const programs = [...new Set(eligibleStudents.map((s) => (s.program || "").toUpperCase().trim()))];
+                  const targetProgram = programs.length === 1 ? NEXT_PROGRAM[programs[0]] : null;
+                  const targetKelas = targetProgram ? KELAS_BY_PROGRAM[targetProgram]?.[0] : null;
+
+                  return (
+                    <div className="space-y-3.5 text-white">
+                      <div className="bg-white/10 rounded-xl px-4 py-3 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-black text-cyan-50 uppercase">Program Saat Ini</span>
+                          <span className="text-xs font-black text-white">
+                            {programs.length === 1 ? programs[0] : programs.join(" / ")}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <ArrowUpCircle className="h-4 w-4 text-emerald-400" />
+                          <span className="text-[10px] font-black text-cyan-50 uppercase">Program Baru</span>
+                          <span className="text-xs font-black text-emerald-300">
+                            {targetProgram || "Campuran program"}
+                          </span>
+                        </div>
+                        {targetKelas && (
+                          <div className="flex items-center gap-2 pl-6">
+                            <span className="text-[10px] font-black text-cyan-50 uppercase">Kelas Awal</span>
+                            <span className="text-xs font-black text-white">{targetKelas}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <div className="border-t border-white/20 pt-4 flex justify-end gap-2 mt-4">
+                  <Button
+                    type="submit"
+                    disabled={bulkActionLoading}
+                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-6 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    {bulkActionLoading ? "MEMPROSES..." : "PINDAHKAN PROGRAM"}
                   </Button>
                 </div>
               </form>

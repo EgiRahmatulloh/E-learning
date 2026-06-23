@@ -334,6 +334,13 @@ export const rombelHandlers = new Elysia()
           .values(newIds.map((sid) => ({ rombelId, studentId: sid })))
           .run();
 
+        // Update kelas siswa sesuai nama rombel
+        await db
+          .update(students)
+          .set({ kelas: existing.nama, updatedAt: new Date().toISOString() })
+          .where(inArray(students.id, newIds))
+          .run();
+
         return {
           success: true,
           message: `${newIds.length} siswa berhasil ditambahkan ke rombel "${existing.nama}"`,
