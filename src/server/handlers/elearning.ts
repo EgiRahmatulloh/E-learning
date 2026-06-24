@@ -862,7 +862,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
             final,
             predikat
           };
-        }));
+        });
 
         return { success: true, data: results };
       } catch (error: any) {
