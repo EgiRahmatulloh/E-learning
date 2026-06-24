@@ -3,7 +3,7 @@ import { jwt } from "@elysia/jwt";
 import { finalJwtSecret } from "../config/jwt";
 import { verifyAdmin } from "../middleware/auth";
 import { db } from "../config/db";
-import { tutors, students, products, alumni, managers, servicePoints } from "../models";
+import { tutors, students, products, alumni, managers, servicePoints, elearningSetups, elearningMaterials } from "../models";
 
 export const statsServices = new Elysia()
   .use(
@@ -72,10 +72,10 @@ export const statsServices = new Elysia()
       ).length;
 
       // E-Learning Stats
-      const setups = await db.select().from(require("../models").elearningSetups).all();
+      const setups = await db.select().from(elearningSetups).all();
       const mapelAktif = setups.length;
       
-      const materials = await db.select().from(require("../models").elearningMaterials).all();
+      const materials = await db.select().from(elearningMaterials).all();
       const tugasDiberikan = materials.filter((m: any) => m.type === "TUGAS").length;
 
       return {

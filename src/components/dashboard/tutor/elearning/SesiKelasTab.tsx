@@ -70,6 +70,7 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
   const [pptFile, setPptFile] = useState<{ title: string, url: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const pptInputRef = useRef<HTMLInputElement>(null);
+  const tugasUploadRef = useRef<HTMLInputElement>(null);
 
   // Forum state
   const [forumPosts, setForumPosts] = useState<any[]>([]);
@@ -389,8 +390,9 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
             <p className="text-xs font-semibold text-slate-500">Unggah soal dan atur batas waktu tugas.</p>
           </div>
 
-          <div onClick={() => !saving && document.getElementById('tugas-upload')?.click()} className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 cursor-pointer transition-colors">
+          <div onClick={() => !saving && tugasUploadRef.current?.click()} className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 cursor-pointer transition-colors">
             <input 
+              ref={tugasUploadRef}
               id="tugas-upload" 
               type="file" 
               className="hidden" 

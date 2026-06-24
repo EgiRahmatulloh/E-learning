@@ -57,8 +57,7 @@ export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) 
         } else {
           setTeksPembuka(""); // fallback later
         }
-
-        const materials = sessionData.data.materials || [];
+        const materials = Array.isArray(sessionData.data.materials) ? sessionData.data.materials : [];
         const ppt = materials.find((m: any) => m.type === "PPT");
         if (ppt) setPptUrl(ppt.fileUrl);
         
@@ -99,7 +98,7 @@ export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) 
         });
         const forumData = await forumRes.json();
         if (forumData.success) {
-          const loadedMessages = forumData.data.map((post: any) => {
+          const loadedMessages = (Array.isArray(forumData.data) ? forumData.data : []).map((post: any) => {
             const isSelf = post.authorId === user?.id && post.authorRole === user?.role;
             const sender = post.authorRole === "tutor" ? "Tutor" : isSelf ? "Siswa (Anda)" : `Siswa ID: ${post.authorId}`;
             const initial = sender.charAt(0).toUpperCase();

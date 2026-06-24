@@ -360,7 +360,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
                   {openMenuId === subject.id && (
                     <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-xl shadow-xl border border-slate-100 z-20 py-1 animate-in fade-in duration-150">
                       <button
-                        onClick={() => { setOpenMenuId(null); setActiveTab?.(`mapel-setup-${subject.setupId}-${subject.slug}-pendahuluan`); }}
+                        onClick={() => { setOpenMenuId(null); setActiveTab?.(`mapel-setup-${subject.setupId}-pendahuluan`); }}
                         className="w-full text-left px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer"
                       >
                         <PlayCircle className="h-3.5 w-3.5 inline mr-2 text-[#280f91]" />

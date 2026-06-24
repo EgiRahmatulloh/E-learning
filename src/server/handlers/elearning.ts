@@ -817,32 +817,36 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         let courseId = course ? course.id : null;
         let sessionsCount = setup.jumlahSesi || 8;
 
-        const results = await Promise.all(studentsList.map(async (student) => {
+        let allSessionIds: number[] = [];
+        let allAttendances: any[] = [];
+        let allForumPosts: any[] = [];
+
+        if (courseId) {
+          const sessions = await db.select().from(elearningSessions).where(eq(elearningSessions.courseId, courseId)).all();
+          allSessionIds = sessions.map(s => s.id);
+
+          if (allSessionIds.length > 0) {
+            allAttendances = await db.select().from(elearningAttendances)
+              .where(inArray(elearningAttendances.sessionId, allSessionIds))
+              .all();
+          }
+
+          allForumPosts = await db.select().from(elearningForumPosts)
+            .where(and(eq(elearningForumPosts.courseId, courseId), eq(elearningForumPosts.authorRole, "siswa")))
+            .all();
+        }
+
+        const results = studentsList.map((student) => {
           let kehadiran = 0;
           let partisipasi = 0;
           let tugas = 0; // default for now
 
-          if (courseId) {
-            // Count attendances
-            const attendances = await db.select().from(elearningAttendances)
-              .where(eq(elearningAttendances.studentId, student.id))
-              .all();
+          if (courseId && allSessionIds.length > 0) {
+            const validAtt = allAttendances.filter(a => a.studentId === student.id);
+            kehadiran = Math.min(100, Math.round((validAtt.length / sessionsCount) * 100));
 
-            // Note: Should only count for this course's sessions, but for simplicity assuming attendances 
-            // are somewhat filtered or we just do an approximation if we can't join sessions easily in sqlite:
-            // Actually let's fetch sessions for this course
-            const sessions = await db.select().from(elearningSessions).where(eq(elearningSessions.courseId, courseId)).all();
-            const sessionIds = sessions.map(s => s.id);
-
-            if (sessionIds.length > 0) {
-              const validAtt = attendances.filter(a => sessionIds.includes(a.sessionId));
-              kehadiran = Math.min(100, Math.round((validAtt.length / sessionsCount) * 100));
-
-              const forumPosts = await db.select().from(elearningForumPosts)
-                .where(and(eq(elearningForumPosts.courseId, courseId), eq(elearningForumPosts.authorId, student.id), eq(elearningForumPosts.authorRole, "siswa")))
-                .all();
-              partisipasi = Math.min(100, Math.round((forumPosts.length / sessionsCount) * 100));
-            }
+            const studentPosts = allForumPosts.filter(p => p.authorId === student.id);
+            partisipasi = Math.min(100, Math.round((studentPosts.length / sessionsCount) * 100));
           }
 
           let final = (kehadiran * 0.2) + (partisipasi * 0.3) + (tugas * 0.5);
