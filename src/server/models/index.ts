@@ -24,6 +24,7 @@ export {
   elearningSetups,
   elearningForumPosts,
   elearningAttendances,
+  elearningAssignments,
   elearningSubmissions,
   elearningEvaluationResponses,
   rombels,

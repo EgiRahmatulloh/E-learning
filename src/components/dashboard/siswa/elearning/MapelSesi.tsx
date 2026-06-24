@@ -10,7 +10,7 @@ interface MapelSesiProps {
   setupId?: number | null;
 }
 
-export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) {
+export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSesiProps) {
   const isTugasSession = true;
   const isEvaluasiSession = sessionNumber === 7;
 
@@ -38,7 +38,7 @@ export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) 
             "Content-Type": "application/json",
             "Authorization": `Bearer ${localStorage.getItem("token")}`
           },
-          body: JSON.stringify({ subjectName, program: user?.program, kelas: user?.kelas })
+          body: JSON.stringify({ subjectName, setupId: setupId || undefined })
         });
         const courseData = await courseRes.json();
         if (!courseData.success) return;
@@ -115,7 +115,7 @@ export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) 
       }
     }
     fetchData();
-  }, [subjectName, sessionNumber, user?.program, user?.kelas]);
+  }, [subjectName, sessionNumber, setupId]);
 
   const handleSendDiscussion = async () => {
     if (!discussionInput.trim() || !sessionId || !courseId) return;

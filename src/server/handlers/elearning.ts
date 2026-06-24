@@ -9,6 +9,8 @@ import {
   elearningSetups,
   elearningForumPosts,
   elearningAttendances,
+  elearningAssignments,
+  elearningSubmissions,
   tutors,
   students,
   rombels,
@@ -57,12 +59,24 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
     async (context: any) => {
       const { headers, jwt, body, set } = context;
 
-      // Auth: admin atau tutor saja yang boleh buat course
-      const authError = await verifyAdminOrTutor(headers, jwt, set);
+      // Auth: semua role yang terautentikasi boleh lihat/buat course
+      const authError = await verifyUser(headers, jwt, set);
       if (authError) return authError;
 
       try {
-        const { subjectName, program, kelas } = body;
+        const { subjectName, program, kelas, setupId } = body;
+
+        // Derive program from setup's kelas if setupId provided (consistency with tutor derivation)
+        let resolvedProgram = program || "";
+        let resolvedKelas = kelas || "";
+        if (setupId) {
+          const setup = await db.select().from(elearningSetups).where(eq(elearningSetups.id, setupId)).get();
+          if (setup) {
+            const kelasUpper = setup.kelas.toUpperCase();
+            resolvedProgram = kelasUpper.includes("PAKET A") ? "Paket A" : kelasUpper.includes("PAKET B") ? "Paket B" : "Paket C";
+            resolvedKelas = setup.kelas;
+          }
+        }
 
         let course = await db
           .select()
@@ -70,7 +84,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           .where(
             and(
               eq(elearningCourses.namaMapel, subjectName),
-              eq(elearningCourses.program, program || "")
+              eq(elearningCourses.program, resolvedProgram)
             )
           )
           .get();
@@ -80,8 +94,8 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
             .insert(elearningCourses)
             .values({
               namaMapel: subjectName,
-              program: program || "",
-              kelas: kelas || "",
+              program: resolvedProgram,
+              kelas: resolvedKelas,
             })
             .returning();
           course = inserted[0];
@@ -98,6 +112,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         subjectName: t.String(),
         program: t.Optional(t.String()),
         kelas: t.Optional(t.String()),
+        setupId: t.Optional(t.Number()),
       }),
     }
   )
@@ -788,14 +803,15 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
       if (authError) return authError;
 
       try {
-        const setupId = parseInt(query.setupId);
+        const setupId = parseInt(query.setupId, 10);
         if (!setupId) return { success: false, message: "setupId diperlukan" };
 
         const setup = await db.select().from(elearningSetups).where(eq(elearningSetups.id, setupId)).get();
         if (!setup) return { success: false, message: "Setup tidak ditemukan" };
 
         const actualSubject = setup.mapel;
-        const actualProgram = setup.kelas.includes("Paket A") ? "Paket A" : setup.kelas.includes("Paket B") ? "Paket B" : "Paket C";
+        const kelasUpper = setup.kelas.toUpperCase();
+        const actualProgram = kelasUpper.includes("PAKET A") ? "Paket A" : kelasUpper.includes("PAKET B") ? "Paket B" : "Paket C";
 
         const course = await db.select().from(elearningCourses)
           .where(and(eq(elearningCourses.namaMapel, actualSubject), eq(elearningCourses.program, actualProgram)))
@@ -814,12 +830,14 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           .where(eq(rombels.nama, setup.kelas))
           .all();
 
-        let courseId = course ? course.id : null;
-        let sessionsCount = setup.jumlahSesi || 8;
+        const courseId = course ? course.id : null;
+        let sessionsCount = setup.jumlahSesi ?? 8;
+        if (!sessionsCount || sessionsCount < 1) sessionsCount = 8;
 
         let allSessionIds: number[] = [];
         let allAttendances: any[] = [];
         let allForumPosts: any[] = [];
+        let allSubmissions: any[] = [];
 
         if (courseId) {
           const sessions = await db.select().from(elearningSessions).where(eq(elearningSessions.courseId, courseId)).all();
@@ -829,28 +847,57 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
             allAttendances = await db.select().from(elearningAttendances)
               .where(inArray(elearningAttendances.sessionId, allSessionIds))
               .all();
-          }
 
-          allForumPosts = await db.select().from(elearningForumPosts)
-            .where(and(eq(elearningForumPosts.courseId, courseId), eq(elearningForumPosts.authorRole, "siswa")))
-            .all();
+            allForumPosts = await db.select().from(elearningForumPosts)
+              .where(and(
+                eq(elearningForumPosts.courseId, courseId),
+                eq(elearningForumPosts.authorRole, "siswa"),
+                inArray(elearningForumPosts.sessionId, allSessionIds)
+              ))
+              .all();
+
+            // Graded assignment submissions for this course's sessions
+            const assignments = await db.select({ id: elearningAssignments.id }).from(elearningAssignments)
+              .where(inArray(elearningAssignments.sessionId, allSessionIds))
+              .all();
+            const assignmentIds = assignments.map(a => a.id);
+            if (assignmentIds.length > 0) {
+              allSubmissions = await db.select().from(elearningSubmissions)
+                .where(inArray(elearningSubmissions.assignmentId, assignmentIds))
+                .all();
+            }
+          }
         }
 
         const results = studentsList.map((student) => {
           let kehadiran = 0;
           let partisipasi = 0;
-          let tugas = 0; // default for now
+          let tugas = 0;
 
           if (courseId && allSessionIds.length > 0) {
-            const validAtt = allAttendances.filter(a => a.studentId === student.id);
-            kehadiran = Math.min(100, Math.round((validAtt.length / sessionsCount) * 100));
+            // Count distinct sessions the student attended (dedup duplicate rows per session)
+            const attendedSessions = new Set(
+              allAttendances.filter(a => a.studentId === student.id).map(a => a.sessionId)
+            );
+            kehadiran = Math.min(100, Math.round((attendedSessions.size / sessionsCount) * 100));
 
-            const studentPosts = allForumPosts.filter(p => p.authorId === student.id);
-            partisipasi = Math.min(100, Math.round((studentPosts.length / sessionsCount) * 100));
+            // Count distinct sessions the student posted in (avoids rewarding spam in one session)
+            const participatedSessions = new Set(
+              allForumPosts.filter(p => p.authorId === student.id).map(p => p.sessionId)
+            );
+            partisipasi = Math.min(100, Math.round((participatedSessions.size / sessionsCount) * 100));
+
+            // Average of graded submissions; ungraded (grade == null) ignored
+            const studentGrades = allSubmissions
+              .filter(s => s.studentId === student.id && s.grade != null)
+              .map(s => s.grade as number);
+            if (studentGrades.length > 0) {
+              tugas = Math.min(100, Math.round(studentGrades.reduce((a, b) => a + b, 0) / studentGrades.length));
+            }
           }
 
-          let final = (kehadiran * 0.2) + (partisipasi * 0.3) + (tugas * 0.5);
-          let predikat = final >= 85 ? "A" : final >= 70 ? "B" : final >= 55 ? "C" : final >= 40 ? "D" : "E";
+          const final = (kehadiran * 0.2) + (partisipasi * 0.3) + (tugas * 0.5);
+          const predikat = final >= 85 ? "A" : final >= 70 ? "B" : final >= 55 ? "C" : final >= 40 ? "D" : "E";
 
           return {
             id: student.id,

@@ -9,7 +9,7 @@ interface MapelPendahuluanProps {
   setupId?: number | null;
 }
 
-export function MapelPendahuluan({ subjectName, user }: MapelPendahuluanProps) {
+export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahuluanProps) {
   const [messages, setMessages] = useState<{sender: string; text: string; isSelf: boolean; initial: string; color: string}[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [loading, setLoading] = useState(true);
@@ -29,7 +29,7 @@ export function MapelPendahuluan({ subjectName, user }: MapelPendahuluanProps) {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${localStorage.getItem("token")}`
           },
-          body: JSON.stringify({ subjectName, program: user?.program, kelas: user?.kelas })
+          body: JSON.stringify({ subjectName, setupId: setupId || undefined })
         });
         const courseData = await courseRes.json();
         if (!courseData.success) return;
@@ -80,7 +80,7 @@ export function MapelPendahuluan({ subjectName, user }: MapelPendahuluanProps) {
       }
     }
     fetchData();
-  }, [subjectName, user]);
+  }, [subjectName, setupId]);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || !sessionId || !courseId) return;
