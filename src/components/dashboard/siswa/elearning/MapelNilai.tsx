@@ -1,10 +1,40 @@
+import { useState, useEffect } from "react";
 import { Award, CheckCircle2, MessageSquare, FileText } from "lucide-react";
 
 interface MapelNilaiProps {
   subjectName: string;
+  setupId?: number | null;
+  user?: any;
 }
 
-export function MapelNilai({ subjectName }: MapelNilaiProps) {
+export function MapelNilai({ subjectName, setupId, user }: MapelNilaiProps) {
+  const [gradeData, setGradeData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchGrades() {
+      if (!setupId || !user?.id) return;
+      try {
+        const res = await fetch(`/api/elearning/grades?setupId=${setupId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+          const myGrade = data.data.find((g: any) => g.id === user.id);
+          setGradeData(myGrade);
+        }
+      } catch (err) {
+        console.error("Failed to fetch grades", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchGrades();
+  }, [setupId, user]);
+
+  if (loading) {
+    return <div className="p-10 text-center text-slate-500 animate-pulse">Memuat rekapitulasi nilai...</div>;
+  }
   return (
     <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-8 space-y-8">
       <div className="flex items-center gap-4 border-b border-slate-100 pb-4">
@@ -24,8 +54,8 @@ export function MapelNilai({ subjectName }: MapelNilaiProps) {
             <CheckCircle2 className="h-5 w-5 text-emerald-600" />
             <h3 className="font-bold text-slate-700">Nilai Kehadiran</h3>
           </div>
-          <div className="text-3xl font-black text-emerald-700">100<span className="text-lg text-emerald-600/60">/100</span></div>
-          <p className="text-xs text-slate-500 font-medium mt-auto">Hadir di semua sesi (8/8)</p>
+          <div className="text-3xl font-black text-emerald-700">{gradeData?.kehadiran || 0}<span className="text-lg text-emerald-600/60">/100</span></div>
+          <p className="text-xs text-slate-500 font-medium mt-auto">Akumulasi kehadiran per sesi</p>
         </div>
 
         {/* Diskusi */}
@@ -34,8 +64,8 @@ export function MapelNilai({ subjectName }: MapelNilaiProps) {
             <MessageSquare className="h-5 w-5 text-blue-600" />
             <h3 className="font-bold text-slate-700">Nilai Diskusi</h3>
           </div>
-          <div className="text-3xl font-black text-blue-700">85<span className="text-lg text-blue-600/60">/100</span></div>
-          <p className="text-xs text-slate-500 font-medium mt-auto">Rata-rata dari 8 diskusi</p>
+          <div className="text-3xl font-black text-blue-700">{gradeData?.partisipasi || 0}<span className="text-lg text-blue-600/60">/100</span></div>
+          <p className="text-xs text-slate-500 font-medium mt-auto">Rata-rata dari diskusi sesi</p>
         </div>
 
         {/* Tugas */}
@@ -44,8 +74,8 @@ export function MapelNilai({ subjectName }: MapelNilaiProps) {
             <FileText className="h-5 w-5 text-orange-600" />
             <h3 className="font-bold text-slate-700">Nilai Tugas</h3>
           </div>
-          <div className="text-3xl font-black text-orange-700">90<span className="text-lg text-orange-600/60">/100</span></div>
-          <p className="text-xs text-slate-500 font-medium mt-auto">Tugas Sesi 3, 5, dan 7</p>
+          <div className="text-3xl font-black text-orange-700">{gradeData?.tugas || 0}<span className="text-lg text-orange-600/60">/100</span></div>
+          <p className="text-xs text-slate-500 font-medium mt-auto">Latihan & Tugas sesi</p>
         </div>
       </div>
 
@@ -54,7 +84,7 @@ export function MapelNilai({ subjectName }: MapelNilaiProps) {
           <h3 className="text-lg font-black text-slate-800">Nilai Akhir Semester</h3>
           <p className="text-sm text-slate-500">Kalkulasi keseluruhan komponen</p>
         </div>
-        <div className="text-4xl font-black text-[#280f91]">91.5</div>
+        <div className="text-4xl font-black text-[#280f91]">{gradeData?.final ? gradeData.final.toFixed(1) : "0.0"}</div>
       </div>
     </div>
   );

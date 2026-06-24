@@ -426,4 +426,68 @@ CREATE TABLE IF NOT EXISTS elearning_setups (
 );
 `);
 
+// Alter table untuk menambahkan is_open jika belum ada
+try {
+  sqlite.exec("ALTER TABLE elearning_sessions ADD COLUMN is_open INTEGER NOT NULL DEFAULT 1;");
+} catch (e) {
+  // Kolom mungkin sudah ada, abaikan error
+}
+
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS elearning_forum_posts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id INTEGER NOT NULL,
+  course_id INTEGER NOT NULL,
+  author_id INTEGER NOT NULL,
+  author_role TEXT NOT NULL,
+  content TEXT NOT NULL,
+  parent_id INTEGER,
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  FOREIGN KEY (session_id) REFERENCES elearning_sessions(id) ON DELETE CASCADE,
+  FOREIGN KEY (course_id) REFERENCES elearning_courses(id) ON DELETE CASCADE
+);
+`);
+
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS elearning_attendances (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id INTEGER NOT NULL,
+  student_id INTEGER NOT NULL,
+  attended_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  FOREIGN KEY (session_id) REFERENCES elearning_sessions(id) ON DELETE CASCADE,
+  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+);
+`);
+
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS elearning_submissions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  assignment_id INTEGER NOT NULL,
+  student_id INTEGER NOT NULL,
+  file_url TEXT,
+  submitted_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  grade INTEGER,
+  feedback TEXT,
+  graded_by INTEGER,
+  graded_at TEXT,
+  FOREIGN KEY (assignment_id) REFERENCES elearning_assignments(id) ON DELETE CASCADE,
+  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+);
+`);
+
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS elearning_evaluation_responses (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  evaluation_id INTEGER NOT NULL,
+  student_id INTEGER NOT NULL,
+  course_id INTEGER NOT NULL,
+  score INTEGER NOT NULL,
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  FOREIGN KEY (evaluation_id) REFERENCES elearning_evaluations(id) ON DELETE CASCADE,
+  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+  FOREIGN KEY (course_id) REFERENCES elearning_courses(id) ON DELETE CASCADE
+);
+`);
+
 export const db = drizzle(sqlite, { schema });

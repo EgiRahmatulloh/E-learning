@@ -7,10 +7,11 @@ interface MapelSesiProps {
   subjectName: string;
   sessionNumber: number;
   user?: any;
+  setupId?: number | null;
 }
 
 export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) {
-  const isTugasSession = [3, 5, 7].includes(sessionNumber);
+  const isTugasSession = true;
   const isEvaluasiSession = sessionNumber === 7;
 
   const [discussions, setDiscussions] = useState<{ sender: string; text: string; isSelf: boolean; initial: string; color: string }[]>([]);
@@ -22,26 +23,39 @@ export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) 
   const [teksPembuka, setTeksPembuka] = useState("");
   const [pptUrl, setPptUrl] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [tugasUrl, setTugasUrl] = useState<string | null>(null);
   const [showAngket, setShowAngket] = useState(false);
   const [angketQuestions, setAngketQuestions] = useState<string[]>([]);
+  const [sessionId, setSessionId] = useState<number | null>(null);
+  const [courseId, setCourseId] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
         const courseRes = await fetch("/api/elearning/course", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("token")}`
+          },
           body: JSON.stringify({ subjectName, program: user?.program, kelas: user?.kelas })
         });
         const courseData = await courseRes.json();
         if (!courseData.success) return;
 
-        const sessionRes = await fetch(`/api/elearning/session?courseId=${courseData.data.id}&sessionNumber=${sessionNumber}`);
+        const sessionRes = await fetch(`/api/elearning/session?courseId=${courseData.data.id}&sessionNumber=${sessionNumber}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
         const sessionData = await sessionRes.json();
         if (!sessionData.success) return;
-        
-        if (sessionData.data.session.description) {
-          setTeksPembuka(sessionData.data.session.description);
+        const session = sessionData.data.session;
+        setSessionId(session.id);
+        setCourseId(courseData.data.id);
+
+        if (session.description) {
+          setTeksPembuka(session.description);
+        } else {
+          setTeksPembuka(""); // fallback later
         }
 
         const materials = sessionData.data.materials || [];
@@ -50,6 +64,9 @@ export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) 
         
         const video = materials.find((m: any) => m.type === "VIDEO");
         if (video) setVideoUrl(video.fileUrl);
+
+        const tugas = materials.find((m: any) => m.type === "TUGAS");
+        if (tugas) setTugasUrl(tugas.fileUrl);
 
         if (sessionNumber === 7) {
           const evalRes = await fetch("/api/elearning/evaluations");
@@ -65,6 +82,33 @@ export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) 
           }
         }
 
+        // Fetch Attendance
+        if (user?.id) {
+          const attRes = await fetch(`/api/elearning/attendance?sessionId=${session.id}&studentId=${user.id}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+          });
+          const attData = await attRes.json();
+          if (attData.success && attData.data) {
+            setIsHadir(true);
+          }
+        }
+
+        // Fetch forum posts
+        const forumRes = await fetch(`/api/elearning/forum?sessionId=${session.id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+        const forumData = await forumRes.json();
+        if (forumData.success) {
+          const loadedMessages = forumData.data.map((post: any) => {
+            const isSelf = post.authorId === user?.id && post.authorRole === user?.role;
+            const sender = post.authorRole === "tutor" ? "Tutor" : isSelf ? "Siswa (Anda)" : `Siswa ID: ${post.authorId}`;
+            const initial = sender.charAt(0).toUpperCase();
+            const color = post.authorRole === "tutor" ? "bg-[#280f91]" : isSelf ? "bg-cyan-600" : "bg-slate-500";
+            return { sender, text: post.content, isSelf, initial, color };
+          });
+          setDiscussions(loadedMessages);
+        }
+
       } catch (err) {
         console.error("Failed to load sesi data", err);
       } finally {
@@ -74,13 +118,32 @@ export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) 
     fetchData();
   }, [subjectName, sessionNumber, user?.program, user?.kelas]);
 
-  const handleSendDiscussion = () => {
-    if (!discussionInput.trim()) return;
-    setDiscussions([
-      ...discussions,
-      { sender: "Siswa (Anda)", text: discussionInput, isSelf: true, initial: "S", color: "bg-cyan-600" }
-    ]);
-    setDiscussionInput("");
+  const handleSendDiscussion = async () => {
+    if (!discussionInput.trim() || !sessionId || !courseId) return;
+    try {
+      const res = await fetch("/api/elearning/forum", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({
+          sessionId,
+          courseId,
+          content: discussionInput
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDiscussions([
+          ...discussions,
+          { sender: "Siswa (Anda)", text: discussionInput, isSelf: true, initial: "S", color: "bg-cyan-600" }
+        ]);
+        setDiscussionInput("");
+      }
+    } catch (err) {
+      toast.error("Gagal mengirim tanggapan");
+    }
   };
 
   const handleDownload = (url: string | null) => {
@@ -93,17 +156,33 @@ export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) 
     window.open(url, "_blank");
   };
 
+  const handleKehadiran = async () => {
+    if (!sessionId || !user?.id) return;
+    try {
+      const res = await fetch("/api/elearning/attendance", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ sessionId, studentId: Number(user.id) })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsHadir(true);
+        toast.success("Kehadiran berhasil dikonfirmasi");
+      }
+    } catch (err) {
+      toast.error("Gagal mengonfirmasi kehadiran");
+    }
+  };
+
   const handleNotAvailable = (item: string) => {
     toast.info("Belum tersedia", {
       description: `${item} belum tersedia atau belum diunggah oleh tutor saat ini.`
     });
   };
 
-  const extractYoutubeId = (url: string) => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
-  };
 
   if (loading) {
     return <div className="p-10 text-center text-slate-500 animate-pulse">Memuat data sesi...</div>;
@@ -125,7 +204,7 @@ export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) 
           </div>
         </div>
         <Button
-          onClick={() => setIsHadir(true)}
+          onClick={handleKehadiran}
           disabled={isHadir}
           className={`rounded-xl font-bold w-full sm:w-auto ${isHadir
               ? "bg-slate-200 text-slate-500 hover:bg-slate-200 cursor-not-allowed"
@@ -136,14 +215,17 @@ export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) 
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Teks Pembuka (jika ada) */}
-        {teksPembuka && (
-          <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 prose prose-sm max-w-none prose-slate">
-            <h3 className="font-bold text-[#280f91] not-prose mb-3">Pengantar Sesi {sessionNumber}</h3>
-            <div dangerouslySetInnerHTML={{ __html: teksPembuka }} />
-          </div>
+      {/* Teks Pembuka / Pengantar Sesi */}
+      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 prose prose-sm max-w-none prose-slate">
+        <h3 className="font-bold text-[#280f91] not-prose mb-3">Pengantar Sesi {sessionNumber}</h3>
+        {teksPembuka ? (
+          <div dangerouslySetInnerHTML={{ __html: teksPembuka }} />
+        ) : (
+          <p className="text-slate-500 italic">Tutor belum menambahkan teks pengantar untuk sesi ini.</p>
         )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Materi Inisiasi */}
         <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 space-y-4 flex flex-col">
           <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
@@ -170,24 +252,26 @@ export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) 
             <PlayCircle className="h-5 w-5 text-red-600" />
             <h3 className="font-bold text-slate-700">Materi Pengayaan (Video)</h3>
           </div>
-          <div className="flex-1 bg-slate-900 rounded-xl flex items-center justify-center overflow-hidden relative border-none">
-            {videoUrl && extractYoutubeId(videoUrl) ? (
-              <iframe
-                width="100%"
-                height="100%"
-                className="absolute inset-0"
-                src={`https://www.youtube.com/embed/${extractYoutubeId(videoUrl)}`}
-                title="YouTube video player"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
-            ) : videoUrl ? (
-              <Button onClick={() => handleDownload(videoUrl)} className="bg-red-600 hover:bg-red-700">Buka Link Video</Button>
+          <div className="flex-1 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center p-6 text-center flex-col gap-4">
+            {videoUrl ? (
+              <>
+                <PlayCircle className="h-12 w-12 text-red-500 opacity-50 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-slate-600">
+                  Silakan tonton video pengayaan berikut:
+                </p>
+                <a 
+                  href={videoUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-[#280f91] underline font-bold hover:text-[#ff6105] transition-colors break-all"
+                >
+                  {videoUrl}
+                </a>
+              </>
             ) : (
               <div className="text-center p-6">
-                <PlayCircle className="h-12 w-12 text-white/20 mx-auto mb-2" />
-                <p className="text-white/40 text-xs font-bold">Materi pengayaan belum diunggah</p>
+                <PlayCircle className="h-12 w-12 text-slate-300 mx-auto mb-2" />
+                <p className="text-slate-400 text-xs font-bold">Materi pengayaan belum diunggah</p>
               </div>
             )}
           </div>
@@ -200,20 +284,19 @@ export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) 
           <MessageSquare className="h-5 w-5 text-blue-600" />
           <h3 className="font-bold text-slate-700">Ruang Diskusi</h3>
         </div>
-        <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 text-sm text-slate-700">
-          <p className="font-bold text-blue-800 mb-2">Pertanyaan Pemantik:</p>
-          <p>Bagaimana pendapat Anda mengenai topik materi {subjectName} pada sesi {sessionNumber} ini? Berikan contoh kasus di kehidupan sehari-hari.</p>
-        </div>
 
-        <div className="space-y-4 my-4">
+        <div className="space-y-4 my-4 max-h-96 overflow-y-auto pr-2">
+          {discussions.length === 0 && (
+            <p className="text-center text-slate-400 text-sm italic py-4">Belum ada diskusi. Jadilah yang pertama menyapa!</p>
+          )}
           {discussions.map((msg, idx) => (
             <div key={idx} className="flex gap-3">
-              <div className={`h-8 w-8 rounded-full ${msg.color} text-white flex items-center justify-center font-bold text-xs shrink-0`}>
+              <div className={`h-8 w-8 rounded-full ${msg.color} text-white flex items-center justify-center font-bold text-xs shrink-0 mt-1`}>
                 {msg.initial}
               </div>
               <div className={`p-3 rounded-lg border shadow-sm flex-1 ${msg.isSelf ? 'bg-cyan-50/30 border-cyan-100' : 'bg-slate-50 border-slate-200'}`}>
                 <p className={`text-xs font-bold mb-1 ${msg.isSelf ? 'text-cyan-700' : 'text-slate-600'}`}>{msg.sender}</p>
-                <p className="text-sm text-slate-700">{msg.text}</p>
+                <div className="text-sm text-slate-700 prose" dangerouslySetInnerHTML={{ __html: msg.text }} />
               </div>
             </div>
           ))}
@@ -259,7 +342,7 @@ export function MapelSesi({ subjectName, sessionNumber, user }: MapelSesiProps) 
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
-            <Button onClick={() => handleNotAvailable("Soal tugas")} variant="outline" className="flex-1 bg-white hover:bg-orange-50 border-orange-200 text-orange-700 font-bold h-12">
+            <Button onClick={() => handleDownload(tugasUrl)} variant="outline" className="flex-1 bg-white hover:bg-orange-50 border-orange-200 text-orange-700 font-bold h-12">
               Unduh Soal Tugas
             </Button>
             <Button onClick={() => handleNotAvailable("Fitur unggah jawaban")} className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold h-12">

@@ -117,6 +117,7 @@ export default function DashboardSidebar({
   const userRole = user?.role;
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
   const [tutorSetups, setTutorSetups] = useState<any[]>([]);
+  const [siswaSetups, setSiswaSetups] = useState<any[]>([]);
 
   useEffect(() => {
     if (user?.role === "tutor") {
@@ -130,8 +131,19 @@ export default function DashboardSidebar({
           }
         })
         .catch((err) => console.error("Failed to load tutor setups:", err));
+    } else if (user?.role === "siswa" && user?.kelas) {
+      fetch(`/api/elearning/setups?kelas=${encodeURIComponent(user.kelas)}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.data) {
+            setSiswaSetups(data.data);
+          }
+        })
+        .catch((err) => console.error("Failed to load siswa setups:", err));
     }
-  }, [user?.id, user?.role]);
+  }, [user?.id, user?.role, user?.kelas]);
 
   const toggleExpand = (id: string) => {
     setExpandedMenus((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -141,9 +153,6 @@ export default function DashboardSidebar({
     setActiveTab(id);
     setMobileSidebarOpen(false);
   };
-
-  // ── Daftar mapel (untuk siswa)
-  const subjects = userRole === "siswa" ? getSubjectsSiswa(user?.program, user?.kelas) : [];
 
   // ── Menentukan apakah suatu tab aktif berada di dalam pohon sebuah menu
   const dataPkbmTabs = ["identitas-lembaga", "data-pengelola", "visi-misi", "program-pendidikan", "sarana-fasilitas", "prestasi", "titik-layanan", "rombel", "tutor", "warga-belajar", "alumni"];
@@ -246,13 +255,14 @@ export default function DashboardSidebar({
 
                   {expandedMenus["elearning-mata-pelajaran"] && (
                     <div className="ml-3 mt-1 space-y-0.5 border-l border-white/10 pl-3 animate-in slide-in-from-top-1 duration-200">
-                      {subjects.map((subject) => {
+                      {siswaSetups.map((setup) => {
+                        const subject = setup.mapel;
                         const slug = toSlug(subject);
-                        const parentId = `mapel-parent-${slug}`;
-                        const isMapelActive = activeTab.startsWith(`mapel-${slug}-`);
+                        const parentId = `mapel-setup-${setup.id}-${slug}`;
+                        const isMapelActive = activeTab.startsWith(`mapel-setup-${setup.id}-`);
 
                         return (
-                          <div key={slug}>
+                          <div key={setup.id}>
                             {/* Nama Mata Pelajaran (collapsible) */}
                             <button
                               onClick={() => toggleExpand(parentId)}
@@ -272,8 +282,8 @@ export default function DashboardSidebar({
                             {/* Sub-menu: Partisipasi, Nilai, Pendahuluan, Sesi 1–8 */}
                             {expandedMenus[parentId] && (
                               <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-2 animate-in slide-in-from-top-1 duration-150">
-                                {["nilai", "pendahuluan", ...Array.from({ length: 8 }, (_, i) => `sesi-${i + 1}`)].map((sub) => {
-                                  const tabId = `mapel-${slug}-${sub}`;
+                                {["nilai", "pendahuluan", ...Array.from({ length: setup.jumlahSesi || 8 }, (_, i) => `sesi-${i + 1}`)].map((sub) => {
+                                  const tabId = `mapel-setup-${setup.id}-${sub}`;
                                   const label = sub === "nilai" ? "Nilai"
                                     : sub === "pendahuluan" ? "Pendahuluan"
                                     : `Sesi ${sub.replace("sesi-", "")}`;

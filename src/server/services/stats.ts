@@ -71,6 +71,13 @@ export const statsServices = new Elysia()
         (s) => s.program && s.program.toLowerCase().includes("paket c")
       ).length;
 
+      // E-Learning Stats
+      const setups = await db.select().from(require("../models").elearningSetups).all();
+      const mapelAktif = setups.length;
+      
+      const materials = await db.select().from(require("../models").elearningMaterials).all();
+      const tugasDiberikan = materials.filter((m: any) => m.type === "TUGAS").length;
+
       return {
         success: true,
         data: {
@@ -82,10 +89,13 @@ export const statsServices = new Elysia()
           paketB,
           paketC,
           alumni: alumniList.length,
+          mapelAktif,
+          tugas: tugasDiberikan,
+          ip: "0.0", // Placeholder for global IP until full grading is implemented
         },
       };
-    } catch {
+    } catch (error: any) {
       set.status = 500;
-      return { success: false, message: "Gagal mengambil data statistik dashboard" };
+      return { success: false, message: "Gagal mengambil data statistik dashboard: " + error.message };
     }
   });

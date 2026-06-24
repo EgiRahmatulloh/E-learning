@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { finalJwtSecret } from "../config/jwt";
-import { verifyAdmin } from "../middleware/auth";
+import { verifyAdminOrTutor } from "../middleware/auth";
 import fs from "fs";
 
 export const uploadServices = new Elysia()
@@ -22,10 +22,11 @@ export const uploadServices = new Elysia()
   .post(
     "/api/upload",
     async ({ body, headers, jwt, set }) => {
-      const authError = await verifyAdmin(headers, jwt, set);
+      const authError = await verifyAdminOrTutor(headers, jwt, set);
       if (authError) return authError;
 
-      const { file } = body;
+      const bodyData = body as { file?: any };
+      const { file } = bodyData;
       if (!file || !(file instanceof File)) {
         set.status = 400;
         return { success: false, message: "Berkas tidak valid" };
