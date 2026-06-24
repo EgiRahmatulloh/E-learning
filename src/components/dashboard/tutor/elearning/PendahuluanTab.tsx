@@ -14,7 +14,7 @@ interface Props {
 export default function PendahuluanTab({ activeTab, user }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [, setCourseId] = useState<number | null>(null);
+  const [courseId, setCourseId] = useState<number | null>(null);
   const [sessionId, setSessionId] = useState<number | null>(null);
 
   const [teksPembuka, setTeksPembuka] = useState("");
@@ -27,6 +27,9 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
   const parts = activeTab?.split("-") || [];
   // Format: mapel-setup-{setupId}-{mapelSlug}-pendahuluan
   const setupId = parts[1] === "setup" ? parseInt(parts[2], 10) : null;
+  const [forumPosts, setForumPosts] = useState<any[]>([]);
+  const [replyText, setReplyText] = useState("");
+  const [activeReplyId, setActiveReplyId] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -49,7 +52,7 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
         // 1. Get Course
         const courseRes = await fetch("/api/elearning/course", {
           method: "POST",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${localStorage.getItem("token")}`
           },
@@ -65,7 +68,7 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
         });
         const sessionData = await sessionRes.json();
         if (!sessionData.success) throw new Error(sessionData.message);
-        
+
         setSessionId(sessionData.data.session.id);
         setTeksPembuka(sessionData.data.session.description || "");
 
@@ -76,6 +79,8 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
         const tertib = materials.find((m: any) => m.type === "TATA_TERTIB");
         if (tertib) setTertibFile({ title: tertib.title, url: tertib.fileUrl });
 
+        // 3. Fetch Forum Posts for this session
+        fetchForumPosts(sessionData.data.session.id);
       } catch (error: any) {
         toast.error("Gagal memuat data pendahuluan", { description: error.message });
       } finally {
@@ -85,13 +90,57 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
     fetchData();
   }, [setupId, user]);
 
+  const fetchForumPosts = async (sId: number) => {
+    try {
+      const res = await fetch(`/api/elearning/forum?sessionId=${sId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setForumPosts(data.data || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch forum posts:", err);
+    }
+  };
+
+  const submitReply = async (parentId?: number) => {
+    if (!replyText.trim()) return toast.error("Komentar tidak boleh kosong");
+    try {
+      const res = await fetch("/api/elearning/forum", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({
+          sessionId: sessionId,
+          courseId: courseId,
+          content: replyText,
+          parentId: parentId || null
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Komentar berhasil dikirim!");
+        setReplyText("");
+        setActiveReplyId(null);
+        if (sessionId) fetchForumPosts(sessionId);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (err) {
+      toast.error("Gagal mengirim komentar");
+    }
+  };
+
   const saveTeksPembuka = async () => {
     if (!sessionId) return;
     try {
       setSaving(true);
       const res = await fetch(`/api/elearning/session/${sessionId}`, {
         method: "PUT",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem("token")}`
         },
@@ -110,10 +159,10 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
   const uploadFileAPI = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
-    const res = await fetch("/api/upload", { 
-      method: "POST", 
+    const res = await fetch("/api/upload", {
+      method: "POST",
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      body: formData 
+      body: formData
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.message);
@@ -123,15 +172,15 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "rat" | "tertib") => {
     if (!e.target.files || e.target.files.length === 0 || !sessionId) return;
     const file = e.target.files[0];
-    
+
     const toastId = toast.loading(`Mengunggah file ${file.name}...`);
     try {
       const fileUrl = await uploadFileAPI(file);
-      
+
       // Save material
       const res = await fetch("/api/elearning/material", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem("token")}`
         },
@@ -183,8 +232,8 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
               Pesan sapaan, penjelasan singkat mengenai RAT, dan instruksi perkenalan untuk warga belajar.
             </p>
           </div>
-          <Button 
-            onClick={saveTeksPembuka} 
+          <Button
+            onClick={saveTeksPembuka}
             disabled={saving}
             className="bg-[#280f91] hover:bg-[#ff6105] text-white cursor-pointer transition-colors font-bold gap-2"
           >
@@ -192,9 +241,9 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
             {saving ? "Menyimpan..." : "Simpan Teks"}
           </Button>
         </div>
-        <RichTextEditor 
-          value={teksPembuka} 
-          onChange={setTeksPembuka} 
+        <RichTextEditor
+          value={teksPembuka}
+          onChange={setTeksPembuka}
           placeholder="Halo Warga Belajar! Selamat datang di mata pelajaran ini. Silakan perkenalkan diri Anda dan baca RAT serta Tata Tertib di bawah ini..."
         />
       </Card>
@@ -209,7 +258,7 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
             Rancangan Aktivitas Tutorial (RAT).
           </p>
 
-            <div
+          <div
             onClick={() => ratInputRef.current?.click()}
             className="border-2 border-dashed border-slate-300 hover:bg-slate-50 rounded-xl p-10 text-center cursor-pointer transition-all duration-200"
           >
@@ -282,9 +331,101 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
         </div>
 
         <div className="space-y-4">
-          <div className="p-8 text-center text-slate-500 border border-slate-100 rounded-xl bg-slate-50/50">
-            <Users className="w-8 h-8 text-slate-300 mx-auto mb-3" />
-            <p className="font-medium">Belum ada warga belajar yang memperkenalkan diri.</p>
+          {forumPosts.length === 0 ? (
+            <div className="p-8 text-center text-slate-500 border border-slate-100 rounded-xl bg-slate-50/50">
+              <Users className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+              <p className="font-medium">Belum ada warga belajar yang memperkenalkan diri.</p>
+            </div>
+          ) : (
+            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+              {forumPosts.filter(p => !p.parentId).map(post => (
+                <div key={post.id} className="bg-slate-50 border border-slate-100 rounded-xl p-4">
+                  <div className="flex gap-3">
+                    <div className="h-10 w-10 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center font-bold text-sm shrink-0">
+                      {(post.authorName || '?').substring(0, 2).toUpperCase()}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-bold text-slate-800 text-sm">{post.authorName}</h4>
+                          <span className="text-xs text-slate-400">{new Date(post.createdAt).toLocaleString('id-ID')}</span>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 text-xs text-cyan-600 hover:bg-cyan-50"
+                          onClick={() => setActiveReplyId(activeReplyId === post.id ? null : post.id)}
+                        >
+                          Balas
+                        </Button>
+                      </div>
+                      <div className="mt-2 text-sm text-slate-600 prose" dangerouslySetInnerHTML={{ __html: post.content }} />
+
+                      {/* Replies */}
+                      {forumPosts.filter(r => r.parentId === post.id).map(reply => (
+                        <div key={reply.id} className="mt-3 pl-4 border-l-2 border-slate-200 flex gap-2">
+                          <div className={`h-6 w-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${reply.authorRole === 'tutor' ? 'bg-[#280f91] text-white' : 'bg-slate-200 text-slate-600'}`}>
+                            {(reply.authorName || '?').substring(0, 2).toUpperCase()}
+                          </div>
+                          <div className="flex-1">
+                            <h5 className="font-bold text-slate-700 text-xs flex items-center gap-2">
+                              {reply.authorName}
+                              {reply.authorRole === 'tutor' && <span className="bg-[#ff6105] text-white px-1.5 py-0.5 rounded text-[9px]">TUTOR</span>}
+                            </h5>
+                            <div className="text-xs text-slate-600 prose mt-1" dangerouslySetInnerHTML={{ __html: reply.content }} />
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Reply Input */}
+                      {activeReplyId === post.id && (
+                        <div className="mt-4 flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Ketik balasan Anda..."
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && submitReply(post.id)}
+                            className="flex-1 h-9 rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:border-[#280f91]"
+                          />
+                          <Button
+                            size="sm"
+                            onClick={() => submitReply(post.id)}
+                            className="h-9 bg-[#280f91] hover:bg-[#ff6105] text-white"
+                          >
+                            Kirim
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* New Pancingan Post Input (At the bottom) */}
+          <div className="mt-4 pt-4 border-t border-slate-100">
+            <h4 className="text-sm font-bold text-slate-700 mb-2">Buat Topik / Teks Pancingan Baru</h4>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Tulis pancingan diskusi di sini..."
+                value={activeReplyId === null ? replyText : ""}
+                onChange={(e) => {
+                  setActiveReplyId(null);
+                  setReplyText(e.target.value);
+                }}
+                onKeyDown={(e) => e.key === 'Enter' && submitReply()}
+                className="flex-1 h-10 rounded-xl border border-slate-200 px-4 text-sm focus:outline-none focus:border-[#280f91]"
+              />
+              <Button
+                onClick={() => submitReply()}
+                className="h-10 bg-[#280f91] hover:bg-[#3a1bca] text-white px-6 font-bold"
+              >
+                Kirim
+              </Button>
+            </div>
           </div>
         </div>
       </Card>

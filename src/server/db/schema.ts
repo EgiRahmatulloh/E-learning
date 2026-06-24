@@ -396,6 +396,7 @@ export const elearningSessions = sqliteTable('elearning_sessions', {
   startDate: text('start_date'),
   endDate: text('end_date'),
   isEvaluation: integer('is_evaluation', { mode: 'boolean' }).notNull().default(false),
+  isOpen: integer('is_open', { mode: 'boolean' }).notNull().default(true),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
   updatedAt: text('updated_at')
     .$defaultFn(() => new Date().toISOString())
@@ -486,5 +487,49 @@ export const elearningSetups = sqliteTable('elearning_setups', {
   tutorId: integer('tutor_id').notNull(),
   skk: integer('skk').notNull().default(1),
   jumlahSesi: integer('jumlah_sesi').notNull().default(8),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+});
+
+// ==========================================
+// NEW TABLES FOR REFACTORING
+// ==========================================
+
+export const elearningForumPosts = sqliteTable('elearning_forum_posts', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  sessionId: integer('session_id').notNull().references(() => elearningSessions.id, { onDelete: 'cascade' }),
+  courseId: integer('course_id').notNull().references(() => elearningCourses.id, { onDelete: 'cascade' }),
+  authorId: integer('author_id').notNull(),
+  authorRole: text('author_role').notNull(), // 'tutor' | 'siswa'
+  content: text('content').notNull(),
+  parentId: integer('parent_id'), // for replies
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+});
+
+export const elearningAttendances = sqliteTable('elearning_attendances', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  sessionId: integer('session_id').notNull().references(() => elearningSessions.id, { onDelete: 'cascade' }),
+  studentId: integer('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
+  attendedAt: text('attended_at').$defaultFn(() => new Date().toISOString()),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+});
+
+export const elearningSubmissions = sqliteTable('elearning_submissions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  assignmentId: integer('assignment_id').notNull().references(() => elearningAssignments.id, { onDelete: 'cascade' }),
+  studentId: integer('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
+  fileUrl: text('file_url'),
+  submittedAt: text('submitted_at').$defaultFn(() => new Date().toISOString()),
+  grade: integer('grade'), // 0 - 100
+  feedback: text('feedback'),
+  gradedBy: integer('graded_by'),
+  gradedAt: text('graded_at'),
+});
+
+export const elearningEvaluationResponses = sqliteTable('elearning_evaluation_responses', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  evaluationId: integer('evaluation_id').notNull().references(() => elearningEvaluations.id, { onDelete: 'cascade' }),
+  studentId: integer('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
+  courseId: integer('course_id').notNull().references(() => elearningCourses.id, { onDelete: 'cascade' }),
+  score: integer('score').notNull(), // 1 - 5
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
 });

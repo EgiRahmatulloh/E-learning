@@ -1,21 +1,71 @@
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileSpreadsheet, Lock } from "lucide-react";
 import { toast } from "sonner";
 
-export default function LaporanNilaiTab({}: { activeTab?: string, user?: any }) {
-  const dummyStudents = [
-    { id: 1, name: "Ahmad Fauzi", tugas: 85, partisipasi: 90, kehadiran: 100, final: 91.6, predikat: "A" },
-    { id: 2, name: "Siti Aminah", tugas: 90, partisipasi: 95, kehadiran: 100, final: 95.0, predikat: "A+" },
-    { id: 3, name: "Budi Santoso", tugas: 75, partisipasi: 80, kehadiran: 80, final: 78.3, predikat: "B" },
-    { id: 4, name: "Rina Permatasari", tugas: 95, partisipasi: 100, kehadiran: 100, final: 98.3, predikat: "A+" },
-  ];
+interface Props {
+  activeTab?: string;
+  user?: any;
+}
+
+interface StudentGradeData {
+  id: number;
+  nama: string;
+  kelas: string;
+  tugas: number;
+  partisipasi: number;
+  kehadiran: number;
+  final: number;
+  predikat: string;
+}
+
+export default function LaporanNilaiTab({ activeTab, user }: Props) {
+  const [students, setStudents] = useState<StudentGradeData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const parts = activeTab?.split("-") || [];
+  const setupId = parts[1] === "setup" ? parseInt(parts[2], 10) : null;
+
+  useEffect(() => {
+    async function fetchData() {
+      if (!setupId) return;
+      try {
+        setLoading(true);
+        // Fetch setup to know which kelas
+        const setupRes = await fetch(`/api/elearning/setups?tutorId=${user?.id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+        const setupData = await setupRes.json();
+        const setup = setupData?.data?.find((s: any) => s.id === setupId);
+        if (!setup) throw new Error("Setup tidak ditemukan");
+
+        const gradesRes = await fetch(`/api/elearning/grades?setupId=${setupId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+        const gradesData = await gradesRes.json();
+        
+        if (gradesData.success) {
+          setStudents(gradesData.data);
+        }
+      } catch (err: any) {
+        toast.error("Gagal memuat data siswa", { description: err.message });
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [setupId, user]);
 
   const handleExport = () => {
+    if (students.length === 0) {
+      toast.error("Tidak ada data untuk diekspor");
+      return;
+    }
     // Generate CSV content
     const header = "Nama Warga Belajar,Nilai Tugas,Nilai Diskusi,Nilai Kehadiran,Nilai Akhir,Predikat\n";
-    const rows = dummyStudents.map(student => 
-      `"${student.name}",${student.tugas},${student.partisipasi},${student.kehadiran},${student.final.toFixed(1)},"${student.predikat}"`
+    const rows = students.map(student => 
+      `"${student.nama}",${student.tugas},${student.partisipasi},${student.kehadiran},${student.final.toFixed(1)},"${student.predikat}"`
     ).join("\n");
     
     const csvContent = header + rows;
@@ -54,9 +104,8 @@ export default function LaporanNilaiTab({}: { activeTab?: string, user?: any }) 
           <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
             <div>
               <h3 className="text-lg font-black text-[#280f91]">Data Nilai Warga Belajar</h3>
-              <p className="text-xs font-semibold text-slate-500">Nilai di bawah ini merupakan data simulasi untuk diekspor.</p>
+              <p className="text-xs font-semibold text-slate-500">Menampilkan siswa di kelas ini (Data Nilai menunggu Integrasi Fase 4).</p>
             </div>
-            <span className="text-xs font-bold px-3 py-1 bg-amber-100 text-amber-700 rounded-full border border-amber-200">Mode Simulasi</span>
           </div>
           
           <div className="overflow-x-auto">
@@ -75,20 +124,37 @@ export default function LaporanNilaiTab({}: { activeTab?: string, user?: any }) 
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {dummyStudents.map(student => (
-                  <tr key={student.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-4 px-6 font-bold text-slate-800">{student.name}</td>
-                    <td className="py-4 px-6 text-center font-medium text-slate-600 border-l border-slate-100">{student.tugas}</td>
-                    <td className="py-4 px-6 text-center font-medium text-slate-600 border-l border-slate-100">{student.partisipasi}</td>
-                    <td className="py-4 px-6 text-center font-medium text-slate-600 border-l border-slate-100">{student.kehadiran}</td>
-                    <td className="py-4 px-6 text-center border-l border-slate-100">
-                      <span className={`inline-flex items-center justify-center px-3 py-1 rounded-md font-bold text-xs ${student.final >= 80 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                        {student.final.toFixed(1)}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-center font-black text-[#280f91]">{student.predikat}</td>
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-slate-400 font-medium">Memuat data...</td>
                   </tr>
-                ))}
+                ) : students.length > 0 ? (
+                  students.map(student => (
+                    <tr key={student.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-4 px-6 font-bold text-slate-800">{student.nama}</td>
+                      <td className="py-4 px-6 text-center font-bold text-slate-700 border-l border-slate-100">{student.tugas}</td>
+                      <td className="py-4 px-6 text-center font-bold text-slate-700 border-l border-slate-100">{student.partisipasi}</td>
+                      <td className="py-4 px-6 text-center font-bold text-slate-700 border-l border-slate-100">{student.kehadiran}</td>
+                      <td className="py-4 px-6 text-center border-l border-slate-100">
+                        <span className="text-[#ff6105] text-sm font-black">{student.final.toFixed(1)}</span>
+                      </td>
+                      <td className="py-4 px-6 text-center font-black text-slate-800">
+                        <span className={`px-3 py-1 rounded-full text-xs ${
+                          student.predikat === 'A' ? 'bg-emerald-100 text-emerald-800' :
+                          student.predikat === 'B' ? 'bg-blue-100 text-blue-800' :
+                          student.predikat === 'C' ? 'bg-amber-100 text-amber-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {student.predikat}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-slate-400 font-medium">Belum ada warga belajar di rombel ini.</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

@@ -3,7 +3,7 @@ import { jwt } from "@elysia/jwt";
 import { finalJwtSecret } from "../config/jwt";
 import { verifyAdmin } from "../middleware/auth";
 import { db } from "../config/db";
-import { tutors, students, products, alumni, managers, servicePoints } from "../models";
+import { tutors, students, products, alumni, managers, servicePoints, elearningSetups, elearningMaterials } from "../models";
 
 export const statsServices = new Elysia()
   .use(
@@ -71,6 +71,13 @@ export const statsServices = new Elysia()
         (s) => s.program && s.program.toLowerCase().includes("paket c")
       ).length;
 
+      // E-Learning Stats
+      const setups = await db.select().from(elearningSetups).all();
+      const mapelAktif = setups.length;
+      
+      const materials = await db.select().from(elearningMaterials).all();
+      const tugasDiberikan = materials.filter((m: any) => m.type === "TUGAS").length;
+
       return {
         success: true,
         data: {
@@ -82,10 +89,13 @@ export const statsServices = new Elysia()
           paketB,
           paketC,
           alumni: alumniList.length,
+          mapelAktif,
+          tugas: tugasDiberikan,
+          ip: "0.0", // Placeholder for global IP until full grading is implemented
         },
       };
-    } catch {
+    } catch (error: any) {
       set.status = 500;
-      return { success: false, message: "Gagal mengambil data statistik dashboard" };
+      return { success: false, message: "Gagal mengambil data statistik dashboard: " + error.message };
     }
   });

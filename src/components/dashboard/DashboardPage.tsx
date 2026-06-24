@@ -37,7 +37,6 @@ import RoleStatsGrid from "./RoleStatsGrid";
 import PendahuluanTab from "./tutor/elearning/PendahuluanTab";
 import SesiKelasTab from "./tutor/elearning/SesiKelasTab";
 import LaporanNilaiTab from "./tutor/elearning/LaporanNilaiTab";
-import { TutorDashboard } from "./tutor/TutorDashboard";
 
 interface DashboardPageProps {
   user: { id: number; name: string; username: string; role: string; email?: string; noHp?: string; alamat?: string; nik?: string; program?: string; kelas?: string };
@@ -53,7 +52,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
   // Profile Form States
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileMsg, setProfileMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  
+
   const [formData, setFormData] = useState({
     name: user.name || "",
     email: user.email || user.username || "",
@@ -127,7 +126,6 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
         <div className="space-y-6 animate-in fade-in duration-500">
           <WelcomeBanner userName={user.name} userRole={user.role} />
           <RoleStatsGrid userRole={user.role} />
-          {user.role === "tutor" && <TutorDashboard />}
         </div>
       );
     }
@@ -146,7 +144,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
           </div>
         );
       }
-      
+
       if (user.role === "admin" || user.role === "super_admin") {
         return (
           <div className="space-y-6 animate-in fade-in duration-300">
@@ -154,7 +152,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
           </div>
         );
       }
-      
+
       if (user.role === "tutor") {
         if (activeTab.endsWith("-pendahuluan")) {
           return <div className="space-y-6 animate-in fade-in duration-300"><PendahuluanTab activeTab={activeTab} user={user} /></div>;
@@ -177,11 +175,10 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
             </div>
 
             {profileMsg && (
-              <div className={`p-4 rounded-xl border font-bold text-sm ${
-                profileMsg.type === "success" 
-                  ? "bg-emerald-50 border-emerald-200 text-emerald-800" 
-                  : "bg-red-50 border-red-200 text-red-800"
-              }`}>
+              <div className={`p-4 rounded-xl border font-bold text-sm ${profileMsg.type === "success"
+                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                : "bg-red-50 border-red-200 text-red-800"
+                }`}>
                 {profileMsg.text}
               </div>
             )}
@@ -576,9 +573,8 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
     <div className="h-screen bg-cyan-100 flex font-sans overflow-hidden animate-in fade-in duration-300">
       {/* ========== LEFT SIDEBAR (Desktop) ========== */}
       <aside
-        className={`hidden lg:flex flex-col shrink-0 bg-gradient-to-b from-cyan-700 via-cyan-800 to-cyan-900 transition-all duration-300 ${
-          sidebarOpen ? "w-64" : "w-0 overflow-hidden"
-        }`}
+        className={`hidden lg:flex flex-col shrink-0 bg-gradient-to-b from-cyan-700 via-cyan-800 to-cyan-900 transition-all duration-300 ${sidebarOpen ? "w-64" : "w-0 overflow-hidden"
+          }`}
       >
         <DashboardSidebar
           user={user}
@@ -643,7 +639,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
 
             {/* Right: User Info + Logout */}
             <div className="flex items-center gap-3">
-              <div 
+              <div
                 onClick={() => setActiveTab("profil")}
                 className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
                 title="Buka Profil Saya"

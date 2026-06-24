@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Search,
@@ -10,7 +10,6 @@ import {
   SortAsc,
   ChevronLeft,
 } from "lucide-react";
-import { getSubjectsSiswa } from "../DashboardSidebar";
 import { MapelPartisipasi } from "./elearning/MapelPartisipasi";
 import { MapelNilai } from "./elearning/MapelNilai";
 import { MapelPendahuluan } from "./elearning/MapelPendahuluan";
@@ -63,29 +62,48 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
   const [sortBy, setSortBy] = useState<"nama" | "terakhir_diakses">("nama");
   const [hiddenSubjects, setHiddenSubjects] = useState<Set<string>>(new Set());
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [siswaSetups, setSiswaSetups] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user?.kelas) {
+      fetch(`/api/elearning/setups?kelas=${encodeURIComponent(user.kelas)}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.data) {
+            setSiswaSetups(data.data);
+          }
+        })
+        .catch(err => console.error("Error fetching setups:", err));
+    }
+  }, [user?.kelas]);
 
   // Cek apakah tab yang aktif adalah halaman detail sesi/nilai/pendahuluan
   const isMapelDetail = activeTab.startsWith("mapel-");
 
-  // Semua mapel sesuai program/kelas
+  // Semua mapel dari setup yang di-fetch
   const allSubjects = useMemo(() => {
-    return getSubjectsSiswa(user?.program, user?.kelas).map((name, index) => {
+    return siswaSetups.map((setup, index) => {
       const meta = getSubjectMeta(index);
-      const slug = toSlug(name);
+      const slug = toSlug(setup.mapel);
+      let progress: number = 0; // Hardcoded to 0 for now as requested
       let status: "belum" | "progres" | "selesai" = "belum";
-      if (meta.progress > 0 && meta.progress < 100) status = "progres";
-      if (meta.progress === 100) status = "selesai";
+      if (progress > 0 && progress < 100) status = "progres";
+      if (progress === 100) status = "selesai";
       return {
-        id: slug,
-        name,
+        setupId: setup.id,
+        id: `setup-${setup.id}-${slug}`,
+        name: setup.mapel,
         slug,
         tutor: meta.tutor,
-        progress: meta.progress,
+        progress,
         status,
         gradient: meta.gradient,
+        jumlahSesi: setup.jumlahSesi,
       };
     });
-  }, [user]);
+  }, [siswaSetups]);
 
   const filteredSubjects = useMemo(() => {
     let result = allSubjects.filter((s) => !hiddenSubjects.has(s.id));
@@ -107,13 +125,23 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
     return result;
   }, [allSubjects, hiddenSubjects, filter, searchQuery, sortBy]);
 
-  // Contoh: mapel-matematika-sesi-3 → slug=matematika, sub=sesi-3
-  const withoutPrefix = activeTab.replace("mapel-", "");
-  // Cari slug subjek yang cocok
-  const matchedSubject = allSubjects.find((s) => withoutPrefix === s.slug || withoutPrefix.startsWith(s.slug + "-"));
-  const subPart = matchedSubject
-    ? withoutPrefix.replace(matchedSubject.slug + "-", "")
-    : withoutPrefix;
+  // Parsing activeTab: mapel-setup-{setupId}-{subPart}
+  let setupId: number | null = null;
+  let subPart = "";
+  if (isMapelDetail) {
+    const parts = activeTab.split("-");
+    // "mapel", "setup", "{setupId}", "{subPart1}", "{subPart2}"...
+    if (parts[1] === "setup") {
+      setupId = parseInt(parts[2], 10);
+      if (parts.includes("sesi")) {
+        subPart = `sesi-${parts[parts.length - 1]}`;
+      } else {
+        subPart = parts[parts.length - 1]; // "nilai", "pendahuluan", dsb.
+      }
+    }
+  }
+
+  const matchedSubject = allSubjects.find((s) => s.setupId === setupId);
 
   const subLabel =
     subPart === "partisipasi" ? "Partisipasi"
@@ -125,14 +153,15 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
   const mapelContent = useMemo(() => {
     const subjectName = matchedSubject?.name || "Mata Pelajaran";
     const tutorName = matchedSubject?.tutor || "Tutor";
+    const currentSetupId = matchedSubject?.setupId;
     
     if (subPart === "partisipasi") return <MapelPartisipasi subjectName={subjectName} tutorName={tutorName} />;
-    if (subPart === "nilai") return <MapelNilai subjectName={subjectName} />;
-    if (subPart === "pendahuluan") return <MapelPendahuluan subjectName={subjectName} user={user} />;
+    if (subPart === "nilai") return <MapelNilai subjectName={subjectName} setupId={currentSetupId} user={user} />;
+    if (subPart === "pendahuluan") return <MapelPendahuluan subjectName={subjectName} user={user} setupId={currentSetupId} />;
     if (subPart.startsWith("sesi-")) {
       const sessionNumber = parseInt(subPart.replace("sesi-", ""), 10);
       if (!isNaN(sessionNumber)) {
-        return <MapelSesi subjectName={subjectName} sessionNumber={sessionNumber} user={user} />;
+        return <MapelSesi subjectName={subjectName} sessionNumber={sessionNumber} user={user} setupId={currentSetupId} />;
       }
     }
     return (
@@ -153,14 +182,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
       { id: "partisipasi", label: "Partisipasi" },
       { id: "nilai", label: "Nilai" },
       { id: "pendahuluan", label: "Pendahuluan" },
-      { id: "sesi-1", label: "Sesi 1" },
-      { id: "sesi-2", label: "Sesi 2" },
-      { id: "sesi-3", label: "Sesi 3" },
-      { id: "sesi-4", label: "Sesi 4" },
-      { id: "sesi-5", label: "Sesi 5" },
-      { id: "sesi-6", label: "Sesi 6" },
-      { id: "sesi-7", label: "Sesi 7" },
-      { id: "sesi-8", label: "Sesi 8" },
+      ...Array.from({ length: matchedSubject?.jumlahSesi || 8 }, (_, i) => ({ id: `sesi-${i + 1}`, label: `Sesi ${i + 1}` }))
     ];
     const currentIndex = menus.findIndex((m) => m.id === subPart);
     const prevMenu = currentIndex > 0 ? menus[currentIndex - 1] : null;
@@ -168,7 +190,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
 
     const handleNavigate = (menuId: string) => {
       if (setActiveTab && matchedSubject) {
-        setActiveTab(`mapel-${matchedSubject.slug}-${menuId}`);
+        setActiveTab(`mapel-setup-${matchedSubject.setupId}-${menuId}`);
       }
     };
 
@@ -338,7 +360,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
                   {openMenuId === subject.id && (
                     <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-xl shadow-xl border border-slate-100 z-20 py-1 animate-in fade-in duration-150">
                       <button
-                        onClick={() => { setOpenMenuId(null); setActiveTab?.(`mapel-${subject.slug}-pendahuluan`); }}
+                        onClick={() => { setOpenMenuId(null); setActiveTab?.(`mapel-setup-${subject.setupId}-pendahuluan`); }}
                         className="w-full text-left px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer"
                       >
                         <PlayCircle className="h-3.5 w-3.5 inline mr-2 text-[#280f91]" />
@@ -388,7 +410,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
 
                   {/* CTA Button */}
                   <Button
-                    onClick={() => setActiveTab?.(`mapel-${subject.slug}-pendahuluan`)}
+                    onClick={() => setActiveTab?.(`mapel-setup-${subject.setupId}-${subject.slug}-pendahuluan`)}
                     className={`rounded-xl font-bold bg-[#ff6105] hover:bg-[#e05404] text-white text-xs shadow-md shadow-orange-400/20 transition-all cursor-pointer ${
                       viewMode === "card" ? "w-full" : ""
                     }`}

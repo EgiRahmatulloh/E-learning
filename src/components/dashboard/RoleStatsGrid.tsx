@@ -14,17 +14,30 @@ export default function RoleStatsGrid({ userRole }: RoleStatsGridProps) {
     paketB: number;
     paketC: number;
     alumni: number;
+    mapelAktif?: number;
+    tugas?: number;
+    tugasMasuk?: number;
+    ip?: string;
   } | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    let endpoint = "";
     if (userRole === "admin") {
-      const token = localStorage.getItem("token");
-      fetch("/api/dashboard-stats", {
+      endpoint = "/api/dashboard-stats";
+    } else if (userRole === "tutor") {
+      endpoint = "/api/elearning/tutor-stats";
+    } else if (userRole === "siswa") {
+      endpoint = "/api/elearning/siswa-stats";
+    }
+
+    if (endpoint) {
+      fetch(endpoint, {
         signal: controller.signal,
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
+        headers: { "Authorization": `Bearer ${token}` }
       })
         .then((res) => res.json())
         .then((data) => {
@@ -36,6 +49,7 @@ export default function RoleStatsGrid({ userRole }: RoleStatsGridProps) {
           if (err.name !== "AbortError") console.error("Error fetching stats:", err);
         });
     }
+
     return () => controller.abort();
   }, [userRole]);
 
@@ -46,6 +60,9 @@ export default function RoleStatsGrid({ userRole }: RoleStatsGridProps) {
       { label: "JUMLAH TUTOR", value: stats ? String(stats.tutors) : "12", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
       { label: "JUMLAH WARGA BELAJAR", value: stats ? String(stats.students) : "350", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
       { label: "JUMLAH ROMBEL", value: stats ? String(stats.rombel) : "9", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
+      { label: "MAPEL AKTIF", value: stats ? String(stats.mapelAktif || 0) : "0", color: "from-cyan-400 to-cyan-500", status: "E-Learning" },
+      { label: "TUGAS DIBERIKAN", value: stats ? String(stats.tugas || 0) : "0", color: "from-amber-400 to-amber-500", status: "E-Learning" },
+      { label: "INDEKS PRESTASI GLOBAL", value: stats ? String(stats.ip || "0.0") : "0.0", color: "from-teal-400 to-teal-500", status: "Rata-rata" },
       { label: "JUMLAH PRODUK WB", value: stats ? String(stats.products) : "24", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
       { label: "JUMLAH WB PAKET A", value: stats ? String(stats.paketA) : "85", color: "from-cyan-400 to-teal-500", status: "Siswa" },
       { label: "JUMLAH WB PAKET B", value: stats ? String(stats.paketB) : "120", color: "from-cyan-400 to-teal-500", status: "Siswa" },
@@ -55,16 +72,17 @@ export default function RoleStatsGrid({ userRole }: RoleStatsGridProps) {
     ];
   } else if (userRole === "tutor") {
     roleStats = [
-      { label: "KELAS PENGAJARAN", value: "3 Kelas", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
-      { label: "TUGAS MASUK", value: "45 Tugas", color: "from-amber-400 to-amber-500", status: "Perlu Review" },
-      { label: "RATA-RATA PRESENSI", value: "92%", color: "from-teal-400 to-teal-500", status: "Sangat Baik" },
+      { label: "KELAS PENGAJARAN", value: stats ? `${stats.mapelAktif} Kelas` : "0 Kelas", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
+      { label: "TUGAS MASUK", value: stats ? `${stats.tugasMasuk} Tugas` : "0 Tugas", color: "from-amber-400 to-amber-500", status: "Perlu Review" },
+      { label: "RATA-RATA PRESENSI", value: "0%", color: "from-teal-400 to-teal-500", status: "Sangat Baik" },
+      { label: "INDEKS PRESTASI KELAS", value: stats ? String(stats.ip || "0.0") : "0.0", color: "from-teal-400 to-teal-500", status: "Rata-rata" },
     ];
   } else {
     // siswa
     roleStats = [
-      { label: "MATA PELAJARAN", value: "5 Matpel", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
-      { label: "TUGAS AKTIF", value: "2 Tugas", color: "from-amber-400 to-amber-500", status: "Belum Selesai" },
-      { label: "INDEKS PRESTASI", value: "88.5", color: "from-teal-400 to-teal-500", status: "Sangat Baik" },
+      { label: "MATA PELAJARAN", value: stats ? `${stats.mapelAktif} MAPEL` : "0 MAPEL", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
+      { label: "TUGAS AKTIF", value: stats ? `${stats.tugasMasuk} TUGAS` : "0 TUGAS", color: "from-amber-400 to-amber-500", status: "Belum Selesai" },
+      { label: "INDEKS PRESTASI", value: stats ? String(stats.ip || "0.0") : "0.0", color: "from-teal-400 to-teal-500", status: "Sangat Baik" },
     ];
   }
 
