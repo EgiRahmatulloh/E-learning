@@ -24,8 +24,6 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
   const [agendas, setAgendas] = useState<AgendaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
-  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetch("/api/agendas")
@@ -39,19 +37,10 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
       .finally(() => setLoading(false));
   }, []);
 
-  // Filter & pagination
+  // Filter
   const filteredAgendas = agendas.filter((a) =>
     a.nama.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, itemsPerPage]);
-
-  const totalPages = Math.ceil(filteredAgendas.length / itemsPerPage) || 1;
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentAgendas = filteredAgendas.slice(indexOfFirstItem, indexOfLastItem);
 
   // Limit shown items on the homepage to 5
   const displayAgendas = agendas.slice(0, 5);
@@ -71,37 +60,21 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
 
           {/* HEADER SECTION */}
-          <div className="text-center max-w-3xl mx-auto mb-8 space-y-4 animate-in fade-in duration-700">
+          <div className="text-center mb-8 space-y-4 animate-in fade-in duration-700">
             <span className="text-xs font-black uppercase tracking-widest text-[#280f91] bg-slate-200/60 rounded-full px-5 py-2 inline-block">
               PROGRAM KEGIATAN SEKOLAH
             </span>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#280f91] tracking-tight leading-tight uppercase">
               AGENDA <span className="text-[#ff6105]">KEGIATAN</span>
             </h2>
-            <p className="text-slate-500 font-semibold text-sm leading-relaxed max-w-2xl mx-auto">
+            <p className="text-slate-500 font-semibold text-sm leading-relaxed tracking-tighter">
               Agenda kegiatan disusun sebagai informasi mengenai rangkaian kegiatan yang akan dilaksanakan di PKBM Menuju Makmur agar seluruh kegiatan dapat berjalan dengan tertib, terarah, dan sesuai tujuan
             </p>
           </div>
 
-          {/* SEARCH & ITEMS PER PAGE FILTER */}
-          <div className="max-w-4xl mx-auto mb-8 bg-white/90 backdrop-blur-md p-6 rounded-3xl shadow-lg border border-slate-200 flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="flex gap-2.5 flex-wrap justify-center w-full md:w-auto">
-              {[0, 5, 10, 15, 20].map((num) => (
-                <button
-                  key={num}
-                  onClick={() => { setItemsPerPage(num || filteredAgendas.length); setCurrentPage(1); }}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wider transition-all uppercase cursor-pointer ${
-                    itemsPerPage === (num || filteredAgendas.length)
-                      ? "bg-[#280f91] text-white shadow-md shadow-[#280f91]/20"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  }`}
-                >
-                  {num === 0 ? "Semua" : num}
-                </button>
-              ))}
-            </div>
-
-            <div className="relative w-full md:w-80">
+          {/* SEARCH */}
+          <div className="max-w-md mx-auto mb-8">
+            <div className="relative w-full">
               <input
                 type="text"
                 placeholder="Cari nama agenda..."
@@ -119,10 +92,10 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
               <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#280f91] border-t-transparent" />
               <span className="text-sm font-bold text-[#280f91] uppercase tracking-widest">Memuat Agenda...</span>
             </div>
-          ) : currentAgendas.length > 0 ? (
+          ) : filteredAgendas.length > 0 ? (
             <div className="space-y-10">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-              {currentAgendas.map((agenda) => (
+              {filteredAgendas.map((agenda) => (
                 <div 
                   key={agenda.id} 
                   className="bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200 group hover:-translate-y-1.5 hover:shadow-xl transition-all duration-300 text-left"
@@ -176,40 +149,6 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
               ))}
             </div>
 
-              {/* PAGINATION CONTROLS */}
-              {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-2">
-                  <Button
-                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="rounded-xl bg-white text-[#280f91] hover:bg-[#280f91] hover:text-white border border-slate-200 font-extrabold text-xs h-10 px-4 cursor-pointer disabled:opacity-50"
-                  >
-                    Sebelumnya
-                  </Button>
-
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`h-10 w-10 rounded-xl text-xs font-black transition-all ${
-                        currentPage === page
-                          ? "bg-[#280f91] text-white shadow-md shadow-[#280f91]/20"
-                          : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-
-                  <Button
-                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    className="rounded-xl bg-white text-[#280f91] hover:bg-[#280f91] hover:text-white border border-slate-200 font-extrabold text-xs h-10 px-4 cursor-pointer disabled:opacity-50"
-                  >
-                    Selanjutnya
-                  </Button>
-                </div>
-              )}
             </div>
           ) : (
             <div className="max-w-md mx-auto bg-white border border-slate-200 rounded-3xl p-8 text-center space-y-4 shadow-lg">
@@ -232,10 +171,10 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
   return (
     <section id="agenda" className="pt-8 pb-16 bg-white relative overflow-hidden">
       <div aria-hidden className="absolute top-0 left-1/2 -translate-x-1/2 h-px w-2/3 bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-6 relative z-10">
 
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3 mb-10">
+        <div className="text-center space-y-3 mb-10">
           <span className="text-xs font-extrabold uppercase tracking-widest text-[#ff6105] bg-orange-100 rounded-full px-4 py-1.5 inline-block">
             PROGRAM KEGIATAN SEKOLAH
           </span>
@@ -243,7 +182,7 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
             <span className="text-[#280f91]">AGENDA</span>{" "}
             <span className="text-[#ff6105]">KEGIATAN</span>
           </h2>
-          <p className="text-slate-600 font-semibold text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
+          <p className="text-slate-600 font-semibold text-sm sm:text-base leading-relaxed tracking-tighter">
             Agenda kegiatan disusun sebagai informasi mengenai rangkaian kegiatan yang akan dilaksanakan di PKBM Menuju Makmur agar seluruh kegiatan dapat berjalan dengan tertib, terarah, dan sesuai tujuan.
           </p>
         </div>

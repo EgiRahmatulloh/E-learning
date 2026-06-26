@@ -121,13 +121,13 @@ export default function GalleryPage(_props: GalleryPageProps) {
 
 
         {/* Title */}
-        <div className="text-center max-w-4xl mx-auto space-y-4 mb-12">
+        <div className="text-center space-y-4 mb-12">
           <span className="text-xs font-black uppercase tracking-widest text-[#280f91] bg-slate-200/60 rounded-full px-5 py-2 inline-block mb-2">DOKUMENTASI KEGIATAN</span>
           <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-center leading-none uppercase drop-shadow-sm">
             <span className="text-[#280f91]">GALERI</span> <span className="text-[#ff6105]">KEGIATAN</span>
           </h2>
           {viewMode === "categories" ? (
-            <p className="text-slate-700 font-bold text-xs sm:text-sm leading-relaxed px-4 max-w-3xl mx-auto text-center">
+            <p className="text-slate-700 font-bold text-xs sm:text-sm leading-relaxed px-4 tracking-tighter text-center">
               Galeri PKBM Menuju Makmur menjadi tempat tersimpannya berbagai momen berharga yang menggambarkan semangat belajar, kebersamaan, dan perjalanan menuju masa depan yang lebih baik
             </p>
           ) : (

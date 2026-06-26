@@ -66,7 +66,7 @@ export default function Products() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
 
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3 mb-10">
+        <div className="text-center space-y-3 mb-10">
           <span className="text-xs font-extrabold uppercase tracking-widest text-[#ff6105] bg-orange-100 rounded-full px-4 py-1.5 inline-block">
             KARYA & KREATIVITAS
           </span>
@@ -74,7 +74,7 @@ export default function Products() {
             <span className="text-[#280f91]">PRODUK HASIL</span>{" "}
             <span className="text-[#ff6105]">WARGA BELAJAR</span>
           </h2>
-          <p className="text-slate-600 font-semibold text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
+          <p className="text-slate-600 font-semibold text-sm sm:text-base leading-relaxed tracking-tighter">
             Dukung karya warga belajar PKBM Menuju Makmur dengan membeli produk hasil kreativitas mereka untuk mendorong kemandirian, semangat berwirausaha, dan masa depan yang lebih baik.
           </p>
         </div>

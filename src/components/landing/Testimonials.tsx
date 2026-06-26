@@ -52,7 +52,7 @@ export default function Testimonials(_props: TestimonialsProps) {
     <section id="alumni" className="pt-8 pb-16 bg-white relative">
       <div aria-hidden className="absolute top-0 left-1/2 -translate-x-1/2 h-px w-2/3 bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto space-y-3 mb-10">
+        <div className="text-center space-y-3 mb-10">
           <span className="text-xs font-extrabold uppercase tracking-widest text-[#ff6105] bg-orange-100 rounded-full px-4 py-1.5 inline-block">
             JEJAK ALUMNI
           </span>
@@ -60,7 +60,7 @@ export default function Testimonials(_props: TestimonialsProps) {
             <span className="text-[#280f91]">CERITA</span>{" "}
             <span className="text-[#ff6105]">ALUMNI</span>
           </h2>
-          <p className="text-slate-600 font-semibold text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
+          <p className="text-slate-600 font-semibold text-sm sm:text-base leading-relaxed tracking-tighter">
             Setiap alumni memiliki kisah perjuangan dan keberhasilan yang berbeda. Melalui semangat belajar, kerja keras, dan kesempatan yang didapat di PKBM Menuju Makmur, mereka berhasil melangkah lebih dekat menuju cita-cita. Kini giliran Anda untuk memulai perjalanan dan menjadi bagian dari cerita sukses berikutnya
           </p>
         </div>

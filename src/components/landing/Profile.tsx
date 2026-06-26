@@ -319,14 +319,14 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
         {/* HEADER SECTION */}
-        <div className="text-center max-w-3xl mx-auto mb-8 space-y-4 animate-in fade-in duration-700">
+        <div className="text-center mb-8 space-y-4 animate-in fade-in duration-700">
           <span className="text-xs font-black uppercase tracking-widest text-[#280f91] bg-slate-200/60 rounded-full px-5 py-2 inline-block">
             INFORMASI PROFIL LEMBAGA
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#280f91] tracking-tight leading-tight uppercase">
             Profil <span className="text-[#ff6105]">PKBM Menuju Makmur</span>
           </h2>
-          <p className="text-slate-500 font-semibold text-sm leading-relaxed max-w-2xl mx-auto">
+          <p className="text-slate-500 font-semibold text-sm leading-relaxed tracking-tighter">
             Mengenal lebih dekat PKBM Menuju Makmur sebagai tempat belajar, berkembang, dan meraih masa depan yang lebih baik
           </p>
         </div>

@@ -77,14 +77,14 @@ export default function ProductsPage() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Centered Title */}
-        <div className="text-center max-w-4xl mx-auto space-y-4 mb-12">
+        <div className="text-center space-y-4 mb-12">
           <span className="text-xs font-black uppercase tracking-widest text-[#280f91] bg-slate-200/60 rounded-full px-5 py-2 inline-block mb-2">
             KARYA & KREATIVITAS
           </span>
           <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-center leading-none uppercase drop-shadow-sm">
             <span className="text-[#280f91]">PRODUK HASIL</span> <span className="text-[#ff6105]">WARGA BELAJAR</span>
           </h2>
-          <p className="text-slate-600 font-bold text-xs sm:text-sm leading-relaxed px-4 max-w-3xl mx-auto">
+          <p className="text-slate-600 font-bold text-xs sm:text-sm leading-relaxed px-4 tracking-tighter">
             Dukung karya dan kreativitas warga belajar dengan membeli produk mereka karena Setiap karya adalah bukti semangat, kreativitas, dan kemampuan warga belajar dalam mengembangkan potensi menuju masa depan yang lebih baik
           </p>
         </div>

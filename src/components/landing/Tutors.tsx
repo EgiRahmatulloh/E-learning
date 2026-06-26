@@ -92,14 +92,14 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
 
           {/* HEADER SECTION */}
-          <div className="text-center max-w-3xl mx-auto mb-8 space-y-4 animate-in fade-in duration-700">
+          <div className="text-center mb-8 space-y-4 animate-in fade-in duration-700">
             <span className="text-xs font-black uppercase tracking-widest text-[#280f91] bg-slate-200/60 rounded-full px-5 py-2 inline-block">
               TENAGA PENDIDIK
             </span>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#280f91] tracking-tight leading-tight uppercase">
               MENGENAL <span className="text-[#ff6105]">TUTOR KAMI</span>
             </h2>
-            <p className="text-slate-500 font-semibold text-sm leading-relaxed max-w-2xl mx-auto">
+            <p className="text-slate-500 font-semibold text-sm leading-relaxed tracking-tighter">
               Tutor PKBM Menuju Makmur merupakan tenaga pendidik yang berdedikasi dalam membimbing, mendampingi, dan memberikan ilmu pengetahuan kepada warga belajar guna meningkatkan kualitas pendidikan dan keterampilan
             </p>
           </div>
@@ -380,7 +380,7 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
       <div aria-hidden className="absolute top-0 left-1/2 -translate-x-1/2 h-px w-2/3 bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3 mb-10">
+        <div className="text-center space-y-3 mb-10">
           <span className="text-xs font-extrabold uppercase tracking-widest text-[#ff6105] bg-orange-100 rounded-full px-4 py-1.5 inline-block">
             Tenaga Pendidik
           </span>
@@ -388,7 +388,7 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
             <span className="text-[#280f91]">MENGENAL</span>{" "}
             <span className="text-[#ff6105]">TUTOR KAMI</span>
           </h2>
-          <p className="text-slate-600 font-semibold text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
+          <p className="text-slate-600 font-semibold text-sm sm:text-base leading-relaxed tracking-tighter">
             Tutor PKBM Menuju Makmur merupakan tenaga pendidik yang berdedikasi dalam membimbing, mendampingi, dan memberikan ilmu pengetahuan kepada warga belajar guna meningkatkan kualitas pendidikan dan keterampilan.
           </p>
         </div>

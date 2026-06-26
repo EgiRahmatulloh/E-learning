@@ -119,14 +119,14 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
 
           {/* HEADER SECTION */}
-          <div className="text-center max-w-3xl mx-auto mb-8 space-y-4 animate-in fade-in duration-700">
+          <div className="text-center mb-8 space-y-4 animate-in fade-in duration-700">
             <span className="text-xs font-black uppercase tracking-widest text-[#280f91] bg-slate-200/60 rounded-full px-5 py-2 inline-block">
               SEPUTAR PKBM KAMI
             </span>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#280f91] tracking-tight leading-tight uppercase">
               BERITA <span className="text-[#ff6105]">DAN INFORMASI</span>
             </h2>
-            <p className="text-slate-500 font-semibold text-sm leading-relaxed max-w-2xl mx-auto">
+            <p className="text-slate-500 font-semibold text-sm leading-relaxed tracking-tighter">
               Berita terbaru PKBM Menuju Makmur menyajikan informasi terbaru mengenai kegiatan, program, pencapaian, dan perkembangan terbaru sebagai bagian dari upaya meningkatkan kualitas pendidikan
             </p>
           </div>
@@ -334,7 +334,7 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
 
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3 mb-10">
+        <div className="text-center space-y-3 mb-10">
           <span className="text-xs font-extrabold uppercase tracking-widest text-[#ff6105] bg-orange-100 rounded-full px-4 py-1.5 inline-block">
             SEPUTAR PKBM KAMI
           </span>
@@ -342,7 +342,7 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
             <span className="text-[#280f91]">BERITA</span>{" "}
             <span className="text-[#ff6105]">DAN INFORMASI</span>
           </h2>
-          <p className="text-slate-600 font-semibold text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
+          <p className="text-slate-600 font-semibold text-sm sm:text-base leading-relaxed tracking-tighter">
             Berita PKBM Menuju Makmur menyajikan informasi mengenai kegiatan, program, pencapaian, dan perkembangan terbaru sebagai bagian dari upaya meningkatkan kualitas pendidikan.
           </p>
         </div>

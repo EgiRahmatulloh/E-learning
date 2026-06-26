@@ -89,12 +89,12 @@ export default function WargaBelajar(_props: WargaBelajarProps) {
 
 
         {/* Centered Title */}
-        <div className="text-center max-w-4xl mx-auto space-y-4 mb-10">
+        <div className="text-center space-y-4 mb-10">
           <span className="text-xs font-black uppercase tracking-widest text-[#280f91] bg-slate-200/60 rounded-full px-5 py-2 inline-block mb-2">WARGA BELAJAR</span>
           <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-center leading-none drop-shadow-sm">
             <span className="text-[#280f91]">MENGENAL</span> <span className="text-[#ff6105]">WARGA BELAJAR</span>
           </h2>
-          <p className="text-slate-700 font-bold text-xs sm:text-sm leading-relaxed px-4 max-w-2xl mx-auto">
+          <p className="text-slate-700 font-bold text-xs sm:text-sm leading-relaxed px-4 tracking-tighter">
             Warga Belajar PKBM Menuju Makmur merupakan peserta didik yang bersemangat dalam menempuh pendidikan non-formal guna mencapai cita-cita, meningkatkan kompetensi, dan berkontribusi bagi masyarakat.
           </p>
         </div>
