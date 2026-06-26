@@ -654,37 +654,38 @@ export default function ManagerManager() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-center">
-          {/* SEARCH BY NAME */}
-          <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-              <Search className="h-4 w-4" />
-            </span>
-            <input
-              type="text"
-              placeholder="CARI NAMA PENGELOLA"
-              value={searchName}
-              onChange={(e) => setSearchName(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner uppercase"
-            />
-          </div>
-
-          {/* SEARCH BY NIK */}
-          <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-              <Search className="h-4 w-4" />
-            </span>
-            <input
-              type="text"
-              placeholder="CARI NIK"
-              value={searchNik}
-              onChange={(e) => setSearchNik(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner uppercase"
-            />
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+          <div className="grid grid-cols-1 gap-3 md:col-span-2">
+            {/* SEARCH BY NAME */}
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <Search className="h-4 w-4" />
+              </span>
+              <input
+                type="text"
+                placeholder="CARI NAMA PENGELOLA"
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+                className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner uppercase"
+              />
+            </div>
+            {/* SEARCH BY NIK */}
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <Search className="h-4 w-4" />
+              </span>
+              <input
+                type="text"
+                placeholder="CARI NIK"
+                value={searchNik}
+                onChange={(e) => setSearchNik(e.target.value)}
+                className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner uppercase"
+              />
+            </div>
           </div>
 
           {/* BUTTONS */}
-          <div className="flex gap-2 col-span-1 sm:col-span-2 items-center flex-wrap">
+          <div className="grid grid-cols-2 gap-2 md:col-span-3">
             <input
               type="file"
               accept=".csv, .xlsx, .xls"
@@ -694,37 +695,33 @@ export default function ManagerManager() {
             />
             <Button
               onClick={() => csvInputRef.current?.click()}
-              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95"
+              className="h-10 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95"
             >
-              <Upload className="h-4 w-4" /> UPLOAD CSV / EXCEL
+              <Upload className="h-4 w-4" /> UPLOAD CSV
             </Button>
-
             <Button
               onClick={handleExportCSV}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md flex items-center gap-1.5 transition-all active:scale-95"
+              className="h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95"
             >
               <Download className="h-4 w-4" /> DOWNLOAD CSV
             </Button>
-
             <Button
               onClick={handleAddNew}
-              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
+              className="h-10 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all active:scale-95"
             >
               <UserPlus className="h-4 w-4" /> TAMBAH PENGELOLA
             </Button>
-
             <Button
               onClick={handleSearch}
-              className={`flex-1 h-10 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              className={`h-10 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 activeFilter ? "bg-[#009cb9] hover:bg-[#008aa7] text-white" : "bg-[#00badb] hover:bg-[#009cb9] text-white"
               }`}
             >
               <Filter className="h-4 w-4" /> FILTER
             </Button>
-
             <Button
               onClick={handleReset}
-              className="flex-1 h-10 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 transition-all uppercase"
+              className="col-span-2 h-10 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 transition-all uppercase active:scale-95"
             >
               <RotateCcw className="h-4 w-4" /> RESET
             </Button>
@@ -860,11 +857,11 @@ export default function ManagerManager() {
 
       {/* DETAIL PROFILE AND FORM EDIT PANEL POPUP MODAL */}
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-300">
           {/* Backdrop Click Closes Popup */}
           <div className="absolute inset-0 cursor-default" onClick={handleCloseForm} />
-          
-          <div className="bg-[#00badb] w-full max-w-4xl max-h-[90vh] flex flex-col p-3 sm:p-4 rounded-3xl border-4 border-cyan-400 shadow-2xl relative animate-in slide-in-from-bottom-8 duration-300 text-white select-text">
+
+          <div className="bg-[#00badb] w-full max-w-4xl max-h-[85vh] sm:max-h-[90vh] flex flex-col p-3 rounded-t-3xl sm:rounded-3xl border-4 border-cyan-400 border-b-0 sm:border-b-4 shadow-2xl relative animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 text-white select-text">
 
             {/* Elegant Close Button */}
             <button
