@@ -420,7 +420,7 @@ export default function GalleryManager() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={closeForm} />
 
           {/* Form Container */}
-          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-lg animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
+          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
             {/* Form Column (Cyan Background) */}
             <div className="bg-[#00badb] p-6 relative text-white">
               {/* Close Button */}

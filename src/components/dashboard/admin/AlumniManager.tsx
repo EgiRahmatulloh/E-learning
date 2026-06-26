@@ -697,9 +697,9 @@ export default function AlumniManager() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={closeForm} />
 
           {/* Form Container */}
-          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10 flex flex-col">
+          <div className="relative bg-[#00badb] rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
             {/* Form Column (Cyan Background) */}
-            <div className="bg-[#00badb] p-3 relative text-white flex-1">
+            <div className="p-3 relative text-white flex flex-col flex-1 min-h-0">
               {/* Close Button */}
               <button
                 onClick={closeForm}
@@ -708,14 +708,14 @@ export default function AlumniManager() {
                 <X className="h-5 w-5" />
               </button>
 
-              <div className="mb-6">
+              <div className="mb-3 pr-10 shrink-0">
                 <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
                   {isAdding ? "TAMBAH ALUMNI BARU" : (!isEditing ? "LIHAT PROFIL ALUMNI" : "EDIT PROFIL ALUMNI")}
                 </span>
               </div>
 
-              <form onSubmit={handleSave} className="text-slate-800">
-                <div className="flex flex-col lg:flex-row gap-4">
+              <form onSubmit={handleSave} className="flex flex-col flex-1 min-h-0 text-slate-800">
+                <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-y-auto pr-1 py-4 space-y-6">
                   {/* LEFT COLUMN: All Form Fields */}
                   <div className="flex-1 lg:min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1.5">
                     {/* Row 1: NAMA | NIK */}
@@ -983,7 +983,7 @@ export default function AlumniManager() {
                 </div>
 
                 {/* Buttons Footer Form */}
-                <div className="col-span-1 md:col-span-4 pt-4 border-t border-white/10 flex items-center justify-end gap-3">
+                <div className="col-span-1 md:col-span-4 pt-4 mt-3 border-t border-white/10 flex items-center justify-end gap-3 shrink-0">
                   {isAdding ? (
                     <>
                       <Button

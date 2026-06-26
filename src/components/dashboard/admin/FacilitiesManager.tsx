@@ -422,7 +422,7 @@ export default function FacilitiesManager() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={resetForm} />
 
           {/* Form Container */}
-          <div className="relative bg-[#00badb] rounded-3xl overflow-hidden shadow-2xl w-full max-w-3xl border-4 border-cyan-400 animate-in zoom-in-95 duration-200 p-6 sm:p-8 text-white">
+          <div className="relative bg-[#00badb] rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border-4 border-cyan-400 animate-in zoom-in-95 duration-200 p-6 sm:p-8 text-white">
             
             {/* Close button */}
             <button

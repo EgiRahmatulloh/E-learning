@@ -1069,9 +1069,9 @@ export default function WargaBelajarManager() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setFormOpen(false)} />
 
           {/* Form Container */}
-          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
+          <div className="relative bg-[#00badb] rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
             {/* Form Column (Cyan Background) */}
-            <div className="bg-[#00badb] p-3 relative text-white">
+            <div className="p-3 relative text-white flex flex-col flex-1 min-h-0">
               {/* Close Button */}
               <button
                 onClick={() => setFormOpen(false)}
@@ -1080,7 +1080,7 @@ export default function WargaBelajarManager() {
                 <X className="h-5 w-5" />
               </button>
 
-              <div className="mb-6">
+              <div className="mb-3 pr-10 shrink-0">
                 <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
                   {isAdding ? "Tambah Warga Belajar Baru" : (!isEditing ? `Profil Warga Belajar: ${selectedStudent?.nama}` : `Edit Warga Belajar: ${selectedStudent?.nama}`)}
                 </span>
@@ -1123,8 +1123,8 @@ export default function WargaBelajarManager() {
                 </div>
               )}
 
-              <form onSubmit={handleSave} className="py-4 space-y-6 text-slate-800">
-                <div className="flex flex-col lg:flex-row gap-4">
+              <form onSubmit={handleSave} className="flex flex-col flex-1 min-h-0 text-slate-800">
+                <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-y-auto pr-1 py-4 space-y-6">
 
                   {/* LEFT COLUMN: FORM INPUT PANEL */}
                   <div className="flex-1 lg:min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1.5">
@@ -1436,7 +1436,7 @@ export default function WargaBelajarManager() {
                 </div>
 
                 {/* Footer buttons */}
-                <div className="border-t border-white/10 pt-4 flex items-center justify-end gap-3">
+                <div className="border-t border-white/10 pt-4 mt-3 flex items-center justify-end gap-3 shrink-0">
                   {isAdding ? (
                     <>
                       <Button

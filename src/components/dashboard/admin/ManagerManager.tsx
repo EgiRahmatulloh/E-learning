@@ -864,7 +864,7 @@ export default function ManagerManager() {
           {/* Backdrop Click Closes Popup */}
           <div className="absolute inset-0 cursor-default" onClick={handleCloseForm} />
           
-          <div className="bg-[#00badb] w-full max-w-4xl p-3 sm:p-4 rounded-3xl border-4 border-cyan-400 shadow-2xl relative animate-in slide-in-from-bottom-8 duration-300 text-white select-text">
+          <div className="bg-[#00badb] w-full max-w-4xl max-h-[90vh] flex flex-col p-3 sm:p-4 rounded-3xl border-4 border-cyan-400 shadow-2xl relative animate-in slide-in-from-bottom-8 duration-300 text-white select-text">
 
             {/* Elegant Close Button */}
             <button
@@ -875,13 +875,13 @@ export default function ManagerManager() {
             </button>
 
         {/* PANEL TITLE */}
-        <div className="mb-6 flex justify-between items-center border-b border-white/20 pb-4">
+        <div className="mb-4 pr-10 shrink-0 flex justify-between items-center border-b border-white/20 pb-4">
           <h3 className="bg-[#9c27b0] text-white font-extrabold text-xs px-4 py-1.5 rounded-full uppercase tracking-widest shadow-md">
             TAMPILAN TAMBAH PENGELOLA DAN DETAIL PROFIL
           </h3>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-y-auto pr-1">
 
           {/* FORM INPUT PANEL */}
           <div className="flex-1 lg:min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1.5">
@@ -1193,7 +1193,7 @@ export default function ManagerManager() {
         </div>
 
         {/* BUTTON PANEL */}
-        <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center justify-end gap-3">
+        <div className="mt-3 pt-4 border-t border-white/10 flex flex-wrap items-center justify-end gap-3 shrink-0">
           {isNew && isEditing ? (
             <>
               <Button
