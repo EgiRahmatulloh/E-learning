@@ -118,7 +118,7 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
             </DialogHeader>
           </div>
 
-          <DialogFooter className="mt-4 flex gap-2 w-full sm:justify-center border-t border-slate-100 pt-4 bg-transparent -mx-6 -mb-6 p-6">
+          <DialogFooter className="mt-4 flex gap-2 sm:justify-center border-t border-slate-100 pt-4 bg-transparent -mx-6 -mb-6 p-6">
             <Button
               type="button"
               variant="outline"
