@@ -26,7 +26,7 @@ export default function RoleStatsGrid({ userRole }: RoleStatsGridProps) {
     if (!token) return;
 
     let endpoint = "";
-    if (userRole === "admin") {
+    if (userRole === "admin" || userRole === "super_admin") {
       endpoint = "/api/dashboard-stats";
     } else if (userRole === "tutor") {
       endpoint = "/api/elearning/tutor-stats";
@@ -55,7 +55,7 @@ export default function RoleStatsGrid({ userRole }: RoleStatsGridProps) {
 
   // Role-specific stats
   let roleStats: { label: string; value: string; color: string; status?: string }[] = [];
-  if (userRole === "admin") {
+  if (userRole === "admin" || userRole === "super_admin") {
     roleStats = [
       { label: "JUMLAH TUTOR", value: stats ? String(stats.tutors) : "12", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
       { label: "JUMLAH WARGA BELAJAR", value: stats ? String(stats.students) : "350", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
@@ -68,6 +68,9 @@ export default function RoleStatsGrid({ userRole }: RoleStatsGridProps) {
       { label: "JUMLAH WB PAKET B", value: stats ? String(stats.paketB) : "120", color: "from-cyan-400 to-teal-500", status: "Siswa" },
       { label: "JUMLAH WB PAKET C", value: stats ? String(stats.paketC) : "145", color: "from-cyan-400 to-teal-500", status: "Siswa" },
       { label: "JUMLAH ALUMNI", value: stats ? String(stats.alumni) : "580", color: "from-cyan-400 to-teal-500", status: "Lulus" },
+      { label: "E-LEARNING", value: stats ? String(stats.mapelAktif || 0) : "0", color: "from-indigo-400 to-indigo-500", status: "Aktif" },
+      { label: "E-UJIAN", value: "0", color: "from-orange-400 to-orange-500", status: "Siap" },
+      { label: "E-SPMB", value: "0", color: "from-rose-400 to-rose-500", status: "Buka" },
       { label: "JUMLAH PENGUNJUNG", value: "1.247", color: "from-cyan-500 to-sky-500", status: "Hari Ini" },
     ];
   } else if (userRole === "tutor") {
