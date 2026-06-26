@@ -41,6 +41,8 @@ export function HeaderManager() {
   // Form State
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [originalData, setOriginalData] = useState<{ title: string; status: string; image: string }>({ title: "", status: "", image: "" });
   const [formTitle, setFormTitle] = useState("");
   const [formStatus, setFormStatus] = useState<"AKTIF" | "NON AKTIF">("AKTIF");
   const [formImage, setFormImage] = useState("");
@@ -210,6 +212,7 @@ export function HeaderManager() {
         setSlides(updated);
         setSafeItem(STORAGE_KEY, JSON.stringify(updated));
         toast.success("Slider berhasil dihapus secara lokal!");
+        closeForm();
         return;
       }
 
@@ -225,6 +228,7 @@ export function HeaderManager() {
         if (data.success) {
           toast.success("Slider berhasil dihapus!");
           fetchSliders();
+          closeForm();
         } else {
           toast.error(data.message || "Gagal menghapus data dari server");
         }
@@ -235,6 +239,7 @@ export function HeaderManager() {
           setSlides(updated);
           setSafeItem(STORAGE_KEY, JSON.stringify(updated));
           toast.success("Slider berhasil dihapus secara lokal!");
+          closeForm();
         } else {
           toast.error("Terjadi kesalahan saat menghapus.");
         }
@@ -244,21 +249,26 @@ export function HeaderManager() {
 
   const openAddForm = () => {
     setEditId(null);
+    setOriginalData({ title: "", status: "", image: "" });
     setFormTitle("");
     setFormStatus("AKTIF");
     setFormImage("");
+    setIsEditing(true);
     setIsFormOpen(true);
   };
 
   const openEditForm = (slide: SlideData) => {
     setEditId(slide.id);
+    setOriginalData({ title: slide.title, status: slide.status, image: slide.image });
     setFormTitle(slide.title);
     setFormStatus(slide.status);
     setFormImage(slide.image);
+    setIsEditing(false);
     setIsFormOpen(true);
   };
 
   const closeForm = () => {
+    setIsEditing(false);
     setIsFormOpen(false);
     setEditId(null);
   };
@@ -331,6 +341,7 @@ export function HeaderManager() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
+    if (!isEditing) return;
     const file = e.dataTransfer.files?.[0];
     if (file) {
       processFile(file);
@@ -490,7 +501,7 @@ export function HeaderManager() {
 
               <div className="mb-6">
                 <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                  {editId ? "TAMPILAN EDIT DATA" : "TAMPILAN TAMBAH BARU"}
+                  {editId ? (isEditing ? "TAMPILAN EDIT DATA" : "TAMPILAN DETAIL DATA") : "TAMPILAN TAMBAH BARU"}
                 </span>
               </div>
 
@@ -503,10 +514,11 @@ export function HeaderManager() {
                   <input
                     type="text"
                     required
+                    disabled={!isEditing}
                     placeholder="Masukkan judul slider..."
                     value={formTitle}
                     onChange={(e) => setFormTitle(e.target.value)}
-                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-extrabold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner"
+                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-extrabold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -518,7 +530,8 @@ export function HeaderManager() {
                   <select
                     value={formStatus}
                     onChange={(e) => setFormStatus(e.target.value as "AKTIF" | "NON AKTIF")}
-                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-extrabold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner"
+                    disabled={!isEditing}
+                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-extrabold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <option value="AKTIF">AKTIF (DITAMPILKAN)</option>
                     <option value="NON AKTIF">NON AKTIF (DISEMBUNYIKAN)</option>
@@ -536,8 +549,8 @@ export function HeaderManager() {
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
-                    onClick={() => document.getElementById("file-upload")?.click()}
-                    className={`border-4 border-dashed rounded-xl p-5 text-center transition-all duration-200 cursor-pointer flex flex-col items-center justify-center relative overflow-hidden bg-white/5 ${
+                    onClick={() => { if (isEditing) document.getElementById("file-upload")?.click(); }}
+                    className={`${!isEditing ? "pointer-events-none opacity-60 " : ""}border-4 border-dashed rounded-xl p-5 text-center transition-all duration-200 cursor-pointer flex flex-col items-center justify-center relative overflow-hidden bg-white/5 ${
                       dragOver
                         ? "border-[#9c27b0] bg-white/20 scale-[0.99]"
                         : "border-white/40 hover:border-white/80 hover:bg-white/10"
@@ -548,6 +561,7 @@ export function HeaderManager() {
                       type="file"
                       accept="image/*"
                       onChange={handleFileChange}
+                      disabled={!isEditing}
                       className="hidden"
                     />
 
@@ -597,28 +611,66 @@ export function HeaderManager() {
                   </label>
                   <input
                     type="text"
+                    disabled={!isEditing}
                     placeholder="Masukkan URL gambar..."
                     value={formImage.startsWith("data:") ? "" : formImage}
                     onChange={(e) => setFormImage(e.target.value)}
-                    className="w-full h-9 px-3 text-xs border-0 rounded-lg bg-white/90 font-medium text-slate-800 focus:outline-none focus:bg-white transition-all shadow-inner"
+                    className="w-full h-9 px-3 text-xs border-0 rounded-lg bg-white/90 font-medium text-slate-800 focus:outline-none focus:bg-white transition-all shadow-inner disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
 
-                {/* BUTTON SUBMIT */}
-                <div className="pt-2 text-right">
-                  <Button
-                    type="submit"
-                    disabled={saving || uploading}
-                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-lg cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5 inline-flex"
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
-                      </>
-                    ) : (
-                      "SIMPAN"
-                    )}
-                  </Button>
+                {/* BUTTON PANEL */}
+                <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-3">
+                  {editId && !isEditing ? (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); if (editId) handleDelete(editId); }}
+                        className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all flex items-center gap-1.5"
+                      >
+                        <Trash2 className="h-4 w-4" /> HAPUS
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                      >
+                        <Edit3 className="h-4 w-4" /> EDIT
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          if (editId) {
+                            setFormTitle(originalData.title);
+                            setFormStatus(originalData.status as "AKTIF" | "NON AKTIF");
+                            setFormImage(originalData.image);
+                            setIsEditing(false);
+                          } else {
+                            closeForm();
+                          }
+                        }}
+                        className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                      >
+                        BATAL
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={saving || uploading}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5 inline-flex"
+                      >
+                        {saving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                          </>
+                        ) : (
+                          "SIMPAN"
+                        )}
+                      </Button>
+                    </>
+                  )}
                 </div>
               </form>
             </div>

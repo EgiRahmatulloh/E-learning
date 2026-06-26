@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { parseCSV, downloadCSV, mapCsvRows, parseExcel } from "@/lib/utils";
-import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, GraduationCap, ArrowUpCircle, RefreshCw, List, LayoutGrid, Filter, RotateCcw, Loader2 } from "lucide-react";
+import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, GraduationCap, ArrowUpCircle, RefreshCw, List, LayoutGrid, Filter, RotateCcw, Loader2, Edit3 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
 
@@ -68,6 +68,7 @@ export default function WargaBelajarManager() {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   // Continuation program dialog states
@@ -103,6 +104,8 @@ export default function WargaBelajarManager() {
     foto: "",
     status: "AKTIF",
   });
+
+  const [originalFormData, setOriginalFormData] = useState<Partial<Student>>({});
 
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -300,6 +303,7 @@ export default function WargaBelajarManager() {
   const openAddForm = () => {
     setIsAdding(true);
     setSelectedStudent(null);
+    setOriginalFormData({});
     setFormData({
       nama: "",
       nik: "",
@@ -320,16 +324,19 @@ export default function WargaBelajarManager() {
       foto: "",
       status: "AKTIF",
     });
+    setIsEditing(true);
     setFormOpen(true);
   };
 
   const openEditForm = (student: Student) => {
     setIsAdding(false);
     setSelectedStudent(student);
+    setOriginalFormData({ ...student, password: "" });
     setFormData({
       ...student,
       password: "", // Keep empty to indicate unchanged unless typed
     });
+    setIsEditing(false);
     setFormOpen(true);
   };
 
@@ -1075,12 +1082,12 @@ export default function WargaBelajarManager() {
 
               <div className="mb-6">
                 <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                  {isAdding ? "Tambah Warga Belajar Baru" : `Profil / Edit Warga Belajar: ${selectedStudent?.nama}`}
+                  {isAdding ? "Tambah Warga Belajar Baru" : (!isEditing ? `Profil Warga Belajar: ${selectedStudent?.nama}` : `Edit Warga Belajar: ${selectedStudent?.nama}`)}
                 </span>
               </div>
 
               {/* Special Actions Menu for Promoting / Graduating / Continuing */}
-              {!isAdding && selectedStudent && (
+              {!isAdding && selectedStudent && !isEditing && (
                 <div className="bg-white/10 p-4 rounded-2xl border border-white/10 flex flex-wrap gap-2.5 items-center justify-between mb-4 text-xs font-bold text-white">
                   <div>
                     Menu Aksi Tingkat Kelas & Program Belajar:
@@ -1132,6 +1139,7 @@ export default function WargaBelajarManager() {
                           value={formData.nama || ""}
                           onChange={(e) => setFormData(prev => ({ ...prev, nama: e.target.value }))}
                           className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                          disabled={!isEditing}
                         />
                       </div>
                       <div className="flex flex-col gap-0.5">
@@ -1142,6 +1150,7 @@ export default function WargaBelajarManager() {
                           value={formData.nik || ""}
                           onChange={(e) => setFormData(prev => ({ ...prev, nik: e.target.value }))}
                           className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                          disabled={!isEditing}
                         />
                       </div>
 
@@ -1156,6 +1165,7 @@ export default function WargaBelajarManager() {
                             setFormData(prev => ({ ...prev, program: prog, kelas: kelasList[0] }));
                           }}
                           className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                          disabled={!isEditing}
                         >
                           <option value="PAKET A">PAKET A</option>
                           <option value="PAKET B">PAKET B</option>
@@ -1168,6 +1178,7 @@ export default function WargaBelajarManager() {
                           value={formData.kelas || ""}
                           onChange={(e) => setFormData(prev => ({ ...prev, kelas: e.target.value }))}
                           className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                          disabled={!isEditing}
                         >
                           {(KELAS_BY_PROGRAM[formData.program || "PAKET C"] || []).map((k) => (
                             <option key={k} value={k}>{k}</option>
@@ -1184,6 +1195,7 @@ export default function WargaBelajarManager() {
                           value={formData.nisn || ""}
                           onChange={(e) => setFormData(prev => ({ ...prev, nisn: e.target.value }))}
                           className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                          disabled={!isEditing}
                         />
                       </div>
                       <div className="flex flex-col gap-0.5">
@@ -1194,6 +1206,7 @@ export default function WargaBelajarManager() {
                           value={formData.nis || ""}
                           onChange={(e) => setFormData(prev => ({ ...prev, nis: e.target.value }))}
                           className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                          disabled={!isEditing}
                         />
                       </div>
 
@@ -1205,7 +1218,8 @@ export default function WargaBelajarManager() {
                           placeholder="Contoh: Ciamis, 05-02-2008"
                           value={formData.tempatTglLahir || ""}
                           onChange={(e) => setFormData(prev => ({ ...prev, tempatTglLahir: e.target.value }))}
-                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                          disabled={!isEditing}
                         />
                       </div>
                       <div className="flex flex-col gap-0.5">
@@ -1214,6 +1228,7 @@ export default function WargaBelajarManager() {
                           value={formData.jenisKelamin || "Laki-laki"}
                           onChange={(e) => setFormData(prev => ({ ...prev, jenisKelamin: e.target.value }))}
                           className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                          disabled={!isEditing}
                         >
                           <option value="Laki-laki">Laki-laki</option>
                           <option value="Perempuan">Perempuan</option>
@@ -1229,6 +1244,7 @@ export default function WargaBelajarManager() {
                           value={formData.agama || ""}
                           onChange={(e) => setFormData(prev => ({ ...prev, agama: e.target.value }))}
                           className="w-full h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-850 placeholder-slate-400 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                          disabled={!isEditing}
                         />
                       </div>
                       <div className="flex flex-col gap-0.5">
@@ -1239,6 +1255,7 @@ export default function WargaBelajarManager() {
                           value={formData.email || ""}
                           onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                           className="w-full h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-850 placeholder-slate-400 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                          disabled={!isEditing}
                         />
                       </div>
 
@@ -1251,6 +1268,7 @@ export default function WargaBelajarManager() {
                           onChange={(e) => setFormData(prev => ({ ...prev, alamat: e.target.value }))}
                           className="w-full p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
                           rows={2}
+                          disabled={!isEditing}
                         />
                       </div>
 
@@ -1263,6 +1281,7 @@ export default function WargaBelajarManager() {
                           value={formData.titikLayanan || ""}
                           onChange={(e) => setFormData(prev => ({ ...prev, titikLayanan: e.target.value }))}
                           className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                          disabled={!isEditing}
                         />
                       </div>
                       <div className="flex flex-col gap-0.5">
@@ -1273,6 +1292,7 @@ export default function WargaBelajarManager() {
                           value={formData.noHp || ""}
                           onChange={(e) => setFormData(prev => ({ ...prev, noHp: e.target.value }))}
                           className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                          disabled={!isEditing}
                         />
                       </div>
 
@@ -1285,6 +1305,7 @@ export default function WargaBelajarManager() {
                           value={formData.namaAyah || ""}
                           onChange={(e) => setFormData(prev => ({ ...prev, namaAyah: e.target.value }))}
                           className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                          disabled={!isEditing}
                         />
                       </div>
                       <div className="flex flex-col gap-0.5">
@@ -1295,6 +1316,7 @@ export default function WargaBelajarManager() {
                           value={formData.namaIbu || ""}
                           onChange={(e) => setFormData(prev => ({ ...prev, namaIbu: e.target.value }))}
                           className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                          disabled={!isEditing}
                         />
                       </div>
 
@@ -1310,6 +1332,7 @@ export default function WargaBelajarManager() {
                             value={formData.password || ""}
                             onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                             className="w-full h-9 pl-3 pr-10 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                            disabled={!isEditing}
                           />
                           <button
                             type="button"
@@ -1336,7 +1359,7 @@ export default function WargaBelajarManager() {
                         onDrop={handleDrop}
                         className={`border-2 border-dashed rounded-xl p-2.5 text-center transition-all ${
                           dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
-                        } h-44 flex flex-col justify-center items-center relative overflow-hidden`}
+                        } h-44 flex flex-col justify-center items-center relative overflow-hidden ${!isEditing && "pointer-events-none opacity-60"}`}
                       >
                         {formData.foto ? (
                           <div className="w-full h-full relative group">
@@ -1363,7 +1386,7 @@ export default function WargaBelajarManager() {
                               accept="image/*"
                               onChange={handleFileInput}
                               className="absolute inset-0 opacity-0 cursor-pointer"
-                              disabled={uploading}
+                              disabled={uploading || !isEditing}
                             />
                           </>
                         )}
@@ -1380,6 +1403,7 @@ export default function WargaBelajarManager() {
                         value={formData.foto || ""}
                         onChange={(e) => setFormData((prev) => ({ ...prev, foto: e.target.value }))}
                         className="w-full text-[11px] font-semibold border border-transparent rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-purple-400 focus:outline-none bg-white text-slate-800"
+                        disabled={!isEditing}
                       />
                     </div>
 
@@ -1393,6 +1417,7 @@ export default function WargaBelajarManager() {
                           value={formData.status || "AKTIF"}
                           onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
                           className="w-full h-8 px-2 text-[11px] border-0 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-400 font-bold bg-white text-slate-800"
+                          disabled={!isEditing}
                         >
                           <option value="AKTIF">AKTIF</option>
                           <option value="LULUS">LULUS (ALUMNI)</option>
@@ -1411,31 +1436,80 @@ export default function WargaBelajarManager() {
                 </div>
 
                 {/* Footer buttons */}
-                <div className="border-t border-white/20 pt-4 flex items-center justify-end gap-3">
-                  {!isAdding && selectedStudent && (
-                    <Button
-                      type="button"
-                      onClick={() => handleDelete(selectedStudent.id)}
-                      className="bg-rose-600 hover:bg-rose-700 text-white border-0 font-extrabold text-sm px-6 h-11 rounded-xl cursor-pointer shadow-md shadow-rose-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
-                    >
-                      <Trash2 className="h-4 w-4" /> HAPUS
-                    </Button>
+                <div className="border-t border-white/10 pt-4 flex items-center justify-end gap-3">
+                  {isAdding ? (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={() => setFormOpen(false)}
+                        className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                      >
+                        BATAL
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={saving || uploading}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
+                      >
+                        {saving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4" /> SIMPAN
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  ) : isEditing ? (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          if (Object.keys(originalFormData).length > 0) {
+                            setFormData(originalFormData);
+                          }
+                          setIsEditing(false);
+                        }}
+                        className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                      >
+                        BATAL
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={saving || uploading}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
+                      >
+                        {saving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4" /> SIMPAN
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); if (selectedStudent) handleDelete(selectedStudent.id); }}
+                        className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all flex items-center gap-1.5"
+                      >
+                        <Trash2 className="h-4 w-4" /> HAPUS
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                      >
+                        <Edit3 className="h-4 w-4" /> EDIT
+                      </Button>
+                    </>
                   )}
-                  <Button
-                    type="submit"
-                    disabled={saving || uploading}
-                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4" /> SIMPAN
-                      </>
-                    )}
-                  </Button>
                 </div>
               </form>
             </div>

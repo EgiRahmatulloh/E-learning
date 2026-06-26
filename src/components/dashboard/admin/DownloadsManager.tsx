@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ShieldAlert, Upload, Plus, Trash2, Edit, Save, FileText, Download, X, Filter, RotateCcw, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShieldAlert, Upload, Plus, Trash2, Edit3, Save, FileText, Download, X, Filter, RotateCcw, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
 
@@ -43,6 +43,7 @@ export default function DownloadsManager() {
   const [status, setStatus] = useState("PUBLISH");
   const [tanggalUpload, setTanggalUpload] = useState("");
 
+  const [isEditing, setIsEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -92,6 +93,7 @@ export default function DownloadsManager() {
     setFileUrl("");
     setStatus("PUBLISH");
     setTanggalUpload(new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }));
+    setIsEditing(true);
     setFormOpen(true);
   };
 
@@ -103,6 +105,7 @@ export default function DownloadsManager() {
     setFileUrl(item.fileUrl);
     setStatus(item.status);
     setTanggalUpload(item.tanggalUpload);
+    setIsEditing(false);
     setFormOpen(true);
   };
 
@@ -224,6 +227,7 @@ export default function DownloadsManager() {
       const data = await res.json();
       if (data.success) {
         toast.success("File berhasil dihapus!");
+        setFormOpen(false);
         fetchDownloads();
       } else {
         toast.error("Gagal menghapus file: " + (data.message || ""));
@@ -363,7 +367,7 @@ export default function DownloadsManager() {
                           onClick={() => openEditForm(item)}
                           className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 h-9 px-3.5 rounded-lg font-bold text-xs cursor-pointer flex items-center gap-1.5 shadow-xs transition-all"
                         >
-                          <Edit className="h-3.5 w-3.5 text-blue-600" /> Edit
+                          <Edit3 className="h-3.5 w-3.5 text-blue-600" /> Edit
                         </Button>
                         <Button
                           onClick={() => handleDelete(item.id)}
@@ -427,7 +431,7 @@ export default function DownloadsManager() {
       {formOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setFormOpen(false)} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => { setFormOpen(false); setIsEditing(false); }} />
 
           {/* Form Container */}
           <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-xl animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
@@ -435,7 +439,7 @@ export default function DownloadsManager() {
             <div className="bg-[#00badb] p-6 relative text-white">
               {/* Close Button */}
               <button
-                onClick={() => setFormOpen(false)}
+                onClick={() => { setFormOpen(false); setIsEditing(false); }}
                 className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
@@ -443,7 +447,7 @@ export default function DownloadsManager() {
 
               <div className="mb-6">
                 <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                  {isAdding ? "TAMBAH DOKUMEN BARU" : "EDIT DATA DOKUMEN"}
+                  {isAdding ? "TAMBAH DOKUMEN BARU" : (!isEditing ? "LIHAT DATA DOKUMEN" : "EDIT DATA DOKUMEN")}
                 </span>
               </div>
 
@@ -456,7 +460,8 @@ export default function DownloadsManager() {
                     placeholder="Nama dokumen file, e.g. MODUL SEJARAH KELAS XII"
                     value={namaFile}
                     onChange={(e) => setNamaFile(e.target.value)}
-                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner placeholder-slate-400"
+                    disabled={!isEditing}
+                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner placeholder-slate-400 disabled:opacity-60"
                   />
                 </div>
 
@@ -465,7 +470,8 @@ export default function DownloadsManager() {
                   <select
                     value={kategori}
                     onChange={(e) => setKategori(e.target.value)}
-                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider"
+                    disabled={!isEditing}
+                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider disabled:opacity-60"
                   >
                     {STATIC_CATEGORIES.map((cat) => (
                       <option key={cat} value={cat}>
@@ -481,7 +487,8 @@ export default function DownloadsManager() {
                     <select
                       value={status}
                       onChange={(e) => setStatus(e.target.value)}
-                      className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider"
+                      disabled={!isEditing}
+                      className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider disabled:opacity-60"
                     >
                       <option value="PUBLISH">PUBLISH</option>
                       <option value="DRAFT">DRAFT</option>
@@ -496,7 +503,8 @@ export default function DownloadsManager() {
                       placeholder="e.g. 20 Januari 2020"
                       value={tanggalUpload}
                       onChange={(e) => setTanggalUpload(e.target.value)}
-                      className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner placeholder-slate-400 uppercase tracking-wider"
+                      disabled={!isEditing}
+                      className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner placeholder-slate-400 uppercase tracking-wider disabled:opacity-60"
                     />
                   </div>
                 </div>
@@ -511,7 +519,7 @@ export default function DownloadsManager() {
                     onDrop={handleDrop}
                     className={`border-2 border-dashed rounded-xl p-4 text-center transition-all ${
                       dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
-                    } h-36 flex flex-col justify-center items-center relative overflow-hidden`}
+                    } h-36 flex flex-col justify-center items-center relative overflow-hidden ${!isEditing && "pointer-events-none opacity-60"}`}
                   >
                     {fileUrl ? (
                       <div className="space-y-2 text-white">
@@ -536,7 +544,7 @@ export default function DownloadsManager() {
                         <input
                           type="file"
                           onChange={handleFileInput}
-                          disabled={uploading}
+                          disabled={uploading || !isEditing}
                           className="absolute inset-0 opacity-0 cursor-pointer"
                         />
                       </div>
@@ -550,26 +558,80 @@ export default function DownloadsManager() {
                     placeholder="Masukkan URL berkas..."
                     value={fileUrl}
                     onChange={(e) => setFileUrl(e.target.value)}
-                    className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white text-slate-800 mt-2"
+                    disabled={!isEditing}
+                    className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white text-slate-800 mt-2 disabled:opacity-60"
                   />
                 </div>
 
-                <div className="flex justify-end gap-2 pt-4 border-t border-white/20">
-                  <Button
-                    type="submit"
-                    disabled={uploading || saving}
-                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" /> SIMPAN
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4" /> Simpan
-                      </>
-                    )}
-                  </Button>
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                  {isAdding ? (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={() => { setFormOpen(false); setIsEditing(false); }}
+                        className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                      >
+                        BATAL
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={uploading || saving}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
+                      >
+                        {saving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" /> SIMPAN
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4" /> SIMPAN
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  ) : isEditing ? (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={() => setIsEditing(false)}
+                        className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                      >
+                        BATAL
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={uploading || saving}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
+                      >
+                        {saving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" /> SIMPAN
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4" /> SIMPAN
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); if (selectedItem) handleDelete(selectedItem.id); }}
+                        className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all flex items-center gap-1.5"
+                      >
+                        <Trash2 size={15} /> HAPUS
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                      >
+                        <Edit3 size={15} /> EDIT
+                      </Button>
+                    </>
+                  )}
                 </div>
               </form>
             </div>

@@ -6,6 +6,7 @@ import {
   Plus,
   Trash2,
   Save,
+  Edit3,
   X,
   List,
   LayoutGrid,
@@ -79,7 +80,9 @@ export default function RombelManager() {
   // Add/Edit form
   const [formOpen, setFormOpen] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ nama: "", waliKelasId: null as number | null });
+  const [originalFormData, setOriginalFormData] = useState<{ nama: string; waliKelasId: number | null }>({ nama: "", waliKelasId: null });
 
   // Add students modal
   const [addStudentsOpen, setAddStudentsOpen] = useState(false);
@@ -198,12 +201,16 @@ export default function RombelManager() {
   // ==========================================
   const openAddForm = () => {
     setIsAdding(true);
+    setIsEditing(true);
     setFormData({ nama: "", waliKelasId: null });
+    setOriginalFormData({ nama: "", waliKelasId: null });
     setFormOpen(true);
   };
 
   const openEditForm = (rombel: Rombel) => {
     setIsAdding(false);
+    setIsEditing(false);
+    setOriginalFormData({ nama: rombel.nama, waliKelasId: rombel.waliKelasId });
     setFormData({ nama: rombel.nama, waliKelasId: rombel.waliKelasId });
     setSelectedRombel(rombel);
     setFormOpen(true);
@@ -233,6 +240,7 @@ export default function RombelManager() {
       const data = await res.json();
       if (data.success) {
         toast.success(isAdding ? "Rombel berhasil dibuat" : "Rombel berhasil diperbarui");
+        setIsEditing(false);
         setFormOpen(false);
         fetchRombels();
       } else {
@@ -269,6 +277,8 @@ export default function RombelManager() {
           setSelectedRombel(null);
           setDetailStudents([]);
         }
+        setFormOpen(false);
+        setIsEditing(false);
       } else {
         toast.error(data.message || "Gagal menghapus");
       }
@@ -793,7 +803,7 @@ export default function RombelManager() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4">
             <div className="flex items-center justify-between p-5 border-b border-slate-100">
               <h3 className="text-lg font-black text-slate-800">
-                {isAdding ? "Tambah Rombel Baru" : "Edit Rombel"}
+                {isAdding ? "Tambah Rombel Baru" : !isEditing ? "Detail Rombel" : "Edit Rombel"}
               </h3>
               <button
                 onClick={() => setFormOpen(false)}
@@ -813,7 +823,8 @@ export default function RombelManager() {
                   value={formData.nama}
                   onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
                   placeholder="Contoh: 10A, 10B, 11A"
-                  className="w-full h-10 px-3 text-xs font-bold border-2 border-white rounded-xl bg-slate-50 focus:bg-white focus:border-[#00badb] outline-none transition-all"
+                  disabled={!isEditing}
+                  className="w-full h-10 px-3 text-xs font-bold border-2 border-white rounded-xl bg-slate-50 focus:bg-white focus:border-[#00badb] outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -830,7 +841,8 @@ export default function RombelManager() {
                       waliKelasId: e.target.value ? Number(e.target.value) : null,
                     })
                   }
-                  className="w-full h-10 px-3 text-xs font-bold border-2 border-white rounded-xl bg-slate-50 focus:bg-white focus:border-[#00badb] outline-none transition-all"
+                  disabled={!isEditing}
+                  className="w-full h-10 px-3 text-xs font-bold border-2 border-white rounded-xl bg-slate-50 focus:bg-white focus:border-[#00badb] outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="">-- Pilih Tutor --</option>
                   {tutors.map((t) => (
@@ -841,25 +853,68 @@ export default function RombelManager() {
                 </select>
               </div>
             </div>
-            <div className="p-5 border-t border-slate-100 flex justify-end gap-2">
-              <Button
-                onClick={() => setFormOpen(false)}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold text-xs px-4 py-2 rounded-xl"
-              >
-                BATAL
-              </Button>
-              <Button
-                onClick={handleSave}
-                disabled={saving}
-                className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2 rounded-xl shadow-md shadow-purple-200/40 flex items-center gap-1.5 disabled:opacity-50"
-              >
-                {saving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-                {isAdding ? "BUAT" : "SIMPAN"}
-              </Button>
+            <div className="p-5 border-t border-white/10 flex justify-end gap-3">
+              {isAdding ? (
+                <>
+                  <Button
+                    onClick={() => { setFormOpen(false); setIsEditing(false); }}
+                    className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                  >
+                    BATAL
+                  </Button>
+                  <Button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
+                  >
+                    {saving ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                    BUAT
+                  </Button>
+                </>
+              ) : !isEditing ? (
+                <>
+                  <Button
+                    onClick={(e) => { e.preventDefault(); if(selectedRombel) handleDelete(selectedRombel); }}
+                    className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all flex items-center gap-1.5"
+                  >
+                    <Trash2 className="h-4 w-4" /> HAPUS
+                  </Button>
+                  <Button
+                    onClick={() => setIsEditing(true)}
+                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                  >
+                    <Edit3 className="h-4 w-4" /> EDIT
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    onClick={() => {
+                      setFormData(originalFormData);
+                      setIsEditing(false);
+                    }}
+                    className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                  >
+                    BATAL
+                  </Button>
+                  <Button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
+                  >
+                    {saving ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                    SIMPAN
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -60,6 +60,8 @@ export default function NewsManager() {
   
   // News Form States
   const [editId, setEditId] = useState<number | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [originalData, setOriginalData] = useState<{ judul: string; kategori: string; tanggalPosting: string; status: string; foto: string; konten: string }>({ judul: "", kategori: "", tanggalPosting: "", status: "", foto: "", konten: "" });
   const [judul, setJudul] = useState("");
   const [kategori, setKategori] = useState("");
   const [tanggalPosting, setTanggalPosting] = useState("");
@@ -135,17 +137,20 @@ export default function NewsManager() {
     setFoto("");
     setKonten("");
     setEditId(null);
+    setIsEditing(false);
     setNewsModalVisible(false);
   };
 
   const handleEditClick = (item: News) => {
     setEditId(item.id);
+    setOriginalData({ judul: item.judul, kategori: item.kategori, tanggalPosting: item.tanggalPosting, status: item.status, foto: item.foto, konten: item.konten });
     setJudul(item.judul);
     setKategori(item.kategori);
     setTanggalPosting(item.tanggalPosting);
     setStatus(item.status);
     setFoto(item.foto);
     setKonten(item.konten);
+    setIsEditing(false);
     setNewsModalVisible(true);
   };
 
@@ -394,6 +399,8 @@ export default function NewsManager() {
             <Button
               onClick={() => {
                 resetNewsForm();
+                setOriginalData({ judul: "", kategori: "", tanggalPosting: "", status: "", foto: "", konten: "" });
+                setIsEditing(true);
                 setNewsModalVisible(true);
               }}
               className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
@@ -552,7 +559,8 @@ export default function NewsManager() {
                     value={judul}
                     onChange={(e) => setJudul(e.target.value)}
                     placeholder="Masukkan judul berita"
-                    className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                    disabled={!isEditing}
+                    className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -565,7 +573,8 @@ export default function NewsManager() {
                     <select
                       value={kategori}
                       onChange={(e) => setKategori(e.target.value)}
-                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                      disabled={!isEditing}
+                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       <option value="">-- PILIH KATEGORI --</option>
                       {categories.map((cat) => (
@@ -583,7 +592,8 @@ export default function NewsManager() {
                     <select
                       value={status}
                       onChange={(e) => setStatus(e.target.value)}
-                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                      disabled={!isEditing}
+                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       <option value="PUBLISH">PUBLISH</option>
                       <option value="DRAFT">DRAFT</option>
@@ -600,7 +610,8 @@ export default function NewsManager() {
                     type="text"
                     value={tanggalPosting}
                     onChange={(e) => setTanggalPosting(e.target.value)}
-                    className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                    disabled={!isEditing}
+                    className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -614,7 +625,8 @@ export default function NewsManager() {
                     value={konten}
                     onChange={(e) => setKonten(e.target.value)}
                     placeholder="Tuliskan berita lengkap..."
-                    className="w-full p-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner resize-none leading-relaxed"
+                    disabled={!isEditing}
+                    className="w-full p-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner resize-none leading-relaxed disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -629,11 +641,12 @@ export default function NewsManager() {
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => {
                     e.preventDefault();
+                    if (!isEditing) return;
                     const file = e.dataTransfer.files?.[0];
                     if (file) processUpload(file);
                   }}
-                  onClick={() => document.getElementById("news-file-upload")?.click()}
-                  className="w-full aspect-square border-4 border-dashed border-white/60 hover:border-white rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden transition-all text-center bg-cyan-300/40 hover:bg-cyan-350/50 cursor-pointer"
+                  onClick={() => { if (isEditing) document.getElementById("news-file-upload")?.click(); }}
+                  className={`${!isEditing ? "pointer-events-none opacity-60 " : ""}w-full aspect-square border-4 border-dashed border-white/60 hover:border-white rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden transition-all text-center bg-cyan-300/40 hover:bg-cyan-350/50 cursor-pointer`}
                 >
                   <input
                     id="news-file-upload"
@@ -688,38 +701,66 @@ export default function NewsManager() {
                     placeholder="Masukkan URL gambar..."
                     value={foto}
                     onChange={(e) => setFoto(e.target.value)}
-                    className="w-full text-xs font-semibold border-none rounded-lg px-3 py-2 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    disabled={!isEditing}
+                    className="w-full text-xs font-semibold border-none rounded-lg px-3 py-2 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
 
               {/* ACTION BUTTONS */}
               <div className="col-span-1 md:col-span-4 pt-4 border-t border-white/10 flex items-center justify-end gap-3">
-                <Button
-                  type="button"
-                  onClick={resetNewsForm}
-                  disabled={saving}
-                  className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
-                >
-                  BATAL
-                </Button>
-                
-                <Button
-                  type="button"
-                  onClick={handleSaveNews}
-                  disabled={saving || uploading}
-                  className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4" /> SIMPAN
-                    </>
-                  )}
-                </Button>
+                {isEditing ? (
+                  <>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        setJudul(originalData.judul);
+                        setKategori(originalData.kategori);
+                        setTanggalPosting(originalData.tanggalPosting);
+                        setStatus(originalData.status);
+                        setFoto(originalData.foto);
+                        setKonten(originalData.konten);
+                        setIsEditing(false);
+                      }}
+                      className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                    >
+                      BATAL
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleSaveNews}
+                      disabled={saving || uploading}
+                      className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4" /> SIMPAN
+                        </>
+                      )}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      onClick={() => { if (editId !== null) handleDeleteNewsClick(editId); }}
+                      className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all flex items-center gap-1.5"
+                    >
+                      <Trash2 className="h-4 w-4" /> HAPUS
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => setIsEditing(true)}
+                      className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                    >
+                      <Edit3 className="h-4 w-4" /> EDIT
+                    </Button>
+                  </>
+                )}
               </div>
             </form>
           </div>

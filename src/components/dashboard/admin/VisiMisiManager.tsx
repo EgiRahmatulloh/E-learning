@@ -33,7 +33,7 @@ const setSafeItem = (key: string, value: string) => {
 
 export default function VisiMisiManager() {
   const [data, setData] = useState<VisionMissionData>(DEFAULT_DATA);
-  const [isLocked, setIsLocked] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const fetchVisionMission = useCallback(async () => {
@@ -93,7 +93,7 @@ export default function VisiMisiManager() {
       const resData = await res.json();
       if (resData.success) {
         toast.success("Visi dan Misi berhasil disimpan!");
-        setIsLocked(true);
+        setIsEditing(false);
         fetchVisionMission();
         return;
       } else {
@@ -113,14 +113,14 @@ export default function VisiMisiManager() {
       try {
         setSafeItem(STORAGE_KEY, JSON.stringify(data));
         toast.success("Visi dan Misi disimpan secara lokal (Offline)!");
-        setIsLocked(true);
+        setIsEditing(false);
       } catch (e: any) {
         if (e?.name === "QuotaExceededError" || e?.name === "NS_ERROR_DOM_QUOTA_REACHED") {
           toast.error("⚠️ Offline: Gagal menyimpan karena kuota penyimpanan lokal penuh.");
         } else {
           toast.error("⚠️ Offline: Gagal menyimpan secara lokal.");
         }
-        setIsLocked(false);
+        setIsEditing(true);
       }
     }
   };
@@ -150,7 +150,7 @@ export default function VisiMisiManager() {
             </label>
             <textarea
               rows={4}
-              disabled={isLocked}
+              disabled={!isEditing}
               value={data.visi}
               onChange={(e) => handleFieldChange("visi", e.target.value)}
               placeholder="Masukkan visi lembaga..."
@@ -165,7 +165,7 @@ export default function VisiMisiManager() {
             </label>
             <textarea
               rows={8}
-              disabled={isLocked}
+              disabled={!isEditing}
               value={data.misi}
               onChange={(e) => handleFieldChange("misi", e.target.value)}
               placeholder="Masukkan misi lembaga..."
@@ -174,12 +174,12 @@ export default function VisiMisiManager() {
           </div>
 
           {/* BUTTON EDIT / SIMPAN */}
-          <div className="pt-6 flex items-center justify-end gap-4">
-            {isLocked ? (
+          <div className="border-t border-white/10 pt-6 flex items-center justify-end gap-3">
+            {!isEditing ? (
               <Button
                 type="button"
-                onClick={() => setIsLocked(false)}
-                className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-200 uppercase tracking-widest flex items-center gap-2 transition-all active:scale-95"
+                onClick={() => setIsEditing(true)}
+                className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
               >
                 <Edit3 className="h-4 w-4" /> EDIT
               </Button>
@@ -189,9 +189,9 @@ export default function VisiMisiManager() {
                   type="button"
                   onClick={() => {
                     fetchVisionMission();
-                    setIsLocked(true);
+                    setIsEditing(false);
                   }}
-                  className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold text-xs px-8 h-11 rounded-full cursor-pointer uppercase tracking-widest transition-all active:scale-95"
+                  className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                 >
                   BATAL
                 </Button>
@@ -199,7 +199,7 @@ export default function VisiMisiManager() {
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-full cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-2 transition-all active:scale-95"
+                  className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
                 >
                   {saving ? (
                     <>

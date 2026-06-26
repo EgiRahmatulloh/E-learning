@@ -36,6 +36,7 @@ export default function FacilitiesManager() {
   // Form states
   const [formVisible, setFormVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [nama, setNama] = useState("");
   const [keterangan, setKeterangan] = useState("");
   const [foto, setFoto] = useState("");
@@ -73,6 +74,7 @@ export default function FacilitiesManager() {
     setKeterangan("");
     setFoto("");
     setEditId(null);
+    setIsEditing(false);
     setFormVisible(false);
   };
 
@@ -81,6 +83,7 @@ export default function FacilitiesManager() {
     setNama(item.nama);
     setKeterangan(item.keterangan);
     setFoto(item.foto);
+    setIsEditing(false);
     setFormVisible(true);
   };
 
@@ -333,6 +336,7 @@ export default function FacilitiesManager() {
             <Button
               onClick={() => {
                 resetForm();
+                setIsEditing(true);
                 setFormVisible(true);
               }}
               className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
@@ -449,7 +453,8 @@ export default function FacilitiesManager() {
                     value={nama}
                     onChange={(e) => setNama(e.target.value)}
                     placeholder="Masukkan nama sarana/fasilitas (Contoh: Ruang Belajar)"
-                    className="w-full h-11 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                    disabled={!isEditing}
+                    className="w-full h-11 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -463,7 +468,8 @@ export default function FacilitiesManager() {
                     value={keterangan}
                     onChange={(e) => setKeterangan(e.target.value)}
                     placeholder="Masukkan keterangan lengkap sarana dan fasilitas..."
-                    className="w-full p-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner resize-none leading-relaxed"
+                    disabled={!isEditing}
+                    className="w-full p-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner resize-none leading-relaxed disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -538,37 +544,58 @@ export default function FacilitiesManager() {
                     placeholder="Masukkan URL foto..."
                     value={foto}
                     onChange={(e) => setFoto(e.target.value)}
-                    className="w-full text-xs font-semibold border-none rounded-lg px-3 py-2 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    disabled={!isEditing}
+                    className="w-full text-xs font-semibold border-none rounded-lg px-3 py-2 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
 
               {/* ACTION BUTTONS */}
               <div className="col-span-1 md:col-span-4 pt-4 border-t border-white/10 flex items-center justify-end gap-3">
-                <Button
-                  type="button"
-                  onClick={resetForm}
-                  className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
-                >
-                  BATAL
-                </Button>
-                
-                <Button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={saving || uploading}
-                  className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4" /> SIMPAN
-                    </>
-                  )}
-                </Button>
+                {isEditing ? (
+                  <>
+                    <Button
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                    >
+                      BATAL
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleSave}
+                      disabled={saving || uploading}
+                      className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4" /> SIMPAN
+                        </>
+                      )}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      onClick={() => { if (editId !== null) handleDeleteClick(editId); }}
+                      className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all flex items-center gap-1.5"
+                    >
+                      <Trash2 className="h-4 w-4" /> HAPUS
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => setIsEditing(true)}
+                      className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                    >
+                      <Edit3 className="h-4 w-4" /> EDIT
+                    </Button>
+                  </>
+                )}
               </div>
             </form>
           </div>

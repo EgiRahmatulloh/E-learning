@@ -43,6 +43,8 @@ export default function GalleryManager() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [originalData, setOriginalData] = useState<{ namaFile: string; kategori: string; tanggalPosting: string; foto: string; status: string }>({ namaFile: "", kategori: "", tanggalPosting: "", foto: "", status: "" });
 
   // Form inputs
   const [namaFile, setNamaFile] = useState("");
@@ -79,26 +81,31 @@ export default function GalleryManager() {
   const selectItem = (item: GalleryItem) => {
     setIsAdding(false);
     setSelectedId(item.id);
+    setOriginalData({ namaFile: item.namaFile, kategori: item.kategori, tanggalPosting: item.tanggalPosting, foto: item.foto, status: item.status });
     setNamaFile(item.namaFile);
     setKategori(item.kategori);
     setTanggalPosting(item.tanggalPosting);
     setFoto(item.foto);
     setStatus(item.status);
+    setIsEditing(false);
     setIsFormOpen(true);
   };
 
   const startAdd = () => {
     setIsAdding(true);
     setSelectedId(null);
+    setOriginalData({ namaFile: "", kategori: "", tanggalPosting: "", foto: "", status: "" });
     setNamaFile("");
     setKategori(GALLERY_CATEGORIES[0]);
     setTanggalPosting(new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }).toUpperCase());
     setFoto("");
     setStatus("PUBLISH");
+    setIsEditing(true);
     setIsFormOpen(true);
   };
 
   const closeForm = () => {
+    setIsEditing(false);
     setIsFormOpen(false);
     setSelectedId(null);
     setIsAdding(false);
@@ -426,7 +433,7 @@ export default function GalleryManager() {
 
               <div className="mb-6">
                 <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                  {isAdding ? "TAMBAH FOTO GALERI" : "EDIT FOTO GALERI"}
+                  {isAdding ? "TAMBAH FOTO GALERI" : (!isEditing ? "LIHAT FOTO GALERI" : "EDIT FOTO GALERI")}
                 </span>
               </div>
 
@@ -437,7 +444,8 @@ export default function GalleryManager() {
                   <input
                     type="text"
                     required
-                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner placeholder-slate-400"
+                    disabled={!isEditing}
+                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner placeholder-slate-400 disabled:opacity-60 disabled:cursor-not-allowed"
                     placeholder="Contoh: Dokumentasi Ujian CBT 2024"
                     value={namaFile}
                     onChange={(e) => setNamaFile(e.target.value)}
@@ -448,7 +456,8 @@ export default function GalleryManager() {
                 <div className="space-y-1.5">
                   <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">Kategori Kegiatan</label>
                   <select
-                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider"
+                    disabled={!isEditing}
+                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed"
                     value={kategori}
                     onChange={(e) => setKategori(e.target.value)}
                   >
@@ -464,7 +473,8 @@ export default function GalleryManager() {
                   <input
                     type="text"
                     required
-                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner placeholder-slate-400 uppercase tracking-wider"
+                    disabled={!isEditing}
+                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner placeholder-slate-400 uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed"
                     placeholder="Contoh: 20 JANUARI 2024"
                     value={tanggalPosting}
                     onChange={(e) => setTanggalPosting(e.target.value)}
@@ -475,7 +485,8 @@ export default function GalleryManager() {
                 <div className="space-y-1.5">
                   <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">Status</label>
                   <select
-                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider"
+                    disabled={!isEditing}
+                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed"
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
                   >
@@ -496,7 +507,7 @@ export default function GalleryManager() {
                     onClick={() => fileInputRef.current?.click()}
                     className={`relative w-full rounded-xl border-2 border-dashed cursor-pointer transition flex flex-col items-center justify-center text-center overflow-hidden min-h-[110px] ${
                       dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
-                    }`}
+                    } ${!isEditing && "pointer-events-none opacity-60"}`}
                   >
                     {uploading ? (
                       <div className="py-6 flex flex-col items-center gap-2">
@@ -521,7 +532,8 @@ export default function GalleryManager() {
                   </p>
                   <input
                     type="text"
-                    className="w-full mt-2 text-[10px] font-mono border border-transparent rounded-lg px-2.5 py-2 bg-white text-slate-800 focus:outline-none"
+                    disabled={!isEditing}
+                    className="w-full mt-2 text-[10px] font-mono border border-transparent rounded-lg px-2.5 py-2 bg-white text-slate-800 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                     value={foto}
                     onChange={(e) => setFoto(e.target.value)}
                     placeholder="Masukkan URL foto..."
@@ -529,30 +541,81 @@ export default function GalleryManager() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center gap-3 pt-2 justify-end">
-                  <Button
-                    type="submit"
-                    disabled={saving || uploading}
-                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" /> SIMPAN
-                      </>
-                    ) : (
-                      <>
-                        <Save size={15} /> SIMPAN
-                      </>
-                    )}
-                  </Button>
-                  {selectedId && (
-                    <Button
-                      type="button"
-                      onClick={() => handleDelete()}
-                      className="bg-rose-600 hover:bg-rose-700 text-white border-0 font-extrabold text-sm px-6 h-11 rounded-xl cursor-pointer shadow-md shadow-rose-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
-                    >
-                      <Trash2 size={15} /> HAPUS
-                    </Button>
+                <div className="border-t border-white/10 pt-4 flex items-center justify-end gap-3">
+                  {isAdding ? (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={closeForm}
+                        className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                      >
+                        BATAL
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={saving || uploading}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
+                      >
+                        {saving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" /> SIMPAN
+                          </>
+                        ) : (
+                          <>
+                            <Save size={15} /> SIMPAN
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  ) : isEditing ? (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setNamaFile(originalData.namaFile);
+                          setKategori(originalData.kategori);
+                          setTanggalPosting(originalData.tanggalPosting);
+                          setFoto(originalData.foto);
+                          setStatus(originalData.status);
+                          setIsEditing(false);
+                        }}
+                        className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                      >
+                        BATAL
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={saving || uploading}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
+                      >
+                        {saving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" /> SIMPAN
+                          </>
+                        ) : (
+                          <>
+                            <Save size={15} /> SIMPAN
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); handleDelete(); }}
+                        className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all flex items-center gap-1.5"
+                      >
+                        <Trash2 size={15} /> HAPUS
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                      >
+                        <Edit3 size={15} /> EDIT
+                      </Button>
+                    </>
                   )}
                 </div>
               </form>

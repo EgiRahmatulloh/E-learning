@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, Plus, Trash2, Edit, Save, HelpCircle, Search, X, Filter, RotateCcw, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Upload, Plus, Trash2, Edit3, Save, HelpCircle, Search, X, Filter, RotateCcw, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
 
@@ -29,7 +29,8 @@ export default function ProductsManager() {
 
   // Form Dialog States
   const [formOpen, setFormOpen] = useState(false);
-  const [isAdding, setIsAdding] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ProductItem | null>(null);
 
   // Form inputs
@@ -41,6 +42,8 @@ export default function ProductsManager() {
   const [harga, setHarga] = useState<number>(0);
   const [status, setStatus] = useState("AKTIF");
   const [gambar, setGambar] = useState("");
+
+  const [originalProduct, setOriginalProduct] = useState<ProductItem | null>(null);
 
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -84,7 +87,9 @@ export default function ProductsManager() {
 
   const openAddForm = () => {
     setIsAdding(true);
+    setIsEditing(true);
     setSelectedItem(null);
+    setOriginalProduct(null);
     setNamaProduk("");
     setDeskripsi("");
     setNoHp("");
@@ -98,7 +103,9 @@ export default function ProductsManager() {
 
   const openEditForm = (item: ProductItem) => {
     setIsAdding(false);
+    setIsEditing(false);
     setSelectedItem(item);
+    setOriginalProduct(item);
     setNamaProduk(item.namaProduk);
     setDeskripsi(item.deskripsi);
     setNoHp(item.noHp);
@@ -236,6 +243,7 @@ export default function ProductsManager() {
       const data = await res.json();
       if (data.success) {
         toast.success("Produk berhasil dihapus");
+        setFormOpen(false);
         fetchProducts();
       } else {
         toast.error("Gagal menghapus produk: " + (data.message || "Error tidak diketahui"));
@@ -399,7 +407,7 @@ export default function ProductsManager() {
                           onClick={() => openEditForm(item)}
                           className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 h-9 px-3.5 rounded-lg font-bold text-xs cursor-pointer flex items-center gap-1.5 shadow-xs transition-all"
                         >
-                          <Edit className="h-3.5 w-3.5 text-blue-600" /> Edit
+                          <Edit3 className="h-3.5 w-3.5 text-blue-600" /> Edit
                         </Button>
                         <Button
                           onClick={() => handleDelete(item.id)}
@@ -462,7 +470,7 @@ export default function ProductsManager() {
 
               <div className="mb-6">
                 <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                  {isAdding ? "TAMBAH PRODUK BARU" : "EDIT PRODUK"}
+                  {isAdding ? "TAMBAH PRODUK BARU" : (!isEditing ? "LIHAT PRODUK" : "EDIT PRODUK")}
                 </span>
               </div>
 
@@ -473,7 +481,8 @@ export default function ProductsManager() {
                     <input
                       type="text"
                       required
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none"
+                      disabled={!isEditing}
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="Contoh: Keset Rajut Cantik"
                       value={namaProduk}
                       onChange={(e) => setNamaProduk(e.target.value)}
@@ -484,7 +493,8 @@ export default function ProductsManager() {
                     <input
                       type="text"
                       required
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none"
+                      disabled={!isEditing}
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="Contoh: Aceng"
                       value={penjual}
                       onChange={(e) => setPenjual(e.target.value)}
@@ -499,7 +509,8 @@ export default function ProductsManager() {
                       type="number"
                       required
                       min={0}
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none"
+                      disabled={!isEditing}
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="Contoh: 15000"
                       value={harga}
                       onChange={(e) => setHarga(Number(e.target.value))}
@@ -510,7 +521,8 @@ export default function ProductsManager() {
                     <input
                       type="text"
                       required
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none"
+                      disabled={!isEditing}
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="Contoh: Buah, Paket, Kg"
                       value={satuan}
                       onChange={(e) => setSatuan(e.target.value)}
@@ -521,7 +533,8 @@ export default function ProductsManager() {
                     <input
                       type="text"
                       required
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none"
+                      disabled={!isEditing}
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="Contoh: 0812..."
                       value={noHp}
                       onChange={(e) => setNoHp(e.target.value)}
@@ -534,7 +547,8 @@ export default function ProductsManager() {
                   <textarea
                     required
                     rows={2}
-                    className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none resize-none"
+                    disabled={!isEditing}
+                    className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none resize-none disabled:opacity-60 disabled:cursor-not-allowed"
                     placeholder="Tuliskan deskripsi lengkap produk hasil karya di sini..."
                     value={deskripsi}
                     onChange={(e) => setDeskripsi(e.target.value)}
@@ -545,7 +559,8 @@ export default function ProductsManager() {
                   <div>
                     <label className="block text-xs font-black tracking-wider uppercase text-cyan-50 mb-1">Status Keaktifan</label>
                     <select
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none"
+                      disabled={!isEditing}
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                       value={status}
                       onChange={(e) => setStatus(e.target.value)}
                     >
@@ -557,7 +572,8 @@ export default function ProductsManager() {
                     <label className="block text-xs font-black tracking-wider uppercase text-cyan-50 mb-1">URL / Link Gambar</label>
                     <input
                       type="text"
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                      disabled={!isEditing}
+                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="Masukkan URL gambar..."
                       value={gambar}
                       onChange={(e) => setGambar(e.target.value)}
@@ -569,7 +585,7 @@ export default function ProductsManager() {
                 <div
                   className={`border-2 border-dashed rounded-xl p-3 text-center transition cursor-pointer text-xs ${
                     dragActive ? "border-yellow-300 bg-white/20" : "border-white/40 hover:border-white hover:bg-white/10"
-                  }`}
+                  } ${!isEditing && "pointer-events-none opacity-60"}`}
                   onDragEnter={handleDrag}
                   onDragOver={handleDrag}
                   onDragLeave={handleDrag}
@@ -594,22 +610,87 @@ export default function ProductsManager() {
                   <span className="text-[10px] text-cyan-100 block mt-0.5">Mendukung format JPG, PNG, WEBP (Maksimal 5MB)</span>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/20">
-                  <Button
-                    type="submit"
-                    disabled={saving || uploading}
-                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
-                      </>
-                    ) : (
-                      <>
-                        <Save size={15} /> SIMPAN
-                      </>
-                    )}
-                  </Button>
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                  {isAdding ? (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={() => setFormOpen(false)}
+                        className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                      >
+                        BATAL
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={saving || uploading}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
+                      >
+                        {saving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                          </>
+                        ) : (
+                          <>
+                            <Save size={15} /> SIMPAN
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  ) : isEditing ? (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          if (originalProduct) {
+                            setNamaProduk(originalProduct.namaProduk);
+                            setDeskripsi(originalProduct.deskripsi);
+                            setNoHp(originalProduct.noHp);
+                            setPenjual(originalProduct.penjual);
+                            setSatuan(originalProduct.satuan);
+                            setHarga(originalProduct.harga);
+                            setStatus(originalProduct.status);
+                            setGambar(originalProduct.gambar);
+                          }
+                          setIsEditing(false);
+                        }}
+                        className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                      >
+                        BATAL
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={saving || uploading}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
+                      >
+                        {saving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                          </>
+                        ) : (
+                          <>
+                            <Save size={15} /> SIMPAN
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); if (selectedItem) handleDelete(selectedItem.id); }}
+                        className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all flex items-center gap-1.5"
+                      >
+                        <Trash2 size={15} /> HAPUS
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                      >
+                        <Edit3 size={15} /> EDIT
+                      </Button>
+                    </>
+                  )}
                 </div>
               </form>
             </div>

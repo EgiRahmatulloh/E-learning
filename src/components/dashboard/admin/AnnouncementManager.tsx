@@ -32,6 +32,7 @@ export default function AnnouncementManager() {
   // Form State
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [formText, setFormText] = useState("");
   const [formDate, setFormDate] = useState("");
   const [formStatus, setFormStatus] = useState<"AKTIF" | "TIDAK AKTIF">("AKTIF");
@@ -149,6 +150,7 @@ export default function AnnouncementManager() {
         if (res.ok && data.success) {
           toast.success("Pengumuman berhasil dihapus!");
           fetchAnnouncements();
+          closeForm();
         } else {
           toast.error(data.message || "Gagal menghapus data dari server");
         }
@@ -169,6 +171,7 @@ export default function AnnouncementManager() {
     const today = `${yyyy}-${mm}-${dd}`;
     setFormDate(today);
     setFormStatus("AKTIF");
+    setIsEditing(true);
     setIsFormOpen(true);
   };
 
@@ -184,10 +187,12 @@ export default function AnnouncementManager() {
     }
     setFormDate(formattedInputDate);
     setFormStatus(item.status);
+    setIsEditing(false);
     setIsFormOpen(true);
   };
 
   const closeForm = () => {
+    setIsEditing(false);
     setIsFormOpen(false);
     setEditId(null);
   };
@@ -335,7 +340,7 @@ export default function AnnouncementManager() {
 
               <div className="mb-6">
                 <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                  {editId ? "TAMPILAN EDIT DATA" : "TAMPILAN TAMBAH BARU"}
+                  {editId ? (isEditing ? "TAMPILAN EDIT DATA" : "TAMPILAN DETAIL DATA") : "TAMPILAN TAMBAH BARU"}
                 </span>
               </div>
 
@@ -351,7 +356,8 @@ export default function AnnouncementManager() {
                     placeholder="Masukkan teks pengumuman penting..."
                     value={formText}
                     onChange={(e) => setFormText(e.target.value)}
-                    className="w-full h-full p-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner resize-none leading-relaxed placeholder-slate-400"
+                    disabled={!isEditing}
+                    className="w-full h-full p-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner resize-none leading-relaxed placeholder-slate-400 disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -365,7 +371,8 @@ export default function AnnouncementManager() {
                     required
                     value={formDate}
                     onChange={(e) => setFormDate(e.target.value)}
-                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-extrabold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner uppercase tracking-wider"
+                    disabled={!isEditing}
+                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-extrabold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -377,28 +384,57 @@ export default function AnnouncementManager() {
                   <select
                     value={formStatus}
                     onChange={(e) => setFormStatus(e.target.value as "AKTIF" | "TIDAK AKTIF")}
-                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-extrabold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider"
+                    disabled={!isEditing}
+                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-extrabold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <option value="AKTIF">YA (AKTIFKAN SEKARANG)</option>
                     <option value="TIDAK AKTIF">TIDAK (SIMPAN SEBAGAI DRAFT)</option>
                   </select>
                 </div>
 
-                {/* BUTTON SUBMIT */}
-                <div className="pt-2 text-right">
-                  <Button
-                    type="submit"
-                    disabled={saving}
-                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5 inline-flex"
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" /> SIMPAN
-                      </>
-                    ) : (
-                      "SIMPAN"
-                    )}
-                  </Button>
+                {/* BUTTON PANEL */}
+                <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-3">
+                  {editId && !isEditing ? (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); if (editId) handleDelete(editId); }}
+                        className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all flex items-center gap-1.5"
+                      >
+                        <Trash2 className="h-4 w-4" /> HAPUS
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                      >
+                        <Edit3 className="h-4 w-4" /> EDIT
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={closeForm}
+                        className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                      >
+                        BATAL
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={saving}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5 inline-flex"
+                      >
+                        {saving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" /> SIMPAN
+                          </>
+                        ) : (
+                          "SIMPAN"
+                        )}
+                      </Button>
+                    </>
+                  )}
                 </div>
               </form>
             </div>

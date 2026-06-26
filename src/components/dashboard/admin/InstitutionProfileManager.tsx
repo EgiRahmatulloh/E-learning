@@ -64,7 +64,7 @@ const setSafeItem = (key: string, value: string) => {
 
 export default function InstitutionProfileManager() {
   const [profile, setProfile] = useState<InstitutionProfileData>(DEFAULT_PROFILE);
-  const [isLocked, setIsLocked] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
   const [uploadingFoto, setUploadingFoto] = useState(false);
   const [uploadingGambar, setUploadingGambar] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -125,7 +125,7 @@ export default function InstitutionProfileManager() {
       const data = await res.json();
       if (data.success) {
         toast.success("Identitas Lembaga berhasil disimpan!");
-        setIsLocked(true);
+        setIsEditing(false);
         fetchProfile();
         return;
       } else {
@@ -146,14 +146,14 @@ export default function InstitutionProfileManager() {
       try {
         setSafeItem(STORAGE_KEY, JSON.stringify(profile));
         toast.info("Identitas Lembaga disimpan secara lokal (Offline)!");
-        setIsLocked(true);
+        setIsEditing(false);
       } catch (e: any) {
         if (e.name === "QuotaExceededError" || e.name === "NS_ERROR_DOM_QUOTA_REACHED") {
           toast.warning("Offline: Gagal menyimpan karena ukuran gambar/foto terlalu besar!");
         } else {
           toast.error("Offline: Gagal menyimpan secara lokal.");
         }
-        setIsLocked(false); // Tetap buka kunci form agar pengguna bisa memperbaiki input/gambar
+        setIsEditing(true); // Tetap buka kunci form agar pengguna bisa memperbaiki input/gambar
       }
     }
   };
@@ -235,7 +235,7 @@ export default function InstitutionProfileManager() {
                 </label>
                 <input
                   type="text"
-                  disabled={isLocked}
+                  disabled={!isEditing}
                   value={profile.namaLembaga}
                   onChange={(e) => handleFieldChange("namaLembaga", e.target.value)}
                   className="flex-1 h-10 px-4 text-sm font-extrabold border border-slate-300 rounded-lg bg-white focus:outline-none focus:border-cyan-500 disabled:bg-slate-100/80 disabled:text-slate-500 disabled:cursor-not-allowed shadow-inner transition-colors"
@@ -249,7 +249,7 @@ export default function InstitutionProfileManager() {
                 </label>
                 <input
                   type="text"
-                  disabled={isLocked}
+                  disabled={!isEditing}
                   value={profile.npsn}
                   onChange={(e) => handleFieldChange("npsn", e.target.value)}
                   className="flex-1 h-10 px-4 text-sm font-extrabold border border-slate-300 rounded-lg bg-white focus:outline-none focus:border-cyan-500 disabled:bg-slate-100/80 disabled:text-slate-500 disabled:cursor-not-allowed shadow-inner transition-colors"
@@ -263,7 +263,7 @@ export default function InstitutionProfileManager() {
                 </label>
                 <input
                   type="text"
-                  disabled={isLocked}
+                  disabled={!isEditing}
                   value={profile.nomorIndukLembaga}
                   onChange={(e) => handleFieldChange("nomorIndukLembaga", e.target.value)}
                   className="flex-1 h-10 px-4 text-sm font-extrabold border border-slate-300 rounded-lg bg-white focus:outline-none focus:border-cyan-500 disabled:bg-slate-100/80 disabled:text-slate-500 disabled:cursor-not-allowed shadow-inner transition-colors"
@@ -277,7 +277,7 @@ export default function InstitutionProfileManager() {
                 </label>
                 <input
                   type="text"
-                  disabled={isLocked}
+                  disabled={!isEditing}
                   value={profile.statusAkreditasi}
                   onChange={(e) => handleFieldChange("statusAkreditasi", e.target.value)}
                   className="flex-1 h-10 px-4 text-sm font-extrabold border border-slate-300 rounded-lg bg-white focus:outline-none focus:border-cyan-500 disabled:bg-slate-100/80 disabled:text-slate-500 disabled:cursor-not-allowed shadow-inner transition-colors"
@@ -291,7 +291,7 @@ export default function InstitutionProfileManager() {
                 </label>
                 <input
                   type="text"
-                  disabled={isLocked}
+                  disabled={!isEditing}
                   value={profile.tahunBerdiri}
                   onChange={(e) => handleFieldChange("tahunBerdiri", e.target.value)}
                   className="flex-1 h-10 px-4 text-sm font-extrabold border border-slate-300 rounded-lg bg-white focus:outline-none focus:border-cyan-500 disabled:bg-slate-100/80 disabled:text-slate-500 disabled:cursor-not-allowed shadow-inner transition-colors"
@@ -305,7 +305,7 @@ export default function InstitutionProfileManager() {
                 </label>
                 <input
                   type="text"
-                  disabled={isLocked}
+                  disabled={!isEditing}
                   value={profile.nomorTelepon}
                   onChange={(e) => handleFieldChange("nomorTelepon", e.target.value)}
                   className="flex-1 h-10 px-4 text-sm font-extrabold border border-slate-300 rounded-lg bg-white focus:outline-none focus:border-cyan-500 disabled:bg-slate-100/80 disabled:text-slate-500 disabled:cursor-not-allowed shadow-inner transition-colors"
@@ -319,7 +319,7 @@ export default function InstitutionProfileManager() {
                 </label>
                 <input
                   type="email"
-                  disabled={isLocked}
+                  disabled={!isEditing}
                   value={profile.email}
                   onChange={(e) => handleFieldChange("email", e.target.value)}
                   className="flex-1 h-10 px-4 text-sm font-extrabold border border-slate-300 rounded-lg bg-white focus:outline-none focus:border-cyan-500 disabled:bg-slate-100/80 disabled:text-slate-500 disabled:cursor-not-allowed shadow-inner transition-colors"
@@ -333,7 +333,7 @@ export default function InstitutionProfileManager() {
                 </label>
                 <textarea
                   rows={3}
-                  disabled={isLocked}
+                  disabled={!isEditing}
                   value={profile.alamatLengkap}
                   onChange={(e) => handleFieldChange("alamatLengkap", e.target.value)}
                   className="flex-1 p-3 text-sm font-extrabold border border-slate-300 rounded-lg bg-white focus:outline-none focus:border-cyan-500 disabled:bg-slate-100/80 disabled:text-slate-500 disabled:cursor-not-allowed shadow-inner transition-colors resize-none"
@@ -355,7 +355,7 @@ export default function InstitutionProfileManager() {
                     </label>
                     <input
                       type="text"
-                      disabled={isLocked}
+                      disabled={!isEditing}
                       value={profile.noIzinPendirian}
                       onChange={(e) => handleFieldChange("noIzinPendirian", e.target.value)}
                       className="flex-1 h-9 px-3 text-xs font-extrabold border border-slate-300 rounded-lg bg-white focus:outline-none focus:border-cyan-500 disabled:bg-slate-100/80 disabled:text-slate-500 disabled:cursor-not-allowed shadow-inner transition-colors"
@@ -370,7 +370,7 @@ export default function InstitutionProfileManager() {
                     </label>
                     <input
                       type="text"
-                      disabled={isLocked}
+                      disabled={!isEditing}
                       value={profile.izinYayasan}
                       onChange={(e) => handleFieldChange("izinYayasan", e.target.value)}
                       className="flex-1 h-9 px-3 text-xs font-extrabold border border-slate-300 rounded-lg bg-white focus:outline-none focus:border-cyan-500 disabled:bg-slate-100/80 disabled:text-slate-500 disabled:cursor-not-allowed shadow-inner transition-colors"
@@ -385,7 +385,7 @@ export default function InstitutionProfileManager() {
                     </label>
                     <input
                       type="text"
-                      disabled={isLocked}
+                      disabled={!isEditing}
                       value={profile.izinOperasional}
                       onChange={(e) => handleFieldChange("izinOperasional", e.target.value)}
                       className="flex-1 h-9 px-3 text-xs font-extrabold border border-slate-300 rounded-lg bg-white focus:outline-none focus:border-cyan-500 disabled:bg-slate-100/80 disabled:text-slate-500 disabled:cursor-not-allowed shadow-inner transition-colors"
@@ -401,7 +401,7 @@ export default function InstitutionProfileManager() {
                 </label>
                 <input
                   type="text"
-                  disabled={isLocked}
+                  disabled={!isEditing}
                   value={profile.npwp}
                   onChange={(e) => handleFieldChange("npwp", e.target.value)}
                   className="flex-1 h-10 px-4 text-sm font-extrabold border border-slate-300 rounded-lg bg-white focus:outline-none focus:border-cyan-500 disabled:bg-slate-100/80 disabled:text-slate-500 disabled:cursor-not-allowed shadow-inner transition-colors"
@@ -423,7 +423,7 @@ export default function InstitutionProfileManager() {
                     </label>
                     <input
                       type="text"
-                      disabled={isLocked}
+                      disabled={!isEditing}
                       value={profile.rekeningNomor}
                       onChange={(e) => handleFieldChange("rekeningNomor", e.target.value)}
                       className="flex-1 h-9 px-3 text-xs font-extrabold border border-slate-300 rounded-lg bg-white focus:outline-none focus:border-cyan-500 disabled:bg-slate-100/80 disabled:text-slate-500 disabled:cursor-not-allowed shadow-inner transition-colors"
@@ -438,7 +438,7 @@ export default function InstitutionProfileManager() {
                     </label>
                     <input
                       type="text"
-                      disabled={isLocked}
+                      disabled={!isEditing}
                       value={profile.rekeningAtasNama}
                       onChange={(e) => handleFieldChange("rekeningAtasNama", e.target.value)}
                       className="flex-1 h-9 px-3 text-xs font-extrabold border border-slate-300 rounded-lg bg-white focus:outline-none focus:border-cyan-500 disabled:bg-slate-100/80 disabled:text-slate-500 disabled:cursor-not-allowed shadow-inner transition-colors"
@@ -453,7 +453,7 @@ export default function InstitutionProfileManager() {
                     </label>
                     <input
                       type="text"
-                      disabled={isLocked}
+                      disabled={!isEditing}
                       value={profile.rekeningNamaBank}
                       onChange={(e) => handleFieldChange("rekeningNamaBank", e.target.value)}
                       className="flex-1 h-9 px-3 text-xs font-extrabold border border-slate-300 rounded-lg bg-white focus:outline-none focus:border-cyan-500 disabled:bg-slate-100/80 disabled:text-slate-500 disabled:cursor-not-allowed shadow-inner transition-colors"
@@ -465,12 +465,12 @@ export default function InstitutionProfileManager() {
             </div>
 
             {/* BUTTON EDIT / SIMPAN */}
-            <div className="pt-6 border-t border-orange-200/60 flex items-center justify-end gap-3">
-              {isLocked ? (
+            <div className="pt-6 border-t border-white/10 flex items-center justify-end gap-3">
+              {!isEditing ? (
                 <Button
                   type="button"
-                  onClick={() => setIsLocked(false)}
-                  className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-6 h-10 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                  onClick={() => setIsEditing(true)}
+                  className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
                 >
                   <Edit3 className="h-4 w-4" /> EDIT
                 </Button>
@@ -480,9 +480,9 @@ export default function InstitutionProfileManager() {
                     type="button"
                     onClick={() => {
                       fetchProfile();
-                      setIsLocked(true);
+                      setIsEditing(false);
                     }}
-                    className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold text-xs px-6 h-10 rounded-xl cursor-pointer uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                    className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                   >
                     BATAL
                   </Button>
@@ -490,7 +490,7 @@ export default function InstitutionProfileManager() {
                     type="button"
                     onClick={handleSave}
                     disabled={saving}
-                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-6 h-10 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
                   >
                     {saving ? (
                       <>
@@ -519,22 +519,22 @@ export default function InstitutionProfileManager() {
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault();
-              if (isLocked) {
-                toast.warning("Buka kunci (Klik Edit) untuk mengubah Foto!");
+              if (!isEditing) {
+                toast.warning("Klik EDIT terlebih dahulu untuk mengubah Foto!");
                 return;
               }
               const file = e.dataTransfer.files?.[0];
               if (file) processUpload(file, "foto");
             }}
             onClick={() => {
-              if (isLocked) {
-                toast.warning("Buka kunci (Klik Edit) untuk mengubah Foto!");
+              if (!isEditing) {
+                toast.warning("Klik EDIT terlebih dahulu untuk mengubah Foto!");
                 return;
               }
               document.getElementById("file-upload-foto")?.click();
             }}
             className={`w-full aspect-square border-4 border-dashed rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden transition-all text-center bg-slate-50/50 ${
-              isLocked
+              !isEditing
                 ? "border-slate-200 cursor-not-allowed opacity-80"
                 : "border-cyan-400 hover:border-cyan-600 hover:bg-cyan-50/30 cursor-pointer"
             }`}
@@ -543,7 +543,7 @@ export default function InstitutionProfileManager() {
               id="file-upload-foto"
               type="file"
               accept="image/*"
-              disabled={isLocked}
+              disabled={!isEditing}
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) {
@@ -566,7 +566,7 @@ export default function InstitutionProfileManager() {
                   alt="Foto Lembaga"
                   className="w-full h-full object-contain rounded-lg"
                 />
-                {!isLocked && (
+                {isEditing && (
                   <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
                     <span className="text-white text-[10px] font-black uppercase tracking-wider">UBAH FOTO</span>
                   </div>
@@ -592,7 +592,7 @@ export default function InstitutionProfileManager() {
             <label className="text-[10px] font-black uppercase text-slate-500">URL Logo Lembaga</label>
             <input
               type="text"
-              disabled={isLocked}
+              disabled={!isEditing}
               placeholder="Masukkan URL foto..."
               value={profile.foto || ""}
               onChange={(e) => handleFieldChange("foto", e.target.value)}
@@ -613,22 +613,22 @@ export default function InstitutionProfileManager() {
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault();
-            if (isLocked) {
-              toast.warning("Buka kunci (Klik Edit) untuk mengubah Gambar!");
+            if (!isEditing) {
+              toast.warning("Klik EDIT terlebih dahulu untuk mengubah Gambar!");
               return;
             }
             const file = e.dataTransfer.files?.[0];
             if (file) processUpload(file, "gambar");
           }}
           onClick={() => {
-            if (isLocked) {
-              toast.warning("Buka kunci (Klik Edit) untuk mengubah Gambar!");
+            if (!isEditing) {
+              toast.warning("Klik EDIT terlebih dahulu untuk mengubah Gambar!");
               return;
             }
             document.getElementById("file-upload-gambar")?.click();
           }}
           className={`w-full max-w-2xl min-h-[160px] border-4 border-dashed rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden transition-all text-center bg-slate-50/50 ${
-            isLocked
+            !isEditing
               ? "border-slate-200 cursor-not-allowed opacity-80"
               : "border-cyan-400 hover:border-cyan-600 hover:bg-cyan-50/30 cursor-pointer"
           }`}
@@ -637,7 +637,7 @@ export default function InstitutionProfileManager() {
             id="file-upload-gambar"
             type="file"
             accept="image/*"
-            disabled={isLocked}
+            disabled={!isEditing}
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) {
@@ -660,7 +660,7 @@ export default function InstitutionProfileManager() {
                 alt="Gambar Lembaga"
                 className="max-h-[280px] object-contain rounded-lg shadow-sm"
               />
-              {!isLocked && (
+              {isEditing && (
                 <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
                   <span className="text-white text-xs font-black uppercase tracking-wider">UBAH GAMBAR</span>
                 </div>
@@ -682,7 +682,7 @@ export default function InstitutionProfileManager() {
           <label className="text-[10px] font-black uppercase text-slate-500">URL Gambar Lembaga</label>
           <input
             type="text"
-            disabled={isLocked}
+            disabled={!isEditing}
             placeholder="Masukkan URL gambar..."
             value={profile.gambar || ""}
             onChange={(e) => handleFieldChange("gambar", e.target.value)}

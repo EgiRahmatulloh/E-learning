@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { parseCSV, downloadCSV, mapCsvRows, parseExcel } from "@/lib/utils";
 import {
-  Edit3,
   Save,
   Trash2,
   UploadCloud,
@@ -16,6 +15,7 @@ import {
   LayoutGrid,
   ShieldAlert,
   Loader2,
+  Edit3,
 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
@@ -86,7 +86,7 @@ export default function ManagerManager() {
   const [selectedManager, setSelectedManager] = useState<ManagerData>(DEFAULT_MANAGER);
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [isNew, setIsNew] = useState(false);
-  const [isLocked, setIsLocked] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
   const [uploadingFoto, setUploadingFoto] = useState(false);
   const [searchName, setSearchName] = useState("");
   const [searchNik, setSearchNik] = useState("");
@@ -98,6 +98,7 @@ export default function ManagerManager() {
   const [showPassword, setShowPassword] = useState(false);
   const [hasUnsyncedOfflineData, setHasUnsyncedOfflineData] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [originalManager, setOriginalManager] = useState<ManagerData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
   const [dbManagerIds, setDbManagerIds] = useState<Set<number>>(new Set());
@@ -233,24 +234,29 @@ export default function ManagerManager() {
       variant: "danger"
     })) return;
     setIsFormOpen(false);
-    setIsLocked(true);
+    setIsEditing(false);
     setIsNew(false);
     setIsFormDirty(false);
   };
 
   const handleFieldChange = (field: keyof ManagerData, value: string) => {
-    if (!isLocked) setIsFormDirty(true);
+    if (isEditing) setIsFormDirty(true);
     setSelectedManager((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  const handleSelectManager = (manager: ManagerData) => {
+  const handleSelectManager = async (manager: ManagerData) => {
+    if (isFormDirty) {
+      const ok = await confirm("Ada perubahan yang belum disimpan. Yakin ingin beralih?");
+      if (!ok) return;
+    }
+    setOriginalManager({ ...manager });
     setSelectedManager(manager);
     setIsFormDirty(false);
     setIsNew(false);
-    setIsLocked(true);
+    setIsEditing(false);
     setIsFormOpen(true);
   };
 
@@ -258,7 +264,7 @@ export default function ManagerManager() {
     setSelectedManager({ ...DEFAULT_MANAGER });
     setIsFormDirty(false);
     setIsNew(true);
-    setIsLocked(false);
+    setIsEditing(true);
     setIsFormOpen(true);
   };
 
@@ -291,7 +297,7 @@ export default function ManagerManager() {
       if (data.success) {
         toast.success(isNew ? "Pengelola baru berhasil ditambahkan!" : "Profil pengelola berhasil disimpan!");
         setIsFormDirty(false);
-        setIsLocked(true);
+        setIsEditing(false);
         setIsNew(false);
         fetchManagers();
         setHasUnsyncedOfflineData(false);
@@ -330,7 +336,7 @@ export default function ManagerManager() {
         setHasUnsyncedOfflineData(true);
         setIsFormDirty(false);
         toast.success("Disimpan secara lokal (Offline)!");
-        setIsLocked(true);
+        setIsEditing(false);
         setIsNew(false);
       } catch (e: any) {
         toast.error("⚠️ Offline: Gagal menyimpan data.");
@@ -352,7 +358,7 @@ export default function ManagerManager() {
       }
       setIsFormDirty(false);
       setIsNew(false);
-      setIsLocked(true);
+      setIsEditing(false);
       setIsFormOpen(false);
       return;
     }
@@ -387,7 +393,7 @@ export default function ManagerManager() {
         } else {
           setSelectedManager(DEFAULT_MANAGER);
         }
-        setIsLocked(true);
+        setIsEditing(false);
         setIsFormOpen(false);
         fetchManagers();
         return;
@@ -422,7 +428,7 @@ export default function ManagerManager() {
         } else {
           setSelectedManager(DEFAULT_MANAGER);
         }
-        setIsLocked(true);
+        setIsEditing(false);
         setIsFormOpen(false);
       } catch {
         toast.error("⚠️ Offline: Gagal menghapus data.");
@@ -885,7 +891,7 @@ export default function ManagerManager() {
                 <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA</label>
                 <input
                   type="text"
-                  disabled={isLocked}
+                  disabled={!isEditing}
                   placeholder="Masukkan nama lengkap dengan gelar (contoh: H. Maman Suparman, S.Pd.)"
                   value={selectedManager.nama}
                   onChange={(e) => handleFieldChange("nama", e.target.value)}
@@ -896,7 +902,7 @@ export default function ManagerManager() {
                 <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIK</label>
                 <input
                   type="text"
-                  disabled={isLocked}
+                  disabled={!isEditing}
                   placeholder="Masukkan 16 digit Nomor Induk Kependudukan"
                   value={selectedManager.nik}
                   onChange={(e) => handleFieldChange("nik", e.target.value)}
@@ -909,7 +915,7 @@ export default function ManagerManager() {
                 <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">JABATAN</label>
                 <input
                   type="text"
-                  disabled={isLocked}
+                  disabled={!isEditing}
                   placeholder="Masukkan jabatan (contoh: Ketua PKBM, Bendahara)"
                   value={selectedManager.jabatan}
                   onChange={(e) => handleFieldChange("jabatan", e.target.value)}
@@ -920,7 +926,7 @@ export default function ManagerManager() {
                 <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NUPTK</label>
                 <input
                   type="text"
-                  disabled={isLocked}
+                  disabled={!isEditing}
                   placeholder="Masukkan Nomor Unik Pendidik dan Tenaga Kependidikan (jika ada)"
                   value={selectedManager.nuptk}
                   onChange={(e) => handleFieldChange("nuptk", e.target.value)}
@@ -933,19 +939,20 @@ export default function ManagerManager() {
                 <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TEMPAT, TGL. LAHIR</label>
                 <input
                   type="text"
-                  disabled={isLocked}
+
                   placeholder="Contoh: Ciamis, 12-05-1970"
                   value={selectedManager.tempatTglLahir}
                   onChange={(e) => handleFieldChange("tempatTglLahir", e.target.value)}
+                  disabled={!isEditing}
                   className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                 />
               </div>
               <div className="flex flex-col gap-0.5">
                 <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">JENIS KELAMIN</label>
                 <select
-                  disabled={isLocked}
                   value={selectedManager.jenisKelamin}
                   onChange={(e) => handleFieldChange("jenisKelamin", e.target.value)}
+                  disabled={!isEditing}
                   className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                 >
                   <option value="" disabled>Pilih Jenis Kelamin</option>
@@ -959,10 +966,11 @@ export default function ManagerManager() {
                 <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">AGAMA</label>
                 <input
                   type="text"
-                  disabled={isLocked}
+
                   placeholder="Contoh: Islam, Kristen, dll"
                   value={selectedManager.agama}
                   onChange={(e) => handleFieldChange("agama", e.target.value)}
+                  disabled={!isEditing}
                   className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                 />
               </div>
@@ -970,10 +978,11 @@ export default function ManagerManager() {
                 <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PENDIDIKAN</label>
                 <input
                   type="text"
-                  disabled={isLocked}
+
                   placeholder="Contoh: S1 Pendidikan, SMA, dll"
                   value={selectedManager.pendidikan}
                   onChange={(e) => handleFieldChange("pendidikan", e.target.value)}
+                  disabled={!isEditing}
                   className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                 />
               </div>
@@ -983,10 +992,11 @@ export default function ManagerManager() {
                 <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">EMAIL</label>
                 <input
                   type="email"
-                  disabled={isLocked}
+
                   placeholder="Contoh: nama@pkbmmakmur.org"
                   value={selectedManager.email}
                   onChange={(e) => handleFieldChange("email", e.target.value)}
+                  disabled={!isEditing}
                   className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                 />
               </div>
@@ -994,10 +1004,11 @@ export default function ManagerManager() {
                 <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TANGGAL MULAI TUGAS</label>
                 <input
                   type="text"
-                  disabled={isLocked}
+
                   placeholder="Masukkan tanggal mulai tugas (contoh: YYYY-MM-DD)"
                   value={selectedManager.tanggalMulaiTugas}
                   onChange={(e) => handleFieldChange("tanggalMulaiTugas", e.target.value)}
+                  disabled={!isEditing}
                   className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                 />
               </div>
@@ -1007,10 +1018,11 @@ export default function ManagerManager() {
                 <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NOMOR SK PENGANGKATAN</label>
                 <input
                   type="text"
-                  disabled={isLocked}
+
                   placeholder="Masukkan nomor SK pengangkatan"
                   value={selectedManager.nomorSkPengangkatan}
                   onChange={(e) => handleFieldChange("nomorSkPengangkatan", e.target.value)}
+                  disabled={!isEditing}
                   className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                 />
               </div>
@@ -1018,10 +1030,11 @@ export default function ManagerManager() {
                 <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">LEMBAGA PENGANGKAT</label>
                 <input
                   type="text"
-                  disabled={isLocked}
+
                   placeholder="Masukkan nama lembaga yang mengeluarkan SK"
                   value={selectedManager.lembagaPengangkat}
                   onChange={(e) => handleFieldChange("lembagaPengangkat", e.target.value)}
+                  disabled={!isEditing}
                   className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                 />
               </div>
@@ -1031,10 +1044,11 @@ export default function ManagerManager() {
                 <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NOMOR SK PENUGASAN</label>
                 <input
                   type="text"
-                  disabled={isLocked}
+
                   placeholder="Masukkan nomor SK penugasan"
                   value={selectedManager.nomorSkPenugasan}
                   onChange={(e) => handleFieldChange("nomorSkPenugasan", e.target.value)}
+                  disabled={!isEditing}
                   className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                 />
               </div>
@@ -1042,10 +1056,11 @@ export default function ManagerManager() {
                 <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">LEMBAGA PENUGAS</label>
                 <input
                   type="text"
-                  disabled={isLocked}
+
                   placeholder="Masukkan nama lembaga yang menugaskan"
                   value={selectedManager.lembagaPenugas}
                   onChange={(e) => handleFieldChange("lembagaPenugas", e.target.value)}
+                  disabled={!isEditing}
                   className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                 />
               </div>
@@ -1055,10 +1070,11 @@ export default function ManagerManager() {
                 <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">ALAMAT</label>
                 <textarea
                   rows={2}
-                  disabled={isLocked}
+
                   placeholder="Masukkan alamat domisili lengkap pengelola"
                   value={selectedManager.alamat}
                   onChange={(e) => handleFieldChange("alamat", e.target.value)}
+                  disabled={!isEditing}
                   className="p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
                 />
               </div>
@@ -1069,10 +1085,11 @@ export default function ManagerManager() {
                 <div className="flex gap-2">
                   <input
                     type={showPassword ? "text" : "password"}
-                    disabled={isLocked}
+
                     placeholder="Masukkan sandi baru (kosongkan jika tidak ingin diubah)"
                     value={selectedManager.password}
                     onChange={(e) => handleFieldChange("password", e.target.value)}
+                    disabled={!isEditing}
                     className="flex-1 h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                   />
                   <button
@@ -1100,31 +1117,21 @@ export default function ManagerManager() {
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
                   e.preventDefault();
-                  if (isLocked) {
-                    toast.error("Buka kunci (Klik Edit) untuk mengubah Foto!");
-                    return;
-                  }
+                  if (!isEditing) { toast.warning("Klik EDIT terlebih dahulu untuk mengubah foto!"); return; }
                   const file = e.dataTransfer.files?.[0];
                   if (file) processUpload(file);
                 }}
                 onClick={() => {
-                  if (isLocked) {
-                    toast.error("Buka kunci (Klik Edit) untuk mengubah Foto!");
-                    return;
-                  }
-                  fileInputRef.current?.click();
+                  if (isEditing) fileInputRef.current?.click();
                 }}
-                className={`w-full h-44 border-4 border-dashed rounded-xl flex flex-col items-center justify-center p-3 relative overflow-hidden transition-all text-center bg-white ${
-                  isLocked
-                    ? "border-slate-350 cursor-not-allowed opacity-80"
-                    : "border-purple-400 hover:border-purple-600 hover:bg-purple-50/20 cursor-pointer"
-                }`}
+                className={`${!isEditing ? "pointer-events-none opacity-60 " : ""}w-full h-44 border-4 border-dashed rounded-xl flex flex-col items-center justify-center p-3 relative overflow-hidden transition-all text-center bg-white border-purple-400 hover:border-purple-600 hover:bg-purple-50/20 cursor-pointer`}
               >
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
-                  disabled={isLocked}
+                  disabled={!isEditing}
+
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
@@ -1147,10 +1154,10 @@ export default function ManagerManager() {
                       alt="Foto Pengelola"
                       className="w-full h-full object-contain rounded-lg"
                     />
-                    {!isLocked && (
-                      <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
-                        <span className="text-white text-[9px] font-black uppercase tracking-wider">UBAH FOTO</span>
-                      </div>
+                    {isEditing && (
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+                      <span className="text-white text-[9px] font-black uppercase tracking-wider">UBAH FOTO</span>
+                    </div>
                     )}
                   </div>
                 ) : (
@@ -1173,81 +1180,100 @@ export default function ManagerManager() {
                 <label className="text-[9px] font-black uppercase text-cyan-50">URL Foto</label>
                 <input
                   type="text"
-                  disabled={isLocked}
+
                   placeholder="atau masukkan URL..."
                   value={selectedManager.foto || ""}
                   onChange={(e) => handleFieldChange("foto", e.target.value)}
-                  className="w-full text-[11px] font-semibold border border-transparent rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-purple-400 focus:outline-none bg-white text-slate-800"
+                  disabled={!isEditing}
+                  className="w-full text-[11px] font-semibold border border-transparent rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-purple-400 focus:outline-none bg-white text-slate-800 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                 />
               </div>
             </div>
           </div>
         </div>
 
-        {/* BUTTON PANEL (Hapus, Edit, Simpan matching Canva mockup locations) */}
-        <div className="mt-8 pt-6 border-t border-white/20 flex flex-wrap items-center justify-between gap-4">
-          
-          {/* LEFT BUTTON: HAPUS */}
-          <Button
-            type="button"
-            onClick={handleDelete}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs px-6 h-10 rounded-xl cursor-pointer shadow-md uppercase tracking-wider flex items-center gap-1.5 transition-all"
-          >
-            <Trash2 className="h-4 w-4" /> HAPUS
-          </Button>
-
-          {/* RIGHT BUTTONS: EDIT & SIMPAN */}
-          <div className="flex items-center gap-3">
-            {isLocked ? (
+        {/* BUTTON PANEL */}
+        <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center justify-end gap-3">
+          {isNew && isEditing ? (
+            <>
               <Button
                 type="button"
-                onClick={() => setIsLocked(false)}
-                className="bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs px-6 h-10 rounded-xl cursor-pointer shadow-md uppercase tracking-wider flex items-center gap-1.5 transition-all"
+                disabled={saving}
+                onClick={() => {
+                  setIsFormOpen(false);
+                  setIsEditing(false);
+                  setIsNew(false);
+                }}
+                className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all disabled:opacity-70"
+              >
+                BATAL
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSave}
+                disabled={saving}
+                className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" /> SIMPAN
+                  </>
+                )}
+              </Button>
+            </>
+          ) : !isNew && !isEditing ? (
+            <>
+              <Button
+                type="button"
+                onClick={(e) => { e.preventDefault(); handleDelete(); }}
+                className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all flex items-center gap-1.5"
+              >
+                <Trash2 className="h-4 w-4" /> HAPUS
+              </Button>
+              <Button
+                type="button"
+                onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
+                className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
               >
                 <Edit3 className="h-4 w-4" /> EDIT
               </Button>
-            ) : (
-              <>
-                <Button
-                  type="button"
-                  onClick={async () => {
-                    if (isFormDirty && !await confirm("Ada perubahan yang belum disimpan. Yakin ingin menutup?")) return;
-                    if (isNew) {
-                      if (managersList.length > 0) {
-                        setSelectedManager(managersList[0]);
-                      } else {
-                        setSelectedManager(DEFAULT_MANAGER);
-                      }
-                      setIsNew(false);
-                    }
-                    setIsLocked(true);
-                    setIsFormOpen(false);
-                    setIsFormDirty(false);
-                  }}
-                  className="bg-slate-200 hover:bg-slate-350 text-slate-700 font-extrabold text-xs px-6 h-10 rounded-xl cursor-pointer uppercase tracking-wider transition-all"
-                >
-                  BATAL
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs px-6 h-10 rounded-xl cursor-pointer shadow-md uppercase tracking-wider flex items-center gap-1.5 transition-all"
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4" /> SIMPAN
-                    </>
-                  )}
-                </Button>
-              </>
-            )}
-          </div>
-
+            </>
+          ) : (
+            <>
+              <Button
+                type="button"
+                onClick={() => {
+                  if (originalManager) {
+                    setSelectedManager(originalManager);
+                  }
+                  setIsEditing(false);
+                }}
+                className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+              >
+                BATAL
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSave}
+                disabled={saving}
+                className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" /> SIMPAN
+                  </>
+                )}
+              </Button>
+            </>
+          )}
         </div>
 
        </div>

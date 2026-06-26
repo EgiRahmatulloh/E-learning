@@ -43,6 +43,8 @@ export default function EducationProgramManager() {
   // Form states
   const [formVisible, setFormVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [originalData, setOriginalData] = useState<{ program: string; penjab: string; keterangan: string; foto: string }>({ program: "", penjab: "", keterangan: "", foto: "" });
   const [program, setProgram] = useState("");
   const [penjab, setPenjab] = useState("");
   const [keterangan, setKeterangan] = useState("");
@@ -109,15 +111,18 @@ export default function EducationProgramManager() {
     setKeterangan("");
     setFoto("");
     setEditId(null);
+    setIsEditing(false);
     setFormVisible(false);
   };
 
   const handleEditClick = (item: EducationProgram) => {
     setEditId(item.id);
+    setOriginalData({ program: item.program, penjab: item.penjab, keterangan: item.keterangan, foto: item.foto });
     setProgram(item.program);
     setPenjab(item.penjab);
     setKeterangan(item.keterangan);
     setFoto(item.foto);
+    setIsEditing(false);
     setFormVisible(true);
   };
 
@@ -281,6 +286,8 @@ export default function EducationProgramManager() {
             <Button
               onClick={() => {
                 resetForm();
+                setOriginalData({ program: "", penjab: "", keterangan: "", foto: "" });
+                setIsEditing(true);
                 setFormVisible(true);
               }}
               className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
@@ -401,7 +408,8 @@ export default function EducationProgramManager() {
                     value={program}
                     onChange={(e) => setProgram(e.target.value)}
                     placeholder="Masukkan nama program (Contoh: Paket C)"
-                    className="w-full h-11 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                    disabled={!isEditing}
+                    className="w-full h-11 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -413,7 +421,8 @@ export default function EducationProgramManager() {
                   <select
                     value={penjab}
                     onChange={(e) => setPenjab(e.target.value)}
-                    className="w-full h-11 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner cursor-pointer"
+                    disabled={!isEditing}
+                    className="w-full h-11 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     <option value="" disabled>Pilih Penanggung Jawab (Dropdown Pengelola)</option>
                     {managers.map((m) => (
@@ -434,7 +443,8 @@ export default function EducationProgramManager() {
                     value={keterangan}
                     onChange={(e) => setKeterangan(e.target.value)}
                     placeholder="Deskripsikan penjelasan singkat tentang program ini..."
-                    className="w-full p-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner resize-none leading-relaxed"
+                    disabled={!isEditing}
+                    className="w-full p-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner resize-none leading-relaxed disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -449,11 +459,12 @@ export default function EducationProgramManager() {
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => {
                     e.preventDefault();
+                    if (!isEditing) return;
                     const file = e.dataTransfer.files?.[0];
                     if (file) processUpload(file);
                   }}
-                  onClick={() => document.getElementById("program-file-upload")?.click()}
-                  className="w-full aspect-square border-4 border-dashed border-white/60 hover:border-white rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden transition-all text-center bg-cyan-300/40 hover:bg-cyan-350/50 cursor-pointer"
+                  onClick={() => { if (isEditing) document.getElementById("program-file-upload")?.click(); }}
+                  className={`${!isEditing ? "pointer-events-none opacity-60 " : ""}w-full aspect-square border-4 border-dashed border-white/60 hover:border-white rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden transition-all text-center bg-cyan-300/40 hover:bg-cyan-350/50 cursor-pointer`}
                 >
                   <input
                     id="program-file-upload"
@@ -509,37 +520,64 @@ export default function EducationProgramManager() {
                     placeholder="Masukkan URL foto..."
                     value={foto}
                     onChange={(e) => setFoto(e.target.value)}
-                    className="w-full text-xs font-semibold border-none rounded-lg px-3 py-2 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    disabled={!isEditing}
+                    className="w-full text-xs font-semibold border-none rounded-lg px-3 py-2 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
 
-              {/* ACTION BUTTONS (Bottom-right inside modal) */}
+              {/* ACTION BUTTONS */}
               <div className="col-span-1 md:col-span-4 pt-4 border-t border-white/10 flex items-center justify-end gap-3">
-                <Button
-                  type="button"
-                  onClick={resetForm}
-                  className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
-                >
-                  BATAL
-                </Button>
-                
-                <Button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={saving || uploading}
-                  className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4" /> SIMPAN
-                    </>
-                  )}
-                </Button>
+                {isEditing ? (
+                  <>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        setProgram(originalData.program);
+                        setPenjab(originalData.penjab);
+                        setKeterangan(originalData.keterangan);
+                        setFoto(originalData.foto);
+                        setIsEditing(false);
+                      }}
+                      className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                    >
+                      BATAL
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleSave}
+                      disabled={saving || uploading}
+                      className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4" /> SIMPAN
+                        </>
+                      )}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      onClick={() => { if (editId !== null) handleDeleteClick(editId); }}
+                      className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all flex items-center gap-1.5"
+                    >
+                      <Trash2 className="h-4 w-4" /> HAPUS
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => setIsEditing(true)}
+                      className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                    >
+                      <Edit3 className="h-4 w-4" /> EDIT
+                    </Button>
+                  </>
+                )}
               </div>
             </form>
           </div>

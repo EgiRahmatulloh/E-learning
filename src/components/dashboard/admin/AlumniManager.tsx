@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { parseCSV, downloadCSV, mapCsvRows, parseExcel } from "@/lib/utils";
-import { Upload, Plus, Trash2, Save, HelpCircle, Download, LayoutGrid, List, Search, X, Loader2, ChevronLeft, ChevronRight, Filter, RotateCcw } from "lucide-react";
+import { Upload, Plus, Trash2, Save, HelpCircle, Download, LayoutGrid, List, Search, X, Loader2, ChevronLeft, ChevronRight, Filter, RotateCcw, Edit3 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
 
@@ -49,6 +49,8 @@ export default function AlumniManager() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [originalData, setOriginalData] = useState<{ nama: string; nik: string; program: string; tahunLulus: string; nisn: string; nis: string; tempatTglLahir: string; noHp: string; namaAyah: string; namaIbu: string; jenisKelamin: string; agama: string; email: string; alamat: string; cerita: string; foto: string }>({ nama: "", nik: "", program: "", tahunLulus: "", nisn: "", nis: "", tempatTglLahir: "", noHp: "", namaAyah: "", namaIbu: "", jenisKelamin: "", agama: "", email: "", alamat: "", cerita: "", foto: "" });
 
   // Form inputs
   const [nama, setNama] = useState("");
@@ -123,6 +125,7 @@ export default function AlumniManager() {
   const selectAlumni = (item: AlumniItem) => {
     setIsAdding(false);
     setSelectedId(item.id);
+    setOriginalData({ nama: item.nama, nik: item.nik, program: item.program, tahunLulus: item.tahunLulus, nisn: item.nisn, nis: item.nis, tempatTglLahir: item.tempatTglLahir, noHp: item.noHp, namaAyah: item.namaAyah, namaIbu: item.namaIbu, jenisKelamin: item.jenisKelamin, agama: item.agama, email: item.email, alamat: item.alamat, cerita: item.cerita, foto: item.foto });
     setNama(item.nama);
     setNik(item.nik);
     setProgram(item.program);
@@ -139,12 +142,14 @@ export default function AlumniManager() {
     setAlamat(item.alamat);
     setCerita(item.cerita);
     setFoto(item.foto);
+    setIsEditing(false);
     setIsFormOpen(true);
   };
 
   const startAddAlumni = () => {
     setIsAdding(true);
     setSelectedId(null);
+    setOriginalData({ nama: "", nik: "", program: "", tahunLulus: "", nisn: "", nis: "", tempatTglLahir: "", noHp: "", namaAyah: "", namaIbu: "", jenisKelamin: "", agama: "", email: "", alamat: "", cerita: "", foto: "" });
     setNama("");
     setNik("");
     setProgram("PAKET C");
@@ -161,6 +166,7 @@ export default function AlumniManager() {
     setAlamat("");
     setCerita("");
     setFoto("");
+    setIsEditing(true);
     setIsFormOpen(true);
   };
 
@@ -168,6 +174,7 @@ export default function AlumniManager() {
     setIsFormOpen(false);
     setSelectedId(null);
     setIsAdding(false);
+    setIsEditing(false);
   };
 
   const handleImageUpload = async (file: File) => {
@@ -703,7 +710,7 @@ export default function AlumniManager() {
 
               <div className="mb-6">
                 <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                  {isAdding ? "TAMBAH ALUMNI BARU" : "EDIT PROFIL ALUMNI"}
+                  {isAdding ? "TAMBAH ALUMNI BARU" : (!isEditing ? "LIHAT PROFIL ALUMNI" : "EDIT PROFIL ALUMNI")}
                 </span>
               </div>
 
@@ -717,6 +724,7 @@ export default function AlumniManager() {
                       <input
                         type="text"
                         required
+                        disabled={!isEditing}
                         placeholder="Nama lengkap alumni"
                         value={nama}
                         onChange={(e) => setNama(e.target.value)}
@@ -729,6 +737,7 @@ export default function AlumniManager() {
                         type="text"
                         required
                         maxLength={16}
+                        disabled={!isEditing}
                         placeholder="Masukkan 16 digit NIK"
                         value={nik}
                         onChange={(e) => setNik(e.target.value)}
@@ -741,6 +750,7 @@ export default function AlumniManager() {
                       <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">PROGRAM / PAKET</label>
                       <select
                         value={program}
+                        disabled={!isEditing}
                         onChange={(e) => setProgram(e.target.value)}
                         className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
                       >
@@ -754,6 +764,7 @@ export default function AlumniManager() {
                       <input
                         type="text"
                         required
+                        disabled={!isEditing}
                         placeholder="Contoh: 2020"
                         value={tahunLulus}
                         onChange={(e) => setTahunLulus(e.target.value)}
@@ -767,6 +778,7 @@ export default function AlumniManager() {
                       <input
                         type="text"
                         required
+                        disabled={!isEditing}
                         placeholder="Masukkan NISN"
                         value={nisn}
                         onChange={(e) => setNisn(e.target.value)}
@@ -778,6 +790,7 @@ export default function AlumniManager() {
                       <input
                         type="text"
                         required
+                        disabled={!isEditing}
                         placeholder="Masukkan NIS"
                         value={nis}
                         onChange={(e) => setNis(e.target.value)}
@@ -791,6 +804,7 @@ export default function AlumniManager() {
                       <input
                         type="text"
                         required
+                        disabled={!isEditing}
                         placeholder="Contoh: Ciamis, 15-08-2002"
                         value={tempatTglLahir}
                         onChange={(e) => setTempatTglLahir(e.target.value)}
@@ -801,6 +815,7 @@ export default function AlumniManager() {
                       <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">JENIS KELAMIN</label>
                       <select
                         value={jenisKelamin}
+                        disabled={!isEditing}
                         onChange={(e) => setJenisKelamin(e.target.value)}
                         className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
                       >
@@ -815,6 +830,7 @@ export default function AlumniManager() {
                       <input
                         type="text"
                         required
+                        disabled={!isEditing}
                         placeholder="Contoh: 0821..."
                         value={noHp}
                         onChange={(e) => setNoHp(e.target.value)}
@@ -825,6 +841,7 @@ export default function AlumniManager() {
                       <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">AGAMA</label>
                       <input
                         type="text"
+                        disabled={!isEditing}
                         placeholder="Contoh: Islam"
                         value={agama}
                         onChange={(e) => setAgama(e.target.value)}
@@ -837,6 +854,7 @@ export default function AlumniManager() {
                       <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">EMAIL</label>
                       <input
                         type="email"
+                        disabled={!isEditing}
                         placeholder="Contoh: alumni@mail.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -847,6 +865,7 @@ export default function AlumniManager() {
                       <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">NAMA AYAH</label>
                       <input
                         type="text"
+                        disabled={!isEditing}
                         placeholder="Nama ayah kandung"
                         value={namaAyah}
                         onChange={(e) => setNamaAyah(e.target.value)}
@@ -859,6 +878,7 @@ export default function AlumniManager() {
                       <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">NAMA IBU</label>
                       <input
                         type="text"
+                        disabled={!isEditing}
                         placeholder="Nama ibu kandung"
                         value={namaIbu}
                         onChange={(e) => setNamaIbu(e.target.value)}
@@ -871,6 +891,7 @@ export default function AlumniManager() {
                       <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">ALAMAT LENGKAP</label>
                       <textarea
                         rows={2}
+                        disabled={!isEditing}
                         placeholder="Tulis alamat rumah lengkap alumni..."
                         value={alamat}
                         onChange={(e) => setAlamat(e.target.value)}
@@ -883,6 +904,7 @@ export default function AlumniManager() {
                       <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">CERITA SUKSES ALUMNI</label>
                       <textarea
                         rows={3}
+                        disabled={!isEditing}
                         placeholder="Bagikan cerita sukses, kesan pesan, atau kutipan motivasi dari alumni..."
                         value={cerita}
                         onChange={(e) => setCerita(e.target.value)}
@@ -901,7 +923,7 @@ export default function AlumniManager() {
                         onDragOver={handleDrag}
                         onDragLeave={handleDrag}
                         onDrop={handleDrop}
-                        className={`border-2 border-dashed rounded-xl p-2.5 text-center transition-all ${
+                        className={`border-2 border-dashed rounded-xl p-2.5 text-center transition-all ${!isEditing && "pointer-events-none opacity-60"} ${
                           dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
                         } h-44 flex flex-col justify-center items-center relative overflow-hidden`}
                       >
@@ -936,7 +958,7 @@ export default function AlumniManager() {
                                 }
                               }}
                               className="absolute inset-0 opacity-0 cursor-pointer"
-                              disabled={uploading}
+                              disabled={!isEditing || uploading}
                             />
                           </>
                         )}
@@ -951,6 +973,7 @@ export default function AlumniManager() {
                       </p>
                       <input type="text" placeholder="atau masukkan URL foto..."
                         value={foto || ""}
+                        disabled={!isEditing}
                         onChange={(e) => setFoto(e.target.value)}
                         className="w-full text-[11px] font-black border border-transparent rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-purple-400 focus:outline-none bg-white text-slate-800"
                       />
@@ -960,31 +983,93 @@ export default function AlumniManager() {
                 </div>
 
                 {/* Buttons Footer Form */}
-                <div className="flex items-center justify-end gap-3 pt-4 mt-4 border-t border-white/20">
-                  <Button
-                    type="submit"
-                    disabled={saving || uploading}
-                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
-                      </>
-                    ) : (
-                      <>
-                        <Save size={15} /> SIMPAN
-                      </>
-                    )}
-                  </Button>
-                  {selectedId && (
-                    <Button
-                      type="button"
-                      disabled={saving}
-                      onClick={handleDelete}
-                      className="bg-rose-600 hover:bg-rose-700 text-white border-0 font-extrabold text-sm px-6 h-11 rounded-xl cursor-pointer shadow-md shadow-rose-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
-                    >
-                      <Trash2 size={15} /> HAPUS
-                    </Button>
+                <div className="col-span-1 md:col-span-4 pt-4 border-t border-white/10 flex items-center justify-end gap-3">
+                  {isAdding ? (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={closeForm}
+                        className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                      >
+                        BATAL
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={saving || uploading}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
+                      >
+                        {saving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                          </>
+                        ) : (
+                          <>
+                            <Save size={15} /> SIMPAN
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  ) : isEditing ? (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setNama(originalData.nama);
+                          setNik(originalData.nik);
+                          setProgram(originalData.program);
+                          setTahunLulus(originalData.tahunLulus);
+                          setNisn(originalData.nisn);
+                          setNis(originalData.nis);
+                          setTempatTglLahir(originalData.tempatTglLahir);
+                          setNoHp(originalData.noHp);
+                          setNamaAyah(originalData.namaAyah);
+                          setNamaIbu(originalData.namaIbu);
+                          setJenisKelamin(originalData.jenisKelamin);
+                          setAgama(originalData.agama);
+                          setEmail(originalData.email);
+                          setAlamat(originalData.alamat);
+                          setCerita(originalData.cerita);
+                          setFoto(originalData.foto);
+                          setIsEditing(false);
+                        }}
+                        className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                      >
+                        BATAL
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={saving || uploading}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
+                      >
+                        {saving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                          </>
+                        ) : (
+                          <>
+                            <Save size={15} /> SIMPAN
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        type="button"
+                        disabled={saving}
+                        onClick={(e) => { e.preventDefault(); handleDelete(); }}
+                        className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all flex items-center gap-1.5"
+                      >
+                        <Trash2 size={15} /> HAPUS
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                      >
+                        <Edit3 size={15} /> EDIT
+                      </Button>
+                    </>
                   )}
                 </div>
               </form>
