@@ -21,7 +21,7 @@ import {
 import { eq, and, inArray } from "drizzle-orm";
 import { jwt } from "@elysia/jwt";
 import { finalJwtSecret } from "../config/jwt";
-import { verifyAdmin, verifyAdminOrTutor } from "../middleware/auth";
+import { verifyAdmin, verifyAdminOrTutor, getAdminPayload } from "../middleware/auth";
 import sanitizeHtml from "sanitize-html";
 
 // Helper: verify any authenticated user (siswa, tutor, admin, super_admin)
