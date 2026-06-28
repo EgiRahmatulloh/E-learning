@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileSpreadsheet, Lock } from "lucide-react";
+import { FileSpreadsheet, Lock, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
@@ -23,6 +23,9 @@ interface StudentGradeData {
 export default function LaporanNilaiTab({ activeTab, user }: Props) {
   const [students, setStudents] = useState<StudentGradeData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const parts = activeTab?.split("-") || [];
   const setupId = parts[1] === "setup" ? parseInt(parts[2], 10) : null;
@@ -84,6 +87,10 @@ export default function LaporanNilaiTab({ activeTab, user }: Props) {
     toast.success("Berhasil mengunduh laporan nilai (.CSV)");
   };
 
+  const filteredStudents = students.filter(s => s.nama.toLowerCase().includes(searchTerm.toLowerCase()));
+  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage) || 1;
+  const currentStudents = filteredStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       
@@ -101,10 +108,23 @@ export default function LaporanNilaiTab({ activeTab, user }: Props) {
       <div className="grid grid-cols-1 gap-6">
         
         <Card className="p-0 border-slate-200/60 bg-white shadow-sm rounded-2xl overflow-hidden">
-          <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+          <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
             <div>
               <h3 className="text-lg font-black text-[#280f91]">Data Nilai Warga Belajar</h3>
               <p className="text-xs font-semibold text-slate-500">Menampilkan siswa di kelas ini (Data Nilai menunggu Integrasi Fase 4).</p>
+            </div>
+            <div className="relative w-full md:w-64">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cari nama siswa..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-full focus:outline-none focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91]"
+              />
             </div>
           </div>
           
@@ -128,8 +148,8 @@ export default function LaporanNilaiTab({ activeTab, user }: Props) {
                   <tr>
                     <td colSpan={6} className="py-8 text-center text-slate-400 font-medium">Memuat data...</td>
                   </tr>
-                ) : students.length > 0 ? (
-                  students.map(student => (
+                ) : currentStudents.length > 0 ? (
+                  currentStudents.map(student => (
                     <tr key={student.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="py-4 px-6 font-bold text-slate-800">{student.nama}</td>
                       <td className="py-4 px-6 text-center font-bold text-slate-700 border-l border-slate-100">{student.tugas}</td>
@@ -152,12 +172,40 @@ export default function LaporanNilaiTab({ activeTab, user }: Props) {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-slate-400 font-medium">Belum ada warga belajar di rombel ini.</td>
+                    <td colSpan={6} className="py-8 text-center text-slate-400 font-medium">Tidak ada data.</td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
+
+          {!loading && filteredStudents.length > 0 && (
+            <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <span className="text-sm text-slate-500 font-medium">
+                Halaman <span className="font-bold text-slate-700">{currentPage}</span> dari <span className="font-bold text-slate-700">{totalPages}</span>
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </Card>
 
         {/* Evaluasi Tutor */}

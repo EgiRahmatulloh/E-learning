@@ -21,6 +21,8 @@ export {
   elearningSessions,
   elearningMaterials,
   elearningEvaluations,
+  elearningQuestions,
+  elearningQuizSubmissions,
   elearningSetups,
   elearningForumPosts,
   elearningAttendances,

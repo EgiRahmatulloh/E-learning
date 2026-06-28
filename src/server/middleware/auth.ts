@@ -60,3 +60,24 @@ export const getAdminPayload = async (
   const token = authHeader.split(" ")[1];
   return await jwt.verify(token);
 };
+
+export const verifyUser = async (
+  headers: Record<string, string | undefined>,
+  jwt: any,
+  set: any
+) => {
+  const authHeader = headers["authorization"];
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    set.status = 401;
+    return { success: false, message: "Akses ditolak, token hilang" };
+  }
+
+  const token = authHeader.split(" ")[1];
+  const payload = await jwt.verify(token);
+  if (!payload) {
+    set.status = 401;
+    return { success: false, message: "Sesi Anda telah kedaluwarsa, silakan masuk kembali" };
+  }
+
+  return null; // Valid for any logged-in user
+};

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CheckCircle2, FileText, PlayCircle, MessageSquare, PenTool, Upload, HelpCircle, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -11,7 +11,6 @@ interface MapelSesiProps {
 }
 
 export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSesiProps) {
-  const isTugasSession = true;
   const isEvaluasiSession = sessionNumber === 7;
 
   const [discussions, setDiscussions] = useState<{ sender: string; text: string; isSelf: boolean; initial: string; color: string }[]>([]);
@@ -26,11 +25,40 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
   const [tugasUrl, setTugasUrl] = useState<string | null>(null);
   const [showAngket, setShowAngket] = useState(false);
   const [angketQuestions, setAngketQuestions] = useState<string[]>([]);
+  const tugasUploadRef = useRef<HTMLInputElement>(null);
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [courseId, setCourseId] = useState<number | null>(null);
+  const [showLatihan, setShowLatihan] = useState(false);
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [answers, setAnswers] = useState<number[]>([]);
+  const [quizGrade, setQuizGrade] = useState<number | null>(null);
+  const [isLatihanLoading, setIsLatihanLoading] = useState(false);
+
+  const loadQuestions = async () => {
+    if (!sessionId || !user?.id) return;
+    setIsLatihanLoading(true);
+    try {
+      const res = await fetch(`/api/elearning/quiz/${sessionId}?studentId=${user.id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setQuestions(data.data.questions.map((q: any) => ({
+          ...q,
+          options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options
+        })));
+        if (data.data.submission) {
+          setQuizGrade(data.data.submission.grade);
+        }
+        setAnswers(new Array(data.data.questions.length).fill(-1));
+      }
+    } catch (err) {}
+    setIsLatihanLoading(false);
+  };
 
   useEffect(() => {
     async function fetchData() {
+      setIsHadir(false);
       try {
         const courseRes = await fetch("/api/elearning/course", {
           method: "POST",
@@ -60,12 +88,15 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
         const materials = Array.isArray(sessionData.data.materials) ? sessionData.data.materials : [];
         const ppt = materials.find((m: any) => m.type === "PPT");
         if (ppt) setPptUrl(ppt.fileUrl);
+        else setPptUrl(null);
         
         const video = materials.find((m: any) => m.type === "VIDEO");
         if (video) setVideoUrl(video.fileUrl);
+        else setVideoUrl(null);
 
         const tugas = materials.find((m: any) => m.type === "TUGAS");
         if (tugas) setTugasUrl(tugas.fileUrl);
+        else setTugasUrl(null);
 
         if (sessionNumber === 7) {
           const evalRes = await fetch("/api/elearning/evaluations");
@@ -176,10 +207,48 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
     }
   };
 
-  const handleNotAvailable = (item: string) => {
-    toast.info("Belum tersedia", {
-      description: `${item} belum tersedia atau belum diunggah oleh tutor saat ini.`
+  const uploadFileAPI = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/upload", { 
+      method: "POST", 
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      body: formData 
     });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    return data.url;
+  };
+
+  const handleUploadJawaban = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0 || !sessionId) return;
+    if (!user?.id) {
+      toast.error("Gagal: User belum login");
+      return;
+    }
+    const file = e.target.files[0];
+    const toastId = toast.loading(`Mengunggah jawaban: ${file.name}...`);
+    try {
+      const fileUrl = await uploadFileAPI(file);
+      
+      const res = await fetch(`/api/elearning/submissions/${sessionId}`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ studentId: user?.id, fileUrl })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        toast.success("Jawaban tugas berhasil diunggah!", { id: toastId });
+      } else {
+        toast.error(data.message, { id: toastId });
+      }
+    } catch (err: any) {
+      toast.error("Gagal mengunggah jawaban", { description: err.message, id: toastId });
+    }
   };
 
 
@@ -325,31 +394,36 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
             <p className="text-sm text-slate-500">Uji pemahaman mandiri (Soal Pilihan Ganda)</p>
           </div>
         </div>
-        <Button onClick={() => handleNotAvailable("Soal latihan")} variant="outline" className="rounded-xl border-purple-200 text-purple-700 font-bold hover:bg-purple-50">
+        <Button onClick={() => { setShowLatihan(true); loadQuestions(); }} variant="outline" className="rounded-xl border-purple-200 text-purple-700 font-bold hover:bg-purple-50">
           Mulai Latihan
         </Button>
       </div>
 
-      {/* Tugas Khusus (Sesi 3, 5, 7) */}
-      {isTugasSession && (
-        <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-200 shadow-sm p-6 space-y-4">
-          <div className="flex items-center gap-3 border-b border-orange-200 pb-3">
-            <Upload className="h-6 w-6 text-orange-600" />
-            <div>
-              <h2 className="text-lg font-black text-orange-900">Tugas Formal {sessionNumber === 3 ? "1" : sessionNumber === 5 ? "2" : "3"}</h2>
-              <p className="text-xs text-orange-700">Unduh soal dan kumpulkan jawaban tugas di sini.</p>
-            </div>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Button onClick={() => handleDownload(tugasUrl)} variant="outline" className="flex-1 bg-white hover:bg-orange-50 border-orange-200 text-orange-700 font-bold h-12">
-              Unduh Soal Tugas
-            </Button>
-            <Button onClick={() => handleNotAvailable("Fitur unggah jawaban")} className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold h-12">
-              Unggah Jawaban
-            </Button>
+      {/* Tugas Khusus */}
+      <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-200 shadow-sm p-6 space-y-4">
+        <div className="flex items-center gap-3 border-b border-orange-200 pb-3">
+          <Upload className="h-6 w-6 text-orange-600" />
+          <div>
+            <h2 className="text-lg font-black text-orange-900">Tugas Sesi {sessionNumber}</h2>
+            <p className="text-xs text-orange-700">Unduh soal dan kumpulkan jawaban tugas di sini.</p>
           </div>
         </div>
-      )}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Button onClick={() => handleDownload(tugasUrl)} variant="outline" className="flex-1 bg-white hover:bg-orange-50 border-orange-200 text-orange-700 font-bold h-12">
+            Unduh Soal Tugas
+          </Button>
+          <input 
+            type="file" 
+            className="hidden" 
+            ref={tugasUploadRef} 
+            accept=".pdf,.docx,.doc" 
+            onChange={handleUploadJawaban} 
+          />
+          <Button onClick={() => tugasUploadRef.current?.click()} className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold h-12">
+            Unggah Jawaban
+          </Button>
+        </div>
+      </div>
 
       {/* Evaluasi Khusus (Sesi 7) */}
       {isEvaluasiSession && (
@@ -414,6 +488,108 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
                 </Button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Latihan Sesi */}
+      {showLatihan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative animate-in zoom-in-95 duration-200 flex flex-col">
+            <div className="sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100 p-6 flex justify-between items-center z-10">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-100 rounded-xl">
+                  <PenTool className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="font-black text-purple-950 text-lg">Latihan Mandiri Sesi {sessionNumber}</h3>
+                  <p className="text-xs font-semibold text-purple-600/80">Kuis Pilihan Ganda</p>
+                </div>
+              </div>
+              <button onClick={() => setShowLatihan(false)} className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-2 rounded-full transition-colors">
+                ✕
+              </button>
+            </div>
+            
+            <div className="p-6 flex-1 overflow-y-auto space-y-6">
+              {isLatihanLoading ? (
+                <p className="text-center text-slate-500 font-bold py-10">Memuat soal kuis...</p>
+              ) : questions.length === 0 ? (
+                <div className="p-10 space-y-6 flex flex-col items-center text-center bg-slate-50/50 rounded-2xl">
+                  <PenTool className="w-12 h-12 text-slate-300 mb-2" />
+                  <p className="font-bold text-slate-700 text-lg">Belum Ada Soal</p>
+                  <p className="text-slate-500 text-sm max-w-sm">Tutor belum menambahkan soal latihan untuk sesi ini. Silakan periksa kembali nanti.</p>
+                  <Button onClick={() => setShowLatihan(false)} variant="outline" className="mt-4 font-bold">Kembali</Button>
+                </div>
+              ) : quizGrade !== null ? (
+                <div className="p-10 space-y-4 flex flex-col items-center text-center bg-purple-50/50 rounded-2xl border border-purple-100">
+                  <CheckCircle2 className="w-16 h-16 text-purple-500 mb-2" />
+                  <p className="font-black text-slate-800 text-2xl">Nilai Anda: {quizGrade}</p>
+                  <p className="text-slate-600 text-sm">Anda telah menyelesaikan latihan ini.</p>
+                  <Button onClick={() => setShowLatihan(false)} className="mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold px-8">Tutup</Button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {questions.map((q, qIdx) => (
+                    <div key={qIdx} className="p-5 border border-slate-200 rounded-2xl bg-white space-y-4 shadow-sm">
+                      <h4 className="font-bold text-slate-800 text-base leading-snug">{qIdx + 1}. {q.question}</h4>
+                      <div className="space-y-2">
+                        {q.options.map((opt: string, optIdx: number) => (
+                          <label key={optIdx} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer border transition-all ${answers[qIdx] === optIdx ? "bg-purple-50 border-purple-300" : "bg-slate-50 border-slate-200 hover:border-purple-200"}`}>
+                            <input 
+                              type="radio" 
+                              name={`question-${qIdx}`} 
+                              checked={answers[qIdx] === optIdx}
+                              onChange={() => {
+                                const newAns = [...answers];
+                                newAns[qIdx] = optIdx;
+                                setAnswers(newAns);
+                              }}
+                              className="w-5 h-5 text-purple-600 focus:ring-purple-500 border-slate-300"
+                            />
+                            <span className="text-sm font-semibold text-slate-700">{opt}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {!isLatihanLoading && questions.length > 0 && quizGrade === null && (
+              <div className="p-6 border-t border-slate-100 bg-slate-50 rounded-b-3xl flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setShowLatihan(false)} className="font-bold">Batal</Button>
+                <Button 
+                  onClick={async () => {
+                    if (answers.includes(-1)) return toast.error("Harap jawab semua pertanyaan!");
+                    const toastId = toast.loading("Mengirim jawaban...");
+                    try {
+                      const res = await fetch(`/api/elearning/quiz/${sessionId}/submit`, {
+                        method: "POST",
+                        headers: { 
+                          "Content-Type": "application/json",
+                          "Authorization": `Bearer ${localStorage.getItem("token")}`
+                        },
+                        body: JSON.stringify({ studentId: user?.id, answers })
+                      });
+                      const data = await res.json();
+                      if (data.success) {
+                        toast.success(data.message, { id: toastId });
+                        setQuizGrade(data.grade);
+                      } else {
+                        toast.error(data.message, { id: toastId });
+                      }
+                    } catch (err: any) {
+                      toast.error("Gagal mengirim jawaban", { id: toastId });
+                    }
+                  }} 
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-bold"
+                >
+                  Kirim Jawaban
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}

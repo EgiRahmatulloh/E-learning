@@ -11,6 +11,8 @@ import {
   elearningAttendances,
   elearningAssignments,
   elearningSubmissions,
+  elearningQuestions,
+  elearningQuizSubmissions,
   tutors,
   students,
   rombels,
@@ -19,7 +21,7 @@ import {
 import { eq, and, inArray } from "drizzle-orm";
 import { jwt } from "@elysia/jwt";
 import { finalJwtSecret } from "../config/jwt";
-import { verifyAdmin, verifyAdminOrTutor } from "../middleware/auth";
+import { verifyAdmin, verifyAdminOrTutor, getAdminPayload } from "../middleware/auth";
 import sanitizeHtml from "sanitize-html";
 
 // Helper: verify any authenticated user (siswa, tutor, admin, super_admin)
@@ -188,20 +190,27 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
       if (authError) return authError;
 
       try {
-        const cleanHtml = sanitizeHtml(body.description, {
+        const cleanHtml = body.description ? sanitizeHtml(body.description, {
           allowedTags: sanitizeHtml.defaults.allowedTags.concat(['font']),
           allowedAttributes: {
             ...sanitizeHtml.defaults.allowedAttributes,
             'font': ['size', 'color', 'face']
           }
-        });
+        }) : undefined;
 
-        await db
-          .update(elearningSessions)
-          .set({ description: cleanHtml })
-          .where(eq(elearningSessions.id, parseInt(id)));
+        const updateData: any = {};
+        if (cleanHtml !== undefined) updateData.description = cleanHtml;
+        if (body.startDate !== undefined) updateData.startDate = body.startDate;
+        if (body.endDate !== undefined) updateData.endDate = body.endDate;
 
-        return { success: true, message: "Berhasil menyimpan teks pembuka" };
+        if (Object.keys(updateData).length > 0) {
+          await db
+            .update(elearningSessions)
+            .set(updateData)
+            .where(eq(elearningSessions.id, parseInt(id)));
+        }
+
+        return { success: true, message: "Berhasil menyimpan pengaturan sesi" };
       } catch (error: any) {
         set.status = 500;
         return { success: false, message: error.message };
@@ -209,7 +218,9 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
     },
     {
       body: t.Object({
-        description: t.String(),
+        description: t.Optional(t.String()),
+        startDate: t.Optional(t.String()),
+        endDate: t.Optional(t.String()),
       }),
     }
   )
@@ -676,15 +687,32 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
 
       try {
         const { sessionId, studentId } = query;
-        const record = await db
-          .select()
-          .from(elearningAttendances)
-          .where(and(
-            eq(elearningAttendances.sessionId, parseInt(sessionId)),
-            eq(elearningAttendances.studentId, parseInt(studentId))
-          ))
-          .get();
-        return { success: true, data: record || null };
+        if (studentId) {
+          const record = await db
+            .select()
+            .from(elearningAttendances)
+            .where(and(
+              eq(elearningAttendances.sessionId, parseInt(sessionId)),
+              eq(elearningAttendances.studentId, parseInt(studentId))
+            ))
+            .get();
+          return { success: true, data: record || null };
+        } else {
+          // Jika studentId tidak ada (mis. dipanggil Tutor), ambil semua data absensi di sesi ini + nama siswa
+          const records = await db
+            .select({
+              id: elearningAttendances.id,
+              sessionId: elearningAttendances.sessionId,
+              studentId: elearningAttendances.studentId,
+              createdAt: elearningAttendances.createdAt,
+              studentName: students.nama
+            })
+            .from(elearningAttendances)
+            .innerJoin(students, eq(elearningAttendances.studentId, students.id))
+            .where(eq(elearningAttendances.sessionId, parseInt(sessionId)))
+            .all();
+          return { success: true, data: records || [] };
+        }
       } catch (error: any) {
         set.status = 500;
         return { success: false, message: error.message };
@@ -979,6 +1007,228 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         const ip = "0.0"; // Placeholder
 
         return { success: true, data: { mapelAktif, tugasMasuk, ip } };
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
+    }
+  )
+
+  // GET Submissions
+  .get(
+    "/submissions/:sessionId",
+    async (context: any) => {
+      const { headers, jwt, params: { sessionId }, set } = context;
+      const authError = await verifyUser(headers, jwt, set);
+      if (authError) return authError;
+
+      try {
+        const sId = parseInt(sessionId);
+        // Find if there is an assignment for this session
+        let assignment = await db.select().from(elearningAssignments).where(eq(elearningAssignments.sessionId, sId)).get();
+        
+        if (!assignment) {
+          return { success: true, data: [] };
+        }
+
+        const submissions = await db.select({
+          id: elearningSubmissions.id,
+          studentId: elearningSubmissions.studentId,
+          studentName: students.nama,
+          fileUrl: elearningSubmissions.fileUrl,
+          grade: elearningSubmissions.grade,
+          feedback: elearningSubmissions.feedback,
+          submittedAt: elearningSubmissions.submittedAt,
+        })
+        .from(elearningSubmissions)
+        .leftJoin(students, eq(elearningSubmissions.studentId, students.id))
+        .where(eq(elearningSubmissions.assignmentId, assignment.id))
+        .all();
+
+        return { success: true, data: submissions };
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
+    }
+  )
+
+  // POST Submission
+  .post(
+    "/submissions/:sessionId",
+    async (context: any) => {
+      const { headers, jwt, params: { sessionId }, body, set } = context;
+      const authError = await verifyUser(headers, jwt, set);
+      if (authError) return authError;
+
+      try {
+        const payload = await getAdminPayload(headers, jwt);
+        if (!payload || payload.role !== "siswa") {
+          return { success: false, message: "Hanya siswa yang dapat mengumpulkan tugas" };
+        }
+        const studentId = payload.id;
+        const sId = parseInt(sessionId);
+        const { fileUrl } = body as { fileUrl: string };
+
+        // Ensure there is an assignment for this session
+        let assignment = await db.select().from(elearningAssignments).where(eq(elearningAssignments.sessionId, sId)).get();
+        if (!assignment) {
+          const insertResult = await db.insert(elearningAssignments).values({
+            sessionId: sId,
+            title: `Tugas Sesi ${sId}`,
+            description: "",
+            fileUrl: ""
+          }).returning();
+          assignment = insertResult[0];
+        }
+
+        const existing = await db.select().from(elearningSubmissions)
+          .where(and(
+            eq(elearningSubmissions.assignmentId, assignment.id),
+            eq(elearningSubmissions.studentId, studentId)
+          )).get();
+
+        if (existing) {
+          await db.update(elearningSubmissions).set({ fileUrl, submittedAt: new Date().toISOString() })
+            .where(eq(elearningSubmissions.id, existing.id));
+        } else {
+          await db.insert(elearningSubmissions).values({
+            assignmentId: assignment.id,
+            studentId,
+            fileUrl
+          });
+        }
+
+        return { success: true, message: "Berhasil mengumpulkan tugas" };
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
+    }
+  )
+
+  // PUT Grade Submission
+  .put(
+    "/submissions/:submissionId/grade",
+    async (context: any) => {
+      const { headers, jwt, params: { submissionId }, body, set } = context;
+      const authError = await verifyAdminOrTutor(headers, jwt, set);
+      if (authError) return authError;
+
+      try {
+        const subId = parseInt(submissionId);
+        const { grade, feedback } = body as { grade: number; feedback?: string };
+        await db.update(elearningSubmissions).set({ grade, feedback, gradedAt: new Date().toISOString() }).where(eq(elearningSubmissions.id, subId));
+        return { success: true, message: "Berhasil memberikan nilai" };
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
+    },
+    {
+      body: t.Object({
+        grade: t.Numeric(),
+        feedback: t.Optional(t.String()),
+      })
+    }
+  )
+
+  // === LATIHAN MANDIRI (QUIZ) ===
+  .get(
+    "/quiz/:sessionId",
+    async (context: any) => {
+      const { headers, jwt, params: { sessionId }, set } = context;
+      const authError = await verifyUser(headers, jwt, set);
+      if (authError) return authError;
+
+      try {
+        const sId = parseInt(sessionId);
+        const payload = await getAdminPayload(headers, jwt);
+        const studentId = payload?.role === "siswa" ? payload.id : null;
+        
+        const questions = await db.select().from(elearningQuestions).where(eq(elearningQuestions.sessionId, sId)).all();
+        
+        let submission = null;
+        if (studentId) {
+          submission = await db.select().from(elearningQuizSubmissions).where(and(eq(elearningQuizSubmissions.sessionId, sId), eq(elearningQuizSubmissions.studentId, studentId))).get();
+        }
+
+        return { success: true, data: { questions, submission } };
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
+    }
+  )
+  .post(
+    "/quiz/:sessionId",
+    async (context: any) => {
+      const { headers, jwt, params: { sessionId }, body, set } = context;
+      const authError = await verifyAdminOrTutor(headers, jwt, set);
+      if (authError) return authError;
+
+      try {
+        const sId = parseInt(sessionId);
+        const { questions } = body as { questions: any[] };
+        
+        // Delete existing questions
+        await db.delete(elearningQuestions).where(eq(elearningQuestions.sessionId, sId));
+        
+        // Insert new ones
+        if (questions && questions.length > 0) {
+          const inserts = questions.map((q: any) => ({
+            sessionId: sId,
+            question: q.question,
+            options: JSON.stringify(q.options),
+            correctAnswer: q.correctAnswer
+          }));
+          await db.insert(elearningQuestions).values(inserts);
+        }
+        return { success: true, message: "Bank soal berhasil disimpan" };
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
+    }
+  )
+  .post(
+    "/quiz/:sessionId/submit",
+    async (context: any) => {
+      const { headers, jwt, params: { sessionId }, body, set } = context;
+      const authError = await verifyUser(headers, jwt, set);
+      if (authError) return authError;
+
+      try {
+        const payload = await getAdminPayload(headers, jwt);
+        if (!payload || payload.role !== "siswa") {
+          return { success: false, message: "Hanya siswa yang dapat mensubmit kuis" };
+        }
+        const studentId = payload.id;
+        const sId = parseInt(sessionId);
+        const { answers } = body as { answers: number[] };
+        
+        const questions = await db.select().from(elearningQuestions).where(eq(elearningQuestions.sessionId, sId)).all();
+        
+        if (questions.length === 0) {
+          return { success: false, message: "Soal kuis tidak ditemukan" };
+        }
+        
+        let correct = 0;
+        for (let i = 0; i < questions.length; i++) {
+          if (answers[i] === questions[i].correctAnswer) correct++;
+        }
+        
+        const grade = Math.round((correct / questions.length) * 100);
+        
+        const existing = await db.select().from(elearningQuizSubmissions).where(and(eq(elearningQuizSubmissions.sessionId, sId), eq(elearningQuizSubmissions.studentId, studentId))).get();
+        
+        if (existing) {
+          await db.update(elearningQuizSubmissions).set({ grade }).where(eq(elearningQuizSubmissions.id, existing.id));
+        } else {
+          await db.insert(elearningQuizSubmissions).values({ sessionId: sId, studentId, grade });
+        }
+        
+        return { success: true, message: "Jawaban berhasil disubmit", grade };
       } catch (error: any) {
         set.status = 500;
         return { success: false, message: error.message };

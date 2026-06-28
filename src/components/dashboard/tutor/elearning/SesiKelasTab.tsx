@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, UploadCloud, Save, Upload, Users, MessageSquare, PenTool, FileText, PlayCircle, DownloadCloud } from "lucide-react";
+import { CheckCircle, UploadCloud, Save, Upload, Users, MessageSquare, PenTool, FileText, PlayCircle, DownloadCloud, Trash2 } from "lucide-react";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { toast } from "sonner";
 // Removed getSubjectsSiswa import
@@ -68,7 +68,14 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
   const [teksPembuka, setTeksPembuka] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [pptFile, setPptFile] = useState<{ title: string, url: string } | null>(null);
+  const [tugasFile, setTugasFile] = useState<{ title: string, url: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [dueDate, setDueDate] = useState("");
+  const [cutoffDate, setCutoffDate] = useState("");
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [showLatihan, setShowLatihan] = useState(false);
+  const [questions, setQuestions] = useState<{question: string; options: string[]; correctAnswer: number}[]>([]);
+  const [isLatihanLoading, setIsLatihanLoading] = useState(false);
   const pptInputRef = useRef<HTMLInputElement>(null);
   const tugasUploadRef = useRef<HTMLInputElement>(null);
 
@@ -97,10 +104,28 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
           const materials = data.data.materials || [];
           const ppt = materials.find((m: any) => m.type === "PPT");
           if (ppt) setPptFile({ title: ppt.title, url: ppt.fileUrl });
+          else setPptFile(null);
+          
           const vid = materials.find((m: any) => m.type === "VIDEO");
           if (vid) setYoutubeUrl(vid.fileUrl);
+          else setYoutubeUrl("");
+
+          const tugas = materials.find((m: any) => m.type === "TUGAS");
+          if (tugas) setTugasFile({ title: tugas.title, url: tugas.fileUrl });
+          else setTugasFile(null);
+
+          setDueDate(data.data.session.startDate || "");
+          setCutoffDate(data.data.session.endDate || "");
           
           fetchForumPosts(sId);
+          
+          const submissionsRes = await fetch(`/api/elearning/submissions/${sId}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+          });
+          const submissionsData = await submissionsRes.json();
+          if (submissionsData.success) {
+            setSubmissions(submissionsData.data || []);
+          }
         }
       } catch (err) {} finally {
         setLoading(false);
@@ -124,8 +149,6 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
   const loadAttendance = async () => {
     if (!sessionId) return;
     try {
-      // Actually we need an endpoint to get attendance by session id
-      // Since it might not exist yet or it's part of another query, let's just make a simple GET to /api/elearning/attendance?sessionId=...
       const res = await fetch(`/api/elearning/attendance?sessionId=${sessionId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
@@ -134,6 +157,47 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
         setAttendance(data.data || []);
       }
     } catch (err) {}
+  };
+
+  const loadQuestions = async () => {
+    if (!sessionId) return;
+    setIsLatihanLoading(true);
+    try {
+      const res = await fetch(`/api/elearning/quiz/${sessionId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setQuestions(data.data.questions.map((q: any) => ({
+          ...q,
+          options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options
+        })));
+      }
+    } catch (err) {}
+    setIsLatihanLoading(false);
+  };
+
+  const saveQuestions = async () => {
+    if (!sessionId) return;
+    const toastId = toast.loading("Menyimpan bank soal...");
+    try {
+      const res = await fetch(`/api/elearning/quiz/${sessionId}`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}` 
+        },
+        body: JSON.stringify({ questions })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message, { id: toastId });
+      } else {
+        toast.error(data.message, { id: toastId });
+      }
+    } catch (err: any) {
+      toast.error(err.message, { id: toastId });
+    }
   };
 
   const submitReply = async (parentId?: number) => {
@@ -180,9 +244,50 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
       });
       toast.success(`Teks Pembuka Sesi ${sessionNumber} tersimpan!`);
     } catch (err) {
-      toast.error("Gagal menyimpan");
+      toast.error("Gagal menyimpan teks pembuka");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveTugasPengaturan = async () => {
+    if (!sessionId) return;
+    try {
+      setSaving(true);
+      await fetch(`/api/elearning/session/${sessionId}`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ startDate: dueDate, endDate: cutoffDate })
+      });
+      toast.success(`Pengaturan Tugas Sesi ${sessionNumber} tersimpan!`);
+    } catch (err) {
+      toast.error("Gagal menyimpan pengaturan tugas");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleGrade = async (submissionId: number, grade: string | number, feedback: string) => {
+    try {
+      await fetch(`/api/elearning/submissions/${submissionId}/grade`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ grade: Number(grade), feedback })
+      });
+      toast.success("Penilaian berhasil disimpan!");
+      
+      // Update local state to prevent overwrite
+      setSubmissions(submissions.map(sub => 
+        sub.id === submissionId ? { ...sub, grade: Number(grade), feedback } : sub
+      ));
+    } catch (err) {
+      toast.error("Gagal menyimpan penilaian");
     }
   };
 
@@ -374,7 +479,14 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
             </div>
             <p className="text-sm text-slate-500 mb-4">Soal pilihan ganda singkat (Quiz) untuk mengevaluasi pemahaman warga belajar usai membaca materi.</p>
           </div>
-          <Button variant="outline" className="w-full border-purple-200 text-purple-700 hover:bg-purple-50 font-bold">
+          <Button 
+            variant="outline" 
+            className="w-full border-purple-200 text-purple-700 hover:bg-purple-50 font-bold"
+            onClick={() => {
+              setShowLatihan(true);
+              loadQuestions();
+            }}
+          >
             Kelola Bank Soal Latihan
           </Button>
         </Card>
@@ -416,15 +528,26 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
                       fileUrl
                     })
                   });
+                  setTugasFile({ title: file.name, url: fileUrl });
                   toast.success("File Tugas berhasil diunggah!", { id: toastId });
                 } catch (err: any) {
                   toast.error("Gagal mengunggah tugas", { description: err.message, id: toastId });
                 }
               }} 
             />
-            <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-            <p className="text-sm font-bold text-slate-600">Unggah Berkas Tugas</p>
-            <p className="text-xs text-slate-400">.PDF / .DOCX</p>
+            {tugasFile ? (
+              <>
+                <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+                <p className="text-sm font-bold text-emerald-700 truncate">{tugasFile.title}</p>
+                <p className="text-xs text-emerald-600 mt-1">Klik untuk mengganti</p>
+              </>
+            ) : (
+              <>
+                <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                <p className="text-sm font-bold text-slate-600">Unggah Berkas Tugas</p>
+                <p className="text-xs text-slate-400">.PDF / .DOCX</p>
+              </>
+            )}
           </div>
 
           <div className="space-y-4">
@@ -432,17 +555,29 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
               <label className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1">
                 Batas Waktu (Due Date)
               </label>
-              <input type="datetime-local" className="w-full text-sm border-slate-200 rounded-lg p-2 bg-slate-50" />
+              <input 
+                type="datetime-local" 
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="w-full text-sm border-slate-200 rounded-lg p-2 bg-slate-50" 
+              />
             </div>
             <div>
               <label className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1">
                 <span className="text-rose-500">Batas Akhir (Cut-off Date)</span>
               </label>
-              <input type="datetime-local" className="w-full text-sm border-slate-200 rounded-lg p-2 bg-slate-50" />
+              <input 
+                type="datetime-local" 
+                value={cutoffDate}
+                onChange={(e) => setCutoffDate(e.target.value)}
+                className="w-full text-sm border-slate-200 rounded-lg p-2 bg-slate-50" 
+              />
             </div>
           </div>
           
-          <Button className="w-full bg-[#ff6105] hover:bg-[#e05200] text-white font-bold">Simpan Pengaturan</Button>
+          <Button onClick={handleSaveTugasPengaturan} disabled={saving} className="w-full bg-[#ff6105] hover:bg-[#e05200] text-white font-bold">
+            Simpan Pengaturan
+          </Button>
         </Card>
 
         {/* Kolom Kanan: Gradebook */}
@@ -468,11 +603,28 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                <tr className="hover:bg-slate-50/50 transition-colors">
-                  <td colSpan={4} className="py-8 px-4 text-center font-bold text-slate-500 italic">
-                    Belum ada siswa yang mengirim tugas.
-                  </td>
-                </tr>
+                {submissions.length === 0 ? (
+                  <tr className="hover:bg-slate-50/50 transition-colors">
+                    <td colSpan={4} className="py-8 px-4 text-center font-bold text-slate-500 italic">
+                      Belum ada siswa yang mengirim tugas.
+                    </td>
+                  </tr>
+                ) : (
+                  submissions.map(sub => (
+                    <tr key={sub.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-3 px-4 font-bold text-slate-700">{sub.studentName}</td>
+                      <td className="py-3 px-4">
+                        <a href={sub.fileUrl} target="_blank" className="text-emerald-600 underline text-xs font-bold bg-emerald-50 px-2 py-1 rounded">Lihat Berkas</a>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <input type="number" defaultValue={sub.grade} className="w-16 border border-slate-200 rounded p-1 text-center focus:border-[#280f91] focus:outline-none" onBlur={(e) => handleGrade(sub.id, e.target.value, sub.feedback)} />
+                      </td>
+                      <td className="py-3 px-4">
+                        <input type="text" defaultValue={sub.feedback} className="w-full border border-slate-200 rounded p-1 text-xs focus:border-[#280f91] focus:outline-none" placeholder="Tulis catatan..." onBlur={(e) => handleGrade(sub.id, sub.grade, e.target.value)} />
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -499,7 +651,7 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
                   ) : (
                     attendance.map((att: any, idx) => (
                       <tr key={idx} className="border-b border-slate-50 hover:bg-slate-50">
-                        <td className="p-3 font-bold text-slate-700">{att.studentId}</td>
+                        <td className="p-3 font-bold text-slate-700">{att.studentName || att.studentId}</td>
                         <td className="p-3 text-center"><span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md text-xs font-bold">Hadir</span></td>
                         <td className="p-3 text-right text-slate-500">{new Date(att.createdAt).toLocaleString("id-ID")}</td>
                       </tr>
@@ -531,7 +683,7 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
                   <div key={post.id} className="bg-slate-50 border border-slate-100 rounded-xl p-4">
                     <div className="flex gap-3">
                       <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${post.authorRole === 'tutor' ? 'bg-[#280f91] text-white' : 'bg-cyan-100 text-cyan-700'}`}>
-                        {post.authorName.substring(0, 2).toUpperCase()}
+                        {(post.authorName || "?").substring(0, 2).toUpperCase()}
                       </div>
                       <div className="flex-1">
                         <div className="flex justify-between items-start">
@@ -550,7 +702,7 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
                         {forumPosts.filter(r => r.parentId === post.id).map(reply => (
                           <div key={reply.id} className="mt-3 pl-4 border-l-2 border-slate-200 flex gap-2">
                             <div className={`h-6 w-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${reply.authorRole === 'tutor' ? 'bg-[#280f91] text-white' : 'bg-slate-200 text-slate-600'}`}>
-                              {reply.authorName.substring(0, 2).toUpperCase()}
+                              {(reply.authorName || "?").substring(0, 2).toUpperCase()}
                             </div>
                             <div className="flex-1">
                               <h5 className="font-bold text-slate-700 text-xs flex items-center gap-2">
@@ -601,6 +753,102 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
             
             <div className="absolute top-4 right-4">
               <Button onClick={() => setShowForum(false)} variant="ghost" className="h-8 w-8 p-0 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100">✕</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Latihan */}
+      {showLatihan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-3xl shadow-2xl p-6 relative flex flex-col max-h-[90vh]">
+            <h3 className="text-xl font-black text-[#280f91] mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
+              <PenTool className="w-5 h-5 text-purple-600" /> Kelola Bank Soal Latihan Sesi {sessionNumber}
+            </h3>
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+              {isLatihanLoading ? (
+                <p className="text-center text-slate-500 py-8 font-bold">Memuat bank soal...</p>
+              ) : questions.length === 0 ? (
+                <div className="p-8 text-center text-slate-500 border border-slate-100 rounded-xl bg-slate-50/50 flex flex-col items-center justify-center">
+                  <PenTool className="w-8 h-8 text-slate-300 mb-3" />
+                  <p className="font-bold text-slate-700">Bank Soal Masih Kosong</p>
+                  <p className="text-sm mt-1">Anda belum menambahkan soal latihan untuk sesi ini.</p>
+                  <Button onClick={() => setQuestions([{question: "", options: ["","","",""], correctAnswer: 0}])} className="mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-md hover:shadow-lg transition-all rounded-xl">
+                    + Tambah Soal Baru
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-6 pb-4">
+                  {questions.map((q, qIdx) => (
+                    <div key={qIdx} className="p-5 border border-slate-200 rounded-2xl space-y-4 relative bg-white shadow-sm">
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => setQuestions(questions.filter((_, i) => i !== qIdx))}
+                        className="absolute top-3 right-3 h-8 w-8 p-0 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2 block">Pertanyaan {qIdx + 1}</label>
+                        <textarea 
+                          value={q.question}
+                          onChange={(e) => {
+                            const newQ = [...questions];
+                            newQ[qIdx] = { ...newQ[qIdx], question: e.target.value };
+                            setQuestions(newQ);
+                          }}
+                          className="w-full border-slate-200 rounded-xl text-sm p-3 bg-slate-50 focus:bg-white focus:border-purple-400 focus:ring-4 focus:ring-purple-400/20 transition-all resize-none" 
+                          rows={3} 
+                          placeholder="Tuliskan pertanyaan di sini..."
+                        />
+                      </div>
+                      <div className="space-y-3">
+                        {q.options.map((opt, optIdx) => (
+                          <div key={optIdx} className="flex items-center gap-3">
+                            <input 
+                              type="radio" 
+                              name={`correct-${qIdx}`} 
+                              checked={q.correctAnswer === optIdx}
+                              onChange={() => {
+                                const newQ = [...questions];
+                                newQ[qIdx].correctAnswer = optIdx;
+                                setQuestions(newQ);
+                              }}
+                              className="w-5 h-5 text-purple-600 border-slate-300 focus:ring-purple-500 cursor-pointer"
+                            />
+                            <span className="text-sm font-black text-slate-400 w-6">{String.fromCharCode(65 + optIdx)}.</span>
+                            <input 
+                              type="text"
+                              value={opt}
+                                onChange={(e) => {
+                                  const newQ = [...questions];
+                                  const newOptions = [...newQ[qIdx].options];
+                                  newOptions[optIdx] = e.target.value;
+                                  newQ[qIdx] = { ...newQ[qIdx], options: newOptions };
+                                  setQuestions(newQ);
+                                }}
+                              className="flex-1 border-slate-200 rounded-xl text-sm p-2.5 bg-slate-50 focus:bg-white focus:border-purple-400 focus:ring-4 focus:ring-purple-400/20 transition-all"
+                              placeholder={`Opsi ${String.fromCharCode(65 + optIdx)}`}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex flex-col sm:flex-row gap-3 justify-end pt-4 border-t border-slate-100">
+                    <Button variant="outline" onClick={() => setQuestions([...questions, {question: "", options: ["","","",""], correctAnswer: 0}])} className="border-purple-200 text-purple-700 font-bold hover:bg-purple-50 rounded-xl h-11">
+                      + Tambah Soal
+                    </Button>
+                    <Button onClick={saveQuestions} className="bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-md hover:shadow-lg transition-all rounded-xl h-11">
+                      <Save className="w-4 h-4 mr-2" /> Simpan Bank Soal
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="absolute top-4 right-4">
+              <Button onClick={() => setShowLatihan(false)} variant="ghost" className="h-8 w-8 p-0 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100">✕</Button>
             </div>
           </div>
         </div>
