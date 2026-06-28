@@ -1062,8 +1062,13 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
       if (authError) return authError;
 
       try {
+        const payload = await getAdminPayload(headers, jwt);
+        if (!payload || payload.role !== "siswa") {
+          return { success: false, message: "Hanya siswa yang dapat mengumpulkan tugas" };
+        }
+        const studentId = payload.id;
         const sId = parseInt(sessionId);
-        const { studentId, fileUrl } = body as { studentId: number; fileUrl: string };
+        const { fileUrl } = body as { fileUrl: string };
 
         // Ensure there is an assignment for this session
         let assignment = await db.select().from(elearningAssignments).where(eq(elearningAssignments.sessionId, sId)).get();
@@ -1132,13 +1137,14 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
   .get(
     "/quiz/:sessionId",
     async (context: any) => {
-      const { headers, jwt, params: { sessionId }, query, set } = context;
+      const { headers, jwt, params: { sessionId }, set } = context;
       const authError = await verifyUser(headers, jwt, set);
       if (authError) return authError;
 
       try {
         const sId = parseInt(sessionId);
-        const studentId = query.studentId ? parseInt(query.studentId) : null;
+        const payload = await getAdminPayload(headers, jwt);
+        const studentId = payload?.role === "siswa" ? payload.id : null;
         
         const questions = await db.select().from(elearningQuestions).where(eq(elearningQuestions.sessionId, sId)).all();
         
@@ -1193,8 +1199,13 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
       if (authError) return authError;
 
       try {
+        const payload = await getAdminPayload(headers, jwt);
+        if (!payload || payload.role !== "siswa") {
+          return { success: false, message: "Hanya siswa yang dapat mensubmit kuis" };
+        }
+        const studentId = payload.id;
         const sId = parseInt(sessionId);
-        const { studentId, answers } = body as { studentId: number; answers: number[] };
+        const { answers } = body as { answers: number[] };
         
         const questions = await db.select().from(elearningQuestions).where(eq(elearningQuestions.sessionId, sId)).all();
         

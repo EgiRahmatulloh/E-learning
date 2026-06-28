@@ -222,6 +222,10 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
 
   const handleUploadJawaban = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !sessionId) return;
+    if (!user?.id) {
+      toast.error("Gagal: User belum login");
+      return;
+    }
     const file = e.target.files[0];
     const toastId = toast.loading(`Mengunggah jawaban: ${file.name}...`);
     try {

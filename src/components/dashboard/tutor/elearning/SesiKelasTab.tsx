@@ -281,6 +281,11 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
         body: JSON.stringify({ grade: Number(grade), feedback })
       });
       toast.success("Penilaian berhasil disimpan!");
+      
+      // Update local state to prevent overwrite
+      setSubmissions(submissions.map(sub => 
+        sub.id === submissionId ? { ...sub, grade: Number(grade), feedback } : sub
+      ));
     } catch (err) {
       toast.error("Gagal menyimpan penilaian");
     }
@@ -789,7 +794,7 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
                           value={q.question}
                           onChange={(e) => {
                             const newQ = [...questions];
-                            newQ[qIdx].question = e.target.value;
+                            newQ[qIdx] = { ...newQ[qIdx], question: e.target.value };
                             setQuestions(newQ);
                           }}
                           className="w-full border-slate-200 rounded-xl text-sm p-3 bg-slate-50 focus:bg-white focus:border-purple-400 focus:ring-4 focus:ring-purple-400/20 transition-all resize-none" 
@@ -815,11 +820,13 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
                             <input 
                               type="text"
                               value={opt}
-                              onChange={(e) => {
-                                const newQ = [...questions];
-                                newQ[qIdx].options[optIdx] = e.target.value;
-                                setQuestions(newQ);
-                              }}
+                                onChange={(e) => {
+                                  const newQ = [...questions];
+                                  const newOptions = [...newQ[qIdx].options];
+                                  newOptions[optIdx] = e.target.value;
+                                  newQ[qIdx] = { ...newQ[qIdx], options: newOptions };
+                                  setQuestions(newQ);
+                                }}
                               className="flex-1 border-slate-200 rounded-xl text-sm p-2.5 bg-slate-50 focus:bg-white focus:border-purple-400 focus:ring-4 focus:ring-purple-400/20 transition-all"
                               placeholder={`Opsi ${String.fromCharCode(65 + optIdx)}`}
                             />
