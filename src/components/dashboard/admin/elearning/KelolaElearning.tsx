@@ -409,41 +409,44 @@ export default function KelolaElearning() {
         </form>
       </div>
 
-      {/* TABLE SECTION */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h3 className="font-black text-slate-600 uppercase text-xs tracking-widest">
-            Daftar Setup E-Learning
-          </h3>
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Cari kelas, mapel, atau tutor..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1); // Reset page on search
-              }}
-              className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-[#280f91] shadow-xs"
-            />
+      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-50/50">
+          <span className="text-xs font-black text-slate-500 uppercase tracking-widest">
+            Daftar Setup E-Learning ({items.length})
+          </span>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <Search className="h-4 w-4" />
+              </span>
+              <input
+                type="text"
+                placeholder="cari"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1); // Reset page on search
+                }}
+                className="w-full sm:w-64 h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner"
+              />
+            </div>
           </div>
         </div>
         
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[800px]">
+          <table className="w-full text-left text-sm border-collapse min-w-[1000px]">
             <thead>
-              <tr className="bg-cyan-50 text-cyan-900 font-black text-xs uppercase tracking-wide">
-                <th className="p-4 border-b border-cyan-100 w-12 text-center">No</th>
-                <th className="p-4 border-b border-cyan-100">Kelas (Rombel)</th>
-                <th className="p-4 border-b border-cyan-100">Mata Pelajaran</th>
-                <th className="p-4 border-b border-cyan-100">Tutor</th>
-                <th className="p-4 border-b border-cyan-100 text-center">SKK</th>
-                <th className="p-4 border-b border-cyan-100 text-center">Sesi</th>
-                <th className="p-4 border-b border-cyan-100 text-center">Aksi</th>
+              <tr className="bg-[#00badb] text-white font-black text-sm uppercase">
+                <th className="py-4 px-6 border-r border-[#009cb9] text-center w-16">NO</th>
+                <th className="py-4 px-6 border-r border-[#009cb9]">KELAS (ROMBEL)</th>
+                <th className="py-4 px-6 border-r border-[#009cb9]">MATA PELAJARAN</th>
+                <th className="py-4 px-6 border-r border-[#009cb9]">TUTOR</th>
+                <th className="py-4 px-6 border-r border-[#009cb9] text-center">SKK</th>
+                <th className="py-4 px-6 border-r border-[#009cb9] text-center">SESI</th>
+                <th className="py-4 px-6 text-center">AKSI</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+            <tbody>
               {(() => {
                 const filteredItems = items.filter(item => {
                   const t = tutors.find(x => x.id === item.tutorId);
@@ -458,15 +461,15 @@ export default function KelolaElearning() {
                   filteredItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((item, idx) => {
                     const t = tutors.find(x => x.id === item.tutorId);
                   return (
-                    <tr key={item.id} className="hover:bg-slate-50 transition">
-                      <td className="p-4 text-center text-slate-400 font-mono">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
-                      <td className="p-4 font-bold text-cyan-900">{item.kelas}</td>
-                      <td className="p-4 font-bold text-slate-800">{item.mapel}</td>
-                      <td className="p-4 text-xs font-bold text-purple-800 uppercase">
+                    <tr key={item.id} className="border-b border-slate-100 hover:bg-cyan-50/20 font-bold text-slate-700 transition-colors">
+                      <td className="py-4 px-6 border-r border-slate-100 text-center text-slate-500 font-mono">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
+                      <td className="py-4 px-6 border-r border-slate-100 font-extrabold text-slate-900 leading-relaxed uppercase">{item.kelas}</td>
+                      <td className="py-4 px-6 border-r border-slate-100 font-extrabold text-slate-800">{item.mapel}</td>
+                      <td className="py-4 px-6 border-r border-slate-100 font-semibold text-slate-650 text-center">
                         {t ? t.nama : <span className="text-slate-400 italic">Tidak Diketahui</span>}
                       </td>
-                      <td className="p-4 text-center font-bold text-orange-600">{item.skk}</td>
-                      <td className="p-4 text-center">
+                      <td className="py-4 px-6 border-r border-slate-100 text-center font-extrabold text-slate-800 font-mono">{item.skk}</td>
+                      <td className="py-4 px-6 border-r border-slate-100 text-center">
                         <Button
                           onClick={() => {
                             setSetupToManage(item);
@@ -478,14 +481,14 @@ export default function KelolaElearning() {
                           Kelola ({item.jumlahSesi})
                         </Button>
                       </td>
-                      <td className="p-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <button onClick={() => handleEdit(item)} className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Edit">
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => triggerDelete(item.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Hapus">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                      <td className="py-4 px-6 text-center">
+                        <div className="flex items-center justify-center gap-3">
+                          <Button onClick={() => handleEdit(item)} className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 h-9 px-3.5 rounded-lg font-bold text-xs cursor-pointer flex items-center gap-1.5 shadow-xs transition-all">
+                            <Edit className="h-3.5 w-3.5 text-blue-600" /> Edit
+                          </Button>
+                          <Button onClick={() => triggerDelete(item.id)} className="bg-white border border-slate-200 hover:bg-rose-50 text-rose-600 h-9 px-3.5 rounded-lg font-bold text-xs cursor-pointer flex items-center gap-1.5 shadow-xs transition-all">
+                            <Trash2 className="h-3.5 w-3.5" /> Hapus
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -493,7 +496,7 @@ export default function KelolaElearning() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-400 text-sm font-semibold">
+                  <td colSpan={7} className="py-10 text-center font-bold text-slate-400">
                     Tidak ada data setup E-Learning yang sesuai kriteria.
                   </td>
                 </tr>
@@ -502,62 +505,44 @@ export default function KelolaElearning() {
             </tbody>
           </table>
         </div>
-        
-        {/* Pagination Controls */}
-        {(() => {
-          const filteredItems = items.filter(item => {
-            const t = tutors.find(x => x.id === item.tutorId);
-            const tutorName = t ? t.nama.toLowerCase() : "";
-            const searchLower = searchTerm.toLowerCase();
-            return item.kelas.toLowerCase().includes(searchLower) || 
-                   item.mapel.toLowerCase().includes(searchLower) ||
-                   tutorName.includes(searchLower);
-          });
-          
-          return filteredItems.length > itemsPerPage && (
-            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/30">
-              <p className="text-xs font-semibold text-slate-500">
-                Menampilkan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredItems.length)} dari {filteredItems.length} setup
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="h-8 text-xs font-bold text-slate-600"
-                >
-                  Sebelumnya
-                </Button>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.ceil(filteredItems.length / itemsPerPage) }).map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${
-                        currentPage === i + 1 
-                          ? 'bg-cyan-600 text-white shadow-md' 
-                          : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredItems.length / itemsPerPage), p + 1))}
-                  disabled={currentPage === Math.ceil(filteredItems.length / itemsPerPage)}
-                  className="h-8 text-xs font-bold text-slate-600"
-                >
-                  Selanjutnya
-                </Button>
-              </div>
-            </div>
-          );
-        })()}
       </div>
+
+      {/* Pagination Controls */}
+      {(() => {
+        const filteredItems = items.filter(item => {
+          const t = tutors.find(x => x.id === item.tutorId);
+          const tutorName = t ? t.nama.toLowerCase() : "";
+          const searchLower = searchTerm.toLowerCase();
+          return item.kelas.toLowerCase().includes(searchLower) || 
+                 item.mapel.toLowerCase().includes(searchLower) ||
+                 tutorName.includes(searchLower);
+        });
+        const totalPages = Math.ceil(filteredItems.length / itemsPerPage) || 1;
+
+        return totalPages > 1 && (
+          <div className="flex justify-end items-center gap-2.5 mt-4">
+            <Button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="bg-[#ffb300] hover:bg-[#ffa000] text-black font-extrabold text-xs h-9 px-4 rounded-xl cursor-pointer disabled:opacity-50 transition-all"
+            >
+              Previous
+            </Button>
+
+            <span className="h-9 w-9 flex items-center justify-center bg-[#ffb300] text-black font-black text-sm rounded-xl">
+              {currentPage}
+            </span>
+
+            <Button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="bg-[#ffb300] hover:bg-[#ffa000] text-black font-extrabold text-xs h-9 px-4 rounded-xl cursor-pointer disabled:opacity-50 transition-all"
+            >
+              Next
+            </Button>
+          </div>
+        );
+      })()}
 
       {/* CUSTOM CONFIRM DELETE MODAL */}
       {deleteModalOpen && (

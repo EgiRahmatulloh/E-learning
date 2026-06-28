@@ -433,6 +433,23 @@ export const elearningEvaluations = sqliteTable('elearning_evaluations', {
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
 });
 
+export const elearningQuestions = sqliteTable('elearning_questions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  sessionId: integer('session_id').notNull().references(() => elearningSessions.id, { onDelete: 'cascade' }),
+  question: text('question').notNull(),
+  options: text('options').notNull(), // JSON array of 4 options
+  correctAnswer: integer('correct_answer').notNull(), // 0, 1, 2, or 3
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+});
+
+export const elearningQuizSubmissions = sqliteTable('elearning_quiz_submissions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  sessionId: integer('session_id').notNull().references(() => elearningSessions.id, { onDelete: 'cascade' }),
+  studentId: integer('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
+  grade: integer('grade').notNull(), // 0 - 100
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+});
+
 export const elearningDiscussions = sqliteTable('elearning_discussions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   sessionId: integer('session_id').notNull(),

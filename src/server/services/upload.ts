@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { finalJwtSecret } from "../config/jwt";
-import { verifyAdminOrTutor } from "../middleware/auth";
+import { verifyUser } from "../middleware/auth";
 import fs from "fs";
 
 export const uploadServices = new Elysia()
@@ -22,7 +22,7 @@ export const uploadServices = new Elysia()
   .post(
     "/api/upload",
     async ({ body, headers, jwt, set }) => {
-      const authError = await verifyAdminOrTutor(headers, jwt, set);
+      const authError = await verifyUser(headers, jwt, set);
       if (authError) return authError;
 
       const bodyData = body as { file?: any };

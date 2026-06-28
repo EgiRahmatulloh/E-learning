@@ -49,7 +49,10 @@ export default function AngketEvaluasiTutor() {
     try {
       const res = await fetch("/api/elearning/evaluations", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({ questions: questions.map(q => ({ text: q.text })) })
       });
       const json = await res.json();

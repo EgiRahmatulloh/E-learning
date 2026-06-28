@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface StudentMonitoringData {
@@ -76,45 +76,55 @@ export default function SiswaMonitoring() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <div className="overflow-x-auto p-6">
-          <table className="w-full text-left border-collapse min-w-[800px]">
+      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-50/50">
+          <span className="text-xs font-black text-slate-500 uppercase tracking-widest">
+            Daftar Warga Belajar ({filtered.length})
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm border-collapse min-w-[800px]">
             <thead>
-              <tr className="border-b border-slate-200 text-xs font-black text-slate-400 uppercase tracking-wider">
-                <th className="py-3 px-4">Nama Siswa / NIS</th>
-                <th className="py-3 px-4">Rombel (Kelas)</th>
-                <th className="py-3 px-4 text-center">Partisipasi Forum</th>
-                <th className="py-3 px-4 text-center">Tugas Selesai</th>
-                <th className="py-3 px-4 text-center">Nilai Rata-rata</th>
+              <tr className="bg-[#00badb] text-white font-black text-sm uppercase">
+                <th className="py-4 px-6 border-r border-[#009cb9] w-16 text-center">NO</th>
+                <th className="py-4 px-6 border-r border-[#009cb9]">NAMA SISWA / NIS</th>
+                <th className="py-4 px-6 border-r border-[#009cb9]">ROMBEL (KELAS)</th>
+                <th className="py-4 px-6 border-r border-[#009cb9] text-center">PARTISIPASI FORUM</th>
+                <th className="py-4 px-6 border-r border-[#009cb9] text-center">TUGAS SELESAI</th>
+                <th className="py-4 px-6 text-center">NILAI RATA-RATA</th>
               </tr>
             </thead>
-            <tbody className="text-sm font-medium text-slate-700">
+            <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-400 font-medium">
+                  <td colSpan={6} className="py-10 text-center font-bold text-slate-400">
                     Memuat data...
                   </td>
                 </tr>
               ) : paginatedStudents.length > 0 ? (
-                paginatedStudents.map((s) => (
-                  <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50/50">
-                    <td className="py-3 px-4">
-                      <div className="font-bold text-slate-800">{s.nama}</div>
-                      <div className="text-xs text-slate-500">{s.nis}</div>
+                paginatedStudents.map((s, idx) => (
+                  <tr key={s.id} className="border-b border-slate-100 hover:bg-cyan-50/20 font-bold text-slate-700 transition-colors">
+                    <td className="py-4 px-6 border-r border-slate-100 text-center text-slate-500 font-mono">
+                      {(currentPage - 1) * itemsPerPage + idx + 1}
                     </td>
-                    <td className="py-3 px-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                    <td className="py-4 px-6 border-r border-slate-100">
+                      <div className="font-extrabold text-slate-900 leading-relaxed uppercase">{s.nama}</div>
+                      <div className="text-xs text-slate-500 font-semibold">{s.nis}</div>
+                    </td>
+                    <td className="py-4 px-6 border-r border-slate-100">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-100 text-blue-800">
                         {s.kelas}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-center text-slate-600 font-bold">{s.forumCount !== undefined ? s.forumCount : 0} Balasan</td>
-                    <td className="py-3 px-4 text-center text-slate-600 font-bold">{s.tugasCount !== undefined ? s.tugasCount : 0} Tugas</td>
-                    <td className="py-3 px-4 text-center font-bold text-[#ff6105]">{s.avgScore !== undefined ? s.avgScore : 0}</td>
+                    <td className="py-4 px-6 border-r border-slate-100 text-center text-slate-600 font-extrabold">{s.forumCount !== undefined ? s.forumCount : 0} BALASAN</td>
+                    <td className="py-4 px-6 border-r border-slate-100 text-center text-slate-600 font-extrabold">{s.tugasCount !== undefined ? s.tugasCount : 0} TUGAS</td>
+                    <td className="py-4 px-6 text-center font-black text-[#ff6105] text-base">{s.avgScore !== undefined ? s.avgScore : 0}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-400 font-medium">
+                  <td colSpan={6} className="py-10 text-center font-bold text-slate-400">
                     Tidak ada data siswa yang sesuai kriteria pencarian.
                   </td>
                 </tr>
@@ -122,51 +132,35 @@ export default function SiswaMonitoring() {
             </tbody>
           </table>
         </div>
-
-        {/* Pagination Controls */}
-        {filtered.length > itemsPerPage && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/30">
-            <p className="text-xs font-semibold text-slate-500">
-              Menampilkan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filtered.length)} dari {filtered.length} siswa
-            </p>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="h-8 text-xs font-bold text-slate-600"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.ceil(filtered.length / itemsPerPage) }).map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${
-                      currentPage === i + 1 
-                        ? 'bg-cyan-600 text-white shadow-md' 
-                        : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(p => Math.min(Math.ceil(filtered.length / itemsPerPage), p + 1))}
-                disabled={currentPage === Math.ceil(filtered.length / itemsPerPage)}
-                className="h-8 text-xs font-bold text-slate-600"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Pagination Controls */}
+      {(() => {
+        const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+        return totalPages > 1 && (
+          <div className="flex justify-end items-center gap-2.5 mt-4">
+            <Button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="bg-[#ffb300] hover:bg-[#ffa000] text-black font-extrabold text-xs h-9 px-4 rounded-xl cursor-pointer disabled:opacity-50 transition-all"
+            >
+              Previous
+            </Button>
+
+            <span className="h-9 w-9 flex items-center justify-center bg-[#ffb300] text-black font-black text-sm rounded-xl">
+              {currentPage}
+            </span>
+
+            <Button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="bg-[#ffb300] hover:bg-[#ffa000] text-black font-extrabold text-xs h-9 px-4 rounded-xl cursor-pointer disabled:opacity-50 transition-all"
+            >
+              Next
+            </Button>
+          </div>
+        );
+      })()}
     </div>
   );
 }
