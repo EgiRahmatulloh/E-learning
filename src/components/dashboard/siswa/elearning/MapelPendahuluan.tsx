@@ -101,9 +101,11 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
         if (forumData.success) {
           const loadedMessages = (Array.isArray(forumData.data) ? forumData.data : []).map((post: any) => {
             const isSelf = post.authorId === user?.id && post.authorRole === user?.role;
-            const sender = post.authorRole === "tutor" ? "Tutor" : isSelf ? "Siswa (Anda)" : `Siswa ID: ${post.authorId}`;
-            const initial = sender.charAt(0).toUpperCase();
-            const color = post.authorRole === "tutor" ? "bg-[#280f91]" : isSelf ? "bg-cyan-600" : "bg-slate-500";
+            const isTutor = post.authorRole === "tutor";
+            const senderName = post.authorName || "Unknown";
+            const sender = isTutor ? `Tutor (${senderName})` : isSelf ? "Siswa (Anda)" : `Siswa (${senderName})`;
+            const initial = isTutor ? "T" : (isSelf ? "S" : senderName.charAt(0).toUpperCase());
+            const color = isTutor ? "bg-[#280f91]" : isSelf ? "bg-cyan-600" : "bg-slate-500";
             return { id: post.id, sender, text: post.content, isSelf, initial, color };
           });
           setMessages(loadedMessages);
