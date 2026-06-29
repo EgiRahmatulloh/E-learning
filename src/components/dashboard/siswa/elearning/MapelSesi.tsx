@@ -357,30 +357,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
 
 
       {/* Selesai Button Helper Component */}
-      {(() => {
-        const SectionCompleteButton = ({ sectionKey, className = "" }: { sectionKey: string, className?: string }) => {
-          const isDone = completions.has(sectionKey);
-          return (
-            <Button
-              size="sm"
-              onClick={() => !isDone && handleMarkComplete(sectionKey)}
-              disabled={isDone}
-              className={`font-bold ${
-                isDone ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 cursor-not-allowed border-emerald-200" 
-                       : "bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200"
-              } border ${className || 'mt-4 w-full sm:w-auto'}`}
-            >
-              {isDone ? (
-                <><CheckCircle2 className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">Selesai</span></>
-              ) : (
-                <><CheckCircle2 className="w-4 h-4 sm:hidden" /> <span className="hidden sm:inline">Tandai Selesai</span></>
-              )}
-            </Button>
-          );
-        };
-
-        return (
-          <>
+        <>
             {/* Kehadiran */}
             <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
@@ -406,7 +383,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
                 >
                   {isHadir ? "Sudah Hadir" : "Konfirmasi Hadir"}
                 </Button>
-                <SectionCompleteButton sectionKey={`sesi_${sessionNumber}_kehadiran`} className="m-0 shrink-0" />
+                <SectionCompleteButton completions={completions} handleMarkComplete={handleMarkComplete} sectionKey={`sesi_${sessionNumber}_kehadiran`} className="m-0 shrink-0" />
               </div>
             </div>
 
@@ -414,7 +391,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
             <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 prose prose-sm max-w-none prose-slate relative">
               <div className="flex items-center justify-between not-prose mb-3">
                 <h3 className="font-bold text-[#280f91]">Pengantar Sesi {sessionNumber}</h3>
-                <SectionCompleteButton sectionKey={`sesi_${sessionNumber}_pengantar`} className="m-0" />
+                <SectionCompleteButton completions={completions} handleMarkComplete={handleMarkComplete} sectionKey={`sesi_${sessionNumber}_pengantar`} className="m-0" />
               </div>
               {teksPembuka ? (
                 <div dangerouslySetInnerHTML={{ __html: teksPembuka }} />
@@ -429,7 +406,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
                 <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
                   <FileText className="h-5 w-5 text-[#280f91]" />
                   <h3 className="font-bold text-slate-700 flex-1">Materi Inisiasi (PPT)</h3>
-                  <SectionCompleteButton sectionKey={`sesi_${sessionNumber}_inisiasi`} className="m-0" />
+                  <SectionCompleteButton completions={completions} handleMarkComplete={handleMarkComplete} sectionKey={`sesi_${sessionNumber}_inisiasi`} className="m-0" />
                 </div>
                 <div className="flex-1 min-h-[160px] bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center p-6 text-center flex-col gap-4">
                   {pptUrl ? (
@@ -450,7 +427,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
                 <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
                   <PlayCircle className="h-5 w-5 text-red-600" />
                   <h3 className="font-bold text-slate-700 flex-1">Materi Pengayaan (Video)</h3>
-                  <SectionCompleteButton sectionKey={`sesi_${sessionNumber}_pengayaan`} className="m-0" />
+                  <SectionCompleteButton completions={completions} handleMarkComplete={handleMarkComplete} sectionKey={`sesi_${sessionNumber}_pengayaan`} className="m-0" />
                 </div>
                 <div className="flex-1 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center p-6 text-center flex-col gap-4">
                   {videoUrl ? (
@@ -483,7 +460,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
               <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
                 <MessageCircle className="h-5 w-5 text-blue-600" />
                 <h3 className="font-bold text-slate-700 flex-1">Ruang Diskusi</h3>
-                <SectionCompleteButton sectionKey={`sesi_${sessionNumber}_diskusi`} className="m-0" />
+                <SectionCompleteButton completions={completions} handleMarkComplete={handleMarkComplete} sectionKey={`sesi_${sessionNumber}_diskusi`} className="m-0" />
               </div>
               <div className="space-y-4 my-4 max-h-96 overflow-y-auto pr-2">
                 {discussions.length === 0 && (
@@ -567,7 +544,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
                 <Button onClick={() => { setShowLatihan(true); loadQuestions(); }} variant="outline" className="flex-1 sm:flex-none rounded-xl border-purple-200 text-purple-700 font-bold hover:bg-purple-50">
                   Mulai Latihan
                 </Button>
-                <SectionCompleteButton sectionKey={`sesi_${sessionNumber}_latihan`} className="m-0 shrink-0" />
+                <SectionCompleteButton completions={completions} handleMarkComplete={handleMarkComplete} sectionKey={`sesi_${sessionNumber}_latihan`} className="m-0 shrink-0" />
               </div>
             </div>
 
@@ -579,7 +556,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
                   <h2 className="text-lg font-black text-orange-900">Tugas Sesi {sessionNumber}</h2>
                   <p className="text-xs text-orange-700">Unduh soal dan kumpulkan jawaban tugas di sini.</p>
                 </div>
-                <SectionCompleteButton sectionKey={`sesi_${sessionNumber}_tugas`} className="m-0" />
+                <SectionCompleteButton completions={completions} handleMarkComplete={handleMarkComplete} sectionKey={`sesi_${sessionNumber}_tugas`} className="m-0" />
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button onClick={() => handleDownload(tugasUrl)} variant="outline" className="flex-1 bg-white hover:bg-orange-50 border-orange-200 text-orange-700 font-bold h-12">
@@ -616,8 +593,6 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
         </div>
       )}
       </>
-        );
-      })()}
 
       {showAngket && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -773,3 +748,24 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
     </div>
   );
 }
+
+const SectionCompleteButton = ({ sectionKey, completions, handleMarkComplete, className = '' }: { sectionKey: string, completions: Set<string>, handleMarkComplete: (key: string) => void, className?: string }) => {
+  const isDone = completions.has(sectionKey);
+  return (
+    <Button
+      size="sm"
+      onClick={() => !isDone && handleMarkComplete(sectionKey)}
+      disabled={isDone}
+      className={`font-bold ${
+        isDone ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 cursor-not-allowed border-emerald-200' 
+               : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200'
+      } border ${className || 'mt-4 w-full sm:w-auto'}`}
+    >
+      {isDone ? (
+        <><CheckCircle2 className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">Selesai</span></>
+      ) : (
+        <><CheckCircle2 className="w-4 h-4 sm:hidden" /> <span className="hidden sm:inline">Tandai Selesai</span></>
+      )}
+    </Button>
+  );
+};

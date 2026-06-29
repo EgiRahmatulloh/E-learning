@@ -16,7 +16,10 @@ export function MapelPartisipasi({ subjectName, tutorName, setupId }: MapelParti
 
   useEffect(() => {
     async function fetchStudents() {
-      if (!setupId) return;
+      if (!setupId) {
+        setLoading(false);
+        return;
+      }
       try {
         const res = await fetch(`/api/elearning/students-by-setup/${setupId}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }

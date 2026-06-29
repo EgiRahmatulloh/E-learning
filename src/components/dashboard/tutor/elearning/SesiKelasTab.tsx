@@ -318,6 +318,12 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
   };
 
   const handleGrade = async (submissionId: number, grade: string | number, feedback: string) => {
+    const numGrade = Number(grade);
+    if (isNaN(numGrade) || numGrade < 0 || numGrade > 100 || grade === "") {
+      toast.error("Nilai tidak valid! Masukkan angka antara 0 - 100.");
+      return;
+    }
+    
     try {
       const res = await fetch(`/api/elearning/submissions/${submissionId}/grade`, {
         method: "PUT",
@@ -325,7 +331,7 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem("token")}`
         },
-        body: JSON.stringify({ grade: Number(grade), feedback })
+        body: JSON.stringify({ grade: numGrade, feedback })
       });
       const data = await res.json();
       
