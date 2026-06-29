@@ -29,6 +29,7 @@ export {
   elearningAssignments,
   elearningSubmissions,
   elearningEvaluationResponses,
+  elearningSectionCompletions,
   rombels,
   rombelStudents,
 } from "../db/schema";

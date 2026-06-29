@@ -282,9 +282,10 @@ export default function DashboardSidebar({
                             {/* Sub-menu: Partisipasi, Nilai, Pendahuluan, Sesi 1–8 */}
                             {expandedMenus[parentId] && (
                               <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-2 animate-in slide-in-from-top-1 duration-150">
-                                {["nilai", "pendahuluan", ...Array.from({ length: setup.jumlahSesi || 8 }, (_, i) => `sesi-${i + 1}`)].map((sub) => {
+                                {["partisipasi", "nilai", "pendahuluan", ...Array.from({ length: setup.jumlahSesi || 8 }, (_, i) => `sesi-${i + 1}`)].map((sub) => {
                                   const tabId = `mapel-setup-${setup.id}-${sub}`;
-                                  const label = sub === "nilai" ? "Nilai"
+                                  const label = sub === "partisipasi" ? "Partisipasi"
+                                    : sub === "nilai" ? "Nilai"
                                     : sub === "pendahuluan" ? "Pendahuluan"
                                     : `Sesi ${sub.replace("sesi-", "")}`;
                                   return (

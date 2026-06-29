@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, UploadCloud, Save, Upload, Users, MessageSquare, PenTool, FileText, PlayCircle, DownloadCloud, Trash2 } from "lucide-react";
+import { CheckCircle, UploadCloud, Save, Upload, Users, MessageSquare, PenTool, FileText, PlayCircle, DownloadCloud, Trash2, Pencil } from "lucide-react";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { toast } from "sonner";
 // Removed getSubjectsSiswa import
@@ -54,7 +54,7 @@ export default function SesiKelasTab({ activeTab, user }: Props) {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {courseId ? (
-        <SesiContent courseId={courseId} sessionNumber={activeSesi} />
+        <SesiContent key={activeSesi} courseId={courseId} sessionNumber={activeSesi} user={user} />
       ) : (
         <div className="p-6 text-center text-slate-500 animate-pulse">Memuat data kelas...</div>
       )}
@@ -62,7 +62,7 @@ export default function SesiKelasTab({ activeTab, user }: Props) {
   );
 }
 
-function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNumber: number }) {
+function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sessionNumber: number, user?: any }) {
   const [loading, setLoading] = useState(true);
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [teksPembuka, setTeksPembuka] = useState("");
@@ -73,17 +73,19 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
   const [dueDate, setDueDate] = useState("");
   const [cutoffDate, setCutoffDate] = useState("");
   const [submissions, setSubmissions] = useState<any[]>([]);
+  const [gradeEdits, setGradeEdits] = useState<Record<number, { grade: string | number, feedback: string }>>({});
   const [showLatihan, setShowLatihan] = useState(false);
   const [questions, setQuestions] = useState<{question: string; options: string[]; correctAnswer: number}[]>([]);
   const [isLatihanLoading, setIsLatihanLoading] = useState(false);
   const pptInputRef = useRef<HTMLInputElement>(null);
   const tugasUploadRef = useRef<HTMLInputElement>(null);
 
-  // Forum state
+  const [showForum, setShowForum] = useState(false);
   const [forumPosts, setForumPosts] = useState<any[]>([]);
   const [replyText, setReplyText] = useState("");
   const [activeReplyId, setActiveReplyId] = useState<number | null>(null);
-  const [showForum, setShowForum] = useState(false);
+  const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
+  const [editInputValue, setEditInputValue] = useState("");
 
   // Attendance state
   const [attendance, setAttendance] = useState<any[]>([]);
@@ -230,6 +232,51 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
     }
   };
 
+  const handleEditSubmit = async (msgId: number) => {
+    if (!editInputValue.trim()) return;
+    try {
+      const res = await fetch(`/api/elearning/forum/${msgId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ content: editInputValue })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Pesan berhasil diubah");
+        setEditingMessageId(null);
+        if (sessionId) fetchForumPosts(sessionId);
+      } else {
+        toast.error(data.message || "Gagal mengubah pesan");
+      }
+    } catch (err) {
+      toast.error("Terjadi kesalahan saat mengubah pesan");
+    }
+  };
+
+  const handleDeleteMessage = async (msgId: number) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus pesan ini?")) return;
+    try {
+      const res = await fetch(`/api/elearning/forum/${msgId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Pesan berhasil dihapus");
+        if (sessionId) fetchForumPosts(sessionId);
+      } else {
+        toast.error(data.message || "Gagal menghapus pesan");
+      }
+    } catch (err) {
+      toast.error("Terjadi kesalahan saat menghapus pesan");
+    }
+  };
+
   const handleSaveTeks = async () => {
     if (!sessionId) return;
     try {
@@ -271,23 +318,34 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
   };
 
   const handleGrade = async (submissionId: number, grade: string | number, feedback: string) => {
+    const numGrade = Number(grade);
+    if (isNaN(numGrade) || numGrade < 0 || numGrade > 100 || grade === "") {
+      toast.error("Nilai tidak valid! Masukkan angka antara 0 - 100.");
+      return;
+    }
+    
     try {
-      await fetch(`/api/elearning/submissions/${submissionId}/grade`, {
+      const res = await fetch(`/api/elearning/submissions/${submissionId}/grade`, {
         method: "PUT",
         headers: { 
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem("token")}`
         },
-        body: JSON.stringify({ grade: Number(grade), feedback })
+        body: JSON.stringify({ grade: numGrade, feedback })
       });
-      toast.success("Penilaian berhasil disimpan!");
+      const data = await res.json();
       
-      // Update local state to prevent overwrite
-      setSubmissions(submissions.map(sub => 
-        sub.id === submissionId ? { ...sub, grade: Number(grade), feedback } : sub
-      ));
+      if (data.success) {
+        toast.success("Penilaian berhasil disimpan!");
+        // Update local state to prevent overwrite
+        setSubmissions(submissions.map(sub => 
+          sub.id === submissionId ? { ...sub, grade: Number(grade), feedback } : sub
+        ));
+      } else {
+        toast.error(data.message || "Gagal menyimpan penilaian");
+      }
     } catch (err) {
-      toast.error("Gagal menyimpan penilaian");
+      toast.error("Terjadi kesalahan jaringan");
     }
   };
 
@@ -600,6 +658,7 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
                   <th className="pb-3 px-4">Berkas Terkirim</th>
                   <th className="pb-3 px-4 text-center">Nilai</th>
                   <th className="pb-3 px-4">Catatan Tutor</th>
+                  <th className="pb-3 px-4 text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -610,20 +669,47 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
                     </td>
                   </tr>
                 ) : (
-                  submissions.map(sub => (
+                  submissions.map(sub => {
+                    const currentEdit = gradeEdits[sub.id] || { grade: sub.grade ?? "", feedback: sub.feedback ?? "" };
+                    return (
                     <tr key={sub.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="py-3 px-4 font-bold text-slate-700">{sub.studentName}</td>
+                      <td className="py-3 px-4 font-bold text-slate-700">{sub.studentName || `Siswa ID: ${sub.studentId}`}</td>
                       <td className="py-3 px-4">
-                        <a href={sub.fileUrl} target="_blank" className="text-emerald-600 underline text-xs font-bold bg-emerald-50 px-2 py-1 rounded">Lihat Berkas</a>
+                        {sub.fileUrl ? (
+                          <a href={sub.fileUrl} target="_blank" className="text-emerald-600 underline text-xs font-bold bg-emerald-50 px-2 py-1 rounded">Lihat Berkas</a>
+                        ) : (
+                          <span className="text-slate-400 text-xs italic">Belum mengumpulkan</span>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <input type="number" defaultValue={sub.grade} className="w-16 border border-slate-200 rounded p-1 text-center focus:border-[#280f91] focus:outline-none" onBlur={(e) => handleGrade(sub.id, e.target.value, sub.feedback)} />
+                        <input 
+                          type="number" 
+                          value={currentEdit.grade} 
+                          onChange={(e) => setGradeEdits(prev => ({...prev, [sub.id]: { ...currentEdit, grade: e.target.value }}))}
+                          className="w-16 border border-slate-200 rounded p-1 text-center focus:border-[#280f91] focus:outline-none" 
+                        />
                       </td>
                       <td className="py-3 px-4">
-                        <input type="text" defaultValue={sub.feedback} className="w-full border border-slate-200 rounded p-1 text-xs focus:border-[#280f91] focus:outline-none" placeholder="Tulis catatan..." onBlur={(e) => handleGrade(sub.id, sub.grade, e.target.value)} />
+                        <input 
+                          type="text" 
+                          value={currentEdit.feedback} 
+                          onChange={(e) => setGradeEdits(prev => ({...prev, [sub.id]: { ...currentEdit, feedback: e.target.value }}))}
+                          className="w-full border border-slate-200 rounded p-1 text-xs focus:border-[#280f91] focus:outline-none" 
+                          placeholder="Tulis catatan..." 
+                        />
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <Button 
+                          onClick={() => handleGrade(sub.id, currentEdit.grade, currentEdit.feedback)}
+                          size="sm"
+                          className="bg-[#280f91] hover:bg-[#3a1bca] text-white text-xs font-bold h-7"
+                        >
+                          Simpan
+                        </Button>
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -694,22 +780,79 @@ function SesiContent({ courseId, sessionNumber }: { courseId: number, sessionNum
                             </h4>
                             <span className="text-xs text-slate-400">{new Date(post.createdAt).toLocaleString('id-ID')}</span>
                           </div>
-                          <Button size="sm" variant="ghost" className="h-7 text-xs text-cyan-600 hover:bg-cyan-50" onClick={() => setActiveReplyId(activeReplyId === post.id ? null : post.id)}>Balas</Button>
+                          <div className="flex gap-2">
+                            {post.authorId === user?.id && post.authorRole === user?.role && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-xs text-slate-400 hover:text-blue-600 px-2"
+                                  onClick={() => {
+                                    setEditingMessageId(post.id);
+                                    setEditInputValue(post.content);
+                                  }}
+                                  title="Edit pesan"
+                                >
+                                  <Pencil className="w-3 h-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-xs text-slate-400 hover:text-red-600 px-2"
+                                  onClick={() => handleDeleteMessage(post.id)}
+                                  title="Hapus pesan"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </>
+                            )}
+                            <Button size="sm" variant="ghost" className="h-7 text-xs text-cyan-600 hover:bg-cyan-50" onClick={() => setActiveReplyId(activeReplyId === post.id ? null : post.id)}>Balas</Button>
+                          </div>
                         </div>
-                        <div className="mt-2 text-sm text-slate-600 prose" dangerouslySetInnerHTML={{ __html: post.content }} />
+                        
+                        {editingMessageId === post.id ? (
+                          <div className="mt-2 space-y-2">
+                            <RichTextEditor value={editInputValue} onChange={setEditInputValue} placeholder="Edit pesan..." />
+                            <div className="flex gap-2 justify-end">
+                              <Button onClick={() => setEditingMessageId(null)} size="sm" variant="outline" className="h-8">Batal</Button>
+                              <Button onClick={() => handleEditSubmit(post.id)} size="sm" className="bg-[#280f91] hover:bg-[#3a1bca] text-white h-8">Simpan</Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="mt-2 text-sm text-slate-600 prose" dangerouslySetInnerHTML={{ __html: post.content }} />
+                        )}
                         
                         {/* Replies */}
                         {forumPosts.filter(r => r.parentId === post.id).map(reply => (
-                          <div key={reply.id} className="mt-3 pl-4 border-l-2 border-slate-200 flex gap-2">
+                          <div key={reply.id} className="mt-3 pl-4 border-l-2 border-slate-200 flex gap-2 group">
                             <div className={`h-6 w-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${reply.authorRole === 'tutor' ? 'bg-[#280f91] text-white' : 'bg-slate-200 text-slate-600'}`}>
                               {(reply.authorName || "?").substring(0, 2).toUpperCase()}
                             </div>
                             <div className="flex-1">
-                              <h5 className="font-bold text-slate-700 text-xs flex items-center gap-2">
-                                {reply.authorName} 
-                                {reply.authorRole === 'tutor' && <span className="bg-[#ff6105] text-white px-1.5 py-0.5 rounded text-[9px]">TUTOR</span>}
-                              </h5>
-                              <div className="text-xs text-slate-600 prose mt-1" dangerouslySetInnerHTML={{ __html: reply.content }} />
+                              <div className="flex justify-between items-start">
+                                <h5 className="font-bold text-slate-700 text-xs flex items-center gap-2">
+                                  {reply.authorName} 
+                                  {reply.authorRole === 'tutor' && <span className="bg-[#ff6105] text-white px-1.5 py-0.5 rounded text-[9px]">TUTOR</span>}
+                                </h5>
+                                {reply.authorId === user?.id && reply.authorRole === user?.role && (
+                                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onClick={() => { setEditingMessageId(reply.id); setEditInputValue(reply.content); }} className="text-slate-400 hover:text-blue-600"><Pencil className="w-3 h-3" /></button>
+                                    <button onClick={() => handleDeleteMessage(reply.id)} className="text-slate-400 hover:text-red-600"><Trash2 className="w-3 h-3" /></button>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {editingMessageId === reply.id ? (
+                                <div className="mt-2 space-y-2">
+                                  <RichTextEditor value={editInputValue} onChange={setEditInputValue} placeholder="Edit balasan..." />
+                                  <div className="flex gap-2 justify-end">
+                                    <Button onClick={() => setEditingMessageId(null)} size="sm" variant="outline" className="h-7 text-xs">Batal</Button>
+                                    <Button onClick={() => handleEditSubmit(reply.id)} size="sm" className="bg-[#280f91] hover:bg-[#3a1bca] text-white h-7 text-xs">Simpan</Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-xs text-slate-600 prose mt-1" dangerouslySetInnerHTML={{ __html: reply.content }} />
+                              )}
                             </div>
                           </div>
                         ))}

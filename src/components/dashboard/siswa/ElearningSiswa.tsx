@@ -64,15 +64,32 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [siswaSetups, setSiswaSetups] = useState<any[]>([]);
 
+  const [progresses, setProgresses] = useState<Record<number, number>>({});
+
   useEffect(() => {
     if (user?.kelas) {
       fetch(`/api/elearning/setups?kelas=${encodeURIComponent(user.kelas)}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       })
         .then(res => res.json())
-        .then(data => {
+        .then(async data => {
           if (data.success && data.data) {
             setSiswaSetups(data.data);
+            
+            // Fetch progress for each setup
+            const progressData: Record<number, number> = {};
+            await Promise.all(data.data.map(async (setup: any) => {
+              try {
+                const res = await fetch(`/api/elearning/completions/progress/${setup.id}`, {
+                  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+                });
+                const progData = await res.json();
+                if (progData.success) {
+                  progressData[setup.id] = progData.progress;
+                }
+              } catch (e) {}
+            }));
+            setProgresses(progressData);
           }
         })
         .catch(err => console.error("Error fetching setups:", err));
@@ -87,7 +104,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
     return siswaSetups.map((setup, index) => {
       const meta = getSubjectMeta(index);
       const slug = toSlug(setup.mapel);
-      let progress: number = 0; // Hardcoded to 0 for now as requested
+      const progress: number = progresses[setup.id] || 0;
       let status: "belum" | "progres" | "selesai" = "belum";
       if (progress > 0 && progress < 100) status = "progres";
       if (progress === 100) status = "selesai";
@@ -103,7 +120,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
         jumlahSesi: setup.jumlahSesi,
       };
     });
-  }, [siswaSetups]);
+  }, [siswaSetups, progresses]);
 
   const filteredSubjects = useMemo(() => {
     let result = allSubjects.filter((s) => !hiddenSubjects.has(s.id));
@@ -155,7 +172,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
     const tutorName = matchedSubject?.tutor || "Tutor";
     const currentSetupId = matchedSubject?.setupId;
     
-    if (subPart === "partisipasi") return <MapelPartisipasi subjectName={subjectName} tutorName={tutorName} />;
+    if (subPart === "partisipasi") return <MapelPartisipasi subjectName={subjectName} tutorName={tutorName} setupId={currentSetupId} />;
     if (subPart === "nilai") return <MapelNilai subjectName={subjectName} setupId={currentSetupId} user={user} />;
     if (subPart === "pendahuluan") return <MapelPendahuluan subjectName={subjectName} user={user} setupId={currentSetupId} />;
     if (subPart.startsWith("sesi-")) {
@@ -212,6 +229,23 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
           </p>
           <h1 className="text-3xl font-black">{subLabel}</h1>
           <p className="text-sm text-white/70 mt-2">{matchedSubject?.tutor}</p>
+        </div>
+
+        {/* Navigasi Tab Atas */}
+        <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
+          {menus.map((menu) => (
+            <button
+              key={menu.id}
+              onClick={() => handleNavigate(menu.id)}
+              className={`whitespace-nowrap px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                subPart === menu.id
+                  ? "bg-[#280f91] text-white shadow-md"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              {menu.label}
+            </button>
+          ))}
         </div>
 
         {/* Dinamis konten */}
