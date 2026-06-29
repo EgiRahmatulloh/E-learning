@@ -385,16 +385,22 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
             </div>
           ) : (
             <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-              {forumPosts.filter(p => !p.parentId).map(post => (
+              {forumPosts.filter(p => !p.parentId).map(post => {
+                const isTutorSelf = post.authorId === user?.id && post.authorRole === "tutor";
+                const displayName = isTutorSelf ? "Tutor (Anda)" : (post.authorRole === "siswa" ? `Siswa (${post.authorName || 'Unknown'})` : post.authorName);
+                const avatarLetter = isTutorSelf ? "T" : (post.authorName || "?").charAt(0).toUpperCase();
+                const avatarColorClass = isTutorSelf ? "bg-[#280f91] text-white" : "bg-cyan-100 text-cyan-700";
+
+                return (
                 <div key={post.id} className="bg-slate-50 border border-slate-100 rounded-xl p-4">
                   <div className="flex gap-3">
-                    <div className="h-10 w-10 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center font-bold text-sm shrink-0">
-                      {(post.authorName || '?').substring(0, 2).toUpperCase()}
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${avatarColorClass}`}>
+                      {avatarLetter}
                     </div>
                     <div className="flex-1">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h4 className="font-bold text-slate-800 text-sm">{post.authorName}</h4>
+                          <h4 className="font-bold text-slate-800 text-sm">{displayName}</h4>
                           <span className="text-xs text-slate-400">{new Date(post.createdAt).toLocaleString('id-ID')}</span>
                         </div>
                         <div className="flex gap-2">
@@ -447,16 +453,22 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
                       )}
 
                       {/* Replies */}
-                      {forumPosts.filter(r => r.parentId === post.id).map(reply => (
+                      {forumPosts.filter(r => r.parentId === post.id).map(reply => {
+                        const replyIsTutorSelf = reply.authorId === user?.id && reply.authorRole === "tutor";
+                        const replyDisplayName = replyIsTutorSelf ? "Tutor (Anda)" : (reply.authorRole === "siswa" ? `Siswa (${reply.authorName || 'Unknown'})` : reply.authorName);
+                        const replyAvatarLetter = replyIsTutorSelf ? "T" : (reply.authorName || "?").charAt(0).toUpperCase();
+                        const replyAvatarColorClass = reply.authorRole === 'tutor' ? 'bg-[#280f91] text-white' : 'bg-slate-200 text-slate-600';
+
+                        return (
                         <div key={reply.id} className="mt-3 pl-4 border-l-2 border-slate-200 flex gap-2 group">
-                          <div className={`h-6 w-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${reply.authorRole === 'tutor' ? 'bg-[#280f91] text-white' : 'bg-slate-200 text-slate-600'}`}>
-                            {(reply.authorName || '?').substring(0, 2).toUpperCase()}
+                          <div className={`h-6 w-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${replyAvatarColorClass}`}>
+                            {replyAvatarLetter}
                           </div>
                           <div className="flex-1">
                             <div className="flex justify-between items-start">
                               <h5 className="font-bold text-slate-700 text-xs flex items-center gap-2">
-                                {reply.authorName}
-                                {reply.authorRole === 'tutor' && <span className="bg-[#ff6105] text-white px-1.5 py-0.5 rounded text-[9px]">TUTOR</span>}
+                                {replyDisplayName}
+                                {reply.authorRole === 'tutor' && !replyIsTutorSelf && <span className="bg-[#ff6105] text-white px-1.5 py-0.5 rounded text-[9px]">TUTOR</span>}
                               </h5>
                               {reply.authorId === user?.id && reply.authorRole === user?.role && (
                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -478,8 +490,9 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
                               <div className="text-xs text-slate-600 prose mt-1" dangerouslySetInnerHTML={{ __html: reply.content }} />
                             )}
                           </div>
-                        </div>
-                      ))}
+                          </div>
+                        );
+                      })}
 
                       {/* Reply Input */}
                       {activeReplyId === post.id && (
@@ -504,7 +517,8 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
 

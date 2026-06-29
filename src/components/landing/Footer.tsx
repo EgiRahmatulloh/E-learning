@@ -43,7 +43,9 @@ export default function Footer() {
             </ul>
             <div className="flex items-center gap-2 pt-1">
               <a
-                href="#"
+                href="https://web.facebook.com/pkbmmm"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="Facebook"
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-slate-400 hover:bg-[#1877F2] hover:text-white transition-colors"
               >
@@ -52,7 +54,9 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                href="#"
+                href="https://www.instagram.com/pkbmmenujumakmur/"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="Instagram"
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-slate-400 hover:bg-[#ff6105] hover:text-white transition-colors"
               >
@@ -61,7 +65,9 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                href="#"
+                href="https://www.youtube.com/@pkbmmenujumakmur"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="YouTube"
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-slate-400 hover:bg-red-600 hover:text-white transition-colors"
               >
