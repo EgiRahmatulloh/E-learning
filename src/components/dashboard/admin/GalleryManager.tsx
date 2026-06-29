@@ -309,7 +309,7 @@ export default function GalleryManager() {
           </div>
         ) : currentItems.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse min-w-[700px]">
+            <table className="w-full text-left text-xs border-collapse min-w-[700px]">
               <thead>
                 <tr className="bg-[#00badb] text-white font-black text-sm uppercase">
                   <th className="py-4 px-6 border-r border-[#009cb9] text-center w-16">NO</th>
@@ -330,7 +330,7 @@ export default function GalleryManager() {
                     <td className="py-4 px-6 border-r border-slate-100 text-center text-slate-500 font-mono">
                       {indexOfFirstItem + idx + 1}
                     </td>
-                    <td className="py-4 px-6 border-r border-slate-100 font-bold text-slate-800">
+                    <td className="py-4 px-6 border-r border-slate-100 font-extrabold text-slate-900">
                       {item.namaFile}
                     </td>
                     <td className="py-4 px-6 border-r border-slate-100">

@@ -568,15 +568,15 @@ export default function TutorManager() {
               ) : (
                 /* Table View */
                 <div className="overflow-x-auto rounded-xl border border-slate-100">
-                  <table className="w-full text-left border-collapse min-w-[700px]">
+                  <table className="w-full text-left text-xs border-collapse min-w-[700px]">
                     <thead>
                       <tr className="bg-[#00badb] text-white font-black text-sm uppercase">
-                        <th className="p-4 w-16 text-center border-r border-[#009cb9]">No</th>
-                        <th className="p-4 border-r border-[#009cb9]">Nama</th>
-                        <th className="p-4 border-r border-[#009cb9] w-48 text-center">Program</th>
-                        <th className="p-4 border-r border-[#009cb9] w-48 text-center">NUPTK</th>
-                        <th className="p-4 border-r border-[#009cb9] w-36 text-center">Pendidikan</th>
-                        <th className="p-4 text-center">Email</th>
+                        <th className="py-4 px-6 w-16 text-center border-r border-[#009cb9]">NO</th>
+                        <th className="py-4 px-6 border-r border-[#009cb9]">NAMA</th>
+                        <th className="py-4 px-6 border-r border-[#009cb9] w-48 text-center">PROGRAM</th>
+                        <th className="py-4 px-6 border-r border-[#009cb9] w-48 text-center">NUPTK</th>
+                        <th className="py-4 px-6 border-r border-[#009cb9] w-36 text-center">PENDIDIKAN</th>
+                        <th className="py-4 px-6 text-center">EMAIL</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
@@ -586,12 +586,12 @@ export default function TutorManager() {
                           onClick={() => openEditForm(tutor)}
                           className="hover:bg-cyan-50/20 cursor-pointer transition"
                         >
-                          <td className="p-4 text-center text-slate-500 font-mono border-r border-slate-100">{idx + 1}</td>
-                          <td className="p-4 font-bold text-slate-800 border-r border-slate-100">{tutor.nama}</td>
-                          <td className="p-4 text-center border-r border-slate-100 font-bold text-purple-700">{tutor.program}</td>
-                          <td className="p-4 text-center border-r border-slate-100 font-mono">{tutor.nuptk || "-"}</td>
-                          <td className="p-4 text-center border-r border-slate-100">{tutor.pendidikan || "-"}</td>
-                          <td className="p-4 text-center text-slate-500 font-mono">{tutor.email || "-"}</td>
+                          <td className="py-4 px-6 text-center text-slate-500 font-mono border-r border-slate-100">{idx + 1}</td>
+                          <td className="py-4 px-6 font-bold text-slate-800 border-r border-slate-100">{tutor.nama}</td>
+                          <td className="py-4 px-6 text-center border-r border-slate-100 font-bold text-purple-700">{tutor.program}</td>
+                          <td className="py-4 px-6 text-center border-r border-slate-100 font-mono">{tutor.nuptk || "-"}</td>
+                          <td className="py-4 px-6 text-center border-r border-slate-100">{tutor.pendidikan || "-"}</td>
+                          <td className="py-4 px-6 text-center text-slate-500 font-mono">{tutor.email || "-"}</td>
                         </tr>
                       ))}
                     </tbody>

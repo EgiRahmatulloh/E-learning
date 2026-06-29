@@ -400,7 +400,7 @@ export function AchievementsManager() {
 
         {/* Beautiful Mockup-aligned Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse min-w-[1000px]">
+          <table className="w-full text-left text-xs border-collapse min-w-[1000px]">
             <thead>
               <tr className="bg-[#00badb] text-white font-black text-sm uppercase">
                 <th className="py-4 px-6 border-r border-[#009cb9] text-center w-16">NO</th>

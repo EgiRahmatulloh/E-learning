@@ -99,7 +99,7 @@ export function AdminDashboard() {
 
       {/* Students Table */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm border-collapse">
+        <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="border-b border-slate-100 text-slate-400 font-black text-xs uppercase tracking-widest">
               <th className="py-3 px-4">ID</th>

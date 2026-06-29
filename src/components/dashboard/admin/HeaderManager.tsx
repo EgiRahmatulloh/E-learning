@@ -399,7 +399,7 @@ export function HeaderManager() {
 
         {/* The Beautiful Mockup-aligned Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse min-w-[700px]">
+          <table className="w-full text-left text-xs border-collapse min-w-[700px]">
             <thead>
               <tr className="bg-[#00badb] text-white font-black text-sm uppercase">
                 <th className="py-4 px-6 border-r border-[#009cb9] text-center w-16">NO</th>
@@ -426,10 +426,10 @@ export function HeaderManager() {
                     <td className="py-4 px-6 border-r border-slate-100 text-center text-slate-500 font-mono">
                       {idx + 1}
                     </td>
-                    <td className="py-4 px-6 border-r border-slate-100 uppercase text-[#280f91]">
+                    <td className="py-4 px-6 border-r border-slate-100 uppercase text-[#280f91] font-extrabold">
                       {slide.creator}
                     </td>
-                    <td className="py-4 px-6 border-r border-slate-100 text-slate-800 text-base">
+                    <td className="py-4 px-6 border-r border-slate-100 font-extrabold text-slate-900 uppercase text-sm">
                       {slide.title}
                     </td>
                     <td className="py-4 px-6 border-r border-slate-100 text-center">
@@ -443,7 +443,7 @@ export function HeaderManager() {
                         {slide.status}
                       </span>
                     </td>
-                    <td className="py-3 px-6 border-r border-slate-100 text-center">
+                    <td className="py-4 px-6 border-r border-slate-100 text-center">
                       <div className="w-36 h-20 rounded-xl overflow-hidden border border-slate-200 mx-auto shadow-inner bg-slate-50 flex items-center justify-center">
                         {slide.image ? (
                           <img

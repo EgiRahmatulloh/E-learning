@@ -248,7 +248,7 @@ export default function AnnouncementManager() {
 
         {/* Beautiful Mockup-aligned Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse min-w-[700px]">
+          <table className="w-full text-left text-xs border-collapse min-w-[700px]">
             <thead>
               <tr className="bg-[#00badb] text-white font-black text-sm uppercase">
                 <th className="py-4 px-6 border-r border-[#009cb9] text-center w-16">NO</th>
@@ -275,10 +275,10 @@ export default function AnnouncementManager() {
                     <td className="py-4 px-6 border-r border-slate-100 text-center text-slate-500 font-mono">
                       {idx + 1}
                     </td>
-                    <td className="py-4 px-6 border-r border-slate-100 uppercase text-slate-800 text-center">
+                    <td className="py-4 px-6 border-r border-slate-100 uppercase text-slate-800 text-center font-extrabold">
                       {item.creator}
                     </td>
-                    <td className="py-4 px-6 border-r border-slate-100 text-slate-800 text-base leading-relaxed font-semibold">
+                    <td className="py-4 px-6 border-r border-slate-100 font-semibold text-slate-800 text-sm leading-relaxed">
                       {item.text}
                     </td>
                     <td className="py-4 px-6 border-r border-slate-100 text-center font-mono text-slate-600">

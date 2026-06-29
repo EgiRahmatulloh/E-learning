@@ -990,10 +990,10 @@ export default function WargaBelajarManager() {
               ) : (
                 /* Table View */
                 <div className="overflow-x-auto rounded-xl border border-slate-100">
-                  <table className="w-full text-left border-collapse min-w-[700px]">
+                  <table className="w-full text-left text-xs border-collapse min-w-[700px]">
                     <thead>
                       <tr className="bg-[#00badb] text-white font-black text-sm uppercase">
-                        <th className="p-4 w-12 text-center border-r border-[#009cb9]">
+                        <th className="py-4 px-6 w-14 text-center border-r border-[#009cb9]">
                           <input
                             type="checkbox"
                             checked={isAllFilteredSelected}
@@ -1001,14 +1001,14 @@ export default function WargaBelajarManager() {
                             className="h-4 w-4 rounded border-slate-300 cursor-pointer accent-white"
                           />
                         </th>
-                        <th className="p-4 w-16 text-center border-r border-[#009cb9]">No</th>
-                        <th className="p-4 border-r border-[#009cb9]">Nama</th>
-                        <th className="p-4 border-r border-[#009cb9] w-48 text-center">NIK</th>
-                        <th className="p-4 border-r border-[#009cb9] w-36 text-center">Program</th>
-                        <th className="p-4 border-r border-[#009cb9] w-24 text-center">Kelas</th>
-                        <th className="p-4 border-r border-[#009cb9] w-36 text-center">NISN</th>
-                        <th className="p-4 border-r border-[#009cb9] w-36 text-center">NIS</th>
-                        <th className="p-4 text-center">Status</th>
+                        <th className="py-4 px-6 w-16 text-center border-r border-[#009cb9]">NO</th>
+                        <th className="py-4 px-6 border-r border-[#009cb9]">NAMA</th>
+                        <th className="py-4 px-6 border-r border-[#009cb9] w-48 text-center">NIK</th>
+                        <th className="py-4 px-6 border-r border-[#009cb9] w-36 text-center">PROGRAM</th>
+                        <th className="py-4 px-6 border-r border-[#009cb9] w-24 text-center">KELAS</th>
+                        <th className="py-4 px-6 border-r border-[#009cb9] w-36 text-center">NISN</th>
+                        <th className="py-4 px-6 border-r border-[#009cb9] w-36 text-center">NIS</th>
+                        <th className="py-4 px-6 text-center">STATUS</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
@@ -1018,7 +1018,7 @@ export default function WargaBelajarManager() {
                           onClick={() => openEditForm(student)}
                           className="hover:bg-cyan-50/20 cursor-pointer transition"
                         >
-                          <td className="p-4 text-center border-r border-slate-100">
+                          <td className="py-4 px-6 text-center border-r border-slate-100">
                             <input
                               type="checkbox"
                               checked={selectedStudentIds.includes(student.id)}
@@ -1027,14 +1027,14 @@ export default function WargaBelajarManager() {
                               className="h-4 w-4 rounded border-slate-300 cursor-pointer accent-cyan-600"
                             />
                           </td>
-                          <td className="p-4 text-center text-slate-500 font-mono border-r border-slate-100">{idx + 1}</td>
-                          <td className="p-4 font-bold text-slate-800 border-r border-slate-100">{student.nama}</td>
-                          <td className="p-4 text-center text-slate-600 font-mono border-r border-slate-100">{student.nik || "-"}</td>
-                          <td className="p-4 text-center border-r border-slate-100 font-bold text-purple-700">{student.program}</td>
-                          <td className="p-4 text-center border-r border-slate-100">{student.kelas}</td>
-                          <td className="p-4 text-center border-r border-slate-100 font-mono">{student.nisn || "-"}</td>
-                          <td className="p-4 text-center border-r border-slate-100 font-mono">{student.nis || "-"}</td>
-                          <td className="p-4 text-center">
+                          <td className="py-4 px-6 text-center text-slate-500 font-mono border-r border-slate-100">{idx + 1}</td>
+                          <td className="py-4 px-6 font-bold text-slate-800 border-r border-slate-100">{student.nama}</td>
+                          <td className="py-4 px-6 text-center text-slate-600 font-mono border-r border-slate-100">{student.nik || "-"}</td>
+                          <td className="py-4 px-6 text-center border-r border-slate-100 font-bold text-purple-700">{student.program}</td>
+                          <td className="py-4 px-6 text-center border-r border-slate-100">{student.kelas}</td>
+                          <td className="py-4 px-6 text-center border-r border-slate-100 font-mono">{student.nisn || "-"}</td>
+                          <td className="py-4 px-6 text-center border-r border-slate-100 font-mono">{student.nis || "-"}</td>
+                          <td className="py-4 px-6 text-center">
                             <span className={`inline-block text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase text-white ${
                               student.status === "LULUS" ? "bg-purple-600" : "bg-emerald-600"
                             }`}>
