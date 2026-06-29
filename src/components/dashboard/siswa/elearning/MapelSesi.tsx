@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { CheckCircle2, FileText, PlayCircle, MessageSquare, PenTool, Upload, HelpCircle, Download } from "lucide-react";
+import { FileText, PlayCircle, PenTool, CheckCircle2, Download, MessageCircle, X, Pencil, Trash2, Upload, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -13,8 +13,10 @@ interface MapelSesiProps {
 export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSesiProps) {
   const isEvaluasiSession = sessionNumber === 7;
 
-  const [discussions, setDiscussions] = useState<{ sender: string; text: string; isSelf: boolean; initial: string; color: string }[]>([]);
+  const [discussions, setDiscussions] = useState<{id: number; sender: string; text: string; isSelf: boolean; initial: string; color: string}[]>([]);
   const [discussionInput, setDiscussionInput] = useState("");
+  const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
+  const [editInputValue, setEditInputValue] = useState("");
 
   const [isHadir, setIsHadir] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -33,6 +35,39 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
   const [answers, setAnswers] = useState<number[]>([]);
   const [quizGrade, setQuizGrade] = useState<number | null>(null);
   const [isLatihanLoading, setIsLatihanLoading] = useState(false);
+  const [completions, setCompletions] = useState<Set<string>>(new Set());
+
+  const fetchCompletions = async () => {
+    if (!setupId) return;
+    try {
+      const res = await fetch(`/api/elearning/completions/${setupId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCompletions(new Set(data.data.map((c: any) => c.sectionKey)));
+      }
+    } catch (err) {}
+  };
+
+  const handleMarkComplete = async (sectionKey: string) => {
+    if (!setupId) return;
+    try {
+      const res = await fetch("/api/elearning/completions", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ setupId, sectionKey })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCompletions(prev => new Set([...prev, sectionKey]));
+        toast.success("Bagian ini telah ditandai selesai!");
+      }
+    } catch (err) {}
+  };
 
   const loadQuestions = async () => {
     if (!sessionId || !user?.id) return;
@@ -57,6 +92,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
   };
 
   useEffect(() => {
+    fetchCompletions();
     async function fetchData() {
       setIsHadir(false);
       try {
@@ -83,7 +119,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
         if (session.description) {
           setTeksPembuka(session.description);
         } else {
-          setTeksPembuka(""); // fallback later
+          setTeksPembuka(""); 
         }
         const materials = Array.isArray(sessionData.data.materials) ? sessionData.data.materials : [];
         const ppt = materials.find((m: any) => m.type === "PPT");
@@ -112,7 +148,6 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
           }
         }
 
-        // Fetch Attendance
         if (user?.id) {
           const attRes = await fetch(`/api/elearning/attendance?sessionId=${session.id}&studentId=${user.id}`, {
             headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
@@ -123,7 +158,6 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
           }
         }
 
-        // Fetch forum posts
         const forumRes = await fetch(`/api/elearning/forum?sessionId=${session.id}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         });
@@ -134,7 +168,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
             const sender = post.authorRole === "tutor" ? "Tutor" : isSelf ? "Siswa (Anda)" : `Siswa ID: ${post.authorId}`;
             const initial = sender.charAt(0).toUpperCase();
             const color = post.authorRole === "tutor" ? "bg-[#280f91]" : isSelf ? "bg-cyan-600" : "bg-slate-500";
-            return { sender, text: post.content, isSelf, initial, color };
+            return { id: post.id, sender, text: post.content, isSelf, initial, color };
           });
           setDiscussions(loadedMessages);
         }
@@ -165,14 +199,76 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
       });
       const data = await res.json();
       if (data.success) {
-        setDiscussions([
-          ...discussions,
-          { sender: "Siswa (Anda)", text: discussionInput, isSelf: true, initial: "S", color: "bg-cyan-600" }
-        ]);
+        reloadDiscussions();
         setDiscussionInput("");
       }
     } catch (err) {
-      toast.error("Gagal mengirim tanggapan");
+      toast.error("Gagal mengirim pesan diskusi");
+    }
+  };
+
+  const reloadDiscussions = async () => {
+    if (!sessionId) return;
+    try {
+      const forumRes = await fetch(`/api/elearning/forum?sessionId=${sessionId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+      const forumData = await forumRes.json();
+      if (forumData.success) {
+        const loadedMessages = (Array.isArray(forumData.data) ? forumData.data : []).map((post: any) => {
+          const isSelf = post.authorId === user?.id && post.authorRole === user?.role;
+          const sender = post.authorRole === "tutor" ? "Tutor" : isSelf ? "Siswa (Anda)" : `Siswa ID: ${post.authorId}`;
+          const initial = sender.charAt(0).toUpperCase();
+          const color = post.authorRole === "tutor" ? "bg-[#280f91]" : isSelf ? "bg-cyan-600" : "bg-slate-500";
+          return { id: post.id, sender, text: post.content, isSelf, initial, color };
+        });
+        setDiscussions(loadedMessages);
+      }
+    } catch (err) {}
+  };
+
+  const handleEditSubmit = async (msgId: number) => {
+    if (!editInputValue.trim()) return;
+    try {
+      const res = await fetch(`/api/elearning/forum/${msgId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ content: editInputValue })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Pesan berhasil diubah");
+        setEditingMessageId(null);
+        reloadDiscussions();
+      } else {
+        toast.error(data.message || "Gagal mengubah pesan");
+      }
+    } catch (err) {
+      toast.error("Terjadi kesalahan saat mengubah pesan");
+    }
+  };
+
+  const handleDeleteMessage = async (msgId: number) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus pesan ini?")) return;
+    try {
+      const res = await fetch(`/api/elearning/forum/${msgId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Pesan berhasil dihapus");
+        reloadDiscussions();
+      } else {
+        toast.error(data.message || "Gagal menghapus pesan");
+      }
+    } catch (err) {
+      toast.error("Terjadi kesalahan saat menghapus pesan");
     }
   };
 
@@ -258,172 +354,249 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
 
   return (
     <div className="space-y-6">
-      {/* Kehadiran */}
-      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-emerald-50 rounded-xl">
-            <CheckCircle2 className="h-6 w-6 text-emerald-600" />
-          </div>
-          <div>
-            <h2 className="text-lg font-black text-slate-800">Kehadiran Sesi {sessionNumber}</h2>
-            <p className="text-sm text-slate-500">
-              {isHadir ? "Anda sudah mengonfirmasi kehadiran untuk sesi ini." : "Klik tombol di samping untuk konfirmasi kehadiran"}
-            </p>
-          </div>
-        </div>
-        <Button
-          onClick={handleKehadiran}
-          disabled={isHadir}
-          className={`rounded-xl font-bold w-full sm:w-auto ${isHadir
-              ? "bg-slate-200 text-slate-500 hover:bg-slate-200 cursor-not-allowed"
-              : "bg-emerald-600 hover:bg-emerald-700 text-white"
-            }`}
-        >
-          {isHadir ? "Sudah Hadir" : "Konfirmasi Hadir"}
-        </Button>
-      </div>
 
-      {/* Teks Pembuka / Pengantar Sesi */}
-      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 prose prose-sm max-w-none prose-slate">
-        <h3 className="font-bold text-[#280f91] not-prose mb-3">Pengantar Sesi {sessionNumber}</h3>
-        {teksPembuka ? (
-          <div dangerouslySetInnerHTML={{ __html: teksPembuka }} />
-        ) : (
-          <p className="text-slate-500 italic">Tutor belum menambahkan teks pengantar untuk sesi ini.</p>
-        )}
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Materi Inisiasi */}
-        <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 space-y-4 flex flex-col">
-          <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-            <FileText className="h-5 w-5 text-[#280f91]" />
-            <h3 className="font-bold text-slate-700">Materi Inisiasi (PPT)</h3>
-          </div>
-          <div className="flex-1 min-h-[160px] bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center p-6 text-center flex-col gap-4">
-            {pptUrl ? (
-              <>
-                <FileText className="h-12 w-12 text-[#280f91] opacity-50" />
-                <Button onClick={() => handleDownload(pptUrl)} variant="outline" className="rounded-xl border-slate-200 font-bold text-slate-700">
-                  <Download className="w-4 h-4 mr-2" /> Unduh Materi PPT/PDF
-                </Button>
-              </>
-            ) : (
-              <p className="text-sm font-semibold text-slate-400">Materi inisiasi belum diunggah</p>
-            )}
-          </div>
-        </div>
+      {/* Selesai Button Helper Component */}
+      {(() => {
+        const SectionCompleteButton = ({ sectionKey, className = "" }: { sectionKey: string, className?: string }) => {
+          const isDone = completions.has(sectionKey);
+          return (
+            <Button
+              size="sm"
+              onClick={() => !isDone && handleMarkComplete(sectionKey)}
+              disabled={isDone}
+              className={`font-bold ${
+                isDone ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 cursor-not-allowed border-emerald-200" 
+                       : "bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200"
+              } border ${className || 'mt-4 w-full sm:w-auto'}`}
+            >
+              {isDone ? (
+                <><CheckCircle2 className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">Selesai</span></>
+              ) : (
+                <><CheckCircle2 className="w-4 h-4 sm:hidden" /> <span className="hidden sm:inline">Tandai Selesai</span></>
+              )}
+            </Button>
+          );
+        };
 
-        {/* Materi Pengayaan */}
-        <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 space-y-4 flex flex-col">
-          <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-            <PlayCircle className="h-5 w-5 text-red-600" />
-            <h3 className="font-bold text-slate-700">Materi Pengayaan (Video)</h3>
-          </div>
-          <div className="flex-1 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center p-6 text-center flex-col gap-4">
-            {videoUrl ? (
-              <>
-                <PlayCircle className="h-12 w-12 text-red-500 opacity-50 mx-auto mb-2" />
-                <p className="text-sm font-semibold text-slate-600">
-                  Silakan tonton video pengayaan berikut:
-                </p>
-                <a 
-                  href={videoUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-[#280f91] underline font-bold hover:text-[#ff6105] transition-colors break-all"
+        return (
+          <>
+            {/* Kehadiran */}
+            <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
+                <div className="p-3 bg-emerald-50 rounded-xl shrink-0">
+                  <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                </div>
+                <div className="flex-1 text-center sm:text-left">
+                  <h2 className="text-lg font-black text-slate-800">Kehadiran Sesi {sessionNumber}</h2>
+                  <p className="text-sm text-slate-500">
+                    {isHadir ? "Anda sudah mengonfirmasi kehadiran untuk sesi ini." : "Klik tombol di samping untuk konfirmasi kehadiran"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+                <Button
+                  onClick={handleKehadiran}
+                  disabled={isHadir}
+                  className={`flex-1 sm:flex-none font-bold rounded-xl px-6 ${
+                    isHadir 
+                      ? "bg-slate-200 text-slate-500 hover:bg-slate-200 cursor-not-allowed"
+                      : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-600/20 shadow-lg"
+                  }`}
                 >
-                  {videoUrl}
-                </a>
-              </>
-            ) : (
-              <div className="text-center p-6">
-                <PlayCircle className="h-12 w-12 text-slate-300 mx-auto mb-2" />
-                <p className="text-slate-400 text-xs font-bold">Materi pengayaan belum diunggah</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Diskusi */}
-      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 space-y-4">
-        <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-          <MessageSquare className="h-5 w-5 text-blue-600" />
-          <h3 className="font-bold text-slate-700">Ruang Diskusi</h3>
-        </div>
-
-        <div className="space-y-4 my-4 max-h-96 overflow-y-auto pr-2">
-          {discussions.length === 0 && (
-            <p className="text-center text-slate-400 text-sm italic py-4">Belum ada diskusi. Jadilah yang pertama menyapa!</p>
-          )}
-          {discussions.map((msg, idx) => (
-            <div key={idx} className="flex gap-3">
-              <div className={`h-8 w-8 rounded-full ${msg.color} text-white flex items-center justify-center font-bold text-xs shrink-0 mt-1`}>
-                {msg.initial}
-              </div>
-              <div className={`p-3 rounded-lg border shadow-sm flex-1 ${msg.isSelf ? 'bg-cyan-50/30 border-cyan-100' : 'bg-slate-50 border-slate-200'}`}>
-                <p className={`text-xs font-bold mb-1 ${msg.isSelf ? 'text-cyan-700' : 'text-slate-600'}`}>{msg.sender}</p>
-                <div className="text-sm text-slate-700 prose" dangerouslySetInnerHTML={{ __html: msg.text }} />
+                  {isHadir ? "Sudah Hadir" : "Konfirmasi Hadir"}
+                </Button>
+                <SectionCompleteButton sectionKey={`sesi_${sessionNumber}_kehadiran`} className="m-0 shrink-0" />
               </div>
             </div>
-          ))}
-        </div>
 
-        <div className="flex gap-3 border-t border-slate-100 pt-4">
-          <input
-            type="text"
-            placeholder="Tulis tanggapan Anda..."
-            value={discussionInput}
-            onChange={(e) => setDiscussionInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSendDiscussion()}
-            className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-          />
-          <Button onClick={handleSendDiscussion} className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold px-6">Kirim</Button>
-        </div>
-      </div>
+            {/* Teks Pembuka / Pengantar Sesi */}
+            <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 prose prose-sm max-w-none prose-slate relative">
+              <div className="flex items-center justify-between not-prose mb-3">
+                <h3 className="font-bold text-[#280f91]">Pengantar Sesi {sessionNumber}</h3>
+                <SectionCompleteButton sectionKey={`sesi_${sessionNumber}_pengantar`} className="m-0" />
+              </div>
+              {teksPembuka ? (
+                <div dangerouslySetInnerHTML={{ __html: teksPembuka }} />
+              ) : (
+                <p className="text-slate-500 italic">Tutor belum menambahkan teks pengantar untuk sesi ini.</p>
+              )}
+            </div>
 
-      {/* Latihan */}
-      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-purple-50 rounded-xl">
-            <PenTool className="h-6 w-6 text-purple-600" />
-          </div>
-          <div>
-            <h2 className="text-lg font-black text-slate-800">Latihan Sesi {sessionNumber}</h2>
-            <p className="text-sm text-slate-500">Uji pemahaman mandiri (Soal Pilihan Ganda)</p>
-          </div>
-        </div>
-        <Button onClick={() => { setShowLatihan(true); loadQuestions(); }} variant="outline" className="rounded-xl border-purple-200 text-purple-700 font-bold hover:bg-purple-50">
-          Mulai Latihan
-        </Button>
-      </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Materi Inisiasi */}
+              <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 space-y-4 flex flex-col relative">
+                <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                  <FileText className="h-5 w-5 text-[#280f91]" />
+                  <h3 className="font-bold text-slate-700 flex-1">Materi Inisiasi (PPT)</h3>
+                  <SectionCompleteButton sectionKey={`sesi_${sessionNumber}_inisiasi`} className="m-0" />
+                </div>
+                <div className="flex-1 min-h-[160px] bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center p-6 text-center flex-col gap-4">
+                  {pptUrl ? (
+                    <>
+                      <FileText className="h-12 w-12 text-[#280f91] opacity-50" />
+                      <Button onClick={() => handleDownload(pptUrl)} variant="outline" className="rounded-xl border-slate-200 font-bold text-slate-700">
+                        <Download className="w-4 h-4 mr-2" /> Unduh Materi PPT/PDF
+                      </Button>
+                    </>
+                  ) : (
+                    <p className="text-sm font-semibold text-slate-400">Materi inisiasi belum diunggah</p>
+                  )}
+                </div>
+              </div>
 
-      {/* Tugas Khusus */}
-      <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-200 shadow-sm p-6 space-y-4">
-        <div className="flex items-center gap-3 border-b border-orange-200 pb-3">
-          <Upload className="h-6 w-6 text-orange-600" />
-          <div>
-            <h2 className="text-lg font-black text-orange-900">Tugas Sesi {sessionNumber}</h2>
-            <p className="text-xs text-orange-700">Unduh soal dan kumpulkan jawaban tugas di sini.</p>
-          </div>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button onClick={() => handleDownload(tugasUrl)} variant="outline" className="flex-1 bg-white hover:bg-orange-50 border-orange-200 text-orange-700 font-bold h-12">
-            Unduh Soal Tugas
-          </Button>
-          <input 
-            type="file" 
-            className="hidden" 
-            ref={tugasUploadRef} 
-            accept=".pdf,.docx,.doc" 
-            onChange={handleUploadJawaban} 
-          />
-          <Button onClick={() => tugasUploadRef.current?.click()} className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold h-12">
-            Unggah Jawaban
-          </Button>
-        </div>
-      </div>
+              {/* Materi Pengayaan */}
+              <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 space-y-4 flex flex-col relative">
+                <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                  <PlayCircle className="h-5 w-5 text-red-600" />
+                  <h3 className="font-bold text-slate-700 flex-1">Materi Pengayaan (Video)</h3>
+                  <SectionCompleteButton sectionKey={`sesi_${sessionNumber}_pengayaan`} className="m-0" />
+                </div>
+                <div className="flex-1 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center p-6 text-center flex-col gap-4">
+                  {videoUrl ? (
+                    <>
+                      <PlayCircle className="h-12 w-12 text-red-500 opacity-50 mx-auto mb-2" />
+                      <p className="text-sm font-semibold text-slate-600">
+                        Silakan tonton video pengayaan berikut:
+                      </p>
+                      <a 
+                        href={videoUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-[#280f91] underline font-bold hover:text-[#ff6105] transition-colors break-all"
+                      >
+                        {videoUrl}
+                      </a>
+                    </>
+                  ) : (
+                    <div className="text-center p-6">
+                      <PlayCircle className="h-12 w-12 text-slate-300 mx-auto mb-2" />
+                      <p className="text-slate-400 text-xs font-bold">Materi pengayaan belum diunggah</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Diskusi */}
+            <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 space-y-4 relative">
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                <MessageCircle className="h-5 w-5 text-blue-600" />
+                <h3 className="font-bold text-slate-700 flex-1">Ruang Diskusi</h3>
+                <SectionCompleteButton sectionKey={`sesi_${sessionNumber}_diskusi`} className="m-0" />
+              </div>
+              <div className="space-y-4 my-4 max-h-96 overflow-y-auto pr-2">
+                {discussions.length === 0 && (
+                  <p className="text-center text-slate-400 text-sm italic py-4">Belum ada diskusi. Jadilah yang pertama menyapa!</p>
+                )}
+                {discussions.map((msg) => (
+                  <div key={msg.id} className="flex gap-3">
+                    <div className={`h-8 w-8 rounded-full ${msg.color} text-white flex items-center justify-center font-bold text-xs shrink-0`}>
+                      {msg.initial}
+                    </div>
+                    <div className={`p-3 rounded-lg border shadow-sm flex-1 ${msg.isSelf ? 'bg-blue-50/30 border-blue-100' : 'bg-slate-50 border-slate-200'}`}>
+                      <div className="flex justify-between items-start mb-1">
+                        <p className={`text-xs font-bold ${msg.isSelf ? 'text-blue-700' : 'text-slate-600'}`}>{msg.sender}</p>
+                        {msg.isSelf && (
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={() => {
+                                setEditingMessageId(msg.id);
+                                setEditInputValue(msg.text.replace(/<[^>]+>/g, ''));
+                              }} 
+                              className="text-slate-400 hover:text-blue-600 transition-colors"
+                              title="Edit pesan"
+                            >
+                              <Pencil className="w-3 h-3" />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteMessage(msg.id)}
+                              className="text-slate-400 hover:text-red-600 transition-colors"
+                              title="Hapus pesan"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      {editingMessageId === msg.id ? (
+                        <div className="flex gap-2 mt-2">
+                          <input
+                            type="text"
+                            value={editInputValue}
+                            onChange={(e) => setEditInputValue(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleEditSubmit(msg.id)}
+                            className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500"
+                            autoFocus
+                          />
+                          <Button onClick={() => handleEditSubmit(msg.id)} size="sm" className="bg-blue-600 hover:bg-blue-700 h-8">Simpan</Button>
+                          <Button onClick={() => setEditingMessageId(null)} size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-500 hover:text-slate-700"><X className="w-4 h-4" /></Button>
+                        </div>
+                      ) : (
+                        <div className="text-sm text-slate-700 prose max-w-none" dangerouslySetInnerHTML={{ __html: msg.text }} />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-3 border-t border-slate-100 pt-4">
+                <input
+                  type="text"
+                  placeholder="Tulis tanggapan Anda..."
+                  value={discussionInput}
+                  onChange={(e) => setDiscussionInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendDiscussion()}
+                  className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                />
+                <Button onClick={handleSendDiscussion} className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold px-6">Kirim</Button>
+              </div>
+            </div>
+
+            {/* Latihan */}
+            <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
+                <div className="p-3 bg-purple-50 rounded-xl shrink-0">
+                  <PenTool className="h-6 w-6 text-purple-600" />
+                </div>
+                <div className="flex-1 text-center sm:text-left">
+                  <h2 className="text-lg font-black text-slate-800">Latihan Sesi {sessionNumber}</h2>
+                  <p className="text-sm text-slate-500">Uji pemahaman mandiri (Soal Pilihan Ganda)</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+                <Button onClick={() => { setShowLatihan(true); loadQuestions(); }} variant="outline" className="flex-1 sm:flex-none rounded-xl border-purple-200 text-purple-700 font-bold hover:bg-purple-50">
+                  Mulai Latihan
+                </Button>
+                <SectionCompleteButton sectionKey={`sesi_${sessionNumber}_latihan`} className="m-0 shrink-0" />
+              </div>
+            </div>
+
+            {/* Tugas Khusus */}
+            <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-200 shadow-sm p-6 space-y-4 relative">
+              <div className="flex items-center gap-3 border-b border-orange-200 pb-3">
+                <Upload className="h-6 w-6 text-orange-600" />
+                <div className="flex-1">
+                  <h2 className="text-lg font-black text-orange-900">Tugas Sesi {sessionNumber}</h2>
+                  <p className="text-xs text-orange-700">Unduh soal dan kumpulkan jawaban tugas di sini.</p>
+                </div>
+                <SectionCompleteButton sectionKey={`sesi_${sessionNumber}_tugas`} className="m-0" />
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button onClick={() => handleDownload(tugasUrl)} variant="outline" className="flex-1 bg-white hover:bg-orange-50 border-orange-200 text-orange-700 font-bold h-12">
+                  Unduh Soal Tugas
+                </Button>
+                <input 
+                  type="file" 
+                  className="hidden" 
+                  ref={tugasUploadRef} 
+                  accept=".pdf,.docx,.doc" 
+                  onChange={handleUploadJawaban} 
+                />
+                <Button onClick={() => tugasUploadRef.current?.click()} className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold h-12">
+                  Unggah Jawaban
+                </Button>
+              </div>
+            </div>
 
       {/* Evaluasi Khusus (Sesi 7) */}
       {isEvaluasiSession && (
@@ -442,6 +615,9 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
           </Button>
         </div>
       )}
+      </>
+        );
+      })()}
 
       {showAngket && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -524,8 +700,8 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
               ) : quizGrade !== null ? (
                 <div className="p-10 space-y-4 flex flex-col items-center text-center bg-purple-50/50 rounded-2xl border border-purple-100">
                   <CheckCircle2 className="w-16 h-16 text-purple-500 mb-2" />
-                  <p className="font-black text-slate-800 text-2xl">Nilai Anda: {quizGrade}</p>
-                  <p className="text-slate-600 text-sm">Anda telah menyelesaikan latihan ini.</p>
+                  <p className="font-black text-slate-800 text-2xl">Latihan Selesai</p>
+                  <p className="text-slate-600 text-sm">Anda telah menyelesaikan latihan ini. Nilai dapat dilihat pada menu <span className="font-bold text-purple-700">Nilai</span>.</p>
                   <Button onClick={() => setShowLatihan(false)} className="mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold px-8">Tutup</Button>
                 </div>
               ) : (
@@ -571,7 +747,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
                           "Content-Type": "application/json",
                           "Authorization": `Bearer ${localStorage.getItem("token")}`
                         },
-                        body: JSON.stringify({ studentId: user?.id, answers })
+                        body: JSON.stringify({ answers })
                       });
                       const data = await res.json();
                       if (data.success) {

@@ -490,4 +490,63 @@ CREATE TABLE IF NOT EXISTS elearning_evaluation_responses (
 );
 `);
 
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS elearning_questions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id INTEGER NOT NULL,
+  question TEXT NOT NULL,
+  options TEXT NOT NULL,
+  correct_answer INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  FOREIGN KEY (session_id) REFERENCES elearning_sessions(id) ON DELETE CASCADE
+);
+`);
+
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS elearning_quiz_submissions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id INTEGER NOT NULL,
+  student_id INTEGER NOT NULL,
+  grade INTEGER NOT NULL,
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  FOREIGN KEY (session_id) REFERENCES elearning_sessions(id) ON DELETE CASCADE,
+  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+);
+`);
+
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS elearning_evaluations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id INTEGER NOT NULL,
+  question TEXT NOT NULL,
+  scale_max INTEGER NOT NULL DEFAULT 5,
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+`);
+
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS elearning_assignments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id INTEGER NOT NULL,
+  title TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  due_date TEXT,
+  file_url TEXT NOT NULL DEFAULT '',
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+`);
+
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS elearning_section_completions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  student_id INTEGER NOT NULL,
+  setup_id INTEGER NOT NULL,
+  section_key TEXT NOT NULL,
+  completed_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  UNIQUE(student_id, setup_id, section_key),
+  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+  FOREIGN KEY (setup_id) REFERENCES elearning_setups(id) ON DELETE CASCADE
+);
+`);
+
 export const db = drizzle(sqlite, { schema });

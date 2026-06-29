@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Settings, Plus, Save, Trash2, Edit, BookOpen, Users, GraduationCap, Clock, Layers, AlertTriangle, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -290,6 +290,17 @@ export default function KelolaElearning() {
     setIsEditing(false);
   };
 
+  const filteredItems = useMemo(() => {
+    return items.filter(item => {
+      const t = tutors.find(x => x.id === item.tutorId);
+      const tutorName = t ? t.nama.toLowerCase() : "";
+      const searchLower = searchTerm.toLowerCase();
+      return item.kelas.toLowerCase().includes(searchLower) || 
+             item.mapel.toLowerCase().includes(searchLower) ||
+             tutorName.includes(searchLower);
+    });
+  }, [items, tutors, searchTerm]);
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       
@@ -448,15 +459,6 @@ export default function KelolaElearning() {
             </thead>
             <tbody>
               {(() => {
-                const filteredItems = items.filter(item => {
-                  const t = tutors.find(x => x.id === item.tutorId);
-                  const tutorName = t ? t.nama.toLowerCase() : "";
-                  const searchLower = searchTerm.toLowerCase();
-                  return item.kelas.toLowerCase().includes(searchLower) || 
-                         item.mapel.toLowerCase().includes(searchLower) ||
-                         tutorName.includes(searchLower);
-                });
-
                 return filteredItems.length > 0 ? (
                   filteredItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((item, idx) => {
                     const t = tutors.find(x => x.id === item.tutorId);
@@ -509,14 +511,6 @@ export default function KelolaElearning() {
 
       {/* Pagination Controls */}
       {(() => {
-        const filteredItems = items.filter(item => {
-          const t = tutors.find(x => x.id === item.tutorId);
-          const tutorName = t ? t.nama.toLowerCase() : "";
-          const searchLower = searchTerm.toLowerCase();
-          return item.kelas.toLowerCase().includes(searchLower) || 
-                 item.mapel.toLowerCase().includes(searchLower) ||
-                 tutorName.includes(searchLower);
-        });
         const totalPages = Math.ceil(filteredItems.length / itemsPerPage) || 1;
 
         return totalPages > 1 && (

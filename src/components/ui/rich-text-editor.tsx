@@ -1,5 +1,5 @@
 import { useRef, useEffect } from "react";
-import { Bold, Italic, Underline } from "lucide-react";
+import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered } from "lucide-react";
 
 interface RichTextEditorProps {
   value: string;
@@ -70,6 +70,56 @@ export function RichTextEditor({ value, onChange, placeholder = "Tulis sesuatu..
           title="Underline"
         >
           <Underline className="w-4 h-4" />
+        </button>
+        <div className="w-[1px] h-4 bg-slate-300 mx-1"></div>
+        <button
+          type="button"
+          onMouseDown={(e) => { e.preventDefault(); executeCommand('justifyLeft'); }}
+          className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+          title="Rata Kiri"
+        >
+          <AlignLeft className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onMouseDown={(e) => { e.preventDefault(); executeCommand('justifyCenter'); }}
+          className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+          title="Rata Tengah"
+        >
+          <AlignCenter className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onMouseDown={(e) => { e.preventDefault(); executeCommand('justifyRight'); }}
+          className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+          title="Rata Kanan"
+        >
+          <AlignRight className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onMouseDown={(e) => { e.preventDefault(); executeCommand('justifyFull'); }}
+          className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+          title="Rata Kiri Kanan"
+        >
+          <AlignJustify className="w-4 h-4" />
+        </button>
+        <div className="w-[1px] h-4 bg-slate-300 mx-1"></div>
+        <button
+          type="button"
+          onMouseDown={(e) => { e.preventDefault(); executeCommand('insertUnorderedList'); }}
+          className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+          title="Bullet List"
+        >
+          <List className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onMouseDown={(e) => { e.preventDefault(); executeCommand('insertOrderedList'); }}
+          className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+          title="Numbered List"
+        >
+          <ListOrdered className="w-4 h-4" />
         </button>
       </div>
       

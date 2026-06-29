@@ -550,3 +550,13 @@ export const elearningEvaluationResponses = sqliteTable('elearning_evaluation_re
   score: integer('score').notNull(), // 1 - 5
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
 });
+
+export const elearningSectionCompletions = sqliteTable('elearning_section_completions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  studentId: integer('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
+  setupId: integer('setup_id').notNull().references(() => elearningSetups.id, { onDelete: 'cascade' }),
+  sectionKey: text('section_key').notNull(),
+  completedAt: text('completed_at').$defaultFn(() => new Date().toISOString()),
+}, (t) => ({
+  unq: unique().on(t.studentId, t.setupId, t.sectionKey),
+}));
