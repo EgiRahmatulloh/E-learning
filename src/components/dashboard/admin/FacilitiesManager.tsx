@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { parseCSV, downloadCSV, mapCsvRows, parseExcel } from "@/lib/utils";
+import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
 import { Edit3, Trash2, Search, UploadCloud, Plus, Save, X, Upload, Download, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
@@ -197,7 +197,7 @@ export default function FacilitiesManager() {
     }
   };
 
-  // CSV Export Logic
+  // Excel Export Logic
   const handleExportCSV = () => {
     if (facilities.length === 0) {
       toast.error("Tidak ada data untuk diekspor!");
@@ -205,12 +205,12 @@ export default function FacilitiesManager() {
     }
     const headers = ["NAMA", "KETERANGAN", "FOTO"];
     const rows = facilities.map(f => [
-      `"${(f.nama || "").replace(/"/g, '""')}"`,
-      `"${(f.keterangan || "").replace(/"/g, '""')}"`,
-      `"${(f.foto || "").replace(/"/g, '""')}"`
+      f.nama || "",
+      f.keterangan || "",
+      f.foto || ""
     ]);
-    downloadCSV(headers, rows, "sarana_dan_fasilitas.csv");
-    toast.success("Berhasil mengunduh CSV!");
+    downloadExcel(headers, rows, "sarana_dan_fasilitas.xlsx");
+    toast.success("Berhasil mengunduh Excel!");
   };
 
   const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -219,19 +219,7 @@ export default function FacilitiesManager() {
     e.target.value = "";
     
     try {
-      let rows: string[][] = [];
-      const lowerName = file.name.toLowerCase();
-      if (lowerName.endsWith(".xlsx") || lowerName.endsWith(".xls")) {
-        rows = await parseExcel(file);
-      } else {
-        const text = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (event) => resolve(event.target?.result as string || "");
-          reader.onerror = (err) => reject(err);
-          reader.readAsText(file);
-        });
-        rows = parseCSV(text);
-      }
+      const rows = await parseExcel(file);
 
       const mapped = mapCsvRows(rows, [
         { key: "nama", aliases: ["nama", "name", "fasilitas", "sarana"], defaultIndex: 0 },
@@ -319,10 +307,10 @@ export default function FacilitiesManager() {
               />
             </div>
             <label className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95">
-              <Upload className="h-4 w-4" /> UPLOAD CSV / EXCEL
+              <Upload className="h-4 w-4" /> UPLOAD EXCEL
               <input
                 type="file"
-                accept=".csv, .xlsx, .xls"
+                accept=".xlsx, .xls"
                 onChange={handleImportCSV}
                 className="hidden"
               />
@@ -331,7 +319,7 @@ export default function FacilitiesManager() {
               onClick={handleExportCSV}
               className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center gap-1.5 transition-all active:scale-95"
             >
-              <Download className="h-4 w-4" /> EKSPOR CSV
+              <Download className="h-4 w-4" /> EKSPOR EXCEL
             </Button>
             <Button
               onClick={() => {

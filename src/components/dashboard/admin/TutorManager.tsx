@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { parseCSV, downloadCSV, mapCsvRows, parseExcel } from "@/lib/utils";
+import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
 import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, List, LayoutGrid, Filter, RotateCcw, Loader2, Edit3 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
@@ -107,7 +107,7 @@ export default function TutorManager() {
     setFilterNik("");
   };
 
-  // CSV Export
+  // Excel Export
   const handleExportCSV = () => {
     if (tutors.length === 0) {
       toast.error("Tidak ada data untuk diekspor!");
@@ -115,25 +115,25 @@ export default function TutorManager() {
     }
     const headers = ["NAMA", "PROGRAM", "NUPTK", "TEMPAT TGL LAHIR", "JENIS KELAMIN", "AGAMA", "PENDIDIKAN", "EMAIL", "NIK", "ALAMAT", "FOTO", "TANGGAL MULAI TUGAS", "NOMOR SK PENGANGKATAN", "LEMBAGA PENGANGKAT", "NOMOR SK PENUGASAN", "LEMBAGA PENUGAS"];
     const rows = tutors.map(t => [
-      `"${(t.nama || "").replace(/"/g, '""')}"`,
-      `"${(t.program || "").replace(/"/g, '""')}"`,
-      `"${(t.nuptk || "").replace(/"/g, '""')}"`,
-      `"${(t.tempatTglLahir || "").replace(/"/g, '""')}"`,
-      `"${(t.jenisKelamin || "").replace(/"/g, '""')}"`,
-      `"${(t.agama || "").replace(/"/g, '""')}"`,
-      `"${(t.pendidikan || "").replace(/"/g, '""')}"`,
-      `"${(t.email || "").replace(/"/g, '""')}"`,
-      `"${(t.nik || "").replace(/"/g, '""')}"`,
-      `"${(t.alamat || "").replace(/"/g, '""')}"`,
-      `"${(t.foto || "").replace(/"/g, '""')}"`,
-      `"${(t.tanggalMulaiTugas || "").replace(/"/g, '""')}"`,
-      `"${(t.nomorSkPengangkatan || "").replace(/"/g, '""')}"`,
-      `"${(t.lembagaPengangkat || "").replace(/"/g, '""')}"`,
-      `"${(t.nomorSkPenugasan || "").replace(/"/g, '""')}"`,
-      `"${(t.lembagaPenugas || "").replace(/"/g, '""')}"`
+      t.nama || "",
+      t.program || "",
+      t.nuptk || "",
+      t.tempatTglLahir || "",
+      t.jenisKelamin || "",
+      t.agama || "",
+      t.pendidikan || "",
+      t.email || "",
+      t.nik || "",
+      t.alamat || "",
+      t.foto || "",
+      t.tanggalMulaiTugas || "",
+      t.nomorSkPengangkatan || "",
+      t.lembagaPengangkat || "",
+      t.nomorSkPenugasan || "",
+      t.lembagaPenugas || ""
     ]);
-    downloadCSV(headers, rows, "tutor.csv");
-    toast.success("Berhasil mengekspor CSV");
+    downloadExcel(headers, rows, "tutor.xlsx");
+    toast.success("Berhasil mengekspor Excel");
   };
 
   const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -142,19 +142,7 @@ export default function TutorManager() {
     e.target.value = "";
 
     try {
-      let rows: string[][] = [];
-      const lowerName = file.name.toLowerCase();
-      if (lowerName.endsWith(".xlsx") || lowerName.endsWith(".xls")) {
-        rows = await parseExcel(file);
-      } else {
-        const text = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (event) => resolve(event.target?.result as string || "");
-          reader.onerror = (err) => reject(err);
-          reader.readAsText(file);
-        });
-        rows = parseCSV(text);
-      }
+      const rows = await parseExcel(file);
 
       const mapped = mapCsvRows(rows, [
         { key: "nama", aliases: ["nama", "name"], defaultIndex: 0 },
@@ -449,7 +437,7 @@ export default function TutorManager() {
               type="file"
               ref={importInputRef}
               className="hidden"
-              accept=".csv, .xlsx, .xls"
+              accept=".xlsx, .xls"
               onChange={handleImportCSV}
             />
             {/* Row 1 */}
@@ -457,13 +445,13 @@ export default function TutorManager() {
               onClick={() => importInputRef.current?.click()}
               className="h-10 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95"
             >
-              <Upload className="h-4 w-4" /> UPLOAD CSV
+              <Upload className="h-4 w-4" /> UPLOAD EXCEL
             </Button>
             <Button
               onClick={handleExportCSV}
               className="h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95"
             >
-              <Download className="h-4 w-4" /> DOWNLOAD CSV
+              <Download className="h-4 w-4" /> DOWNLOAD EXCEL
             </Button>
             {/* Row 2 */}
             <Button

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { parseCSV, downloadCSV, mapCsvRows, parseExcel } from "@/lib/utils";
+import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
 import {
   Save,
   Trash2,
@@ -487,7 +487,7 @@ export default function ManagerManager() {
     }
   };
 
-  // CSV Export
+  // Excel Export
   const handleExportCSV = () => {
     if (managersList.length === 0) {
       toast.error("Tidak ada data untuk diekspor!");
@@ -495,25 +495,25 @@ export default function ManagerManager() {
     }
     const headers = ["NAMA", "NIK", "JABATAN", "NUPTK", "TEMPAT TGL LAHIR", "JENIS KELAMIN", "AGAMA", "PENDIDIKAN", "EMAIL", "TANGGAL MULAI TUGAS", "NOMOR SK PENGANGKATAN", "LEMBAGA PENGANGKAT", "NOMOR SK PENUGASAN", "LEMBAGA PENUGAS", "ALAMAT", "FOTO"];
     const rows = managersList.map(m => [
-      `"${(m.nama || "").replace(/"/g, '""')}"`,
-      `"${(m.nik || "").replace(/"/g, '""')}"`,
-      `"${(m.jabatan || "").replace(/"/g, '""')}"`,
-      `"${(m.nuptk || "").replace(/"/g, '""')}"`,
-      `"${(m.tempatTglLahir || "").replace(/"/g, '""')}"`,
-      `"${(m.jenisKelamin || "").replace(/"/g, '""')}"`,
-      `"${(m.agama || "").replace(/"/g, '""')}"`,
-      `"${(m.pendidikan || "").replace(/"/g, '""')}"`,
-      `"${(m.email || "").replace(/"/g, '""')}"`,
-      `"${(m.tanggalMulaiTugas || "").replace(/"/g, '""')}"`,
-      `"${(m.nomorSkPengangkatan || "").replace(/"/g, '""')}"`,
-      `"${(m.lembagaPengangkat || "").replace(/"/g, '""')}"`,
-      `"${(m.nomorSkPenugasan || "").replace(/"/g, '""')}"`,
-      `"${(m.lembagaPenugas || "").replace(/"/g, '""')}"`,
-      `"${(m.alamat || "").replace(/"/g, '""')}"`,
-      `"${(m.foto || "").replace(/"/g, '""')}"`
+      m.nama || "",
+      m.nik || "",
+      m.jabatan || "",
+      m.nuptk || "",
+      m.tempatTglLahir || "",
+      m.jenisKelamin || "",
+      m.agama || "",
+      m.pendidikan || "",
+      m.email || "",
+      m.tanggalMulaiTugas || "",
+      m.nomorSkPengangkatan || "",
+      m.lembagaPengangkat || "",
+      m.nomorSkPenugasan || "",
+      m.lembagaPenugas || "",
+      m.alamat || "",
+      m.foto || ""
     ]);
-    downloadCSV(headers, rows, "data_pengelola.csv");
-    toast.success("Berhasil mengunduh CSV!");
+    downloadExcel(headers, rows, "data_pengelola.xlsx");
+    toast.success("Berhasil mengunduh Excel!");
   };
 
   const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -522,19 +522,7 @@ export default function ManagerManager() {
     e.target.value = "";
 
     try {
-      let rows: string[][] = [];
-      const lowerName = file.name.toLowerCase();
-      if (lowerName.endsWith(".xlsx") || lowerName.endsWith(".xls")) {
-        rows = await parseExcel(file);
-      } else {
-        const text = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (event) => resolve(event.target?.result as string || "");
-          reader.onerror = (err) => reject(err);
-          reader.readAsText(file);
-        });
-        rows = parseCSV(text);
-      }
+      const rows = await parseExcel(file);
 
       const mapped = mapCsvRows(rows, [
         { key: "nama", aliases: ["nama", "name"], defaultIndex: 0 },
@@ -688,7 +676,7 @@ export default function ManagerManager() {
           <div className="grid grid-cols-2 gap-2 md:col-span-3">
             <input
               type="file"
-              accept=".csv, .xlsx, .xls"
+              accept=".xlsx, .xls"
               ref={csvInputRef}
               onChange={handleImportCSV}
               className="hidden"
@@ -697,13 +685,13 @@ export default function ManagerManager() {
               onClick={() => csvInputRef.current?.click()}
               className="h-10 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95"
             >
-              <Upload className="h-4 w-4" /> UPLOAD CSV
+              <Upload className="h-4 w-4" /> UPLOAD EXCEL
             </Button>
             <Button
               onClick={handleExportCSV}
               className="h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95"
             >
-              <Download className="h-4 w-4" /> DOWNLOAD CSV
+              <Download className="h-4 w-4" /> DOWNLOAD EXCEL
             </Button>
             <Button
               onClick={handleAddNew}

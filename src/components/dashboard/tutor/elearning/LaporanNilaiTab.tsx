@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileSpreadsheet, Lock, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import { downloadExcel } from "@/lib/utils";
 
 interface Props {
   activeTab?: string;
@@ -65,26 +66,20 @@ export default function LaporanNilaiTab({ activeTab, user }: Props) {
       toast.error("Tidak ada data untuk diekspor");
       return;
     }
-    // Generate CSV content
-    const header = "Nama Warga Belajar,Nilai Tugas,Nilai Diskusi,Nilai Kehadiran,Nilai Akhir,Predikat\n";
-    const rows = students.map(student => 
-      `"${student.nama}",${student.tugas},${student.partisipasi},${student.kehadiran},${student.final.toFixed(1)},"${student.predikat}"`
-    ).join("\n");
-    
-    const csvContent = header + rows;
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    
-    // Create download link
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "laporan_nilai_warga_belajar.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    
-    toast.success("Berhasil mengunduh laporan nilai (.CSV)");
+    // Generate Excel content
+    const headers = ["Nama Warga Belajar", "Nilai Tugas", "Nilai Diskusi", "Nilai Kehadiran", "Nilai Akhir", "Predikat"];
+    const rows = students.map(student => [
+      student.nama || "",
+      student.tugas ?? 0,
+      student.partisipasi ?? 0,
+      student.kehadiran ?? 0,
+      Math.round((student.final ?? 0) * 10) / 10,
+      student.predikat || ""
+    ]);
+
+    downloadExcel(headers, rows, "laporan_nilai_warga_belajar.xlsx");
+
+    toast.success("Berhasil mengunduh laporan nilai (.XLSX)");
   };
 
   const filteredStudents = students.filter(s => s.nama.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -101,7 +96,7 @@ export default function LaporanNilaiTab({ activeTab, user }: Props) {
           <p className="text-sm text-indigo-200 font-medium">Unduh data akhir partisipasi, diskusi, dan tugas mahasiswa.</p>
         </div>
         <Button onClick={handleExport} className="bg-[#ff6105] hover:bg-white hover:text-[#ff6105] font-bold text-sm h-10 px-6 transition-colors shadow-lg cursor-pointer">
-          <FileSpreadsheet className="w-4 h-4 mr-2" /> Ekspor (.CSV)
+          <FileSpreadsheet className="w-4 h-4 mr-2" /> Ekspor (.XLSX)
         </Button>
       </div>
 
@@ -156,7 +151,7 @@ export default function LaporanNilaiTab({ activeTab, user }: Props) {
                       <td className="py-4 px-6 text-center font-bold text-slate-700 border-l border-slate-100">{student.partisipasi}</td>
                       <td className="py-4 px-6 text-center font-bold text-slate-700 border-l border-slate-100">{student.kehadiran}</td>
                       <td className="py-4 px-6 text-center border-l border-slate-100">
-                        <span className="text-[#ff6105] text-sm font-black">{student.final.toFixed(1)}</span>
+                        <span className="text-[#ff6105] text-sm font-black">{student.final?.toFixed(1) ?? "-"}</span>
                       </td>
                       <td className="py-4 px-6 text-center font-black text-slate-800">
                         <span className={`px-3 py-1 rounded-full text-xs ${

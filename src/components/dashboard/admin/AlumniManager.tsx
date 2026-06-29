@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { parseCSV, downloadCSV, mapCsvRows, parseExcel } from "@/lib/utils";
+import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
 import { Upload, Plus, Trash2, Save, HelpCircle, Download, LayoutGrid, List, Search, X, Loader2, ChevronLeft, ChevronRight, Filter, RotateCcw, Edit3 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
@@ -313,28 +313,32 @@ export default function AlumniManager() {
     }
   };
 
-  // CSV Export
+  // Excel Export
   const handleExportCSV = () => {
-    if (alumniList.length === 0) return;
+    if (alumniList.length === 0) {
+      toast.error("Tidak ada data untuk diekspor!");
+      return;
+    }
     const headers = ["Nama", "NIK", "Program", "Tahun Lulus", "NISN", "NIS", "Tempat Tgl Lahir", "No HP", "Nama Ayah", "Nama Ibu", "Jenis Kelamin", "Agama", "Email", "Alamat", "Cerita Sukses"];
     const rows = alumniList.map((item) => [
-      `"${item.nama.replace(/"/g, '""')}"`,
-      `"${item.nik}"`,
-      `"${item.program}"`,
-      `"${item.tahunLulus}"`,
-      `"${item.nisn}"`,
-      `"${item.nis}"`,
-      `"${item.tempatTglLahir.replace(/"/g, '""')}"`,
-      `"${item.noHp}"`,
-      `"${item.namaAyah.replace(/"/g, '""')}"`,
-      `"${item.namaIbu.replace(/"/g, '""')}"`,
-      `"${item.jenisKelamin}"`,
-      `"${item.agama}"`,
-      `"${item.email}"`,
-      `"${item.alamat.replace(/"/g, '""')}"`,
-      `"${item.cerita.replace(/"/g, '""')}"`
+      item.nama || "",
+      item.nik || "",
+      item.program || "",
+      item.tahunLulus || "",
+      item.nisn || "",
+      item.nis || "",
+      item.tempatTglLahir || "",
+      item.noHp || "",
+      item.namaAyah || "",
+      item.namaIbu || "",
+      item.jenisKelamin || "",
+      item.agama || "",
+      item.email || "",
+      item.alamat || "",
+      item.cerita || ""
     ]);
-    downloadCSV(headers, rows, `data-alumni-${Date.now()}.csv`);
+    downloadExcel(headers, rows, `data-alumni-${Date.now()}.xlsx`);
+    toast.success("Berhasil mengekspor Excel");
   };
 
   const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -342,20 +346,8 @@ export default function AlumniManager() {
       const file = e.target.files[0];
       e.target.value = "";
       try {
-        let rows: string[][] = [];
-        const lowerName = file.name.toLowerCase();
-        if (lowerName.endsWith(".xlsx") || lowerName.endsWith(".xls")) {
-          rows = await parseExcel(file);
-        } else {
-          const text = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (event) => resolve(event.target?.result as string || "");
-            reader.onerror = (err) => reject(err);
-            reader.readAsText(file);
-          });
-          rows = parseCSV(text);
-        }
-        
+        const rows = await parseExcel(file);
+
         if (rows.length <= 1) return;
 
         const token = localStorage.getItem("token");
@@ -521,20 +513,20 @@ export default function AlumniManager() {
             type="file"
             ref={importInputRef}
             className="hidden"
-            accept=".csv, .xlsx, .xls"
+            accept=".xlsx, .xls"
             onChange={handleImportCSV}
           />
           <Button
             onClick={() => importInputRef.current?.click()}
             className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 h-9 rounded-xl cursor-pointer uppercase tracking-wider shadow-sm flex items-center gap-1.5 transition-all select-none active:scale-95"
           >
-            <Upload className="h-3.5 w-3.5" /> UPLOAD CSV / EXCEL
+            <Upload className="h-3.5 w-3.5" /> UPLOAD EXCEL
           </Button>
           <Button
             onClick={handleExportCSV}
             className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] px-4 h-9 rounded-xl cursor-pointer uppercase tracking-wider shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
           >
-            <Download className="h-3.5 w-3.5" /> DOWNLOAD CSV
+            <Download className="h-3.5 w-3.5" /> DOWNLOAD EXCEL
           </Button>
           <Button
             onClick={startAddAlumni}

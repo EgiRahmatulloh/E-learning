@@ -521,7 +521,7 @@ export const studentsHandlers = new Elysia()
       return { success: false, message: "Gagal menghapus warga belajar" };
     }
   })
-  // Import data warga belajar via CSV (bulk)
+  // Import data warga belajar via Excel (bulk)
   .post(
     "/api/students/import",
     async ({ body, headers, jwt, set }) => {

@@ -259,7 +259,7 @@ export const tutorsHandlers = new Elysia()
       return { success: false, message: "Gagal menghapus data tutor" };
     }
   })
-  // Import data tutor via CSV (bulk)
+  // Import data tutor via Excel (bulk)
   .post(
     "/api/tutors/import",
     async ({ body, headers, jwt, set }) => {

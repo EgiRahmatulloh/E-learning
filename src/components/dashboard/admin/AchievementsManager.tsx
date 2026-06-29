@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { parseCSV, downloadCSV, mapCsvRows, parseExcel } from "@/lib/utils";
+import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
 import { Edit3, Trash2, Search, UploadCloud, Plus, Save, X, Upload, Download, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
@@ -231,7 +231,7 @@ export function AchievementsManager() {
     }
   };
 
-  // CSV Export Logic
+  // Excel Export Logic
   const handleExportCSV = () => {
     if (achievements.length === 0) {
       toast.error("Tidak ada data untuk diekspor!");
@@ -239,38 +239,26 @@ export function AchievementsManager() {
     }
     const headers = ["NAMA PRESTASI", "TAHUN", "TINGKAT", "PENYELENGGARA", "PESERTA", "KETERANGAN", "FOTO"];
     const rows = achievements.map(a => [
-      `"${(a.nama || "").replace(/"/g, '""')}"`,
-      `"${(a.tahun || "").replace(/"/g, '""')}"`,
-      `"${(a.tingkat || "").replace(/"/g, '""')}"`,
-      `"${(a.penyelenggara || "").replace(/"/g, '""')}"`,
-      `"${(a.peserta || "").replace(/"/g, '""')}"`,
-      `"${(a.keterangan || "").replace(/"/g, '""')}"`,
-      `"${(a.foto || "").replace(/"/g, '""')}"`
+      a.nama || "",
+      a.tahun || "",
+      a.tingkat || "",
+      a.penyelenggara || "",
+      a.peserta || "",
+      a.keterangan || "",
+      a.foto || ""
     ]);
-    downloadCSV(headers, rows, "prestasi.csv");
-    toast.success("Berhasil mengunduh CSV!");
+    downloadExcel(headers, rows, "prestasi.xlsx");
+    toast.success("Berhasil mengunduh Excel!");
   };
 
-  // CSV/Excel Import Logic
+  // Excel Import Logic
   const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
     
     try {
-      let rows: string[][] = [];
-      const lowerName = file.name.toLowerCase();
-      if (lowerName.endsWith(".xlsx") || lowerName.endsWith(".xls")) {
-        rows = await parseExcel(file);
-      } else {
-        const text = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (event) => resolve(event.target?.result as string || "");
-          reader.onerror = (err) => reject(err);
-          reader.readAsText(file);
-        });
-        rows = parseCSV(text);
-      }
+      const rows = await parseExcel(file);
 
       const mapped = mapCsvRows(rows, [
         { key: "nama", aliases: ["nama", "name", "judul"], defaultIndex: 0 },
@@ -370,10 +358,10 @@ export function AchievementsManager() {
               />
             </div>
             <label className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95">
-              <Upload className="h-4 w-4" /> UPLOAD CSV / EXCEL
+              <Upload className="h-4 w-4" /> UPLOAD EXCEL
               <input
                 type="file"
-                accept=".csv, .xlsx, .xls"
+                accept=".xlsx, .xls"
                 onChange={handleImportCSV}
                 className="hidden"
               />
@@ -382,7 +370,7 @@ export function AchievementsManager() {
               onClick={handleExportCSV}
               className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center gap-1.5 transition-all active:scale-95"
             >
-              <Download className="h-4 w-4" /> EKSPOR CSV
+              <Download className="h-4 w-4" /> EKSPOR EXCEL
             </Button>
             <Button
               onClick={() => {

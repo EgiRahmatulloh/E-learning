@@ -190,7 +190,7 @@ export const managersHandlers = new Elysia()
       return { success: false, message: "Gagal menghapus pengelola" };
     }
   })
-  // Import data pengelola via CSV (bulk)
+  // Import data pengelola via Excel (bulk)
   .post(
     "/api/managers/import",
     async ({ body, headers, jwt, set }) => {

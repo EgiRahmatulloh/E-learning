@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { parseCSV, downloadCSV, mapCsvRows, parseExcel } from "@/lib/utils";
+import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
 import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, GraduationCap, ArrowUpCircle, RefreshCw, List, LayoutGrid, Filter, RotateCcw, Loader2, Edit3 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
@@ -181,34 +181,35 @@ export default function WargaBelajarManager() {
     return false;
   };
 
-  // CSV Export
+  // Excel Export
   const handleExportCSV = () => {
-    if (students.length === 0) {
+    const exportData = students.filter(s => s.status !== "LULUS");
+    if (exportData.length === 0) {
       toast.error("Tidak ada data untuk diekspor!");
       return;
     }
     const headers = ["NAMA", "NIK", "PROGRAM", "KELAS", "NISN", "NIS", "TEMPAT TGL LAHIR", "TITIK LAYANAN", "JENIS KELAMIN", "NO HP", "AGAMA", "NAMA AYAH", "EMAIL", "NAMA IBU", "ALAMAT", "FOTO", "STATUS"];
-    const rows = students.map(s => [
-      `"${(s.nama || "").replace(/"/g, '""')}"`,
-      `"${(s.nik || "").replace(/"/g, '""')}"`,
-      `"${(s.program || "").replace(/"/g, '""')}"`,
-      `"${(s.kelas || "").replace(/"/g, '""')}"`,
-      `"${(s.nisn || "").replace(/"/g, '""')}"`,
-      `"${(s.nis || "").replace(/"/g, '""')}"`,
-      `"${(s.tempatTglLahir || "").replace(/"/g, '""')}"`,
-      `"${(s.titikLayanan || "").replace(/"/g, '""')}"`,
-      `"${(s.jenisKelamin || "").replace(/"/g, '""')}"`,
-      `"${(s.noHp || "").replace(/"/g, '""')}"`,
-      `"${(s.agama || "").replace(/"/g, '""')}"`,
-      `"${(s.namaAyah || "").replace(/"/g, '""')}"`,
-      `"${(s.email || "").replace(/"/g, '""')}"`,
-      `"${(s.namaIbu || "").replace(/"/g, '""')}"`,
-      `"${(s.alamat || "").replace(/"/g, '""')}"`,
-      `"${(s.foto || "").replace(/"/g, '""')}"`,
-      `"${(s.status || "").replace(/"/g, '""')}"`
+    const rows = exportData.map(s => [
+      s.nama || "",
+      s.nik || "",
+      s.program || "",
+      s.kelas || "",
+      s.nisn || "",
+      s.nis || "",
+      s.tempatTglLahir || "",
+      s.titikLayanan || "",
+      s.jenisKelamin || "",
+      s.noHp || "",
+      s.agama || "",
+      s.namaAyah || "",
+      s.email || "",
+      s.namaIbu || "",
+      s.alamat || "",
+      s.foto || "",
+      s.status || ""
     ]);
-    downloadCSV(headers, rows, "warga_belajar.csv");
-    toast.success("Berhasil mengekspor CSV");
+    downloadExcel(headers, rows, "warga_belajar.xlsx");
+    toast.success("Berhasil mengekspor Excel");
   };
 
   const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -217,19 +218,7 @@ export default function WargaBelajarManager() {
     e.target.value = "";
 
     try {
-      let rows: string[][] = [];
-      const lowerName = file.name.toLowerCase();
-      if (lowerName.endsWith(".xlsx") || lowerName.endsWith(".xls")) {
-        rows = await parseExcel(file);
-      } else {
-        const text = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (event) => resolve(event.target?.result as string || "");
-          reader.onerror = (err) => reject(err);
-          reader.readAsText(file);
-        });
-        rows = parseCSV(text);
-      }
+      const rows = await parseExcel(file);
 
       const mapped = mapCsvRows(rows, [
         { key: "nama", aliases: ["nama", "name"], defaultIndex: 0 },
@@ -812,20 +801,20 @@ export default function WargaBelajarManager() {
               type="file"
               ref={importInputRef}
               className="hidden"
-              accept=".csv, .xlsx, .xls"
+              accept=".xlsx, .xls"
               onChange={handleImportCSV}
             />
             <Button
               onClick={() => importInputRef.current?.click()}
               className="rounded-xl bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 h-10 cursor-pointer transition-all shadow-md flex items-center gap-1.5 active:scale-95"
             >
-              <Upload className="h-4 w-4" /> UPLOAD CSV / EXCEL
+              <Upload className="h-4 w-4" /> UPLOAD EXCEL
             </Button>
             <Button
               onClick={handleExportCSV}
               className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] px-4 h-10 cursor-pointer transition-all shadow-md flex items-center gap-1.5 active:scale-95"
             >
-              <Download className="h-4 w-4" /> DOWNLOAD CSV
+              <Download className="h-4 w-4" /> DOWNLOAD EXCEL
             </Button>
             <Button
               onClick={openAddForm}
