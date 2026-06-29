@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UploadCloud, Users, CheckCircle, FileText, Save } from "lucide-react";
+import { UploadCloud, Users, CheckCircle, FileText, Save, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 // Removed getSubjectsSiswa
@@ -30,6 +30,8 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
   const [forumPosts, setForumPosts] = useState<any[]>([]);
   const [replyText, setReplyText] = useState("");
   const [activeReplyId, setActiveReplyId] = useState<number | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
+  const [editInputValue, setEditInputValue] = useState("");
 
   useEffect(() => {
     async function fetchData() {
@@ -131,6 +133,51 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
       }
     } catch (err) {
       toast.error("Gagal mengirim komentar");
+    }
+  };
+
+  const handleEditSubmit = async (msgId: number) => {
+    if (!editInputValue.trim()) return;
+    try {
+      const res = await fetch(`/api/elearning/forum/${msgId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ content: editInputValue })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Pesan berhasil diubah");
+        setEditingMessageId(null);
+        if (sessionId) fetchForumPosts(sessionId);
+      } else {
+        toast.error(data.message || "Gagal mengubah pesan");
+      }
+    } catch (err) {
+      toast.error("Terjadi kesalahan saat mengubah pesan");
+    }
+  };
+
+  const handleDeleteMessage = async (msgId: number) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus pesan ini?")) return;
+    try {
+      const res = await fetch(`/api/elearning/forum/${msgId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Pesan berhasil dihapus");
+        if (sessionId) fetchForumPosts(sessionId);
+      } else {
+        toast.error(data.message || "Gagal menghapus pesan");
+      }
+    } catch (err) {
+      toast.error("Terjadi kesalahan saat menghapus pesan");
     }
   };
 
@@ -350,29 +397,86 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
                           <h4 className="font-bold text-slate-800 text-sm">{post.authorName}</h4>
                           <span className="text-xs text-slate-400">{new Date(post.createdAt).toLocaleString('id-ID')}</span>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 text-xs text-cyan-600 hover:bg-cyan-50"
-                          onClick={() => setActiveReplyId(activeReplyId === post.id ? null : post.id)}
-                        >
-                          Balas
-                        </Button>
+                        <div className="flex gap-2">
+                          {post.authorId === user?.id && post.authorRole === user?.role && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 text-xs text-slate-400 hover:text-blue-600 px-2"
+                                onClick={() => {
+                                  setEditingMessageId(post.id);
+                                  setEditInputValue(post.content);
+                                }}
+                                title="Edit pesan"
+                              >
+                                <Pencil className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 text-xs text-slate-400 hover:text-red-600 px-2"
+                                onClick={() => handleDeleteMessage(post.id)}
+                                title="Hapus pesan"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 text-xs text-cyan-600 hover:bg-cyan-50"
+                            onClick={() => setActiveReplyId(activeReplyId === post.id ? null : post.id)}
+                          >
+                            Balas
+                          </Button>
+                        </div>
                       </div>
-                      <div className="mt-2 text-sm text-slate-600 prose" dangerouslySetInnerHTML={{ __html: post.content }} />
+                      
+                      {editingMessageId === post.id ? (
+                        <div className="mt-2 space-y-2">
+                          <RichTextEditor value={editInputValue} onChange={setEditInputValue} placeholder="Edit pesan..." />
+                          <div className="flex gap-2 justify-end">
+                            <Button onClick={() => setEditingMessageId(null)} size="sm" variant="outline" className="h-8">Batal</Button>
+                            <Button onClick={() => handleEditSubmit(post.id)} size="sm" className="bg-[#280f91] hover:bg-[#3a1bca] text-white h-8">Simpan</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-2 text-sm text-slate-600 prose" dangerouslySetInnerHTML={{ __html: post.content }} />
+                      )}
 
                       {/* Replies */}
                       {forumPosts.filter(r => r.parentId === post.id).map(reply => (
-                        <div key={reply.id} className="mt-3 pl-4 border-l-2 border-slate-200 flex gap-2">
+                        <div key={reply.id} className="mt-3 pl-4 border-l-2 border-slate-200 flex gap-2 group">
                           <div className={`h-6 w-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${reply.authorRole === 'tutor' ? 'bg-[#280f91] text-white' : 'bg-slate-200 text-slate-600'}`}>
                             {(reply.authorName || '?').substring(0, 2).toUpperCase()}
                           </div>
                           <div className="flex-1">
-                            <h5 className="font-bold text-slate-700 text-xs flex items-center gap-2">
-                              {reply.authorName}
-                              {reply.authorRole === 'tutor' && <span className="bg-[#ff6105] text-white px-1.5 py-0.5 rounded text-[9px]">TUTOR</span>}
-                            </h5>
-                            <div className="text-xs text-slate-600 prose mt-1" dangerouslySetInnerHTML={{ __html: reply.content }} />
+                            <div className="flex justify-between items-start">
+                              <h5 className="font-bold text-slate-700 text-xs flex items-center gap-2">
+                                {reply.authorName}
+                                {reply.authorRole === 'tutor' && <span className="bg-[#ff6105] text-white px-1.5 py-0.5 rounded text-[9px]">TUTOR</span>}
+                              </h5>
+                              {reply.authorId === user?.id && reply.authorRole === user?.role && (
+                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button onClick={() => { setEditingMessageId(reply.id); setEditInputValue(reply.content); }} className="text-slate-400 hover:text-blue-600"><Pencil className="w-3 h-3" /></button>
+                                  <button onClick={() => handleDeleteMessage(reply.id)} className="text-slate-400 hover:text-red-600"><Trash2 className="w-3 h-3" /></button>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {editingMessageId === reply.id ? (
+                              <div className="mt-2 space-y-2">
+                                <RichTextEditor value={editInputValue} onChange={setEditInputValue} placeholder="Edit balasan..." />
+                                <div className="flex gap-2 justify-end">
+                                  <Button onClick={() => setEditingMessageId(null)} size="sm" variant="outline" className="h-7 text-xs">Batal</Button>
+                                  <Button onClick={() => handleEditSubmit(reply.id)} size="sm" className="bg-[#280f91] hover:bg-[#3a1bca] text-white h-7 text-xs">Simpan</Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-xs text-slate-600 prose mt-1" dangerouslySetInnerHTML={{ __html: reply.content }} />
+                            )}
                           </div>
                         </div>
                       ))}
