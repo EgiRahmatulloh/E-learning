@@ -19,7 +19,7 @@ import {
   rombels,
   rombelStudents
 } from "../models";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, isNull } from "drizzle-orm";
 import { jwt } from "@elysia/jwt";
 import { finalJwtSecret } from "../config/jwt";
 import { verifyAdmin, verifyAdminOrTutor } from "../middleware/auth";
@@ -903,12 +903,12 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         const tutorsList = await db.select().from(tutors).all();
 
         // Enrich tutors with stats
-        const allPosts = await db.select().from(elearningForumPosts).all();
+        const allPosts = await db.select().from(elearningForumPosts).where(eq(elearningForumPosts.authorRole, "tutor")).all();
         const allSetups = await db.select().from(elearningSetups).all();
         const allCourses = await db.select().from(elearningCourses).all();
         const allSessions = await db.select().from(elearningSessions).all();
         const allAssignments = await db.select().from(elearningAssignments).all();
-        const allSubmissions = await db.select().from(elearningSubmissions).all();
+        const allSubmissions = await db.select().from(elearningSubmissions).where(isNull(elearningSubmissions.grade)).all();
 
         const enrichedTutors = tutorsList.map(tutor => {
           // 1. diskusiCount (posts made by this tutor)
@@ -965,7 +965,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           .all();
 
         // Calculate simple stats
-        const allPosts = await db.select().from(elearningForumPosts).all();
+        const allPosts = await db.select().from(elearningForumPosts).where(eq(elearningForumPosts.authorRole, "siswa")).all();
 
         const enhancedStudents = studentsList.map(s => {
           const studentPosts = allPosts.filter(p => p.authorId === s.id && p.authorRole === "siswa");
