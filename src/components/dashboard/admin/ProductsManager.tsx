@@ -347,7 +347,6 @@ export default function ProductsManager() {
                   <th className="py-4 px-6 border-r border-[#009cb9] text-center w-16">NO</th>
                   <th className="py-4 px-6 border-r border-[#009cb9] text-center w-48">GAMBAR</th>
                   <th className="py-4 px-6 border-r border-[#009cb9]">NAMA PRODUK</th>
-                  <th className="py-4 px-6 border-r border-[#009cb9]">DESKRIPSI</th>
                   <th className="py-4 px-6 border-r border-[#009cb9] w-48">PENJUAL</th>
                   <th className="py-4 px-6 border-r border-[#009cb9] w-48 text-center">HARGA / SATUAN</th>
                   <th className="py-4 px-6 border-r border-[#009cb9] w-36 text-center font-mono">NO. HP/WA</th>
@@ -376,9 +375,6 @@ export default function ProductsManager() {
                     </td>
                     <td className="py-4 px-6 border-r border-slate-100 font-extrabold text-slate-900 uppercase">
                       {item.namaProduk}
-                    </td>
-                    <td className="py-4 px-6 border-r border-slate-100 text-slate-800 text-sm leading-relaxed font-semibold">
-                      {item.deskripsi}
                     </td>
                     <td className="py-4 px-6 border-r border-slate-100 uppercase">
                       {item.penjual}

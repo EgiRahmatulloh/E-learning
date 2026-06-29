@@ -319,7 +319,6 @@ export default function AgendaManager() {
                 <th className="py-4 px-6 border-r border-[#009cb9] w-36">LOKASI</th>
                 <th className="py-4 px-6 border-r border-[#009cb9] w-36">PENYELENGGARA</th>
                 <th className="py-4 px-6 border-r border-[#009cb9] w-36">PENANGGUNGJAWAB</th>
-                <th className="py-4 px-6 border-r border-[#009cb9]">KETERANGAN</th>
                 <th className="py-4 px-6 border-r border-[#009cb9] text-center w-36">FOTO</th>
                 <th className="py-4 px-6 text-center w-36">AKSI</th>
               </tr>
@@ -327,7 +326,7 @@ export default function AgendaManager() {
             <tbody>
               {filteredAgendas.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-10 text-center font-bold text-slate-400">
+                  <td colSpan={10} className="py-10 text-center font-bold text-slate-400">
                     Tidak ada data agenda ditemukan. Silakan tambahkan baru!
                   </td>
                 </tr>
@@ -360,9 +359,6 @@ export default function AgendaManager() {
                     </td>
                     <td className="py-4 px-6 border-r border-slate-100 font-extrabold text-[#9c27b0] uppercase text-center">
                       {item.penanggungjawab}
-                    </td>
-                    <td className="py-4 px-6 border-r border-slate-100 text-slate-800 text-sm leading-relaxed font-semibold">
-                      {item.keterangan}
                     </td>
                     <td className="py-4 px-6 border-r border-slate-100 text-center">
                       {item.foto ? (
