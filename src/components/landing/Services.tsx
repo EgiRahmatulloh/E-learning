@@ -10,6 +10,7 @@ import {
   DialogClose
 } from "@/components/ui/dialog";
 import {
+  AlertCircle,
   CheckCircle2,
   MessageCircle,
 } from "lucide-react";
@@ -22,6 +23,35 @@ interface ServicesProps {
 
 export default function Services({ onLoginClick, activeDialog, onDialogClose }: ServicesProps) {
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
+
+  const [elearningUsername, setElearningUsername] = useState("");
+  const [elearningPassword, setElearningPassword] = useState("");
+  const [elearningError, setElearningError] = useState("");
+  const [elearningLoading, setElearningLoading] = useState(false);
+
+  const handleElearningLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setElearningError("");
+    setElearningLoading(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: elearningUsername, password: elearningPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Gagal masuk");
+      if (data.success) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        window.location.reload();
+      }
+    } catch (err) {
+      setElearningError(err instanceof Error ? err.message : "Koneksi ke server gagal");
+    } finally {
+      setElearningLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (toast.show) {
@@ -79,16 +109,22 @@ export default function Services({ onLoginClick, activeDialog, onDialogClose }: 
       </Dialog>
 
       {/* ===== E-LEARNING Dialog ===== */}
-      <Dialog open={activeDialog === "e-learning"} onOpenChange={(open) => !open && onDialogClose()}>
+      <Dialog open={activeDialog === "e-learning"} onOpenChange={(open) => {
+        if (!open) {
+          onDialogClose();
+          setElearningUsername("");
+          setElearningPassword("");
+          setElearningError("");
+        }
+      }}>
         <DialogContent className="sm:max-w-md bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-black text-[#280f91]">Portal E-Learning Mandiri</DialogTitle>
             <DialogDescription className="text-sm font-semibold text-indigo-700">Akses Pembelajaran Digital & Modul</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <p className="text-slate-600 text-sm leading-relaxed font-semibold">
-              Gunakan akun resmi yang diberikan oleh administrator untuk masuk ke portal E-Learning dan mengakses modul pembelajaran.
-            </p>
+
+          <div className="space-y-5 py-4">
+            {/* Layanan Mandiri */}
             <div className="space-y-2.5 text-xs text-slate-500 font-bold bg-indigo-50 p-4 rounded-xl border border-indigo-100">
               <span className="block text-indigo-950 uppercase tracking-wider text-[10px] font-black">Layanan Mandiri:</span>
               <div className="flex items-center gap-2">
@@ -104,24 +140,64 @@ export default function Services({ onLoginClick, activeDialog, onDialogClose }: 
                 <span>Melihat Hasil Rekapitulasi Kehadiran & Nilai Tugas</span>
               </div>
             </div>
-            <p className="text-xs text-slate-500 leading-relaxed font-medium">
-              Hubungi wali kelas atau admin E-Learning jika Anda lupa password atau memerlukan bantuan teknis akun belajar Anda.
+
+            <p className="text-slate-600 text-sm leading-relaxed font-semibold">
+              Gunakan akun resmi yang diberikan oleh administrator untuk masuk ke portal E-Learning dan mengakses modul pembelajaran.
             </p>
+
+            {/* Login Form */}
+            <form onSubmit={handleElearningLogin} className="space-y-4">
+              {elearningError && (
+                <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 text-xs font-bold rounded-xl flex items-center gap-2 animate-in shake duration-300">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{elearningError}</span>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label htmlFor="elearning-email" className="text-xs font-black text-slate-700 uppercase tracking-widest block">Email</label>
+                <input
+                  id="elearning-email"
+                  type="text"
+                  required
+                  placeholder="Masukkan alamat email"
+                  value={elearningUsername}
+                  onChange={(e) => setElearningUsername(e.target.value)}
+                  className="w-full h-11 px-4 border border-slate-200 rounded-xl font-medium focus:outline-none focus:border-[#280f91] transition-all bg-slate-50/50"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="elearning-password" className="text-xs font-black text-slate-700 uppercase tracking-widest block">Password</label>
+                <input
+                  id="elearning-password"
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={elearningPassword}
+                  onChange={(e) => setElearningPassword(e.target.value)}
+                  className="w-full h-11 px-4 border border-slate-200 rounded-xl font-medium focus:outline-none focus:border-[#280f91] transition-all bg-slate-50/50"
+                />
+              </div>
+
+              <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                Hubungi wali kelas atau admin E-Learning jika Anda lupa password atau memerlukan bantuan teknis akun belajar Anda.
+              </p>
+
+              <DialogFooter className="flex gap-2 border-t border-slate-100 pt-4">
+                <DialogClose asChild>
+                  <Button className="flex-1 rounded-xl bg-red-600 text-white hover:bg-red-700 font-bold h-11 shadow-xs cursor-pointer">Tutup</Button>
+                </DialogClose>
+                <Button
+                  type="submit"
+                  disabled={elearningLoading}
+                  className="flex-1 rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 shadow-xs cursor-pointer"
+                >
+                  {elearningLoading ? "Memproses..." : "Masuk Kelas Belajar"}
+                </Button>
+              </DialogFooter>
+            </form>
           </div>
-          <DialogFooter className="flex sm:justify-between gap-2 border-t border-slate-100 pt-4">
-            <DialogClose asChild>
-              <Button variant="outline" className="rounded-xl font-bold cursor-pointer">Tutup</Button>
-            </DialogClose>
-            <Button 
-              onClick={() => {
-                onDialogClose();
-                onLoginClick();
-              }}
-              className="rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 px-5 shadow-xs cursor-pointer"
-            >
-              Masuk Kelas Belajar
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 

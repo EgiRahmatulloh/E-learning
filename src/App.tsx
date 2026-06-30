@@ -203,13 +203,7 @@ function App() {
           </div>
         ) : (
           <>
-            <Hero onServiceClick={(service) => {
-              if (service === "e-learning") {
-                setLoginDialogOpen(true);
-              } else {
-                setActiveServiceDialog(service);
-              }
-            }} />
+            <Hero onServiceClick={(service) => setActiveServiceDialog(service)} />
             
             <Services
               onLoginClick={() => setLoginDialogOpen(true)}
