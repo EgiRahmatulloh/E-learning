@@ -108,7 +108,7 @@ export default function TutorManager() {
   };
 
   // Excel Export
-  const handleExportCSV = () => {
+  const handleExportExcel = () => {
     if (tutors.length === 0) {
       toast.error("Tidak ada data untuk diekspor!");
       return;
@@ -136,7 +136,7 @@ export default function TutorManager() {
     toast.success("Berhasil mengekspor Excel");
   };
 
-  const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
@@ -438,7 +438,7 @@ export default function TutorManager() {
               ref={importInputRef}
               className="hidden"
               accept=".xlsx, .xls"
-              onChange={handleImportCSV}
+              onChange={handleImportExcel}
             />
             {/* Row 1 */}
             <Button
@@ -448,7 +448,7 @@ export default function TutorManager() {
               <Upload className="h-4 w-4" /> UPLOAD EXCEL
             </Button>
             <Button
-              onClick={handleExportCSV}
+              onClick={handleExportExcel}
               className="h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95"
             >
               <Download className="h-4 w-4" /> DOWNLOAD EXCEL

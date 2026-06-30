@@ -182,7 +182,7 @@ export default function WargaBelajarManager() {
   };
 
   // Excel Export
-  const handleExportCSV = () => {
+  const handleExportExcel = () => {
     const exportData = students.filter(s => s.status !== "LULUS");
     if (exportData.length === 0) {
       toast.error("Tidak ada data untuk diekspor!");
@@ -212,7 +212,7 @@ export default function WargaBelajarManager() {
     toast.success("Berhasil mengekspor Excel");
   };
 
-  const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
@@ -802,7 +802,7 @@ export default function WargaBelajarManager() {
               ref={importInputRef}
               className="hidden"
               accept=".xlsx, .xls"
-              onChange={handleImportCSV}
+              onChange={handleImportExcel}
             />
             <Button
               onClick={() => importInputRef.current?.click()}
@@ -811,7 +811,7 @@ export default function WargaBelajarManager() {
               <Upload className="h-4 w-4" /> UPLOAD EXCEL
             </Button>
             <Button
-              onClick={handleExportCSV}
+              onClick={handleExportExcel}
               className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] px-4 h-10 cursor-pointer transition-all shadow-md flex items-center gap-1.5 active:scale-95"
             >
               <Download className="h-4 w-4" /> DOWNLOAD EXCEL

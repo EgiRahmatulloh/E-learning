@@ -314,7 +314,7 @@ export default function AlumniManager() {
   };
 
   // Excel Export
-  const handleExportCSV = () => {
+  const handleExportExcel = () => {
     if (alumniList.length === 0) {
       toast.error("Tidak ada data untuk diekspor!");
       return;
@@ -341,7 +341,7 @@ export default function AlumniManager() {
     toast.success("Berhasil mengekspor Excel");
   };
 
-  const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       e.target.value = "";
@@ -514,7 +514,7 @@ export default function AlumniManager() {
             ref={importInputRef}
             className="hidden"
             accept=".xlsx, .xls"
-            onChange={handleImportCSV}
+            onChange={handleImportExcel}
           />
           <Button
             onClick={() => importInputRef.current?.click()}
@@ -523,7 +523,7 @@ export default function AlumniManager() {
             <Upload className="h-3.5 w-3.5" /> UPLOAD EXCEL
           </Button>
           <Button
-            onClick={handleExportCSV}
+              onClick={handleExportExcel}
             className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] px-4 h-9 rounded-xl cursor-pointer uppercase tracking-wider shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
           >
             <Download className="h-3.5 w-3.5" /> DOWNLOAD EXCEL

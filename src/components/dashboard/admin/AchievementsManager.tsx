@@ -232,7 +232,7 @@ export function AchievementsManager() {
   };
 
   // Excel Export Logic
-  const handleExportCSV = () => {
+  const handleExportExcel = () => {
     if (achievements.length === 0) {
       toast.error("Tidak ada data untuk diekspor!");
       return;
@@ -252,7 +252,7 @@ export function AchievementsManager() {
   };
 
   // Excel Import Logic
-  const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
@@ -362,12 +362,12 @@ export function AchievementsManager() {
               <input
                 type="file"
                 accept=".xlsx, .xls"
-                onChange={handleImportCSV}
+                onChange={handleImportExcel}
                 className="hidden"
               />
             </label>
             <Button
-              onClick={handleExportCSV}
+              onClick={handleExportExcel}
               className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center gap-1.5 transition-all active:scale-95"
             >
               <Download className="h-4 w-4" /> EKSPOR EXCEL
