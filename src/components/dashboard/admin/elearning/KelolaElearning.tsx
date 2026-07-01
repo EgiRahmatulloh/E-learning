@@ -67,12 +67,6 @@ const extractLevelFromRombel = (namaRombel: string): string => {
   return nama;
 };
 
-// Cek apakah nama rombel termasuk dalam level tertentu
-const rombelBelongsToLevel = (namaRombel: string, levelId: string): boolean => {
-  const extracted = extractLevelFromRombel(namaRombel);
-  return extracted === levelId.toUpperCase();
-};
-
 export default function KelolaElearning() {
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [rombels, setRombels] = useState<RombelData[]>([]);
@@ -176,7 +170,7 @@ export default function KelolaElearning() {
         levelMap.get(levelId)!.push(rombel);
       }
 
-      for (const [levelId, levelRombels] of levelMap) {
+      for (const [, levelRombels] of levelMap) {
         if (levelRombels.length < 2) continue;
 
         // Kumpulkan semua mapel yang ada di level ini (deduplicated)
