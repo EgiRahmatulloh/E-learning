@@ -1,6 +1,18 @@
 import { BookOpen } from "lucide-react";
 
 export const MASTER_MAPEL = {
+  "Paket A (Kelas I-IV)": [
+    "Pendidikan Agama Islam dan Budi Pekerti",
+    "Pendidikan Pancasila",
+    "Bahasa Indonesia",
+    "Matematika",
+    "Ilmu Pengetahuan Alam dan Sosial",
+    "PJOK",
+    "Seni Budaya",
+    "Bahasa Inggris",
+    "Pemberdayaan",
+    "Keterampilan"
+  ],
   "Paket A": [
     "Pendidikan Agama Islam dan Budi Pekerti",
     "Pendidikan Pancasila",

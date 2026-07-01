@@ -44,16 +44,20 @@ interface KelasLevel {
 // Mapping program berdasarkan level kelas
 const getProgramByLevel = (levelId: string): string => {
   const id = levelId.toUpperCase();
+  if (["I", "II", "III", "IV"].includes(id)) return "Paket A (Kelas I-IV)";
   if (["V", "VI"].includes(id)) return "Paket A";
   if (["VII", "VIII", "IX"].includes(id)) return "Paket B";
-  return "Paket C";
+  if (id === "X") return "Paket C (Kelas X)";
+  if (["XI", "XII"].includes(id)) return "Paket C (Kelas XI dan XII)";
+  return "Paket A";
 };
 
 // Mapping foto berdasarkan program
 const getImageByProgram = (program: string): string => {
-  if (program === "Paket A") return "/paket/paketA.jpg.jpeg";
-  if (program === "Paket B") return "/paket/paketB.jpg.jpeg";
-  return "/paket/paketC.jpg.jpeg";
+  if (program.startsWith("Paket A")) return "/paket/paketA.jpg.jpeg";
+  if (program.startsWith("Paket B")) return "/paket/paketB.jpg.jpeg";
+  if (program.startsWith("Paket C")) return "/paket/paketC.jpg.jpeg";
+  return "/paket/paketA.jpg.jpeg";
 };
 
 // Ekstrak level ID dari nama rombel
