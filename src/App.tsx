@@ -22,7 +22,6 @@ import Products from "./components/landing/Products";
 import Testimonials from "./components/landing/Testimonials";
 import Gallery from "./components/landing/Gallery";
 import Footer from "./components/landing/Footer";
-import LoginModal from "./components/landing/LoginModal";
 
 function App() {
 
@@ -43,11 +42,6 @@ function App() {
 
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
   const [user, setUser] = useState<{ id: number; name: string; username: string; role: string } | null>(getLocalStorageUser());
-  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
-  const [loginUsername, setLoginUsername] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const [loginLoading, setLoginLoading] = useState(false);
 
   // URL Path State for SPA Routing
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -110,35 +104,15 @@ function App() {
 
 
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError("");
-    setLoginLoading(true);
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: loginUsername, password: loginPassword }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Gagal masuk");
-      if (data.success) {
-        setToken(data.token);
-        setUser(data.user);
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        setLoginDialogOpen(false);
-        setLoginUsername("");
-        setLoginPassword("");
-        navigate("/dashboard");
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Koneksi ke server gagal";
-      setLoginError(message);
-    } finally {
-      setLoginLoading(false);
-    }
-  };
+  // Dipanggil oleh Services setelah login berhasil dari dialog e-learning.
+  // Mengangkat state auth ke App agar tidak perlu window.location.reload().
+  const handleAuthSuccess = useCallback((newToken: string, newUser: { id: number; name: string; username: string; role: string }) => {
+    setToken(newToken);
+    setUser(newUser);
+    localStorage.setItem("token", newToken);
+    localStorage.setItem("user", JSON.stringify(newUser));
+    navigate("/dashboard");
+  }, [navigate]);
 
   const handleLogout = () => {
     setToken(null);
@@ -206,7 +180,7 @@ function App() {
             <Hero onServiceClick={(service) => setActiveServiceDialog(service)} />
             
             <Services
-              onLoginClick={() => setLoginDialogOpen(true)}
+              onLoginSuccess={handleAuthSuccess}
               activeDialog={activeServiceDialog}
               onDialogClose={() => setActiveServiceDialog(null)}
             />
@@ -230,25 +204,6 @@ function App() {
         )}
         
         <Footer />
-
-        <LoginModal
-          isOpen={loginDialogOpen}
-          onOpenChange={(open) => {
-            setLoginDialogOpen(open);
-            if (!open) {
-              setLoginError("");
-              setLoginUsername("");
-              setLoginPassword("");
-            }
-          }}
-          onSubmit={handleLogin}
-          loginUsername={loginUsername}
-          setLoginUsername={setLoginUsername}
-          loginPassword={loginPassword}
-          setLoginPassword={setLoginPassword}
-          loginError={loginError}
-          loginLoading={loginLoading}
-        />
       </div>
     </TooltipProvider>
   );

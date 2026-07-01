@@ -504,6 +504,7 @@ export const elearningSetups = sqliteTable('elearning_setups', {
   tutorId: integer('tutor_id').notNull(),
   skk: integer('skk').notNull().default(1),
   jumlahSesi: integer('jumlah_sesi').notNull().default(8),
+  semester: text('semester').notNull().default('Ganjil'), // Ganjil / Genap
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
 });
 

@@ -422,6 +422,7 @@ CREATE TABLE IF NOT EXISTS elearning_setups (
   tutor_id INTEGER NOT NULL,
   skk INTEGER NOT NULL DEFAULT 1,
   jumlah_sesi INTEGER NOT NULL DEFAULT 8,
+  semester TEXT NOT NULL DEFAULT 'Ganjil',
   created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 `);

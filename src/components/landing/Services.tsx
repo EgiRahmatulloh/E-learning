@@ -15,13 +15,20 @@ import {
   MessageCircle,
 } from "lucide-react";
 
+interface AuthUser {
+  id: number;
+  name: string;
+  username: string;
+  role: string;
+}
+
 interface ServicesProps {
-  onLoginClick: () => void;
+  onLoginSuccess: (token: string, user: AuthUser) => void;
   activeDialog: "e-spmb" | "e-learning" | "e-ujian" | null;
   onDialogClose: () => void;
 }
 
-export default function Services({ onLoginClick, activeDialog, onDialogClose }: ServicesProps) {
+export default function Services({ onLoginSuccess, activeDialog, onDialogClose }: ServicesProps) {
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: "", show: false });
 
   const [elearningUsername, setElearningUsername] = useState("");
@@ -42,9 +49,10 @@ export default function Services({ onLoginClick, activeDialog, onDialogClose }: 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Gagal masuk");
       if (data.success) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        window.location.reload();
+        // Serahkan ke App untuk update state auth & navigasi (tanpa reload penuh)
+        onLoginSuccess(data.token, data.user);
+      } else {
+        throw new Error(data.message || "Email atau password salah");
       }
     } catch (err) {
       setElearningError(err instanceof Error ? err.message : "Koneksi ke server gagal");
@@ -158,7 +166,7 @@ export default function Services({ onLoginClick, activeDialog, onDialogClose }: 
                 <label htmlFor="elearning-email" className="text-xs font-black text-slate-700 uppercase tracking-widest block">Email</label>
                 <input
                   id="elearning-email"
-                  type="text"
+                  type="email"
                   required
                   placeholder="Masukkan alamat email"
                   value={elearningUsername}

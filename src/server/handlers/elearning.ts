@@ -355,20 +355,27 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
       if (authError) return authError;
 
       try {
-        let condition = undefined;
+        let conditions: any[] = [];
         const authHeader = headers["authorization"];
         const token = authHeader!.split(" ")[1];
         const payload = await jwt.verify(token);
 
         if (payload.role === "tutor") {
-          condition = eq(elearningSetups.tutorId, payload.id as number);
+          conditions.push(eq(elearningSetups.tutorId, payload.id as number));
         } else if (payload.role === "siswa" && query.kelas) {
-          condition = eq(elearningSetups.kelas, query.kelas);
+          conditions.push(eq(elearningSetups.kelas, query.kelas));
         } else if (query.tutorId) {
-          condition = eq(elearningSetups.tutorId, parseInt(query.tutorId));
+          conditions.push(eq(elearningSetups.tutorId, parseInt(query.tutorId)));
         } else if (query.kelas) {
-          condition = eq(elearningSetups.kelas, query.kelas);
+          conditions.push(eq(elearningSetups.kelas, query.kelas));
         }
+
+        // Filter by semester if provided
+        if (query.semester) {
+          conditions.push(eq(elearningSetups.semester, query.semester));
+        }
+
+        const condition = conditions.length > 0 ? and(...conditions) : undefined;
 
         const setups = await db
           .select()
@@ -386,6 +393,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
       query: t.Object({
         tutorId: t.Optional(t.String()),
         kelas: t.Optional(t.String()),
+        semester: t.Optional(t.String()),
       }),
     }
   )
@@ -399,7 +407,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
       if (authError) return authError;
 
       try {
-        const { kelas, mapel, tutorId, skk, jumlahSesi } = body;
+        const { kelas, mapel, tutorId, skk, jumlahSesi, semester } = body;
         const inserted = await db
           .insert(elearningSetups)
           .values({
@@ -408,6 +416,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
             tutorId,
             skk,
             jumlahSesi,
+            semester: semester || "Ganjil",
           })
           .returning();
 
@@ -424,6 +433,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         tutorId: t.Number(),
         skk: t.Number(),
         jumlahSesi: t.Number(),
+        semester: t.Optional(t.String()),
       }),
     }
   )
@@ -437,7 +447,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
       if (authError) return authError;
 
       try {
-        const { kelas, mapel, tutorId, skk, jumlahSesi } = body;
+        const { kelas, mapel, tutorId, skk, jumlahSesi, semester } = body;
         const updated = await db
           .update(elearningSetups)
           .set({
@@ -446,6 +456,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
             tutorId,
             skk,
             jumlahSesi,
+            semester: semester || "Ganjil",
           })
           .where(eq(elearningSetups.id, parseInt(id)))
           .returning();
@@ -468,6 +479,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         tutorId: t.Number(),
         skk: t.Number(),
         jumlahSesi: t.Number(),
+        semester: t.Optional(t.String()),
       }),
     }
   )
