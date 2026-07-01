@@ -110,6 +110,11 @@ export default function KelolaElearning() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
+  // Search & Pagination untuk Daftar Kelas (kiri)
+  const [kelasSearch, setKelasSearch] = useState("");
+  const [kelasPage, setKelasPage] = useState(1);
+  const kelasPerPage = 3;
+
   const fetchSetups = async () => {
     try {
       const res = await fetch(`/api/elearning/setups?semester=${selectedSemester}`, {
@@ -280,6 +285,36 @@ export default function KelolaElearning() {
     () => (selectedKelasId ? kelasLevels.find(l => l.id === selectedKelasId) ?? null : null),
     [kelasLevels, selectedKelasId]
   );
+
+  // Daftar kelas hasil filter search (nama, nama Indonesia, program, atau nama rombel)
+  const filteredKelasLevels = useMemo(() => {
+    const q = kelasSearch.trim().toLowerCase();
+    if (!q) return kelasLevels;
+    return kelasLevels.filter((level) =>
+      level.nama.toLowerCase().includes(q) ||
+      level.namaIndonesia.toLowerCase().includes(q) ||
+      level.program.toLowerCase().includes(q) ||
+      level.rombels.some((r) => r.nama.toLowerCase().includes(q))
+    );
+  }, [kelasLevels, kelasSearch]);
+
+  const kelasTotalPages = Math.max(1, Math.ceil(filteredKelasLevels.length / kelasPerPage));
+
+  // Halaman kelas yang ditampilkan saat ini
+  const paginatedKelasLevels = useMemo(() => {
+    const start = (kelasPage - 1) * kelasPerPage;
+    return filteredKelasLevels.slice(start, start + kelasPerPage);
+  }, [filteredKelasLevels, kelasPage]);
+
+  // Reset ke halaman 1 saat kata kunci berubah
+  useEffect(() => {
+    setKelasPage(1);
+  }, [kelasSearch]);
+
+  // Jaga agar halaman tidak melebihi total halaman (mis. setelah filter mengecil)
+  useEffect(() => {
+    if (kelasPage > kelasTotalPages) setKelasPage(kelasTotalPages);
+  }, [kelasPage, kelasTotalPages]);
 
   // Get setups for selected kelas level (deduplicated by mapel)
   const filteredItems = useMemo(() => {
@@ -539,8 +574,35 @@ export default function KelolaElearning() {
               DAFTAR KELAS
             </h3>
           </div>
+          {/* Search Daftar Kelas */}
+          <div className="p-4 pb-0">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                value={kelasSearch}
+                onChange={(e) => setKelasSearch(e.target.value)}
+                placeholder="Cari kelas / rombel..."
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-9 pr-9 py-2.5 text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-[#280f91] outline-none"
+              />
+              {kelasSearch && (
+                <button
+                  type="button"
+                  onClick={() => setKelasSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
           <div className="p-4 space-y-3 max-h-[900px] overflow-y-auto">
-            {kelasLevels.map((level) => (
+            {paginatedKelasLevels.length === 0 && (
+              <div className="py-10 text-center text-sm text-slate-400 font-medium">
+                Tidak ada kelas yang cocok.
+              </div>
+            )}
+            {paginatedKelasLevels.map((level) => (
               <button
                 key={level.id}
                 onClick={() => {
@@ -607,6 +669,30 @@ export default function KelolaElearning() {
               </button>
             ))}
           </div>
+          {/* Pagination Daftar Kelas */}
+          {kelasTotalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
+              <button
+                type="button"
+                onClick={() => setKelasPage((p) => Math.max(1, p - 1))}
+                disabled={kelasPage === 1}
+                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Sebelumnya
+              </button>
+              <span className="text-xs font-semibold text-slate-500">
+                Hal {kelasPage} / {kelasTotalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => setKelasPage((p) => Math.min(kelasTotalPages, p + 1))}
+                disabled={kelasPage === kelasTotalPages}
+                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Berikutnya
+              </button>
+            </div>
+          )}
         </div>
 
         {/* KANAN: KONFIGURASI MAPEL */}
