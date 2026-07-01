@@ -666,7 +666,7 @@ export default function TutorManager() {
                         onChange={(e) => {
                           setFormData(prev => ({ ...prev, program: e.target.value, kelas: "", tutorMapel: "" }));
                         }}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       >
                         <option value="" disabled>Pilih Program / Paket</option>
                         <option value="Paket A">Paket A</option>

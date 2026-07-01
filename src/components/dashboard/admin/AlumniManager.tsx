@@ -720,7 +720,7 @@ export default function AlumniManager() {
                         placeholder="Nama lengkap alumni"
                         value={nama}
                         onChange={(e) => setNama(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
@@ -733,7 +733,7 @@ export default function AlumniManager() {
                         placeholder="Masukkan 16 digit NIK"
                         value={nik}
                         onChange={(e) => setNik(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
@@ -744,7 +744,7 @@ export default function AlumniManager() {
                         value={program}
                         disabled={!isEditing}
                         onChange={(e) => setProgram(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       >
                         <option value="PAKET A">PAKET A (Setara SD)</option>
                         <option value="PAKET B">PAKET B (Setara SMP)</option>
@@ -760,7 +760,7 @@ export default function AlumniManager() {
                         placeholder="Contoh: 2020"
                         value={tahunLulus}
                         onChange={(e) => setTahunLulus(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
@@ -774,7 +774,7 @@ export default function AlumniManager() {
                         placeholder="Masukkan NISN"
                         value={nisn}
                         onChange={(e) => setNisn(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
@@ -786,7 +786,7 @@ export default function AlumniManager() {
                         placeholder="Masukkan NIS"
                         value={nis}
                         onChange={(e) => setNis(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
@@ -800,7 +800,7 @@ export default function AlumniManager() {
                         placeholder="Contoh: Ciamis, 15-08-2002"
                         value={tempatTglLahir}
                         onChange={(e) => setTempatTglLahir(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
@@ -809,7 +809,7 @@ export default function AlumniManager() {
                         value={jenisKelamin}
                         disabled={!isEditing}
                         onChange={(e) => setJenisKelamin(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       >
                         <option value="Laki-laki">Laki-laki</option>
                         <option value="Perempuan">Perempuan</option>
@@ -826,7 +826,7 @@ export default function AlumniManager() {
                         placeholder="Contoh: 0821..."
                         value={noHp}
                         onChange={(e) => setNoHp(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
@@ -837,7 +837,7 @@ export default function AlumniManager() {
                         placeholder="Contoh: Islam"
                         value={agama}
                         onChange={(e) => setAgama(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
@@ -850,7 +850,7 @@ export default function AlumniManager() {
                         placeholder="Contoh: alumni@mail.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
@@ -861,7 +861,7 @@ export default function AlumniManager() {
                         placeholder="Nama ayah kandung"
                         value={namaAyah}
                         onChange={(e) => setNamaAyah(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
@@ -874,7 +874,7 @@ export default function AlumniManager() {
                         placeholder="Nama ibu kandung"
                         value={namaIbu}
                         onChange={(e) => setNamaIbu(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
@@ -887,7 +887,7 @@ export default function AlumniManager() {
                         placeholder="Tulis alamat rumah lengkap alumni..."
                         value={alamat}
                         onChange={(e) => setAlamat(e.target.value)}
-                        className="p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 resize-none transition-colors"
+                        className="p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
                       />
                     </div>
 
@@ -900,7 +900,7 @@ export default function AlumniManager() {
                         placeholder="Bagikan cerita sukses, kesan pesan, atau kutipan motivasi dari alumni..."
                         value={cerita}
                         onChange={(e) => setCerita(e.target.value)}
-                        className="p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 resize-none transition-colors"
+                        className="p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
                       />
                     </div>
                   </div>

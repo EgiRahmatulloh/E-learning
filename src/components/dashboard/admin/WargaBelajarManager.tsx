@@ -1153,7 +1153,7 @@ export default function WargaBelajarManager() {
                             const kelasList = KELAS_BY_PROGRAM[prog];
                             setFormData(prev => ({ ...prev, program: prog, kelas: kelasList[0] }));
                           }}
-                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                           disabled={!isEditing}
                         >
                           <option value="PAKET A">PAKET A</option>
@@ -1166,7 +1166,7 @@ export default function WargaBelajarManager() {
                         <select
                           value={formData.kelas || ""}
                           onChange={(e) => setFormData(prev => ({ ...prev, kelas: e.target.value }))}
-                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                           disabled={!isEditing}
                         >
                           {(KELAS_BY_PROGRAM[formData.program || "PAKET C"] || []).map((k) => (
@@ -1216,7 +1216,7 @@ export default function WargaBelajarManager() {
                         <select
                           value={formData.jenisKelamin || "Laki-laki"}
                           onChange={(e) => setFormData(prev => ({ ...prev, jenisKelamin: e.target.value }))}
-                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 transition-colors"
+                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                           disabled={!isEditing}
                         >
                           <option value="Laki-laki">Laki-laki</option>

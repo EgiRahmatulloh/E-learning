@@ -137,7 +137,7 @@ export default function Services({ onLoginSuccess, activeDialog, onDialogClose }
               <span className="block text-indigo-950 uppercase tracking-wider text-[10px] font-black">Layanan Mandiri:</span>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-indigo-600 shrink-0" />
-                <span>Unduh Modul Kurikulum Merdeka & K-13 Lengkap</span>
+                <span>Unduh Modul Kurikulum Merdeka</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-indigo-600 shrink-0" />
