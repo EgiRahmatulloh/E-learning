@@ -24,6 +24,13 @@ interface RombelData {
   nama: string;
 }
 
+// Mapping nama Indonesia untuk angka romawi
+const ROMAN_TO_INDONESIAN: Record<string, string> = {
+  "I": "Satu", "II": "Dua", "III": "Tiga", "IV": "Empat",
+  "V": "Lima", "VI": "Enam", "VII": "Tujuh", "VIII": "Delapan",
+  "IX": "Sembilan", "X": "Sepuluh", "XI": "Sebelas", "XII": "Dua Belas",
+};
+
 // Kelas berdasarkan angka romawi (level kelas)
 interface KelasLevel {
   id: string;
@@ -34,85 +41,36 @@ interface KelasLevel {
   image: string;
 }
 
-const KELAS_LEVELS: KelasLevel[] = [
-  {
-    id: "V",
-    nama: "KELAS V",
-    namaIndonesia: "Kelas Lima",
-    rombels: [],
-    program: "Paket A",
-    image: "/paket/paketA.jpg.jpeg",
-  },
-  {
-    id: "VI",
-    nama: "KELAS VI",
-    namaIndonesia: "Kelas Enam",
-    rombels: [],
-    program: "Paket A",
-    image: "/paket/paketA.jpg.jpeg",
-  },
-  {
-    id: "VII",
-    nama: "KELAS VII",
-    namaIndonesia: "Kelas Tujuh",
-    rombels: [],
-    program: "Paket B",
-    image: "/paket/paketB.jpg.jpeg",
-  },
-  {
-    id: "VIII",
-    nama: "KELAS VIII",
-    namaIndonesia: "Kelas Delapan",
-    rombels: [],
-    program: "Paket B",
-    image: "/paket/paketB.jpg.jpeg",
-  },
-  {
-    id: "IX",
-    nama: "KELAS IX",
-    namaIndonesia: "Kelas Sembilan",
-    rombels: [],
-    program: "Paket B",
-    image: "/paket/paketB.jpg.jpeg",
-  },
-  {
-    id: "X",
-    nama: "KELAS X",
-    namaIndonesia: "Kelas Sepuluh",
-    rombels: [],
-    program: "Paket C",
-    image: "/paket/paketC.jpg.jpeg",
-  },
-  {
-    id: "XI",
-    nama: "KELAS XI",
-    namaIndonesia: "Kelas Sebelas",
-    rombels: [],
-    program: "Paket C",
-    image: "/paket/paketC.jpg.jpeg",
-  },
-  {
-    id: "XII",
-    nama: "KELAS XII",
-    namaIndonesia: "Kelas Dua Belas",
-    rombels: [],
-    program: "Paket C",
-    image: "/paket/paketC.jpg.jpeg",
-  },
-];
-
-// Cek apakah nama rombel (mis. "XIA") termasuk dalam level tertentu (mis. "XI").
-// Suffix setelah level id harus tepat satu huruf (A-Z), sehingga "XIA" hanya cocok
-// dengan level "XI" dan bukan "X" — angka romawi yang lebih pendek tidak salah cocok.
-const rombelBelongsToLevel = (namaRombel: string, levelId: string): boolean => {
-  const nama = namaRombel.toUpperCase();
+// Mapping program berdasarkan level kelas
+const getProgramByLevel = (levelId: string): string => {
   const id = levelId.toUpperCase();
-  if (nama === id) return true;
-  if (nama.startsWith(id) && nama.length > id.length) {
-    const suffix = nama.slice(id.length);
-    return /^[A-Z]$/.test(suffix);
+  if (["V", "VI"].includes(id)) return "Paket A";
+  if (["VII", "VIII", "IX"].includes(id)) return "Paket B";
+  return "Paket C";
+};
+
+// Mapping foto berdasarkan program
+const getImageByProgram = (program: string): string => {
+  if (program === "Paket A") return "/paket/paketA.jpg.jpeg";
+  if (program === "Paket B") return "/paket/paketB.jpg.jpeg";
+  return "/paket/paketC.jpg.jpeg";
+};
+
+// Ekstrak level ID dari nama rombel
+// "IVA" → "IV", "VA" → "V", "XIIA" → "XII", "X" → "X"
+const extractLevelFromRombel = (namaRombel: string): string => {
+  const nama = namaRombel.toUpperCase();
+  // Jika huruf terakhir adalah A-Z tunggal (suffix rombel), buang itu
+  if (nama.length > 1 && /^[A-Z]$/.test(nama.slice(-1))) {
+    return nama.slice(0, -1);
   }
-  return false;
+  return nama;
+};
+
+// Cek apakah nama rombel termasuk dalam level tertentu
+const rombelBelongsToLevel = (namaRombel: string, levelId: string): boolean => {
+  const extracted = extractLevelFromRombel(namaRombel);
+  return extracted === levelId.toUpperCase();
 };
 
 export default function KelolaElearning() {
@@ -210,10 +168,15 @@ export default function KelolaElearning() {
       let synced = 0;
 
       try {
-      for (const level of KELAS_LEVELS) {
-        // Filter rombels dalam level ini
-        const levelRombels = rombels.filter(r => rombelBelongsToLevel(r.nama, level.id));
+      // Bangun level secara dinamis dari rombel
+      const levelMap = new Map<string, RombelData[]>();
+      for (const rombel of rombels) {
+        const levelId = extractLevelFromRombel(rombel.nama);
+        if (!levelMap.has(levelId)) levelMap.set(levelId, []);
+        levelMap.get(levelId)!.push(rombel);
+      }
 
+      for (const [levelId, levelRombels] of levelMap) {
         if (levelRombels.length < 2) continue;
 
         // Kumpulkan semua mapel yang ada di level ini (deduplicated)
@@ -274,18 +237,44 @@ export default function KelolaElearning() {
     syncNewRombels();
   }, [rombels, items]);
 
-  // Group rombels by kelas level
+  // Group rombels by kelas level (DINAMIS dari database)
   const kelasLevels = useMemo(() => {
-    return KELAS_LEVELS.map(level => {
-      // Filter rombels yang termasuk dalam level ini
-      // Format rombel: VA, VB, VIA, VIB, VIIA, VIIIA, IXA, XA, XB, XIA, XIB, XIIA, XIIB
-      const levelRombels = rombels.filter(r => rombelBelongsToLevel(r.nama, level.id));
+    // Ekstrak semua level unik dari rombel
+    const levelMap = new Map<string, RombelData[]>();
+    for (const rombel of rombels) {
+      const levelId = extractLevelFromRombel(rombel.nama);
+      if (!levelMap.has(levelId)) {
+        levelMap.set(levelId, []);
+      }
+      levelMap.get(levelId)!.push(rombel);
+    }
 
-      return {
-        ...level,
-        rombels: levelRombels
-      };
+    // Buat array KelasLevel, urutkan berdasarkan urutan romawi
+    const romanOrder = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+    const levels: KelasLevel[] = [];
+
+    for (const [levelId, levelRombels] of levelMap) {
+      const program = getProgramByLevel(levelId);
+      levels.push({
+        id: levelId,
+        nama: `KELAS ${levelId}`,
+        namaIndonesia: `Kelas ${ROMAN_TO_INDONESIAN[levelId] || levelId}`,
+        rombels: levelRombels,
+        program,
+        image: getImageByProgram(program),
+      });
+    }
+
+    // Urutkan: yang ada di romanOrder diurutkan duluan, sisanya di belakang
+    levels.sort((a, b) => {
+      const idxA = romanOrder.indexOf(a.id);
+      const idxB = romanOrder.indexOf(b.id);
+      const orderA = idxA >= 0 ? idxA : 100 + a.id.length;
+      const orderB = idxB >= 0 ? idxB : 100 + b.id.length;
+      return orderA - orderB;
     });
+
+    return levels;
   }, [rombels]);
 
   // Objek level yang sedang dipilih, selalu diturunkan dari kelasLevels terbaru
