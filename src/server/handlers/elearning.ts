@@ -19,9 +19,10 @@ import {
   tutors,
   students,
   rombels,
-  rombelStudents
+  rombelStudents,
+  managers
 } from "../models";
-import { eq, and, or, inArray, isNull } from "drizzle-orm";
+import { eq, and, or, inArray, isNull, like } from "drizzle-orm";
 import { jwt } from "@elysia/jwt";
 import { finalJwtSecret } from "../config/jwt";
 import { verifyAdmin, verifyAdminOrTutor } from "../middleware/auth";
@@ -1748,15 +1749,24 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         }
         const semester = [...semesterCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || "Ganjil";
 
+        const kepalaPkbm = await db.select().from(managers).where(
+          or(
+            like(managers.jabatan, "%Kepala%"),
+            like(managers.jabatan, "%Ketua%")
+          )
+        ).get();
+        const namaKepalaPkbm = kepalaPkbm?.nama || "-";
+
         const buffer = fillTemplate("DAFTAR HADIR TUTOR.xlsx", {
-          program: "Paket A/B/C", semester,
+          program: "PAKET A/B/C", semester,
           tahunAjaran: currentYear + "/" + (currentYear + 1),
           kelas: "Semua Kelas",
-          bulan: now.toLocaleDateString("id-ID", { month: "long", year: "numeric" }),
-          waliKelas: "-",
+          bulan: now.toLocaleDateString("id-ID", { month: "long" }),
+          waliKelas: "-", namaWaliKelas: "-",
           tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
           kecamatan: "Jatinagara", namaPkbm: "Menuju Makmur",
           nipPenilik: "-", nipKepalaPkbm: "-", nipWaliKelas: "-",
+          namaKepalaPkbm, namaPemilik: "-",
           tutors: tutorsData,
         });
 
@@ -1853,10 +1863,11 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
 
         const rombelList = await db.select().from(rombels).where(eq(rombels.nama, kelas)).all();
         const rombelIds = rombelList.map(r => r.id);
-        const studentsList = rombelIds.length > 0 ? await db
-          .select({ id: students.id, nama: students.nama, nis: students.nis })
+        const studentsListRaw = rombelIds.length > 0 ? await db
+          .select({ id: students.id, nama: students.nama, nis: students.nis, nisn: students.nisn, jenisKelamin: students.jenisKelamin })
           .from(students).innerJoin(rombelStudents, eq(students.id, rombelStudents.studentId))
           .where(inArray(rombelStudents.rombelId, rombelIds)).all() : [];
+        const studentsList = studentsListRaw.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
 
         const setups = await db.select().from(elearningSetups).where(eq(elearningSetups.kelas, kelas)).all();
         if (setups.length === 0) {
@@ -1898,18 +1909,28 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           const { dayData, rekap } = buildAttendanceGrid(
             studentAtt, a => a.attendedAt || a.createdAt, currentMonth, currentYear, daysInMonth
           );
-          return { no: idx + 1, nipd: "", nisn: student.nis || "", namaSiswa: student.nama, jk: "", rombel: kelas, ...dayData, rekap };
+          return { no: idx + 1, nis: student.nis || "", nisn: student.nisn || "", namaSiswa: student.nama, jenisKelamin: student.jenisKelamin || "", rombel: kelas, ...dayData, rekap };
         });
 
-        const program = deriveProgram(setups[0].kelas);
+        const program = deriveProgram(setups[0].kelas).toUpperCase();
+
+        const kepalaPkbm = await db.select().from(managers).where(
+          or(
+            like(managers.jabatan, "%Kepala%"),
+            like(managers.jabatan, "%Ketua%")
+          )
+        ).get();
+        const namaKepalaPkbm = kepalaPkbm?.nama || "-";
+
         const buffer = fillTemplate("DAFTAR HADIR WARGA BELAJAR REKAP.xlsx", {
           program, semester: setups[0].semester || "Ganjil",
           tahunAjaran: currentYear + "/" + (currentYear + 1),
-          kelas, waliKelas,
-          bulan: now.toLocaleDateString("id-ID", { month: "long", year: "numeric" }),
+          kelas, waliKelas: waliKelas, namaWaliKelas: waliKelas,
+          bulan: now.toLocaleDateString("id-ID", { month: "long" }),
           tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
           kecamatan: "Jatinagara", namaPkbm: "Menuju Makmur",
           nipPenilik: "-", nipKepalaPkbm: "-", nipWaliKelas: "-",
+          namaKepalaPkbm, namaPemilik: "-",
           siswa: siswaData,
         });
 
@@ -2013,6 +2034,156 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         set.headers = {
           "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "Content-Disposition": "attachment; filename=\"nilai_wb_" + sanitizeFilename(setup.mapel) + "_" + currentYear + ".xlsx\"",
+        };
+        return buffer;
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
+    }
+  )
+
+  // GET Laporan Nilai WB Rekap (xlsx template)
+  .get(
+    "/laporan/student-grades-rekap",
+    async (context: any) => {
+      const { headers, jwt, query, set } = context;
+      const authError = await verifyAdmin(headers, jwt, set);
+      if (authError) return authError;
+
+      try {
+        let setupsFilter: any = undefined;
+        let kelasName = "Semua Kelas";
+        if (query.kelas) {
+          setupsFilter = eq(elearningSetups.kelas, query.kelas);
+          kelasName = query.kelas;
+        }
+
+        const setups = await db.select().from(elearningSetups).where(setupsFilter).all();
+        if (setups.length === 0) {
+          set.status = 404;
+          return { success: false, message: "Tidak ditemukan setup elearning" };
+        }
+
+        // Get unique courses from setups to know how many mapels
+        const mapelNames = [...new Set(setups.map(s => s.mapel))].sort();
+
+        // Get all classes
+        const allKelas = [...new Set(setups.map(s => s.kelas))];
+        const rombelList = await db.select().from(rombels).where(inArray(rombels.nama, allKelas)).all();
+        const rombelIds = rombelList.map(r => r.id);
+        const studentsListRaw = rombelIds.length > 0 ? await db
+          .select({ id: students.id, nama: students.nama, nis: students.nis, nisn: students.nisn, jenisKelamin: students.jenisKelamin, kelas: rombels.nama })
+          .from(students)
+          .innerJoin(rombelStudents, eq(students.id, rombelStudents.studentId))
+          .innerJoin(rombels, eq(rombels.id, rombelStudents.rombelId))
+          .where(inArray(rombelStudents.rombelId, rombelIds)).all() : [];
+        const studentsList = studentsListRaw.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+
+        // Pre-fetch courses, sessions, attendances, forum posts, submissions
+        const courseConditions = setups.map(s => and(
+          eq(elearningCourses.namaMapel, s.mapel),
+          eq(elearningCourses.program, deriveProgram(s.kelas))
+        ));
+        const allCourses = courseConditions.length > 0
+          ? await db.select().from(elearningCourses).where(courseConditions.length === 1 ? courseConditions[0] : or(...courseConditions)).all()
+          : [];
+        const courseIds = allCourses.map(c => c.id);
+
+        const allSessions = courseIds.length > 0 ? await db.select().from(elearningSessions).where(inArray(elearningSessions.courseId, courseIds)).all() : [];
+        const sessionIds = allSessions.map(s => s.id);
+
+        const allAttendances = sessionIds.length > 0 ? await db.select().from(elearningAttendances).where(inArray(elearningAttendances.sessionId, sessionIds)).all() : [];
+        const allForumPosts = sessionIds.length > 0 ? await db.select().from(elearningForumPosts).where(and(inArray(elearningForumPosts.sessionId, sessionIds), eq(elearningForumPosts.authorRole, "siswa"))).all() : [];
+        const assignments = sessionIds.length > 0 ? await db.select().from(elearningAssignments).where(inArray(elearningAssignments.sessionId, sessionIds)).all() : [];
+        const assignmentIds = assignments.map(a => a.id);
+        const allSubmissions = assignmentIds.length > 0 ? await db.select().from(elearningSubmissions).where(inArray(elearningSubmissions.assignmentId, assignmentIds)).all() : [];
+
+        const now = new Date();
+        const currentYear = now.getFullYear();
+
+        const siswaData = studentsList.map((student, idx) => {
+          const sData: any = {
+            no: idx + 1,
+            nis: student.nis || "",
+            nisn: student.nisn || "",
+            namaSiswa: student.nama,
+            jenisKelamin: student.jenisKelamin || "",
+            rombel: student.kelas
+          };
+
+          // Assign mapel scores dynamically
+          mapelNames.forEach((mapelName, mIdx) => {
+            const mKey = `mapel${mIdx + 1}`;
+            sData[mKey] = mapelName; // ${table:siswa.mapel1} contains the mapel name
+
+            const sSetups = setups.filter(s => s.kelas === student.kelas && s.mapel === mapelName);
+            if (sSetups.length === 0) {
+              sData[`${mKey}Nilai`] = "-";
+              sData[`${mKey}Predikat`] = "-";
+              return;
+            }
+
+            const setup = sSetups[0];
+            const prog = deriveProgram(setup.kelas);
+            const course = allCourses.find(c => c.namaMapel === mapelName && c.program === prog);
+            if (!course) {
+              sData[`${mKey}Nilai`] = "-";
+              sData[`${mKey}Predikat`] = "-";
+              return;
+            }
+
+            const sessions = allSessions.filter(s => s.courseId === course.id);
+            const sIds = sessions.map(s => s.id);
+            const sessionsCount = sIds.length > 0 ? sIds.length : (setup.jumlahSesi || 8);
+            
+            const attendedSessions = new Set(allAttendances.filter(a => a.studentId === student.id && sIds.includes(a.sessionId)).map(a => a.sessionId));
+            const participatedSessions = new Set(allForumPosts.filter(p => p.authorId === student.id && sIds.includes(p.sessionId)).map(p => p.sessionId));
+            
+            const assignIds = assignments.filter(a => sIds.includes(a.sessionId)).map(a => a.id);
+            const studentSubs = allSubmissions.filter(s => s.studentId === student.id && assignIds.includes(s.assignmentId));
+            const studentGrades = studentSubs.filter(s => s.grade != null).map(s => s.grade as number);
+
+            const kehadiran = Math.min(100, Math.round((attendedSessions.size / sessionsCount) * 100));
+            const partisipasi = Math.min(100, Math.round((participatedSessions.size / sessionsCount) * 100));
+            const tugas = studentGrades.length > 0 ? Math.min(100, Math.round(studentGrades.reduce((a, b) => a + b, 0) / studentGrades.length)) : 0;
+            const { final, predikat } = calculateGrade(kehadiran, partisipasi, tugas);
+
+            sData[`${mKey}Nilai`] = final;
+            sData[`${mKey}Predikat`] = predikat;
+          });
+
+          return sData;
+        });
+
+        const program = setups.length > 0 ? deriveProgram(setups[0].kelas).toUpperCase() : "PAKET A/B/C";
+        const semester = setups.length > 0 ? (setups[0].semester || "Ganjil") : "Ganjil";
+        const waliKelas = rombelList.length > 0 && rombelList[0].waliKelasId
+          ? (await db.select().from(tutors).where(eq(tutors.id, rombelList[0].waliKelasId)).get())?.nama || "-" : "-";
+
+        const kepalaPkbm = await db.select().from(managers).where(
+          or(
+            like(managers.jabatan, "%Kepala%"),
+            like(managers.jabatan, "%Ketua%")
+          )
+        ).get();
+        const namaKepalaPkbm = kepalaPkbm?.nama || "-";
+
+        const buffer = fillTemplate("NILAI WARGA BELAJAR REKAP.xlsx", {
+          program, semester,
+          tahunAjaran: currentYear + "/" + (currentYear + 1),
+          kelas: kelasName, kelas2: kelasName,
+          waliKelas: waliKelas, namaWaliKelas: waliKelas,
+          tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
+          kecamatan: "Jatinagara", namaPkbm: "Menuju Makmur",
+          nipPenilik: "-", nipKepalaPkbm: "-", nipWaliKelas: "-",
+          namaKepalaPkbm, namaPemilik: "-",
+          siswa: siswaData,
+        });
+
+        set.headers = {
+          "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "Content-Disposition": "attachment; filename=\"rekap_nilai_wb_" + sanitizeFilename(kelasName) + "_" + currentYear + ".xlsx\"",
         };
         return buffer;
       } catch (error: any) {

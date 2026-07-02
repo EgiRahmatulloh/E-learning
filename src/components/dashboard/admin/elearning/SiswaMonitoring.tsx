@@ -71,32 +71,19 @@ export default function SiswaMonitoring() {
   const [exporting, setExporting] = useState(false);
 
   const handleExportNilai = async () => {
-    if (!selectedKelas || exporting) {
-      if (!selectedKelas) toast.warning("Pilih kelas terlebih dahulu");
+    if (exporting) return;
+    if (selectedKelas) {
+      toast.warning("Kosongkan filter kelas terlebih dahulu untuk cetak rekap nilai keseluruhan");
       return;
     }
     setExporting(true);
     try {
-      const res = await fetch("/api/elearning/setups?kelas=" + encodeURIComponent(selectedKelas), {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      if (data.success && data.data && data.data.length > 0) {
-        const setups = data.data;
-        const setupId = setups[0].id;
-        await downloadFromTemplate(
-          "/api/elearning/laporan/student-grades?setupId=" + setupId,
-          "nilai_wb_" + sanitizeFilename(selectedKelas) + ".xlsx"
-        );
-        if (setups.length > 1) {
-          toast.info(`Ditemukan ${setups.length} mata pelajaran. Mengekspor: ${setups[0].mapel}`);
-        }
-      } else {
-        toast.error("Tidak ditemukan setup elearning untuk kelas ini");
-      }
+      const endpoint = "/api/elearning/laporan/student-grades-rekap";
+      const filename = "rekap_nilai_wb_semua_kelas.xlsx";
+
+      await downloadFromTemplate(endpoint, filename);
     } catch (err: any) {
-      toast.error("Gagal mengambil data setup", { description: err.message });
+      toast.error("Gagal mengunduh rekap nilai", { description: err.message });
     } finally {
       setExporting(false);
     }
@@ -141,7 +128,7 @@ export default function SiswaMonitoring() {
           <Button onClick={handleExportKehadiran} className="bg-[#ff6105] hover:bg-[#e55800] text-white font-bold text-xs h-9 px-4 rounded-xl shadow-sm cursor-pointer shrink-0">
             <FileSpreadsheet className="w-4 h-4 mr-1.5" /> Rekap Kehadiran (.XLSX)
           </Button>
-          <Button onClick={handleExportNilai} disabled={exporting} className="bg-[#280f91] hover:bg-[#1e0b6e] text-white font-bold text-xs h-9 px-4 rounded-xl shadow-sm cursor-pointer shrink-0 disabled:opacity-50">
+          <Button onClick={handleExportNilai} disabled={exporting || !!selectedKelas} className="bg-[#280f91] hover:bg-[#1e0b6e] text-white font-bold text-xs h-9 px-4 rounded-xl shadow-sm cursor-pointer shrink-0 disabled:opacity-50">
             <FileSpreadsheet className="w-4 h-4 mr-1.5" /> {exporting ? "Mengekspor..." : "Rekap Nilai (.XLSX)"}
           </Button>
         </div>
