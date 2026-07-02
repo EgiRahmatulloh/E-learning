@@ -20,7 +20,9 @@ import {
   students,
   rombels,
   rombelStudents,
-  managers
+  managers,
+  tutorAttendances,
+  elearningSessionAngkets
 } from "../models";
 import { eq, and, or, inArray, isNull, like } from "drizzle-orm";
 import { jwt } from "@elysia/jwt";
@@ -56,13 +58,14 @@ const deriveProgram = (kelas: string): string => {
   return "Paket C";
 };
 
-// Helper: build monthly attendance grid (d1..d31) — uses local timezone for calendar-day accuracy
+// Helper: build monthly attendance grid (d1..d31)
 const buildAttendanceGrid = (
   items: any[],
   dateAccessor: (item: any) => string | null | undefined,
   currentMonth: number,
   currentYear: number,
-  daysInMonth: number
+  daysInMonth: number,
+  sessionDates: Set<number> | null = null // Set of days in the month where a session occurred. If null, uses Tutor format (✓)
 ): { dayData: Record<string, string>; rekap: number } => {
   const dayData: Record<string, string> = {};
   let rekap = 0;
@@ -73,8 +76,22 @@ const buildAttendanceGrid = (
       const dt = new Date(raw);
       return dt.getMonth() === currentMonth && dt.getFullYear() === currentYear && dt.getDate() === d;
     });
-    dayData["d" + d] = hasActivity ? "✓" : "";
-    if (hasActivity) rekap++;
+
+    if (sessionDates === null) {
+      // Tutor mode: output ✓ or empty
+      dayData["d" + d] = hasActivity ? "✓" : "";
+      if (hasActivity) rekap++;
+    } else {
+      // Student mode: output H, A, or -
+      if (hasActivity) {
+        dayData["d" + d] = "H";
+        rekap++;
+      } else if (sessionDates.has(d)) {
+        dayData["d" + d] = "A";
+      } else {
+        dayData["d" + d] = "-";
+      }
+    }
   }
   return { dayData, rekap };
 };
@@ -1787,7 +1804,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
     "/laporan/student-attendance",
     async (context: any) => {
       const { headers, jwt, query, set } = context;
-      const authError = await verifyAdmin(headers, jwt, set);
+      const authError = await verifyAdminOrTutor(headers, jwt, set);
       if (authError) return authError;
 
       try {
@@ -1805,11 +1822,12 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         const rombelList = await db.select().from(rombels).where(eq(rombels.nama, setup.kelas)).all();
         const rombelIds = rombelList.map(r => r.id);
         const studentsList = rombelIds.length > 0 ? await db
-          .select({ id: students.id, nama: students.nama, nis: students.nis })
+          .select({ id: students.id, nama: students.nama, nis: students.nis, nisn: students.nisn, jenisKelamin: students.jenisKelamin })
           .from(students).innerJoin(rombelStudents, eq(students.id, rombelStudents.studentId))
           .where(inArray(rombelStudents.rombelId, rombelIds)).all() : [];
 
-        const sessionIds = course ? (await db.select().from(elearningSessions).where(eq(elearningSessions.courseId, course.id)).all()).map(s => s.id) : [];
+        const sessionsList = course ? await db.select().from(elearningSessions).where(eq(elearningSessions.courseId, course.id)).all() : [];
+        const sessionIds = sessionsList.map(s => s.id);
         const attendances = sessionIds.length > 0 ? await db.select().from(elearningAttendances)
           .where(inArray(elearningAttendances.sessionId, sessionIds)).all() : [];
 
@@ -1818,16 +1836,26 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         const currentYear = now.getFullYear();
         const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
+        const sessionDates = new Set<number>();
+        sessionsList.forEach(s => {
+          if (s.startDate) {
+            const dt = new Date(s.startDate);
+            if (dt.getMonth() === currentMonth && dt.getFullYear() === currentYear) {
+              sessionDates.add(dt.getDate());
+            }
+          }
+        });
+
         const siswaData = studentsList.map((student, idx) => {
           const studentAtt = attendances.filter(a => a.studentId === student.id);
           const { dayData, rekap } = buildAttendanceGrid(
-            studentAtt, a => a.attendedAt || a.createdAt, currentMonth, currentYear, daysInMonth
+            studentAtt, a => a.attendedAt || a.createdAt, currentMonth, currentYear, daysInMonth, sessionDates
           );
-          return { no: idx + 1, nipd: "", nisn: student.nis || "", namaSiswa: student.nama, jk: "", rombel: setup.kelas, ...dayData, rekap };
+          return { no: idx + 1, nis: student.nis || "", nisn: student.nisn || "", namaSiswa: student.nama, jenisKelamin: student.jenisKelamin || "", rombel: setup.kelas, ...dayData, rekap };
         });
 
         const buffer = fillTemplate("DAFTAR HADIR WARGA BELAJAR PER MAPEL.xlsx", {
-          program, semester: setup.semester || "Ganjil",
+          program: program.toUpperCase(), semester: setup.semester || "Ganjil",
           tahunAjaran: currentYear + "/" + (currentYear + 1),
           mapel: setup.mapel, kelas: setup.kelas,
           namaTutor: tutor?.nama || "-",
@@ -1901,13 +1929,23 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         const currentYear = now.getFullYear();
         const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
+        const sessionDates = new Set<number>();
+        allSessions.forEach(s => {
+          if (s.startDate) {
+            const dt = new Date(s.startDate);
+            if (dt.getMonth() === currentMonth && dt.getFullYear() === currentYear) {
+              sessionDates.add(dt.getDate());
+            }
+          }
+        });
+
         const waliKelas = rombelList.length > 0 && rombelList[0].waliKelasId
           ? (await db.select().from(tutors).where(eq(tutors.id, rombelList[0].waliKelasId)).get())?.nama || "-" : "-";
 
         const siswaData = studentsList.map((student, idx) => {
           const studentAtt = allAttendances.filter(a => a.studentId === student.id);
           const { dayData, rekap } = buildAttendanceGrid(
-            studentAtt, a => a.attendedAt || a.createdAt, currentMonth, currentYear, daysInMonth
+            studentAtt, a => a.attendedAt || a.createdAt, currentMonth, currentYear, daysInMonth, sessionDates
           );
           return { no: idx + 1, nis: student.nis || "", nisn: student.nisn || "", namaSiswa: student.nama, jenisKelamin: student.jenisKelamin || "", rombel: kelas, ...dayData, rekap };
         });
@@ -1946,12 +1984,74 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
     }
   )
 
-  // GET Laporan Nilai WB Per Mapel (xlsx template)
+  // GET Laporan Kehadiran WB Per Mapel (JSON)
+  .get(
+    "/laporan/student-attendances",
+    async (context: any) => {
+      const { headers, jwt, query, set } = context;
+      const authError = await verifyAdminOrTutor(headers, jwt, set);
+      if (authError) return authError;
+
+      try {
+        const setupId = query.setupId ? parseInt(query.setupId, 10) : null;
+        if (!setupId) { set.status = 400; return { success: false, message: "setupId diperlukan" }; }
+
+        const setup = await db.select().from(elearningSetups).where(eq(elearningSetups.id, setupId)).get();
+        if (!setup) { set.status = 404; return { success: false, message: "Setup tidak ditemukan" }; }
+
+        const program = deriveProgram(setup.kelas);
+        const course = await db.select().from(elearningCourses)
+          .where(and(eq(elearningCourses.namaMapel, setup.mapel), eq(elearningCourses.program, program))).get();
+
+        const rombelList = await db.select().from(rombels).where(eq(rombels.nama, setup.kelas)).all();
+        const rombelIds = rombelList.map(r => r.id);
+        const studentsList = rombelIds.length > 0 ? await db
+          .select({ id: students.id, nama: students.nama, nis: students.nis })
+          .from(students).innerJoin(rombelStudents, eq(students.id, rombelStudents.studentId))
+          .where(inArray(rombelStudents.rombelId, rombelIds)).all() : [];
+
+        const sessionsList = course ? await db.select().from(elearningSessions).where(eq(elearningSessions.courseId, course.id)).all() : [];
+        const sessionIds = sessionsList.map(s => s.id);
+        const attendances = sessionIds.length > 0 ? await db.select().from(elearningAttendances)
+          .where(inArray(elearningAttendances.sessionId, sessionIds)).all() : [];
+
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+        const sessionDates = new Set<number>();
+        sessionsList.forEach(s => {
+          if (s.startDate) {
+            const dt = new Date(s.startDate);
+            if (dt.getMonth() === currentMonth && dt.getFullYear() === currentYear) {
+              sessionDates.add(dt.getDate());
+            }
+          }
+        });
+
+        const siswaData = studentsList.map((student) => {
+          const studentAtt = attendances.filter(a => a.studentId === student.id);
+          const { dayData, rekap } = buildAttendanceGrid(
+            studentAtt, a => a.attendedAt || a.createdAt, currentMonth, currentYear, daysInMonth, sessionDates
+          );
+          return { nis: student.nis || "", namaSiswa: student.nama, rombel: setup.kelas, ...dayData, rekap };
+        });
+
+        return { success: true, data: siswaData, daysInMonth, month: currentMonth, year: currentYear };
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
+    }
+  )
+
+  // GET Laporan Nilai WB Per Mapel (JSON)
   .get(
     "/laporan/student-grades",
     async (context: any) => {
       const { headers, jwt, query, set } = context;
-      const authError = await verifyAdmin(headers, jwt, set);
+      const authError = await verifyAdminOrTutor(headers, jwt, set);
       if (authError) return authError;
 
       try {
@@ -1969,7 +2069,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         const rombelList = await db.select().from(rombels).where(eq(rombels.nama, setup.kelas)).all();
         const rombelIds = rombelList.map(r => r.id);
         const studentsList = rombelIds.length > 0 ? await db
-          .select({ id: students.id, nama: students.nama, nis: students.nis })
+          .select({ id: students.id, nama: students.nama, nis: students.nis, nisn: students.nisn, jenisKelamin: students.jenisKelamin })
           .from(students).innerJoin(rombelStudents, eq(students.id, rombelStudents.studentId))
           .where(inArray(rombelStudents.rombelId, rombelIds)).all() : [];
 
@@ -2015,14 +2115,14 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           const { final, predikat } = calculateGrade(kehadiran, partisipasi, tugas);
 
           return {
-            no: idx + 1, nipd: "", nisn: student.nis || "", namaSiswa: student.nama, jk: "", rombel: setup.kelas,
+            no: idx + 1, nis: student.nis || "", nisn: student.nisn || "", namaSiswa: student.nama, jenisKelamin: student.jenisKelamin || "", rombel: setup.kelas,
             nilaiTugas: tugas, nilaiDiskusi: partisipasi, nilaiKehadiran: kehadiran,
             nilaiAkhir: final, predikat,
           };
         });
 
         const buffer = fillTemplate("NILAI WARGA BELAJAR PER MAPEL.xlsx", {
-          program, semester: setup.semester || "Ganjil",
+          program: program.toUpperCase(), semester: setup.semester || "Ganjil",
           tahunAjaran: currentYear + "/" + (currentYear + 1),
           mapel: setup.mapel, kelas: setup.kelas,
           namaTutor: tutor?.nama || "-",
@@ -2223,8 +2323,182 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         };
         return buffer;
       } catch (error: any) {
+        console.error("Export error:", error);
         set.status = 500;
-        return { success: false, message: error.message };
+        return { success: false, message: "Terjadi kesalahan saat meng-export data." };
       }
     }
-  );
+  )
+  // ---------------------------------------------------------
+  // TUTOR ATTENDANCE
+  // ---------------------------------------------------------
+  .get("/tutor-attendance", async (context: any) => {
+    const { headers, jwt, set } = context;
+    const authError = await verifyAdminOrTutor(headers, jwt, set);
+    if (authError) return authError;
+
+    try {
+      const authHeader = headers["authorization"];
+      const token = authHeader.split(" ")[1];
+      const payload = await jwt.verify(token);
+      if (payload.role !== "tutor") {
+        return { success: true, attended: false }; // Not a tutor
+      }
+
+      const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+      const record = await db.select().from(tutorAttendances)
+        .where(and(
+          eq(tutorAttendances.tutorId, Number(payload.id)),
+          eq(tutorAttendances.date, today)
+        )).get();
+
+      return { success: true, attended: !!record };
+    } catch (error: any) {
+      set.status = 500;
+      return { success: false, message: error.message };
+    }
+  })
+  .post("/tutor-attendance", async (context: any) => {
+    const { headers, jwt, set } = context;
+    const authError = await verifyAdminOrTutor(headers, jwt, set);
+    if (authError) return authError;
+
+    try {
+      const authHeader = headers["authorization"];
+      const token = authHeader.split(" ")[1];
+      const payload = await jwt.verify(token);
+      if (payload.role !== "tutor") {
+        set.status = 403;
+        return { success: false, message: "Only tutors can mark attendance here" };
+      }
+
+      const today = new Date().toLocaleDateString('en-CA');
+      try {
+        await db.insert(tutorAttendances).values({
+          tutorId: Number(payload.id),
+          date: today,
+        });
+        return { success: true, message: "Kehadiran berhasil ditandai" };
+      } catch (err: any) {
+        if (err.message && err.message.includes("UNIQUE constraint failed")) {
+          return { success: true, message: "Sudah absen hari ini" };
+        }
+        throw err;
+      }
+    } catch (error: any) {
+      set.status = 500;
+      return { success: false, message: error.message };
+    }
+  })
+  .get("/tutor-attendance/history", async (context: any) => {
+    const { headers, jwt, query, set } = context;
+    const authError = await verifyAdminOrTutor(headers, jwt, set);
+    if (authError) return authError;
+
+    try {
+      const authHeader = headers["authorization"];
+      const token = authHeader.split(" ")[1];
+      const payload = await jwt.verify(token);
+      
+      const tutorId = payload.role === "tutor" ? Number(payload.id) : (query.tutorId ? Number(query.tutorId) : null);
+      if (!tutorId) {
+        set.status = 400;
+        return { success: false, message: "Tutor ID required" };
+      }
+
+      const year = query.year ? Number(query.year) : new Date().getFullYear();
+      const month = query.month ? Number(query.month) : (new Date().getMonth() + 1); // 1-12
+      
+      const prefix = `${year}-${month.toString().padStart(2, '0')}`;
+      
+      const records = await db.select().from(tutorAttendances)
+        .where(and(
+          eq(tutorAttendances.tutorId, tutorId),
+          like(tutorAttendances.date, `${prefix}%`)
+        )).all();
+
+      return { success: true, data: records };
+    } catch (error: any) {
+      set.status = 500;
+      return { success: false, message: error.message };
+    }
+  })
+
+  // ---------------------------------------------------------
+  // SESSION ANGKET (Tutor Evaluation per Session)
+  // ---------------------------------------------------------
+  .get("/session-angket", async (context: any) => {
+    const { headers, jwt, query, set } = context;
+    const authError = await verifyUser(headers, jwt, set);
+    if (authError) return authError;
+
+    try {
+      const sessionId = Number(query.sessionId);
+      const authHeader = headers["authorization"];
+      const token = authHeader.split(" ")[1];
+      const payload = await jwt.verify(token);
+      
+      if (payload.role !== "siswa") {
+        return { success: true, completed: true }; // non-siswa don't need this
+      }
+
+      const studentId = Number(payload.id);
+
+      // Check if there's any record for this session + student
+      const record = await db.select().from(elearningSessionAngkets)
+        .where(and(
+          eq(elearningSessionAngkets.sessionId, sessionId),
+          eq(elearningSessionAngkets.studentId, studentId)
+        )).limit(1).get();
+
+      return { success: true, completed: !!record };
+    } catch (error: any) {
+      set.status = 500;
+      return { success: false, message: error.message };
+    }
+  })
+  .post("/session-angket", async (context: any) => {
+    const { headers, jwt, body, set } = context;
+    const authError = await verifyUser(headers, jwt, set);
+    if (authError) return authError;
+
+    try {
+      const { sessionId, responses } = body;
+      const authHeader = headers["authorization"];
+      const token = authHeader.split(" ")[1];
+      const payload = await jwt.verify(token);
+      
+      if (payload.role !== "siswa") {
+        set.status = 403;
+        return { success: false, message: "Only siswa can submit angket" };
+      }
+
+      const studentId = Number(payload.id);
+
+      for (const res of responses) {
+        try {
+          await db.insert(elearningSessionAngkets).values({
+            sessionId: Number(sessionId),
+            studentId,
+            evaluationId: Number(res.evaluationId),
+            score: Number(res.score),
+          });
+        } catch (e: any) {
+          // ignore unique constraint errors if already submitted
+        }
+      }
+
+      return { success: true, message: "Angket berhasil disubmit" };
+    } catch (error: any) {
+      set.status = 500;
+      return { success: false, message: error.message };
+    }
+  }, {
+    body: t.Object({
+      sessionId: t.Numeric(),
+      responses: t.Array(t.Object({
+        evaluationId: t.Numeric(),
+        score: t.Numeric()
+      }))
+    })
+  });

@@ -561,3 +561,23 @@ export const elearningSectionCompletions = sqliteTable('elearning_section_comple
 }, (t) => ({
   unq: unique().on(t.studentId, t.setupId, t.sectionKey),
 }));
+
+export const tutorAttendances = sqliteTable('tutor_attendances', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  tutorId: integer('tutor_id').notNull().references(() => tutors.id, { onDelete: 'cascade' }),
+  date: text('date').notNull(), // format: YYYY-MM-DD
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+}, (t) => ({
+  unq: unique().on(t.tutorId, t.date),
+}));
+
+export const elearningSessionAngkets = sqliteTable('elearning_session_angkets', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  sessionId: integer('session_id').notNull().references(() => elearningSessions.id, { onDelete: 'cascade' }),
+  studentId: integer('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
+  evaluationId: integer('evaluation_id').notNull().references(() => elearningEvaluations.id),
+  score: integer('score').notNull(), // 1-5
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+}, (t) => ({
+  unq: unique().on(t.sessionId, t.studentId, t.evaluationId),
+}));

@@ -25,7 +25,7 @@ export const authHandlers = new Elysia()
   .post(
     "/api/auth/login",
     async ({ body, jwt, set }) => {
-      const { username, password } = body;
+      const { username, password } = body as any;
       try {
         // 1. Cari di tabel managers (role: admin)
         const manager = await db.select().from(managers).where(eq(managers.email, username)).get();
@@ -253,14 +253,18 @@ export const authHandlers = new Elysia()
 
       const role = payload.role as string;
       const id = Number(payload.id);
-      const { name, email, password, noHp, alamat } = body;
+      const { 
+        name, email, password, noHp, alamat,
+        nik, nuptk, tempatTglLahir, jenisKelamin, agama, pendidikan,
+        tanggalMulaiTugas, nomorSkPengangkatan, lembagaPengangkat, nomorSkPenugasan, lembagaPenugas,
+        nisn, nis, titikLayanan, namaAyah, namaIbu
+      } = body as any;
 
       try {
         const updateData: any = {};
         if (name !== undefined) updateData.nama = name;
         if (email !== undefined) updateData.email = email;
         if (alamat !== undefined) updateData.alamat = alamat;
-        if (noHp !== undefined && role === "siswa") updateData.noHp = noHp;
         if (password) {
           updateData.password = await Bun.password.hash(password, { algorithm: "bcrypt" });
         }
@@ -296,6 +300,19 @@ export const authHandlers = new Elysia()
         }
 
         if (role === "tutor") {
+          // Fields specific to Tutor
+          if (nik !== undefined) updateData.nik = nik;
+          if (nuptk !== undefined) updateData.nuptk = nuptk;
+          if (tempatTglLahir !== undefined) updateData.tempatTglLahir = tempatTglLahir;
+          if (jenisKelamin !== undefined) updateData.jenisKelamin = jenisKelamin;
+          if (agama !== undefined) updateData.agama = agama;
+          if (pendidikan !== undefined) updateData.pendidikan = pendidikan;
+          if (tanggalMulaiTugas !== undefined) updateData.tanggalMulaiTugas = tanggalMulaiTugas;
+          if (nomorSkPengangkatan !== undefined) updateData.nomorSkPengangkatan = nomorSkPengangkatan;
+          if (lembagaPengangkat !== undefined) updateData.lembagaPengangkat = lembagaPengangkat;
+          if (nomorSkPenugasan !== undefined) updateData.nomorSkPenugasan = nomorSkPenugasan;
+          if (lembagaPenugas !== undefined) updateData.lembagaPenugas = lembagaPenugas;
+          
           const updated = await db
             .update(tutors)
             .set(updateData)
@@ -327,6 +344,17 @@ export const authHandlers = new Elysia()
         }
 
         if (role === "siswa") {
+          if (noHp !== undefined) updateData.noHp = noHp;
+          if (nik !== undefined) updateData.nik = nik;
+          if (nisn !== undefined) updateData.nisn = nisn;
+          if (nis !== undefined) updateData.nis = nis;
+          if (tempatTglLahir !== undefined) updateData.tempatTglLahir = tempatTglLahir;
+          if (titikLayanan !== undefined) updateData.titikLayanan = titikLayanan;
+          if (jenisKelamin !== undefined) updateData.jenisKelamin = jenisKelamin;
+          if (agama !== undefined) updateData.agama = agama;
+          if (namaAyah !== undefined) updateData.namaAyah = namaAyah;
+          if (namaIbu !== undefined) updateData.namaIbu = namaIbu;
+          
           const updated = await db
             .update(students)
             .set(updateData)
@@ -374,9 +402,26 @@ export const authHandlers = new Elysia()
         password: t.Optional(t.String()),
         noHp: t.Optional(t.String()),
         alamat: t.Optional(t.String()),
+        nik: t.Optional(t.String()),
+        nuptk: t.Optional(t.String()),
+        tempatTglLahir: t.Optional(t.String()),
+        jenisKelamin: t.Optional(t.String()),
+        agama: t.Optional(t.String()),
+        pendidikan: t.Optional(t.String()),
+        tanggalMulaiTugas: t.Optional(t.String()),
+        nomorSkPengangkatan: t.Optional(t.String()),
+        lembagaPengangkat: t.Optional(t.String()),
+        nomorSkPenugasan: t.Optional(t.String()),
+        lembagaPenugas: t.Optional(t.String()),
+        nisn: t.Optional(t.String()),
+        nis: t.Optional(t.String()),
+        titikLayanan: t.Optional(t.String()),
+        namaAyah: t.Optional(t.String()),
+        namaIbu: t.Optional(t.String()),
       }),
     }
   )
+
   // Endpoint untuk Reset Password Pengguna oleh Super Admin
   .post(
     "/api/admin/reset-password",
@@ -393,7 +438,7 @@ export const authHandlers = new Elysia()
         return { success: false, message: "Akses ditolak. Anda tidak memiliki otoritas." };
       }
 
-      const { targetRole, targetId, newPassword } = body;
+      const { targetRole, targetId, newPassword } = body as any;
       try {
         const hashedPassword = await Bun.password.hash(newPassword, { algorithm: "bcrypt" });
         if (targetRole === "admin" || targetRole === "super_admin" || targetRole === "manager") {

@@ -118,6 +118,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
       }
     }
     fetchData();
+    handleMarkComplete("pendahuluan_pengantar");
   }, [subjectName, setupId]);
 
   const handleSendMessage = async () => {
@@ -139,6 +140,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
       if (data.success) {
         setInputValue("");
         reloadMessages();
+        handleMarkComplete("pendahuluan_perkenalan");
       }
     } catch (err) {
       toast.error("Gagal mengirim pesan");
@@ -248,7 +250,12 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
               </div>
               <div className="flex gap-2 items-center">
                 {ratUrl && (
-                  <Button onClick={() => window.open(ratUrl, "_blank")} size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full text-emerald-600 hover:bg-emerald-100">
+                  <Button 
+                    onClick={() => {
+                      handleMarkComplete("pendahuluan_rat");
+                      window.open(ratUrl, "_blank");
+                    }} 
+                    size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full text-emerald-600 hover:bg-emerald-100">
                     <Download className="h-4 w-4" />
                   </Button>
                 )}
@@ -258,7 +265,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
             <h4 className="font-bold text-emerald-900 mb-1">Rancangan Aktivitas Tutorial (RAT)</h4>
             <p className="text-xs text-emerald-700/80 mb-3 line-clamp-2">Dokumen panduan aktivitas tutorial selama satu semester.</p>
             {ratUrl ? (
-              <Button onClick={() => window.open(ratUrl, "_blank")} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm font-semibold rounded-xl text-xs h-9">
+              <Button onClick={() => { handleMarkComplete("pendahuluan_rat"); window.open(ratUrl, "_blank"); }} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm font-semibold rounded-xl text-xs h-9">
                 Unduh Dokumen
               </Button>
             ) : (
@@ -275,7 +282,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
               </div>
               <div className="flex gap-2 items-center">
                 {tertibUrl && (
-                  <Button onClick={() => window.open(tertibUrl, "_blank")} size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full text-amber-600 hover:bg-amber-100">
+                  <Button onClick={() => { handleMarkComplete("pendahuluan_tertib"); window.open(tertibUrl, "_blank"); }} size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full text-amber-600 hover:bg-amber-100">
                     <Download className="h-4 w-4" />
                   </Button>
                 )}

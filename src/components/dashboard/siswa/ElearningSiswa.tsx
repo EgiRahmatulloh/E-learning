@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Search,
   LayoutGrid,
@@ -63,6 +64,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
   const [hiddenSubjects, setHiddenSubjects] = useState<Set<string>>(new Set());
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [siswaSetups, setSiswaSetups] = useState<any[]>([]);
+  const [canNavigateNext, setCanNavigateNext] = useState(true);
 
   const [progresses, setProgresses] = useState<Record<number, number>>({});
 
@@ -178,7 +180,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
     if (subPart.startsWith("sesi-")) {
       const sessionNumber = parseInt(subPart.replace("sesi-", ""), 10);
       if (!isNaN(sessionNumber)) {
-        return <MapelSesi subjectName={subjectName} sessionNumber={sessionNumber} user={user} setupId={currentSetupId} />;
+        return <MapelSesi subjectName={subjectName} sessionNumber={sessionNumber} user={user} setupId={currentSetupId} setCanNavigateNext={setCanNavigateNext} />;
       }
     }
     return (
@@ -206,6 +208,11 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
     const nextMenu = currentIndex >= 0 && currentIndex < menus.length - 1 ? menus[currentIndex + 1] : null;
 
     const handleNavigate = (menuId: string) => {
+      const targetIndex = menus.findIndex((m) => m.id === menuId);
+      if (subPart.startsWith("sesi-") && !canNavigateNext && targetIndex > currentIndex) {
+        toast.error("Silakan isi angket tutor di bagian bawah halaman sebelum melanjutkan ke sesi berikutnya.");
+        return;
+      }
       if (setActiveTab && matchedSubject) {
         setActiveTab(`mapel-setup-${matchedSubject.setupId}-${menuId}`);
       }
@@ -266,7 +273,13 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
 
           {nextMenu ? (
             <Button
-              onClick={() => handleNavigate(nextMenu.id)}
+              onClick={() => {
+                if (subPart.startsWith("sesi-") && !canNavigateNext) {
+                  toast.error("Silakan isi angket tutor di bagian bawah halaman sebelum melanjutkan ke sesi berikutnya.");
+                  return;
+                }
+                handleNavigate(nextMenu.id);
+              }}
               className="rounded-xl bg-[#280f91] hover:bg-[#3a1bca] text-white font-bold px-6 h-12 shadow-md shadow-[#280f91]/20"
             >
               {nextMenu.label}
