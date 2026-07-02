@@ -72,14 +72,14 @@ export default function SiswaMonitoring() {
 
   const handleExportNilai = async () => {
     if (exporting) return;
-    if (selectedKelas) {
-      toast.warning("Kosongkan filter kelas terlebih dahulu untuk cetak rekap nilai keseluruhan");
-      return;
-    }
     setExporting(true);
     try {
-      const endpoint = "/api/elearning/laporan/student-grades-rekap";
-      const filename = "rekap_nilai_wb_semua_kelas.xlsx";
+      const endpoint = selectedKelas 
+        ? "/api/elearning/laporan/student-grades-rekap?kelas=" + encodeURIComponent(selectedKelas)
+        : "/api/elearning/laporan/student-grades-rekap";
+      const filename = selectedKelas
+        ? "rekap_nilai_wb_" + sanitizeFilename(selectedKelas) + ".xlsx"
+        : "rekap_nilai_wb_semua_kelas.xlsx";
 
       await downloadFromTemplate(endpoint, filename);
     } catch (err: any) {
@@ -128,7 +128,7 @@ export default function SiswaMonitoring() {
           <Button onClick={handleExportKehadiran} className="bg-[#ff6105] hover:bg-[#e55800] text-white font-bold text-xs h-9 px-4 rounded-xl shadow-sm cursor-pointer shrink-0">
             <FileSpreadsheet className="w-4 h-4 mr-1.5" /> Rekap Kehadiran (.XLSX)
           </Button>
-          <Button onClick={handleExportNilai} disabled={exporting || !!selectedKelas} className="bg-[#280f91] hover:bg-[#1e0b6e] text-white font-bold text-xs h-9 px-4 rounded-xl shadow-sm cursor-pointer shrink-0 disabled:opacity-50">
+          <Button onClick={handleExportNilai} disabled={exporting} className="bg-[#280f91] hover:bg-[#1e0b6e] text-white font-bold text-xs h-9 px-4 rounded-xl shadow-sm cursor-pointer shrink-0 disabled:opacity-50">
             <FileSpreadsheet className="w-4 h-4 mr-1.5" /> {exporting ? "Mengekspor..." : "Rekap Nilai (.XLSX)"}
           </Button>
         </div>

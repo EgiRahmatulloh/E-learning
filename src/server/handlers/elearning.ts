@@ -2102,6 +2102,36 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         const now = new Date();
         const currentYear = now.getFullYear();
 
+        // Optimizations: Map-based caching
+        const setupsMap = new Map();
+        for (const s of setups) setupsMap.set(`${s.kelas}-${s.mapel}`, s);
+
+        const courseMap = new Map();
+        for (const c of allCourses) courseMap.set(`${c.namaMapel}-${c.program}`, c);
+
+        const sessionsByCourse = new Map<number, typeof allSessions>();
+        for (const s of allSessions) {
+          if (!sessionsByCourse.has(s.courseId)) sessionsByCourse.set(s.courseId, []);
+          sessionsByCourse.get(s.courseId)!.push(s);
+        }
+
+        const attendancesByStudentSession = new Set();
+        for (const a of allAttendances) attendancesByStudentSession.add(`${a.studentId}-${a.sessionId}`);
+
+        const forumPostsByStudentSession = new Set();
+        for (const p of allForumPosts) forumPostsByStudentSession.add(`${p.authorId}-${p.sessionId}`);
+
+        const assignmentsBySession = new Map<number, number[]>();
+        for (const a of assignments) {
+          if (!assignmentsBySession.has(a.sessionId)) assignmentsBySession.set(a.sessionId, []);
+          assignmentsBySession.get(a.sessionId)!.push(a.id);
+        }
+
+        const submissionsByStudentAssignment = new Map<string, number>();
+        for (const s of allSubmissions) {
+          if (s.grade != null) submissionsByStudentAssignment.set(`${s.studentId}-${s.assignmentId}`, s.grade as number);
+        }
+
         const siswaData = studentsList.map((student, idx) => {
           const sData: any = {
             no: idx + 1,
@@ -2117,35 +2147,41 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
             const mKey = `mapel${mIdx + 1}`;
             sData[mKey] = mapelName; // ${table:siswa.mapel1} contains the mapel name
 
-            const sSetups = setups.filter(s => s.kelas === student.kelas && s.mapel === mapelName);
-            if (sSetups.length === 0) {
+            const setup = setupsMap.get(`${student.kelas}-${mapelName}`);
+            if (!setup) {
               sData[`${mKey}Nilai`] = "-";
               sData[`${mKey}Predikat`] = "-";
               return;
             }
 
-            const setup = sSetups[0];
             const prog = deriveProgram(setup.kelas);
-            const course = allCourses.find(c => c.namaMapel === mapelName && c.program === prog);
+            const course = courseMap.get(`${mapelName}-${prog}`);
             if (!course) {
               sData[`${mKey}Nilai`] = "-";
               sData[`${mKey}Predikat`] = "-";
               return;
             }
 
-            const sessions = allSessions.filter(s => s.courseId === course.id);
+            const sessions = sessionsByCourse.get(course.id) || [];
             const sIds = sessions.map(s => s.id);
             const sessionsCount = sIds.length > 0 ? sIds.length : (setup.jumlahSesi || 8);
             
-            const attendedSessions = new Set(allAttendances.filter(a => a.studentId === student.id && sIds.includes(a.sessionId)).map(a => a.sessionId));
-            const participatedSessions = new Set(allForumPosts.filter(p => p.authorId === student.id && sIds.includes(p.sessionId)).map(p => p.sessionId));
-            
-            const assignIds = assignments.filter(a => sIds.includes(a.sessionId)).map(a => a.id);
-            const studentSubs = allSubmissions.filter(s => s.studentId === student.id && assignIds.includes(s.assignmentId));
-            const studentGrades = studentSubs.filter(s => s.grade != null).map(s => s.grade as number);
+            let attendedCount = 0;
+            let participatedCount = 0;
+            const studentGrades: number[] = [];
 
-            const kehadiran = Math.min(100, Math.round((attendedSessions.size / sessionsCount) * 100));
-            const partisipasi = Math.min(100, Math.round((participatedSessions.size / sessionsCount) * 100));
+            for (const sId of sIds) {
+              if (attendancesByStudentSession.has(`${student.id}-${sId}`)) attendedCount++;
+              if (forumPostsByStudentSession.has(`${student.id}-${sId}`)) participatedCount++;
+              const assignIds = assignmentsBySession.get(sId) || [];
+              for (const aId of assignIds) {
+                const grade = submissionsByStudentAssignment.get(`${student.id}-${aId}`);
+                if (grade !== undefined) studentGrades.push(grade);
+              }
+            }
+
+            const kehadiran = Math.min(100, Math.round((attendedCount / sessionsCount) * 100));
+            const partisipasi = Math.min(100, Math.round((participatedCount / sessionsCount) * 100));
             const tugas = studentGrades.length > 0 ? Math.min(100, Math.round(studentGrades.reduce((a, b) => a + b, 0) / studentGrades.length)) : 0;
             const { final, predikat } = calculateGrade(kehadiran, partisipasi, tugas);
 
@@ -2158,8 +2194,8 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
 
         const program = setups.length > 0 ? deriveProgram(setups[0].kelas).toUpperCase() : "PAKET A/B/C";
         const semester = setups.length > 0 ? (setups[0].semester || "Ganjil") : "Ganjil";
-        const waliKelas = rombelList.length > 0 && rombelList[0].waliKelasId
-          ? (await db.select().from(tutors).where(eq(tutors.id, rombelList[0].waliKelasId)).get())?.nama || "-" : "-";
+        const waliKelas = kelasName === "Semua Kelas" ? "-" : (rombelList.length > 0 && rombelList[0].waliKelasId
+          ? (await db.select().from(tutors).where(eq(tutors.id, rombelList[0].waliKelasId)).get())?.nama || "-" : "-");
 
         const kepalaPkbm = await db.select().from(managers).where(
           or(
