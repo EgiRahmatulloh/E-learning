@@ -11,7 +11,7 @@ export default function ElearningAdminDashboard() {
   const tabs = [
     { id: "kelola", label: "Kelola Elearning", icon: <Layers className="w-4 h-4" /> },
     { id: "monitoring", label: "Tutor", icon: <Activity className="w-4 h-4" /> },
-    { id: "siswa", label: "Warga Belajar", icon: <Users className="w-4 h-4" /> },
+    { id: "siswa", label: "Nilai Warga Belajar", icon: <Users className="w-4 h-4" /> },
     { id: "angket", label: "Angket Evaluasi Tutor", icon: <FileQuestion className="w-4 h-4" /> },
   ] as const;
 

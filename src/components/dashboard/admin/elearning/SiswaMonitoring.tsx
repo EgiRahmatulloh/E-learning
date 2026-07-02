@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
-import { Users, Search } from "lucide-react";
+import { Users, Search, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { downloadFromTemplate } from "@/lib/downloadTemplate";
 
 interface StudentMonitoringData {
   id: number;
@@ -8,6 +10,7 @@ interface StudentMonitoringData {
   nis: string;
   kelas: string;
   forumCount?: number;
+  kehadiranCount?: number;
   tugasCount?: number;
   avgScore?: number;
 }
@@ -16,6 +19,7 @@ export default function SiswaMonitoring() {
   const [searchTerm, setSearchTerm] = useState("");
   const [students, setStudents] = useState<StudentMonitoringData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedKelas, setSelectedKelas] = useState("");
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -40,12 +44,63 @@ export default function SiswaMonitoring() {
     fetchStudents();
   }, []);
 
+  // Get unique kelas list
+  const kelasList = [...new Set(students.map(s => s.kelas))].sort();
+
   const filtered = students.filter(
     (s) =>
-      s.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.kelas.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.nis.toLowerCase().includes(searchTerm.toLowerCase())
+      (selectedKelas === "" || s.kelas === selectedKelas) &&
+      (s.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.kelas.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.nis.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  const sanitizeFilename = (s: string) => s.replace(/[^a-zA-Z0-9._\-\s]/g, "_").replace(/\s+/g, "_");
+
+  const handleExportKehadiran = async () => {
+    if (!selectedKelas) {
+      toast.warning("Pilih kelas terlebih dahulu");
+      return;
+    }
+    await downloadFromTemplate(
+      "/api/elearning/laporan/student-attendance-rekap?kelas=" + encodeURIComponent(selectedKelas),
+      "rekap_kehadiran_wb_" + sanitizeFilename(selectedKelas) + ".xlsx"
+    );
+  };
+
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportNilai = async () => {
+    if (!selectedKelas || exporting) {
+      if (!selectedKelas) toast.warning("Pilih kelas terlebih dahulu");
+      return;
+    }
+    setExporting(true);
+    try {
+      const res = await fetch("/api/elearning/setups?kelas=" + encodeURIComponent(selectedKelas), {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data.success && data.data && data.data.length > 0) {
+        const setups = data.data;
+        const setupId = setups[0].id;
+        await downloadFromTemplate(
+          "/api/elearning/laporan/student-grades?setupId=" + setupId,
+          "nilai_wb_" + sanitizeFilename(selectedKelas) + ".xlsx"
+        );
+        if (setups.length > 1) {
+          toast.info(`Ditemukan ${setups.length} mata pelajaran. Mengekspor: ${setups[0].mapel}`);
+        }
+      } else {
+        toast.error("Tidak ditemukan setup elearning untuk kelas ini");
+      }
+    } catch (err: any) {
+      toast.error("Gagal mengambil data setup", { description: err.message });
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const paginatedStudents = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -61,18 +116,34 @@ export default function SiswaMonitoring() {
             Pantau partisipasi, progres belajar, dan nilai dari warga belajar.
           </p>
         </div>
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Cari siswa, NIS, atau kelas..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1); // Reset page on search
-            }}
-            className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-[#280f91] shadow-xs"
-          />
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <select
+            value={selectedKelas}
+            onChange={(e) => { setSelectedKelas(e.target.value); setCurrentPage(1); }}
+            className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:outline-none focus:border-[#280f91] shadow-xs"
+          >
+            <option value="">Semua Kelas</option>
+            {kelasList.map(k => <option key={k} value={k}>{k}</option>)}
+          </select>
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Cari siswa, NIS, atau kelas..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1); // Reset page on search
+              }}
+              className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-[#280f91] shadow-xs"
+            />
+          </div>
+          <Button onClick={handleExportKehadiran} className="bg-[#ff6105] hover:bg-[#e55800] text-white font-bold text-xs h-9 px-4 rounded-xl shadow-sm cursor-pointer shrink-0">
+            <FileSpreadsheet className="w-4 h-4 mr-1.5" /> Rekap Kehadiran (.XLSX)
+          </Button>
+          <Button onClick={handleExportNilai} disabled={exporting} className="bg-[#280f91] hover:bg-[#1e0b6e] text-white font-bold text-xs h-9 px-4 rounded-xl shadow-sm cursor-pointer shrink-0 disabled:opacity-50">
+            <FileSpreadsheet className="w-4 h-4 mr-1.5" /> {exporting ? "Mengekspor..." : "Rekap Nilai (.XLSX)"}
+          </Button>
         </div>
       </div>
 
@@ -90,6 +161,7 @@ export default function SiswaMonitoring() {
                 <th className="py-4 px-6 border-r border-[#009cb9] w-16 text-center">NO</th>
                 <th className="py-4 px-6 border-r border-[#009cb9]">NAMA SISWA / NIS</th>
                 <th className="py-4 px-6 border-r border-[#009cb9]">ROMBEL (KELAS)</th>
+                <th className="py-4 px-6 border-r border-[#009cb9] text-center">KEHADIRAN</th>
                 <th className="py-4 px-6 border-r border-[#009cb9] text-center">PARTISIPASI FORUM</th>
                 <th className="py-4 px-6 border-r border-[#009cb9] text-center">TUGAS SELESAI</th>
                 <th className="py-4 px-6 text-center">NILAI RATA-RATA</th>
@@ -98,7 +170,7 @@ export default function SiswaMonitoring() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center font-bold text-slate-400">
+                  <td colSpan={7} className="py-10 text-center font-bold text-slate-400">
                     Memuat data...
                   </td>
                 </tr>
@@ -117,6 +189,7 @@ export default function SiswaMonitoring() {
                         {s.kelas}
                       </span>
                     </td>
+                    <td className="py-4 px-6 border-r border-slate-100 text-center text-slate-600 font-extrabold">{s.kehadiranCount !== undefined ? s.kehadiranCount : 0} HADIR</td>
                     <td className="py-4 px-6 border-r border-slate-100 text-center text-slate-600 font-extrabold">{s.forumCount !== undefined ? s.forumCount : 0} BALASAN</td>
                     <td className="py-4 px-6 border-r border-slate-100 text-center text-slate-600 font-extrabold">{s.tugasCount !== undefined ? s.tugasCount : 0} TUGAS</td>
                     <td className="py-4 px-6 text-center font-black text-[#ff6105] text-base">{s.avgScore !== undefined ? s.avgScore : 0}</td>
@@ -124,7 +197,7 @@ export default function SiswaMonitoring() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center font-bold text-slate-400">
+                  <td colSpan={7} className="py-10 text-center font-bold text-slate-400">
                     Tidak ada data siswa yang sesuai kriteria pencarian.
                   </td>
                 </tr>

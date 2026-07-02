@@ -1,17 +1,42 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, Trash2, Save, FileQuestion, CheckCircle } from "lucide-react";
+import { Plus, Trash2, Save, FileQuestion, FileSpreadsheet, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
+import { downloadExcel } from "@/lib/utils";
+
+interface EvaluationResponse {
+  id: number;
+  evaluationId: number;
+  studentId: number;
+  studentName: string;
+  courseId: number;
+  courseName: string;
+  score: number;
+  createdAt: string;
+}
+
+interface AggregatedItem {
+  questionId: number;
+  question: string;
+  scaleMax: number;
+  responseCount: number;
+  avgScore: number;
+}
 
 export default function AngketEvaluasiTutor() {
-  const [isActive, setIsActive] = useState(false);
   const [questions, setQuestions] = useState<{id: number, text: string}[]>([]);
+  const [responses, setResponses] = useState<EvaluationResponse[]>([]);
+  const [aggregated, setAggregated] = useState<AggregatedItem[]>([]);
+  const [loadingReport, setLoadingReport] = useState(true);
+  const [reportError, setReportError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchQuestions() {
       try {
-        const res = await fetch("/api/elearning/evaluations");
+        const res = await fetch("/api/elearning/evaluations", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
         const json = await res.json();
         if (json.success && json.data.length > 0) {
           setQuestions(json.data.map((q: any) => ({ id: q.id, text: q.question })));
@@ -26,7 +51,33 @@ export default function AngketEvaluasiTutor() {
         console.error(err);
       }
     }
+
+    async function fetchResponses() {
+      try {
+        setLoadingReport(true);
+        setReportError(null);
+        const res = await fetch("/api/elearning/evaluation-responses", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        const json = await res.json();
+        if (json.success) {
+          setResponses(json.data.responses || []);
+          setAggregated(json.data.aggregated || []);
+        } else {
+          setReportError(json.message || "Gagal memuat data laporan");
+        }
+      } catch (err) {
+        console.error(err);
+        const msg = err instanceof Error ? err.message : String(err);
+        setReportError(msg);
+        toast.error("Gagal memuat data laporan angket", { description: msg });
+      } finally {
+        setLoadingReport(false);
+      }
+    }
+
     fetchQuestions();
+    fetchResponses();
   }, []);
 
   const addQuestion = () => {
@@ -49,7 +100,7 @@ export default function AngketEvaluasiTutor() {
     try {
       const res = await fetch("/api/elearning/evaluations", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem("token")}`
         },
@@ -66,6 +117,44 @@ export default function AngketEvaluasiTutor() {
     }
   };
 
+  const handleExportRekap = () => {
+    if (aggregated.length === 0) {
+      toast.error("Tidak ada data rekap untuk diekspor");
+      return;
+    }
+    const headers = ["No", "Pertanyaan", "Skala Maks", "Jumlah Respons", "Rata-rata Skor"];
+    const rows = aggregated.map((item, idx) => [
+      idx + 1,
+      item.question || "",
+      item.scaleMax,
+      item.responseCount,
+      item.avgScore,
+    ]);
+    downloadExcel(headers, rows, "laporan_rekap_angket_evaluasi.xlsx");
+    toast.success("Berhasil mengunduh rekap angket (.XLSX)");
+  };
+
+  const handleExportDetail = () => {
+    if (responses.length === 0) {
+      toast.error("Tidak ada data detail untuk diekspor");
+      return;
+    }
+    const headers = ["No", "Nama Warga Belajar", "Mata Pelajaran", "Pertanyaan", "Skor", "Tanggal"];
+    const rows = responses.map((r, idx) => {
+      const evaluation = aggregated.find(a => a.questionId === r.evaluationId);
+      return [
+        idx + 1,
+        r.studentName || "",
+        r.courseName || "",
+        evaluation?.question || `Evaluasi #${r.evaluationId}`,
+        r.score,
+        r.createdAt ? new Date(r.createdAt).toLocaleDateString("id-ID") : "",
+      ];
+    });
+    downloadExcel(headers, rows, "laporan_detail_angket_evaluasi.xlsx");
+    toast.success("Berhasil mengunduh detail angket (.XLSX)");
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -74,15 +163,6 @@ export default function AngketEvaluasiTutor() {
           <p className="text-sm text-slate-500 font-medium">
             Atur pertanyaan untuk kuesioner evaluasi kinerja tutor pada akhir semester.
           </p>
-        </div>
-        <div className="flex items-center gap-3 bg-white px-4 py-2 border rounded-xl shadow-sm">
-          <span className="text-sm font-bold text-slate-700">Status Angket:</span>
-          <button 
-            onClick={() => setIsActive(!isActive)}
-            className={`px-3 py-1 text-xs font-bold rounded-lg transition-colors ${isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}
-          >
-            {isActive ? "AKTIF" : "TIDAK AKTIF"}
-          </button>
         </div>
       </div>
 
@@ -126,16 +206,79 @@ export default function AngketEvaluasiTutor() {
           </Button>
         </div>
       </Card>
-      
-      <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 flex items-start gap-4">
-        <CheckCircle className="w-6 h-6 text-emerald-500 shrink-0 mt-0.5" />
-        <div>
-          <h4 className="font-bold text-emerald-800 mb-1">Informasi Fitur</h4>
-          <p className="text-sm text-emerald-700/80 leading-relaxed">
-            Jika status angket diaktifkan, warga belajar dapat melihat dan mengisi form evaluasi ini pada panel kelas masing-masing. Hasil agregasi penilaian akan muncul pada menu <strong>Laporan & Nilai</strong> di halaman Tutor setelah divalidasi.
-          </p>
+
+      {/* Laporan Hasil Angket */}
+      <Card className="p-6 border-slate-200/60 shadow-sm rounded-2xl bg-white space-y-6">
+        <div className="flex items-center justify-between border-b pb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-emerald-50 rounded-xl">
+              <BarChart3 className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <h4 className="font-bold text-slate-800">Laporan Hasil Angket</h4>
+              <p className="text-xs text-slate-500 font-medium">Rekapitulasi hasil evaluasi dari warga belajar.</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={handleExportRekap} disabled={loadingReport || !!reportError} className="bg-[#ff6105] hover:bg-[#e55800] text-white font-bold text-xs h-9 px-4 rounded-xl shadow-sm cursor-pointer disabled:opacity-50">
+              <FileSpreadsheet className="w-4 h-4 mr-1.5" /> Rekap (.XLSX)
+            </Button>
+            <Button onClick={handleExportDetail} disabled={loadingReport || !!reportError} className="bg-[#280f91] hover:bg-[#1e0b6e] text-white font-bold text-xs h-9 px-4 rounded-xl shadow-sm cursor-pointer disabled:opacity-50">
+              <FileSpreadsheet className="w-4 h-4 mr-1.5" /> Detail (.XLSX)
+            </Button>
+          </div>
         </div>
-      </div>
+
+        {loadingReport ? (
+          <div className="py-8 text-center text-slate-400 font-medium">Memuat data laporan...</div>
+        ) : reportError ? (
+          <div className="py-8 text-center border-2 border-dashed border-red-200 rounded-xl bg-red-50/50">
+            <p className="text-red-500 font-medium text-sm">Gagal memuat data laporan.</p>
+            <p className="text-red-400 text-xs mt-1">{reportError}</p>
+          </div>
+        ) : aggregated.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm border-collapse">
+              <thead>
+                <tr className="bg-slate-50 text-slate-600 font-bold text-xs uppercase tracking-wider border-b border-slate-200">
+                  <th className="py-3 px-4 text-center w-12">NO</th>
+                  <th className="py-3 px-4">Pertanyaan</th>
+                  <th className="py-3 px-4 text-center">Skala</th>
+                  <th className="py-3 px-4 text-center">Respons</th>
+                  <th className="py-3 px-4 text-center">Rata-rata</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {aggregated.map((item, idx) => (
+                  <tr key={item.questionId} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="py-3 px-4 text-center text-slate-500 font-mono">{idx + 1}</td>
+                    <td className="py-3 px-4 font-medium text-slate-800">{item.question}</td>
+                    <td className="py-3 px-4 text-center text-slate-600">/{item.scaleMax}</td>
+                    <td className="py-3 px-4 text-center font-bold text-slate-700">{item.responseCount}</td>
+                    <td className="py-3 px-4 text-center">
+                      <span className={`font-black text-sm px-2.5 py-1 rounded-full ${
+                        item.avgScore >= 4 ? 'bg-emerald-100 text-emerald-800' :
+                        item.avgScore >= 3 ? 'bg-blue-100 text-blue-800' :
+                        item.avgScore >= 2 ? 'bg-amber-100 text-amber-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {item.avgScore.toFixed(2)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="py-8 text-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+            <BarChart3 className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <p className="text-slate-500 font-medium text-sm">Belum ada data respons angket.</p>
+            <p className="text-slate-400 text-xs mt-1">Data akan muncul setelah warga belajar mengisi evaluasi.</p>
+          </div>
+        )}
+      </Card>
+
     </div>
   );
 }

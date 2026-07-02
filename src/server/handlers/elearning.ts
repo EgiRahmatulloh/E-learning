@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Elysia, t } from "elysia";
 import { db } from "../config/db";
+import { fillTemplate } from "../utils/templateXlsx";
 import {
   elearningCourses,
   elearningSessions,
@@ -13,13 +14,14 @@ import {
   elearningSubmissions,
   elearningQuestions,
   elearningQuizSubmissions,
+  elearningEvaluationResponses,
   elearningSectionCompletions,
   tutors,
   students,
   rombels,
   rombelStudents
 } from "../models";
-import { eq, and, inArray, isNull } from "drizzle-orm";
+import { eq, and, or, inArray, isNull } from "drizzle-orm";
 import { jwt } from "@elysia/jwt";
 import { finalJwtSecret } from "../config/jwt";
 import { verifyAdmin, verifyAdminOrTutor } from "../middleware/auth";
@@ -39,6 +41,48 @@ const verifyUser = async (headers: Record<string, string | undefined>, jwt: any,
     return { success: false, message: "Sesi Anda telah kedaluwarsa, silakan masuk kembali" };
   }
   return null; // valid
+};
+
+// Helper: sanitize a string for use in Content-Disposition filename
+const sanitizeFilename = (s: string): string =>
+  s.replace(/[^a-zA-Z0-9._\-\s]/g, "_").replace(/\s+/g, "_");
+
+// Helper: derive program from class name
+const deriveProgram = (kelas: string): string => {
+  const upper = kelas.toUpperCase();
+  if (upper.includes("PAKET A")) return "Paket A";
+  if (upper.includes("PAKET B")) return "Paket B";
+  return "Paket C";
+};
+
+// Helper: build monthly attendance grid (d1..d31) — uses local timezone for calendar-day accuracy
+const buildAttendanceGrid = (
+  items: any[],
+  dateAccessor: (item: any) => string | null | undefined,
+  currentMonth: number,
+  currentYear: number,
+  daysInMonth: number
+): { dayData: Record<string, string>; rekap: number } => {
+  const dayData: Record<string, string> = {};
+  let rekap = 0;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const hasActivity = items.some(item => {
+      const raw = dateAccessor(item);
+      if (!raw) return false;
+      const dt = new Date(raw);
+      return dt.getMonth() === currentMonth && dt.getFullYear() === currentYear && dt.getDate() === d;
+    });
+    dayData["d" + d] = hasActivity ? "✓" : "";
+    if (hasActivity) rekap++;
+  }
+  return { dayData, rekap };
+};
+
+// Helper: calculate final grade from components
+const calculateGrade = (kehadiran: number, partisipasi: number, tugas: number) => {
+  const final = (kehadiran * 0.2) + (partisipasi * 0.3) + (tugas * 0.5);
+  const predikat = final >= 85 ? "A" : final >= 70 ? "B" : final >= 55 ? "C" : final >= 40 ? "D" : "E";
+  return { final: Math.round(final * 10) / 10, predikat };
 };
 
 export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
@@ -75,8 +119,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         if (setupId) {
           const setup = await db.select().from(elearningSetups).where(eq(elearningSetups.id, setupId)).get();
           if (setup) {
-            const kelasUpper = setup.kelas.toUpperCase();
-            resolvedProgram = kelasUpper.includes("PAKET A") ? "Paket A" : kelasUpper.includes("PAKET B") ? "Paket B" : "Paket C";
+            resolvedProgram = deriveProgram(setup.kelas);
             resolvedKelas = setup.kelas;
           }
         }
@@ -339,6 +382,58 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           })
         ),
       }),
+    }
+  )
+
+  // GET aggregated evaluation responses (admin only — for laporan angket)
+  .get(
+    "/evaluation-responses",
+    async (context: any) => {
+      const { headers, jwt, set } = context;
+      const authError = await verifyAdmin(headers, jwt, set);
+      if (authError) return authError;
+
+      try {
+        const evaluations = await db.select().from(elearningEvaluations).all();
+        if (evaluations.length === 0) {
+          return { success: true, data: { evaluations: [], responses: [], aggregated: [] } };
+        }
+
+        const responses = await db
+          .select({
+            id: elearningEvaluationResponses.id,
+            evaluationId: elearningEvaluationResponses.evaluationId,
+            studentId: elearningEvaluationResponses.studentId,
+            studentName: students.nama,
+            courseId: elearningEvaluationResponses.courseId,
+            courseName: elearningCourses.namaMapel,
+            score: elearningEvaluationResponses.score,
+            createdAt: elearningEvaluationResponses.createdAt,
+          })
+          .from(elearningEvaluationResponses)
+          .innerJoin(students, eq(elearningEvaluationResponses.studentId, students.id))
+          .leftJoin(elearningCourses, eq(elearningEvaluationResponses.courseId, elearningCourses.id))
+          .all();
+
+        // Aggregate: rata-rata skor per pertanyaan
+        const aggregated = evaluations.map(ev => {
+          const evResponses = responses.filter(r => r.evaluationId === ev.id);
+          const totalScore = evResponses.reduce((sum, r) => sum + r.score, 0);
+          const avgScore = evResponses.length > 0 ? Math.round((totalScore / evResponses.length) * 100) / 100 : 0;
+          return {
+            questionId: ev.id,
+            question: ev.question,
+            scaleMax: ev.scaleMax,
+            responseCount: evResponses.length,
+            avgScore,
+          };
+        });
+
+        return { success: true, data: { evaluations, responses, aggregated } };
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
     }
   )
 
@@ -942,6 +1037,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
 
           return {
             ...tutor,
+            jumlahKelas: tutorSetups.length,
             diskusiCount,
             tugasBelumDinilai
           };
@@ -976,19 +1072,31 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           .innerJoin(rombels, eq(rombelStudents.rombelId, rombels.id))
           .all();
 
-        // Calculate simple stats
+        // Calculate stats — fetch only what's needed via targeted queries
         const allPosts = await db.select().from(elearningForumPosts).where(eq(elearningForumPosts.authorRole, "siswa")).all();
+        const allAttendances = await db.select().from(elearningAttendances).all();
+
+        // Fetch graded submissions for tugas count and avg score
+        const allGradedSubs = await db.select({
+          studentId: elearningSubmissions.studentId,
+          grade: elearningSubmissions.grade,
+        }).from(elearningSubmissions).all();
 
         const enhancedStudents = studentsList.map(s => {
           const studentPosts = allPosts.filter(p => p.authorId === s.id && p.authorRole === "siswa");
-          const avgScore = 0; // Mock until phase 4 submissions are added
-          const tugasCount = 0; // Mock until phase 4 submissions are added
+          const kehadiranCount = allAttendances.filter(a => a.studentId === s.id).length;
+          const studentGrades = allGradedSubs
+            .filter(sub => sub.studentId === s.id && sub.grade != null)
+            .map(sub => sub.grade as number);
 
           return {
             ...s,
             forumCount: studentPosts.length,
-            tugasCount: tugasCount,
-            avgScore: avgScore
+            kehadiranCount,
+            tugasCount: studentGrades.length,
+            avgScore: studentGrades.length > 0
+              ? Math.round(studentGrades.reduce((a, b) => a + b, 0) / studentGrades.length * 10) / 10
+              : 0,
           };
         });
 
@@ -1016,8 +1124,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         if (!setup) return { success: false, message: "Setup tidak ditemukan" };
 
         const actualSubject = setup.mapel;
-        const kelasUpper = setup.kelas.toUpperCase();
-        const actualProgram = kelasUpper.includes("PAKET A") ? "Paket A" : kelasUpper.includes("PAKET B") ? "Paket B" : "Paket C";
+        const actualProgram = deriveProgram(setup.kelas);
 
         const course = await db.select().from(elearningCourses)
           .where(and(eq(elearningCourses.namaMapel, actualSubject), eq(elearningCourses.program, actualProgram)))
@@ -1037,8 +1144,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           .all();
 
         const courseId = course ? course.id : null;
-        let sessionsCount = setup.jumlahSesi ?? 8;
-        if (!sessionsCount || sessionsCount < 1) sessionsCount = 8;
+        const defaultSessions = setup.jumlahSesi && setup.jumlahSesi > 0 ? setup.jumlahSesi : 8;
 
         let allSessionIds: number[] = [];
         let sessionsMap: Record<number, number> = {};
@@ -1088,6 +1194,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           const detailKehadiran: any[] = [];
           const detailDiskusi: any[] = [];
           const detailTugas: any[] = [];
+          const sessionsCount = allSessionIds.length > 0 ? allSessionIds.length : defaultSessions;
 
           if (courseId && allSessionIds.length > 0) {
             const attendedSessions = new Set(
@@ -1154,8 +1261,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
             }
           }
 
-          const final = (kehadiran * 0.2) + (partisipasi * 0.3) + (tugas * 0.5);
-          const predikat = final >= 85 ? "A" : final >= 70 ? "B" : final >= 55 ? "C" : final >= 40 ? "D" : "E";
+          const { final, predikat } = calculateGrade(kehadiran, partisipasi, tugas);
 
           return {
             id: student.id,
@@ -1593,6 +1699,322 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         const progress = Math.min(100, Math.round((completedSections / totalSections) * 100));
 
         return { success: true, progress, completedSections, totalSections };
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
+    }
+  )
+
+  // ==========================================
+  // LAPORAN TEMPLATE DOWNLOADS
+  // ==========================================
+
+  // GET Laporan Kehadiran Tutor (xlsx template)
+  .get(
+    "/laporan/tutor-attendance",
+    async (context: any) => {
+      const { headers, jwt, set } = context;
+      const authError = await verifyAdmin(headers, jwt, set);
+      if (authError) return authError;
+
+      try {
+        const tutorsList = await db.select().from(tutors).all();
+        const allSetups = await db.select().from(elearningSetups).all();
+        const allPosts = await db.select().from(elearningForumPosts).where(eq(elearningForumPosts.authorRole, "tutor")).all();
+
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+        const tutorsData = tutorsList.map((tutor, idx) => {
+          const tutorSetups = allSetups.filter(s => s.tutorId === tutor.id);
+          const mapel = tutorSetups.length > 0 ? tutorSetups.map(s => s.mapel).join(", ") : "-";
+          const kelas = tutorSetups.length > 0 ? tutorSetups.map(s => s.kelas).join(", ") : "-";
+          const tutorPosts = allPosts.filter(p => p.authorId === tutor.id && p.authorRole === "tutor");
+
+          const { dayData, rekap } = buildAttendanceGrid(
+            tutorPosts, p => p.createdAt, currentMonth, currentYear, daysInMonth
+          );
+          return { no: idx + 1, namaTutor: tutor.nama, mapel, kelas, ...dayData, rekap };
+        });
+
+        // Derive semester from the most common semester among all setups
+        const semesterCounts = new Map<string, number>();
+        for (const s of allSetups) {
+          const sem = s.semester || "Ganjil";
+          semesterCounts.set(sem, (semesterCounts.get(sem) || 0) + 1);
+        }
+        const semester = [...semesterCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || "Ganjil";
+
+        const buffer = fillTemplate("DAFTAR HADIR TUTOR.xlsx", {
+          program: "Paket A/B/C", semester,
+          tahunAjaran: currentYear + "/" + (currentYear + 1),
+          kelas: "Semua Kelas",
+          bulan: now.toLocaleDateString("id-ID", { month: "long", year: "numeric" }),
+          waliKelas: "-",
+          tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
+          kecamatan: "Jatinagara", namaPkbm: "Menuju Makmur",
+          nipPenilik: "-", nipKepalaPkbm: "-", nipWaliKelas: "-",
+          tutors: tutorsData,
+        });
+
+        set.headers = {
+          "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "Content-Disposition": "attachment; filename=\"laporan_kehadiran_tutor_" + currentYear + "_" + (currentMonth + 1) + ".xlsx\"",
+        };
+        return buffer;
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
+    }
+  )
+
+  // GET Laporan Kehadiran WB Per Mapel (xlsx template)
+  .get(
+    "/laporan/student-attendance",
+    async (context: any) => {
+      const { headers, jwt, query, set } = context;
+      const authError = await verifyAdmin(headers, jwt, set);
+      if (authError) return authError;
+
+      try {
+        const setupId = query.setupId ? parseInt(query.setupId, 10) : null;
+        if (!setupId) { set.status = 400; return { success: false, message: "setupId diperlukan" }; }
+
+        const setup = await db.select().from(elearningSetups).where(eq(elearningSetups.id, setupId)).get();
+        if (!setup) { set.status = 404; return { success: false, message: "Setup tidak ditemukan" }; }
+
+        const tutor = await db.select().from(tutors).where(eq(tutors.id, setup.tutorId)).get();
+        const program = deriveProgram(setup.kelas);
+        const course = await db.select().from(elearningCourses)
+          .where(and(eq(elearningCourses.namaMapel, setup.mapel), eq(elearningCourses.program, program))).get();
+
+        const rombelList = await db.select().from(rombels).where(eq(rombels.nama, setup.kelas)).all();
+        const rombelIds = rombelList.map(r => r.id);
+        const studentsList = rombelIds.length > 0 ? await db
+          .select({ id: students.id, nama: students.nama, nis: students.nis })
+          .from(students).innerJoin(rombelStudents, eq(students.id, rombelStudents.studentId))
+          .where(inArray(rombelStudents.rombelId, rombelIds)).all() : [];
+
+        const sessionIds = course ? (await db.select().from(elearningSessions).where(eq(elearningSessions.courseId, course.id)).all()).map(s => s.id) : [];
+        const attendances = sessionIds.length > 0 ? await db.select().from(elearningAttendances)
+          .where(inArray(elearningAttendances.sessionId, sessionIds)).all() : [];
+
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+        const siswaData = studentsList.map((student, idx) => {
+          const studentAtt = attendances.filter(a => a.studentId === student.id);
+          const { dayData, rekap } = buildAttendanceGrid(
+            studentAtt, a => a.attendedAt || a.createdAt, currentMonth, currentYear, daysInMonth
+          );
+          return { no: idx + 1, nipd: "", nisn: student.nis || "", namaSiswa: student.nama, jk: "", rombel: setup.kelas, ...dayData, rekap };
+        });
+
+        const buffer = fillTemplate("DAFTAR HADIR WARGA BELAJAR PER MAPEL.xlsx", {
+          program, semester: setup.semester || "Ganjil",
+          tahunAjaran: currentYear + "/" + (currentYear + 1),
+          mapel: setup.mapel, kelas: setup.kelas,
+          namaTutor: tutor?.nama || "-",
+          bulan: now.toLocaleDateString("id-ID", { month: "long", year: "numeric" }),
+          tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
+          nipTutor: "-",
+          siswa: siswaData,
+        });
+
+        set.headers = {
+          "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "Content-Disposition": "attachment; filename=\"kehadiran_wb_" + sanitizeFilename(setup.mapel) + "_" + currentYear + "_" + (currentMonth + 1) + ".xlsx\"",
+        };
+        return buffer;
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
+    }
+  )
+
+  // GET Laporan Kehadiran WB Rekap (xlsx template)
+  .get(
+    "/laporan/student-attendance-rekap",
+    async (context: any) => {
+      const { headers, jwt, query, set } = context;
+      const authError = await verifyAdmin(headers, jwt, set);
+      if (authError) return authError;
+
+      try {
+        const kelas = query.kelas;
+        if (!kelas) { set.status = 400; return { success: false, message: "kelas diperlukan" }; }
+
+        const rombelList = await db.select().from(rombels).where(eq(rombels.nama, kelas)).all();
+        const rombelIds = rombelList.map(r => r.id);
+        const studentsList = rombelIds.length > 0 ? await db
+          .select({ id: students.id, nama: students.nama, nis: students.nis })
+          .from(students).innerJoin(rombelStudents, eq(students.id, rombelStudents.studentId))
+          .where(inArray(rombelStudents.rombelId, rombelIds)).all() : [];
+
+        const setups = await db.select().from(elearningSetups).where(eq(elearningSetups.kelas, kelas)).all();
+        if (setups.length === 0) {
+          set.status = 404;
+          return { success: false, message: "Tidak ditemukan setup elearning untuk kelas " + kelas };
+        }
+        // Batch course lookup using Drizzle or()
+        const courseConditions = setups.map(s => and(
+          eq(elearningCourses.namaMapel, s.mapel),
+          eq(elearningCourses.program, deriveProgram(s.kelas))
+        ));
+        const allCourses = courseConditions.length > 0
+          ? await db.select().from(elearningCourses).where(
+              courseConditions.length === 1 ? courseConditions[0] : or(...courseConditions)
+            ).all()
+          : [];
+        const courseIds: number[] = [];
+        for (const s of setups) {
+          const prog = deriveProgram(s.kelas);
+          const c = allCourses.find(c => c.namaMapel === s.mapel && c.program === prog);
+          if (c) courseIds.push(c.id);
+        }
+        const allSessions = courseIds.length > 0 ? await db.select().from(elearningSessions)
+          .where(inArray(elearningSessions.courseId, courseIds)).all() : [];
+        const sessionIds = allSessions.map(s => s.id);
+        const allAttendances = sessionIds.length > 0 ? await db.select().from(elearningAttendances)
+          .where(inArray(elearningAttendances.sessionId, sessionIds)).all() : [];
+
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+        const waliKelas = rombelList.length > 0 && rombelList[0].waliKelasId
+          ? (await db.select().from(tutors).where(eq(tutors.id, rombelList[0].waliKelasId)).get())?.nama || "-" : "-";
+
+        const siswaData = studentsList.map((student, idx) => {
+          const studentAtt = allAttendances.filter(a => a.studentId === student.id);
+          const { dayData, rekap } = buildAttendanceGrid(
+            studentAtt, a => a.attendedAt || a.createdAt, currentMonth, currentYear, daysInMonth
+          );
+          return { no: idx + 1, nipd: "", nisn: student.nis || "", namaSiswa: student.nama, jk: "", rombel: kelas, ...dayData, rekap };
+        });
+
+        const program = deriveProgram(setups[0].kelas);
+        const buffer = fillTemplate("DAFTAR HADIR WARGA BELAJAR REKAP.xlsx", {
+          program, semester: setups[0].semester || "Ganjil",
+          tahunAjaran: currentYear + "/" + (currentYear + 1),
+          kelas, waliKelas,
+          bulan: now.toLocaleDateString("id-ID", { month: "long", year: "numeric" }),
+          tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
+          kecamatan: "Jatinagara", namaPkbm: "Menuju Makmur",
+          nipPenilik: "-", nipKepalaPkbm: "-", nipWaliKelas: "-",
+          siswa: siswaData,
+        });
+
+        set.headers = {
+          "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "Content-Disposition": "attachment; filename=\"rekap_kehadiran_wb_" + sanitizeFilename(kelas) + "_" + currentYear + "_" + (currentMonth + 1) + ".xlsx\"",
+        };
+        return buffer;
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
+    }
+  )
+
+  // GET Laporan Nilai WB Per Mapel (xlsx template)
+  .get(
+    "/laporan/student-grades",
+    async (context: any) => {
+      const { headers, jwt, query, set } = context;
+      const authError = await verifyAdmin(headers, jwt, set);
+      if (authError) return authError;
+
+      try {
+        const setupId = query.setupId ? parseInt(query.setupId, 10) : null;
+        if (!setupId) { set.status = 400; return { success: false, message: "setupId diperlukan" }; }
+
+        const setup = await db.select().from(elearningSetups).where(eq(elearningSetups.id, setupId)).get();
+        if (!setup) { set.status = 404; return { success: false, message: "Setup tidak ditemukan" }; }
+
+        const tutor = await db.select().from(tutors).where(eq(tutors.id, setup.tutorId)).get();
+        const program = deriveProgram(setup.kelas);
+        const course = await db.select().from(elearningCourses)
+          .where(and(eq(elearningCourses.namaMapel, setup.mapel), eq(elearningCourses.program, program))).get();
+
+        const rombelList = await db.select().from(rombels).where(eq(rombels.nama, setup.kelas)).all();
+        const rombelIds = rombelList.map(r => r.id);
+        const studentsList = rombelIds.length > 0 ? await db
+          .select({ id: students.id, nama: students.nama, nis: students.nis })
+          .from(students).innerJoin(rombelStudents, eq(students.id, rombelStudents.studentId))
+          .where(inArray(rombelStudents.rombelId, rombelIds)).all() : [];
+
+        const courseId = course ? course.id : null;
+        const defaultSessions = setup.jumlahSesi && setup.jumlahSesi > 0 ? setup.jumlahSesi : 8;
+
+        let allSessionIds: number[] = [];
+        let allAttendances: any[] = [];
+        let allForumPosts: any[] = [];
+        let allSubmissions: any[] = [];
+
+        if (courseId) {
+          const sessions = await db.select().from(elearningSessions).where(eq(elearningSessions.courseId, courseId)).all();
+          allSessionIds = sessions.map(s => s.id);
+          if (allSessionIds.length > 0) {
+            allAttendances = await db.select().from(elearningAttendances)
+              .where(inArray(elearningAttendances.sessionId, allSessionIds)).all();
+            allForumPosts = await db.select().from(elearningForumPosts)
+              .where(and(eq(elearningForumPosts.courseId, courseId), eq(elearningForumPosts.authorRole, "siswa"), inArray(elearningForumPosts.sessionId, allSessionIds))).all();
+            const assignments = await db.select().from(elearningAssignments)
+              .where(inArray(elearningAssignments.sessionId, allSessionIds)).all();
+            const assignmentIds = assignments.map(a => a.id);
+            if (assignmentIds.length > 0) {
+              allSubmissions = await db.select().from(elearningSubmissions)
+                .where(inArray(elearningSubmissions.assignmentId, assignmentIds)).all();
+            }
+          }
+        }
+
+        const now = new Date();
+        const currentYear = now.getFullYear();
+
+        const siswaData = studentsList.map((student, idx) => {
+          const sessionsCount = allSessionIds.length > 0 ? allSessionIds.length : defaultSessions;
+          const attendedSessions = new Set(allAttendances.filter(a => a.studentId === student.id).map(a => a.sessionId));
+          const participatedSessions = new Set(allForumPosts.filter(p => p.authorId === student.id).map(p => p.sessionId));
+          const studentSubs = allSubmissions.filter(s => s.studentId === student.id);
+          const studentGrades = studentSubs.filter(s => s.grade != null).map(s => s.grade as number);
+
+          const kehadiran = Math.min(100, Math.round((attendedSessions.size / sessionsCount) * 100));
+          const partisipasi = Math.min(100, Math.round((participatedSessions.size / sessionsCount) * 100));
+          const tugas = studentGrades.length > 0 ? Math.min(100, Math.round(studentGrades.reduce((a, b) => a + b, 0) / studentGrades.length)) : 0;
+          const { final, predikat } = calculateGrade(kehadiran, partisipasi, tugas);
+
+          return {
+            no: idx + 1, nipd: "", nisn: student.nis || "", namaSiswa: student.nama, jk: "", rombel: setup.kelas,
+            nilaiTugas: tugas, nilaiDiskusi: partisipasi, nilaiKehadiran: kehadiran,
+            nilaiAkhir: final, predikat,
+          };
+        });
+
+        const buffer = fillTemplate("NILAI WARGA BELAJAR PER MAPEL.xlsx", {
+          program, semester: setup.semester || "Ganjil",
+          tahunAjaran: currentYear + "/" + (currentYear + 1),
+          mapel: setup.mapel, kelas: setup.kelas,
+          namaTutor: tutor?.nama || "-",
+          tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
+          nipTutor: "-",
+          siswa: siswaData,
+        });
+
+        set.headers = {
+          "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "Content-Disposition": "attachment; filename=\"nilai_wb_" + sanitizeFilename(setup.mapel) + "_" + currentYear + ".xlsx\"",
+        };
+        return buffer;
       } catch (error: any) {
         set.status = 500;
         return { success: false, message: error.message };

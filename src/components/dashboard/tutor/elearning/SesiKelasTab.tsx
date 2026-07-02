@@ -32,7 +32,8 @@ export default function SesiKelasTab({ activeTab, user }: Props) {
 
         const actualSubject = setup.mapel;
         const actualKelas = setup.kelas;
-        const actualProgram = setup.kelas.includes("Paket A") ? "Paket A" : setup.kelas.includes("Paket B") ? "Paket B" : "Paket C";
+        const kelasUpper = setup.kelas.toUpperCase();
+        const actualProgram = kelasUpper.includes("PAKET A") ? "Paket A" : kelasUpper.includes("PAKET B") ? "Paket B" : "Paket C";
 
         const res = await fetch("/api/elearning/course", {
           method: "POST",

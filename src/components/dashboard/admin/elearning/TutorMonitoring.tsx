@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { Search, GraduationCap } from "lucide-react";
+import { Search, GraduationCap, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { downloadFromTemplate } from "@/lib/downloadTemplate";
 
 interface TutorMonitoringData {
   id: number;
   nama: string;
   tutorMapel: string;
+  jumlahKelas?: number;
   tugasBelumDinilai?: number;
   diskusiCount?: number;
 }
@@ -44,6 +46,10 @@ export default function TutorMonitoring() {
       t.tutorMapel.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleExportLaporan = () => {
+    downloadFromTemplate("/api/elearning/laporan/tutor-attendance", "laporan_kehadiran_tutor.xlsx");
+  };
+
   const paginatedTutors = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
@@ -56,18 +62,23 @@ export default function TutorMonitoring() {
           </h3>
           <p className="text-sm text-slate-500 font-medium">Lacak performa dan aktivitas mengajar tutor.</p>
         </div>
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Cari tutor atau mapel..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1); // Reset page on search
-            }}
-            className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-[#280f91] shadow-xs"
-          />
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Cari tutor atau mapel..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1); // Reset page on search
+              }}
+              className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-[#280f91] shadow-xs"
+            />
+          </div>
+          <Button onClick={handleExportLaporan} className="bg-[#ff6105] hover:bg-[#e55800] text-white font-bold text-xs h-9 px-4 rounded-xl shadow-sm cursor-pointer shrink-0">
+            <FileSpreadsheet className="w-4 h-4 mr-1.5" /> Laporan (.XLSX)
+          </Button>
         </div>
       </div>
 
@@ -84,6 +95,7 @@ export default function TutorMonitoring() {
               <tr className="bg-[#00badb] text-white font-black text-sm uppercase">
                 <th className="py-4 px-6 border-r border-[#009cb9] w-16 text-center">NO</th>
                 <th className="py-4 px-6 border-r border-[#009cb9]">NAMA TUTOR / MAPEL BASE</th>
+                <th className="py-4 px-6 border-r border-[#009cb9] text-center">JUMLAH KELAS</th>
                 <th className="py-4 px-6 border-r border-[#009cb9] text-center">TUGAS BELUM DINILAI</th>
                 <th className="py-4 px-6 text-center">RUANG DISKUSI</th>
               </tr>
@@ -91,7 +103,7 @@ export default function TutorMonitoring() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={4} className="py-10 text-center font-bold text-slate-400">
+                  <td colSpan={5} className="py-10 text-center font-bold text-slate-400">
                     Memuat data...
                   </td>
                 </tr>
@@ -106,6 +118,9 @@ export default function TutorMonitoring() {
                       <div className="text-xs text-slate-500 font-semibold">{t.tutorMapel}</div>
                     </td>
                     <td className="py-4 px-6 border-r border-slate-100 text-center">
+                      <span className="text-slate-600 font-extrabold">{t.jumlahKelas !== undefined ? t.jumlahKelas : 0}</span>
+                    </td>
+                    <td className="py-4 px-6 border-r border-slate-100 text-center">
                       <span className="text-slate-600 font-extrabold">{t.tugasBelumDinilai !== undefined ? t.tugasBelumDinilai : 0}</span>
                     </td>
                     <td className="py-4 px-6 text-center">
@@ -115,7 +130,7 @@ export default function TutorMonitoring() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="py-10 text-center font-bold text-slate-400">
+                  <td colSpan={5} className="py-10 text-center font-bold text-slate-400">
                     Tidak ada tutor yang sesuai kriteria pencarian.
                   </td>
                 </tr>
