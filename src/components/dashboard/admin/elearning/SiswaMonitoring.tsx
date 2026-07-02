@@ -71,32 +71,19 @@ export default function SiswaMonitoring() {
   const [exporting, setExporting] = useState(false);
 
   const handleExportNilai = async () => {
-    if (!selectedKelas || exporting) {
-      if (!selectedKelas) toast.warning("Pilih kelas terlebih dahulu");
-      return;
-    }
+    if (exporting) return;
     setExporting(true);
     try {
-      const res = await fetch("/api/elearning/setups?kelas=" + encodeURIComponent(selectedKelas), {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      if (data.success && data.data && data.data.length > 0) {
-        const setups = data.data;
-        const setupId = setups[0].id;
-        await downloadFromTemplate(
-          "/api/elearning/laporan/student-grades?setupId=" + setupId,
-          "nilai_wb_" + sanitizeFilename(selectedKelas) + ".xlsx"
-        );
-        if (setups.length > 1) {
-          toast.info(`Ditemukan ${setups.length} mata pelajaran. Mengekspor: ${setups[0].mapel}`);
-        }
-      } else {
-        toast.error("Tidak ditemukan setup elearning untuk kelas ini");
-      }
+      const endpoint = selectedKelas 
+        ? "/api/elearning/laporan/student-grades-rekap?kelas=" + encodeURIComponent(selectedKelas)
+        : "/api/elearning/laporan/student-grades-rekap";
+      const filename = selectedKelas
+        ? "rekap_nilai_wb_" + sanitizeFilename(selectedKelas) + ".xlsx"
+        : "rekap_nilai_wb_semua_kelas.xlsx";
+
+      await downloadFromTemplate(endpoint, filename);
     } catch (err: any) {
-      toast.error("Gagal mengambil data setup", { description: err.message });
+      toast.error("Gagal mengunduh rekap nilai", { description: err.message });
     } finally {
       setExporting(false);
     }
