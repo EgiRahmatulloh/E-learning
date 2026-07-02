@@ -5,6 +5,8 @@ import {
   Menu,
   X,
   LogOut,
+  ChevronDown,
+  BookOpen
 } from "lucide-react";
 import { AdminDashboard } from "./admin/AdminDashboard";
 import { ElearningSiswa } from "./siswa/ElearningSiswa";
@@ -37,6 +39,7 @@ import RoleStatsGrid from "./RoleStatsGrid";
 import PendahuluanTab from "./tutor/elearning/PendahuluanTab";
 import SesiKelasTab from "./tutor/elearning/SesiKelasTab";
 import LaporanNilaiTab from "./tutor/elearning/LaporanNilaiTab";
+import KehadiranTab from "./tutor/elearning/KehadiranTab";
 
 interface DashboardPageProps {
   user: { id: number; name: string; username: string; role: string; email?: string; noHp?: string; alamat?: string; nik?: string; program?: string; kelas?: string };
@@ -48,6 +51,28 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
   const [activeTab, setActiveTab] = useState(user.role === "siswa" ? "elearning-dashboard" : "dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  
+  // Siswa Overhaul states
+  const [avatarDropdownOpen, setAvatarDropdownOpen] = useState(false);
+  const [subjectDropdownOpen, setSubjectDropdownOpen] = useState(false);
+  const [siswaSetups, setSiswaSetups] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user?.role === "siswa" && user?.kelas) {
+      fetch(`/api/elearning/setups?kelas=${encodeURIComponent(user.kelas)}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.data) {
+            setSiswaSetups(data.data);
+          }
+        })
+        .catch(err => console.error("Error fetching setups:", err));
+    }
+  }, [user]);
+
+  const toSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
 
   // Profile Form States
   const [profileLoading, setProfileLoading] = useState(false);
@@ -60,6 +85,21 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
     confirmPassword: "",
     noHp: user.noHp || "",
     alamat: user.alamat || "",
+    nik: user.nik || "",
+    nuptk: (user as any).nuptk || "",
+    tempatTglLahir: (user as any).tempatTglLahir || "",
+    jenisKelamin: (user as any).jenisKelamin || "",
+    agama: (user as any).agama || "",
+    pendidikan: (user as any).pendidikan || "",
+    tanggalMulaiTugas: (user as any).tanggalMulaiTugas || "",
+    nomorSkPengangkatan: (user as any).nomorSkPengangkatan || "",
+    lembagaPengangkat: (user as any).lembagaPengangkat || "",
+    nomorSkPenugasan: (user as any).nomorSkPenugasan || "",
+    lembagaPenugas: (user as any).lembagaPenugas || "",
+    nisn: (user as any).nisn || "",
+    nis: (user as any).nis || "",
+    namaAyah: (user as any).namaAyah || "",
+    namaIbu: (user as any).namaIbu || "",
   });
 
   useEffect(() => {
@@ -71,6 +111,21 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
         confirmPassword: "",
         noHp: user.noHp || "",
         alamat: user.alamat || "",
+        nik: user.nik || "",
+        nuptk: (user as any).nuptk || "",
+        tempatTglLahir: (user as any).tempatTglLahir || "",
+        jenisKelamin: (user as any).jenisKelamin || "",
+        agama: (user as any).agama || "",
+        pendidikan: (user as any).pendidikan || "",
+        tanggalMulaiTugas: (user as any).tanggalMulaiTugas || "",
+        nomorSkPengangkatan: (user as any).nomorSkPengangkatan || "",
+        lembagaPengangkat: (user as any).lembagaPengangkat || "",
+        nomorSkPenugasan: (user as any).nomorSkPenugasan || "",
+        lembagaPenugas: (user as any).lembagaPenugas || "",
+        nisn: (user as any).nisn || "",
+        nis: (user as any).nis || "",
+        namaAyah: (user as any).namaAyah || "",
+        namaIbu: (user as any).namaIbu || "",
       });
     }
   }, [user]);
@@ -99,6 +154,21 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
           password: formData.password || undefined,
           noHp: formData.noHp || undefined,
           alamat: formData.alamat || undefined,
+          nik: formData.nik || undefined,
+          nuptk: formData.nuptk || undefined,
+          tempatTglLahir: formData.tempatTglLahir || undefined,
+          jenisKelamin: formData.jenisKelamin || undefined,
+          agama: formData.agama || undefined,
+          pendidikan: formData.pendidikan || undefined,
+          tanggalMulaiTugas: formData.tanggalMulaiTugas || undefined,
+          nomorSkPengangkatan: formData.nomorSkPengangkatan || undefined,
+          lembagaPengangkat: formData.lembagaPengangkat || undefined,
+          nomorSkPenugasan: formData.nomorSkPenugasan || undefined,
+          lembagaPenugas: formData.lembagaPenugas || undefined,
+          nisn: formData.nisn || undefined,
+          nis: formData.nis || undefined,
+          namaAyah: formData.namaAyah || undefined,
+          namaIbu: formData.namaIbu || undefined,
         }),
       });
 
@@ -154,6 +224,9 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       }
 
       if (user.role === "tutor") {
+        if (activeTab.endsWith("-kehadiran")) {
+          return <div className="space-y-6 animate-in fade-in duration-300"><KehadiranTab /></div>;
+        }
         if (activeTab.endsWith("-pendahuluan")) {
           return <div className="space-y-6 animate-in fade-in duration-300"><PendahuluanTab activeTab={activeTab} user={user} /></div>;
         }
@@ -208,15 +281,137 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                 </div>
 
                 {user.role === "siswa" && (
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Nomor HP</label>
-                    <input
-                      type="text"
-                      value={formData.noHp}
-                      onChange={(e) => setFormData({ ...formData, noHp: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
-                    />
-                  </div>
+                  <>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Nomor HP</label>
+                      <input
+                        type="text"
+                        value={formData.noHp}
+                        onChange={(e) => setFormData({ ...formData, noHp: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">NIS</label>
+                      <input
+                        type="text"
+                        value={formData.nis}
+                        onChange={(e) => setFormData({ ...formData, nis: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">NISN</label>
+                      <input
+                        type="text"
+                        value={formData.nisn}
+                        onChange={(e) => setFormData({ ...formData, nisn: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Nama Ayah</label>
+                      <input
+                        type="text"
+                        value={formData.namaAyah}
+                        onChange={(e) => setFormData({ ...formData, namaAyah: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Nama Ibu</label>
+                      <input
+                        type="text"
+                        value={formData.namaIbu}
+                        onChange={(e) => setFormData({ ...formData, namaIbu: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
+                  </>
+                )}
+                
+                {user.role === "tutor" && (
+                  <>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">NUPTK</label>
+                      <input
+                        type="text"
+                        value={formData.nuptk}
+                        onChange={(e) => setFormData({ ...formData, nuptk: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Pendidikan Terakhir</label>
+                      <input
+                        type="text"
+                        value={formData.pendidikan}
+                        onChange={(e) => setFormData({ ...formData, pendidikan: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Tanggal Mulai Tugas</label>
+                      <input
+                        type="text"
+                        value={formData.tanggalMulaiTugas}
+                        onChange={(e) => setFormData({ ...formData, tanggalMulaiTugas: e.target.value })}
+                        placeholder="DD/MM/YYYY"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {(user.role === "siswa" || user.role === "tutor") && (
+                  <>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">NIK</label>
+                      <input
+                        type="text"
+                        value={formData.nik}
+                        onChange={(e) => setFormData({ ...formData, nik: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Tempat, Tanggal Lahir</label>
+                      <input
+                        type="text"
+                        value={formData.tempatTglLahir}
+                        onChange={(e) => setFormData({ ...formData, tempatTglLahir: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Jenis Kelamin</label>
+                      <select
+                        value={formData.jenisKelamin}
+                        onChange={(e) => setFormData({ ...formData, jenisKelamin: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      >
+                        <option value="">Pilih</option>
+                        <option value="L">Laki-Laki (L)</option>
+                        <option value="P">Perempuan (P)</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Agama</label>
+                      <select
+                        value={formData.agama}
+                        onChange={(e) => setFormData({ ...formData, agama: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      >
+                        <option value="">Pilih</option>
+                        <option value="Islam">Islam</option>
+                        <option value="Kristen">Kristen</option>
+                        <option value="Katolik">Katolik</option>
+                        <option value="Hindu">Hindu</option>
+                        <option value="Buddha">Buddha</option>
+                        <option value="Konghucu">Konghucu</option>
+                      </select>
+                    </div>
+                  </>
                 )}
 
                 <div className="space-y-1.5 sm:col-span-2">
@@ -260,12 +455,6 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Role Akun</span>
                   <span className="font-bold text-slate-700 uppercase">{user.role}</span>
                 </div>
-                {user.nik && (
-                  <div>
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">NIK</span>
-                    <span className="font-bold text-slate-700">{user.nik}</span>
-                  </div>
-                )}
                 {user.program && (
                   <div>
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Program</span>
@@ -572,20 +761,22 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
   return (
     <div className="h-screen bg-cyan-100 flex font-sans overflow-hidden animate-in fade-in duration-300">
       {/* ========== LEFT SIDEBAR (Desktop) ========== */}
-      <aside
-        className={`hidden lg:flex flex-col shrink-0 bg-gradient-to-b from-cyan-700 via-cyan-800 to-cyan-900 transition-all duration-300 ${sidebarOpen ? "w-64" : "w-0 overflow-hidden"
-          }`}
-      >
-        <DashboardSidebar
-          user={user}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          setMobileSidebarOpen={setMobileSidebarOpen}
-        />
-      </aside>
+      {user.role !== "siswa" && (
+        <aside
+          className={`hidden lg:flex flex-col shrink-0 bg-gradient-to-b from-cyan-700 via-cyan-800 to-cyan-900 transition-all duration-300 ${sidebarOpen ? "w-64" : "w-0 overflow-hidden"
+            }`}
+        >
+          <DashboardSidebar
+            user={user}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            setMobileSidebarOpen={setMobileSidebarOpen}
+          />
+        </aside>
+      )}
 
       {/* ========== MOBILE SIDEBAR OVERLAY ========== */}
-      {mobileSidebarOpen && (
+      {user.role !== "siswa" && mobileSidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           {/* Backdrop */}
           <div
@@ -616,55 +807,147 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
         {/* Top Header Bar */}
         <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-cyan-200/60 shadow-sm">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6">
-            <div className="flex items-center gap-3">
-              {/* Hamburger Toggle */}
-              <button
-                onClick={() => {
-                  if (window.innerWidth >= 1024) {
-                    setSidebarOpen(!sidebarOpen);
-                  } else {
-                    setMobileSidebarOpen(true);
-                  }
-                }}
-                className="h-10 w-10 rounded-xl bg-gradient-to-br from-cyan-700 to-cyan-800 text-white flex items-center justify-center hover:from-cyan-600 hover:to-cyan-700 active:scale-95 transition-all shadow-md shadow-cyan-700/20 cursor-pointer"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
+            <div className="flex items-center gap-3 relative">
+              {/* Hamburger Toggle - Hidden for Siswa */}
+              {user.role !== "siswa" && (
+                <button
+                  onClick={() => {
+                    if (window.innerWidth >= 1024) {
+                      setSidebarOpen(!sidebarOpen);
+                    } else {
+                      setMobileSidebarOpen(true);
+                    }
+                  }}
+                  className="h-10 w-10 rounded-xl bg-gradient-to-br from-cyan-700 to-cyan-800 text-white flex items-center justify-center hover:from-cyan-600 hover:to-cyan-700 active:scale-95 transition-all shadow-md shadow-cyan-700/20 cursor-pointer"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+              )}
 
               {/* Page Title */}
-              <h1 className="text-xl sm:text-2xl font-black text-cyan-900 tracking-tight uppercase">
-                PKBM MENUJU MAKMUR
+              <h1 
+                className="text-xl sm:text-2xl font-black text-cyan-900 tracking-tight uppercase cursor-pointer"
+                onClick={() => {
+                  if (user.role === "siswa") setActiveTab("elearning-dashboard");
+                }}
+              >
+                {user.role === "siswa" ? "ELEARNING" : "PKBM MENUJU MAKMUR"}
               </h1>
+            </div>
+
+            {/* Center: Dropdown Mapel (Siswa) */}
+            <div className="hidden sm:flex flex-1 justify-center">
+              {user.role === "siswa" && siswaSetups.length > 0 && (
+                <div className="relative">
+                  <button
+                    onClick={() => setSubjectDropdownOpen(!subjectDropdownOpen)}
+                    onBlur={() => setTimeout(() => setSubjectDropdownOpen(false), 200)}
+                    className="flex items-center gap-2 bg-cyan-50 hover:bg-cyan-100 text-cyan-900 px-4 py-2 rounded-xl text-sm font-bold border border-cyan-200 transition-colors"
+                  >
+                    <BookOpen className="h-4 w-4" />
+                    <span>Mata Pelajaran</span>
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                  {subjectDropdownOpen && (
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-white rounded-xl shadow-lg border border-cyan-100 py-2 z-50">
+                      {siswaSetups.map((setup) => {
+                        const setupId = setup.id;
+                        const mapelSlug = toSlug(setup.mapel);
+                        return (
+                          <button
+                            key={setupId}
+                            onClick={() => {
+                              setActiveTab(`mapel-setup-${setupId}-${mapelSlug}-pendahuluan`);
+                              setSubjectDropdownOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm font-semibold text-cyan-900 hover:bg-cyan-50 transition-colors"
+                          >
+                            {setup.mapel}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Right: User Info + Logout */}
             <div className="flex items-center gap-3">
               <div
-                onClick={() => setActiveTab("profil")}
-                className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
-                title="Buka Profil Saya"
+                className="flex items-center gap-3 relative"
               >
-                <div className="hidden sm:flex flex-col text-right">
-                  <span className="text-xs font-black text-cyan-900">{user.name}</span>
-                  <span className="text-[10px] font-bold text-cyan-600 uppercase tracking-widest leading-none mt-0.5">
-                    {user.role}
-                  </span>
+                {/* Avatar Info */}
+                <div 
+                  className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => {
+                    if (user.role === "siswa") {
+                      setAvatarDropdownOpen(!avatarDropdownOpen);
+                    } else {
+                      setActiveTab("profil");
+                    }
+                  }}
+                  onBlur={() => {
+                    if (user.role === "siswa") {
+                      setTimeout(() => setAvatarDropdownOpen(false), 200);
+                    }
+                  }}
+                >
+                  <div className="hidden sm:flex flex-col text-right">
+                    <span className="text-xs font-black text-cyan-900">{user.name}</span>
+                    <span className="text-[10px] font-bold text-cyan-600 uppercase tracking-widest leading-none mt-0.5">
+                      {user.role}
+                    </span>
+                  </div>
+
+                  {/* Avatar */}
+                  <div className="h-9 w-9 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center text-white font-black text-sm shadow-md shadow-cyan-500/20">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
                 </div>
 
-                {/* Avatar */}
-                <div className="h-9 w-9 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center text-white font-black text-sm shadow-md shadow-cyan-500/20">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
+                {/* Avatar Dropdown for Siswa */}
+                {user.role === "siswa" && avatarDropdownOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-cyan-100 py-2 z-50">
+                    <button
+                      onClick={() => {
+                        setActiveTab("elearning-dashboard");
+                        setAvatarDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm font-semibold text-cyan-900 hover:bg-cyan-50 transition-colors"
+                    >
+                      Dashboard
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveTab("profil");
+                        setAvatarDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm font-semibold text-cyan-900 hover:bg-cyan-50 transition-colors"
+                    >
+                      Profil Saya
+                    </button>
+                    <div className="border-t border-cyan-100 my-1"></div>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" /> Keluar
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {/* Logout Button */}
-              <Button
-                onClick={handleLogout}
-                className="rounded-full bg-red-500 hover:bg-red-600 text-white font-bold px-4 h-9 text-xs shadow-md shadow-red-500/20 cursor-pointer transition-all flex items-center gap-1.5"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Keluar</span>
-              </Button>
+              {/* Logout Button (Hidden for Siswa as it's in dropdown) */}
+              {user.role !== "siswa" && (
+                <Button
+                  onClick={handleLogout}
+                  className="rounded-full bg-red-500 hover:bg-red-600 text-white font-bold px-4 h-9 text-xs shadow-md shadow-red-500/20 cursor-pointer transition-all flex items-center gap-1.5"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Keluar</span>
+                </Button>
+              )}
             </div>
           </div>
         </header>

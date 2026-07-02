@@ -8,10 +8,11 @@ interface MapelSesiProps {
   sessionNumber: number;
   user?: any;
   setupId?: number | null;
+  setCanNavigateNext?: (val: boolean) => void;
 }
 
-export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSesiProps) {
-  const isEvaluasiSession = sessionNumber === 7;
+export function MapelSesi({ subjectName, sessionNumber, user, setupId, setCanNavigateNext }: MapelSesiProps) {
+
 
   const [discussions, setDiscussions] = useState<any[]>([]);
   const [discussionInput, setDiscussionInput] = useState("");
@@ -28,7 +29,9 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [tugasUrl, setTugasUrl] = useState<string | null>(null);
   const [showAngket, setShowAngket] = useState(false);
-  const [angketQuestions, setAngketQuestions] = useState<string[]>([]);
+  const [angketQuestions, setAngketQuestions] = useState<any[]>([]);
+  const [angketCompleted, setAngketCompleted] = useState(false);
+  const [angketAnswers, setAngketAnswers] = useState<Record<number, string>>({});
   const tugasUploadRef = useRef<HTMLInputElement>(null);
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [courseId, setCourseId] = useState<number | null>(null);
@@ -148,7 +151,25 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
         const video = materials.find((m: any) => m.type === "VIDEO");
         if (video) setVideoUrl(video.fileUrl);
         else setVideoUrl(null);
+        
+        // Fetch Angket status & questions
+        const angketStatusRes = await fetch(`/api/elearning/session-angket?sessionId=${session.id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+        const angketStatusData = await angketStatusRes.json();
+        if (angketStatusData.success) {
+          setAngketCompleted(angketStatusData.completed);
+        }
 
+        const angketQRes = await fetch(`/api/elearning/evaluations`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+        const angketQData = await angketQRes.json();
+        if (angketQData.success && Array.isArray(angketQData.data)) {
+          setAngketQuestions(angketQData.data);
+        }
+
+        // Fetch forum posts tugas = materials.find((m: any) => m.type === "TUGAS");
         const tugas = materials.find((m: any) => m.type === "TUGAS");
         if (tugas) setTugasUrl(tugas.fileUrl);
         else setTugasUrl(null);
@@ -185,14 +206,19 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
           setDiscussions(Array.isArray(forumData.data) ? forumData.data : []);
         }
 
-      } catch (err) {
-        console.error("Failed to load sesi data", err);
-      } finally {
+      } catch (err) { }
+      finally {
         setLoading(false);
       }
     }
     fetchData();
+    handleMarkComplete(`sesi_${sessionNumber}_pengantar`);
   }, [subjectName, sessionNumber, setupId]);
+
+  useEffect(() => {
+    setCanNavigateNext?.(angketCompleted);
+    return () => setCanNavigateNext?.(true);
+  }, [angketCompleted, setCanNavigateNext]);
 
   const handleSendDiscussion = async () => {
     if (!discussionInput.trim() || !sessionId || !courseId) return;
@@ -212,6 +238,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
       const data = await res.json();
       if (data.success) {
         reloadDiscussions();
+        handleMarkComplete(`sesi_${sessionNumber}_diskusi`);
         setDiscussionInput("");
       }
     } catch (err) {
@@ -274,8 +301,11 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
       });
       const data = await res.json();
       if (data.success) {
+        setDiscussionInput("");
         setReplyText("");
         setActiveReplyId(null);
+        handleMarkComplete(`sesi_${sessionNumber}_diskusi`);
+        toast.success("Diskusi berhasil dikirim!");
         reloadDiscussions();
       } else {
         toast.error("Gagal mengirim balasan");
@@ -330,7 +360,8 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
       const data = await res.json();
       if (data.success) {
         setIsHadir(true);
-        toast.success("Kehadiran berhasil dikonfirmasi");
+        handleMarkComplete(`sesi_${sessionNumber}_kehadiran`);
+        toast.success("Kehadiran berhasil dicatat!");
       }
     } catch (err) {
       toast.error("Gagal mengonfirmasi kehadiran");
@@ -372,7 +403,8 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
       const data = await res.json();
 
       if (data.success) {
-        toast.success("Jawaban tugas berhasil diunggah!", { id: toastId });
+        toast.success("Tugas berhasil diunggah!", { id: toastId });
+        handleMarkComplete(`sesi_${sessionNumber}_tugas`);
       } else {
         toast.error(data.message, { id: toastId });
       }
@@ -445,7 +477,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
               {pptUrl ? (
                 <>
                   <FileText className="h-12 w-12 text-[#280f91] opacity-50" />
-                  <Button onClick={() => handleDownload(pptUrl)} variant="outline" className="rounded-xl border-slate-200 font-bold text-slate-700">
+                  <Button onClick={() => { handleMarkComplete(`sesi_${sessionNumber}_inisiasi`); handleDownload(pptUrl); }} variant="outline" className="rounded-xl border-slate-200 font-bold text-slate-700">
                     <Download className="w-4 h-4 mr-2" /> Unduh Materi PPT/PDF
                   </Button>
                 </>
@@ -473,6 +505,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
                     href={videoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => handleMarkComplete(`sesi_${sessionNumber}_pengayaan`)}
                     className="text-[#280f91] underline font-bold hover:text-[#ff6105] transition-colors break-all"
                   >
                     {videoUrl}
@@ -688,16 +721,16 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
           </div>
         </div>
 
-        {/* Evaluasi Khusus (Sesi 7) */}
-        {isEvaluasiSession && (
+        {/* Evaluasi Khusus (Semua Sesi) */}
+        {!angketCompleted && (
           <div className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-2xl border border-rose-200 shadow-sm p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-rose-100 rounded-xl">
                 <HelpCircle className="h-6 w-6 text-rose-600" />
               </div>
               <div>
-                <h2 className="text-lg font-black text-rose-900">Evaluasi Kinerja Tutor</h2>
-                <p className="text-sm text-rose-700">Wajib diisi: Angket penilaian untuk tutor selama semester ini.</p>
+                <h2 className="text-lg font-black text-rose-900">Evaluasi Kinerja Tutor Sesi {sessionNumber}</h2>
+                <p className="text-sm text-rose-700">Wajib diisi: Angket penilaian untuk tutor pada sesi ini sebelum melanjutkan.</p>
               </div>
             </div>
             <Button onClick={() => setShowAngket(true)} className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold w-full sm:w-auto">
@@ -726,12 +759,18 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
             </div>
             <div className="p-6 space-y-6">
               {angketQuestions.map((q, idx) => (
-                <div key={idx} className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
-                  <p className="font-bold text-slate-800 text-sm mb-4">{idx + 1}. {q}</p>
+                <div key={q.id || idx} className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                  <p className="font-bold text-slate-800 text-sm mb-4">{idx + 1}. {q.question}</p>
                   <div className="flex justify-between items-center gap-2">
                     {["Sangat Kurang", "Kurang", "Cukup", "Baik", "Sangat Baik"].map((label, i) => (
                       <label key={i} className="flex flex-col items-center gap-2 cursor-pointer group">
-                        <input type="radio" name={`q_${idx}`} className="w-4 h-4 text-rose-600 accent-rose-600 focus:ring-rose-500" />
+                        <input 
+                          type="radio" 
+                          name={`q_${q.id}`} 
+                          checked={angketAnswers[q.id] === label}
+                          onChange={() => setAngketAnswers(prev => ({ ...prev, [q.id]: label }))}
+                          className="w-4 h-4 text-rose-600 accent-rose-600 focus:ring-rose-500" 
+                        />
                         <span className="text-[10px] sm:text-xs font-bold text-slate-500 group-hover:text-rose-600 text-center leading-tight">
                           {label}
                         </span>
@@ -742,9 +781,35 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
               ))}
               <div className="pt-4 border-t border-slate-100">
                 <Button
-                  onClick={() => {
-                    toast.success("Terima kasih! Angket berhasil dikirimkan.");
-                    setShowAngket(false);
+                  onClick={async () => {
+                    if (Object.keys(angketAnswers).length < angketQuestions.length) {
+                      return toast.error("Harap jawab semua pertanyaan angket.");
+                    }
+                    const toastId = toast.loading("Mengirim angket...");
+                    try {
+                      const responses = Object.keys(angketAnswers).map(qid => ({
+                        evaluationId: Number(qid),
+                        score: Number(angketAnswers[Number(qid)])
+                      }));
+                      const res = await fetch("/api/elearning/session-angket", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          "Authorization": `Bearer ${localStorage.getItem("token")}`
+                        },
+                        body: JSON.stringify({ sessionId, responses })
+                      });
+                      const data = await res.json();
+                      if (data.success) {
+                        toast.success("Terima kasih! Angket berhasil dikirimkan.", { id: toastId });
+                        setAngketCompleted(true);
+                        setShowAngket(false);
+                      } else {
+                        toast.error(data.message || "Gagal mengirim angket", { id: toastId });
+                      }
+                    } catch (err) {
+                      toast.error("Terjadi kesalahan", { id: toastId });
+                    }
                   }}
                   className="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:opacity-90 text-white font-bold h-12 rounded-xl text-base shadow-lg shadow-rose-200"
                 >
@@ -887,6 +952,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId }: MapelSe
                         toast.success(data.message, { id: toastId });
                         localStorage.setItem(`quiz_answers_${sessionId}_${user.id}`, JSON.stringify(answers));
                         setQuizGrade(data.grade);
+                        handleMarkComplete(`sesi_${sessionNumber}_latihan`);
                       } else {
                         toast.error(data.message, { id: toastId });
                       }

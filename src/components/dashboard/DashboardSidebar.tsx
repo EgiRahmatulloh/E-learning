@@ -428,6 +428,7 @@ export default function DashboardSidebar({
                   label: setup.mapel,
                   icon: <BookMarked className="h-4 w-4" />,
                   children: [
+                    { id: `mapel-setup-${setupId}-kehadiran`, label: "Kehadiran" },
                     { id: `mapel-setup-${setupId}-pendahuluan`, label: "Pendahuluan" },
                     ...Array.from({ length: setup.jumlahSesi }, (_, i) => ({
                       id: `mapel-setup-${setupId}-sesi-${i + 1}`,

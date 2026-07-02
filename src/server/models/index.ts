@@ -30,6 +30,8 @@ export {
   elearningSubmissions,
   elearningEvaluationResponses,
   elearningSectionCompletions,
+  tutorAttendances,
+  elearningSessionAngkets,
   rombels,
   rombelStudents,
 } from "../db/schema";
