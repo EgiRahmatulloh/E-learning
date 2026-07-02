@@ -2372,7 +2372,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         return { success: false, message: "Only tutors can mark attendance here" };
       }
 
-      const today = new Date().toLocaleDateString('en-CA');
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
       try {
         await db.insert(tutorAttendances).values({
           tutorId: Number(payload.id),

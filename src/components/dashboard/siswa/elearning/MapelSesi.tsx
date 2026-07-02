@@ -788,9 +788,8 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, setCanNav
                     const toastId = toast.loading("Mengirim angket...");
                     try {
                       const responses = Object.keys(angketAnswers).map(qid => ({
-                        questionId: Number(qid),
-                        question: angketQuestions.find(q => q.id === Number(qid))?.question || "",
-                        answer: angketAnswers[Number(qid)]
+                        evaluationId: Number(qid),
+                        score: Number(angketAnswers[Number(qid)])
                       }));
                       const res = await fetch("/api/elearning/session-angket", {
                         method: "POST",

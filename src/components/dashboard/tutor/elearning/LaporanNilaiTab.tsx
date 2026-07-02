@@ -86,6 +86,7 @@ export default function LaporanNilaiTab({ activeTab, user }: Props) {
       a.href = window.URL.createObjectURL(blob);
       a.download = `nilai_wb_${setupId}.xlsx`; // Will be overridden by Content-Disposition if browser supports it, but fallback is good
       a.click();
+      setTimeout(() => window.URL.revokeObjectURL(a.href), 100);
       toast.success("Berhasil mengunduh laporan nilai (.XLSX)");
     } catch (err: any) {
       toast.error(err.message);
@@ -104,6 +105,7 @@ export default function LaporanNilaiTab({ activeTab, user }: Props) {
       a.href = window.URL.createObjectURL(blob);
       a.download = `kehadiran_wb_${setupId}.xlsx`;
       a.click();
+      setTimeout(() => window.URL.revokeObjectURL(a.href), 100);
       toast.success("Berhasil mengunduh daftar hadir (.XLSX)");
     } catch (err: any) {
       toast.error(err.message);
