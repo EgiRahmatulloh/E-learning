@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -64,8 +64,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
   const [hiddenSubjects, setHiddenSubjects] = useState<Set<string>>(new Set());
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [siswaSetups, setSiswaSetups] = useState<any[]>([]);
-  const [canNavigateNext, setCanNavigateNext] = useState(true);
-
+  const [angketCompletedSessions, setAngketCompletedSessions] = useState<Set<number>>(new Set());
   const [progresses, setProgresses] = useState<Record<number, number>>({});
 
   useEffect(() => {
@@ -160,6 +159,24 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
     }
   }
 
+  // Fetch angket progress for the current subject (which sessions have completed evaluation)
+  const fetchAngketProgress = useCallback(() => {
+    if (!setupId) { setAngketCompletedSessions(new Set()); return; }
+    fetch(`/api/elearning/session-angket/progress?setupId=${setupId}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          const completed = new Set(data.data.filter((d: any) => d.completed).map((d: any) => d.sessionNumber));
+          setAngketCompletedSessions(completed);
+        }
+      })
+      .catch(() => {});
+  }, [setupId]);
+
+  useEffect(() => { fetchAngketProgress(); }, [fetchAngketProgress, subPart]);
+
   const matchedSubject = allSubjects.find((s) => s.setupId === setupId);
 
   const subLabel =
@@ -180,7 +197,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
     if (subPart.startsWith("sesi-")) {
       const sessionNumber = parseInt(subPart.replace("sesi-", ""), 10);
       if (!isNaN(sessionNumber)) {
-        return <MapelSesi subjectName={subjectName} sessionNumber={sessionNumber} user={user} setupId={currentSetupId} setCanNavigateNext={setCanNavigateNext} />;
+        return <MapelSesi subjectName={subjectName} sessionNumber={sessionNumber} user={user} setupId={currentSetupId} />;
       }
     }
     return (
@@ -207,11 +224,23 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
     const prevMenu = currentIndex > 0 ? menus[currentIndex - 1] : null;
     const nextMenu = currentIndex >= 0 && currentIndex < menus.length - 1 ? menus[currentIndex + 1] : null;
 
+    const canAccessSession = (sessionNum: number): boolean => {
+      // Sesi 1 always accessible
+      if (sessionNum <= 1) return true;
+      // Check all previous sessions have completed their angket (evaluasi tutor)
+      for (let i = 1; i < sessionNum; i++) {
+        if (!angketCompletedSessions.has(i)) return false;
+      }
+      return true;
+    };
+
     const handleNavigate = (menuId: string) => {
-      const targetIndex = menus.findIndex((m) => m.id === menuId);
-      if (subPart.startsWith("sesi-") && !canNavigateNext && targetIndex > currentIndex) {
-        toast.error("Silakan isi angket tutor di bagian bawah halaman sebelum melanjutkan ke sesi berikutnya.");
-        return;
+      if (menuId.startsWith("sesi-")) {
+        const targetSession = parseInt(menuId.replace("sesi-", ""), 10);
+        if (!canAccessSession(targetSession)) {
+          toast.error(`Selesaikan sesi ${targetSession - 1} terlebih dahulu sebelum melanjutkan ke sesi ${targetSession}.`);
+          return;
+        }
       }
       if (setActiveTab && matchedSubject) {
         setActiveTab(`mapel-setup-${matchedSubject.setupId}-${menuId}`);
@@ -274,9 +303,12 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
           {nextMenu ? (
             <Button
               onClick={() => {
-                if (subPart.startsWith("sesi-") && !canNavigateNext) {
-                  toast.error("Silakan isi angket tutor di bagian bawah halaman sebelum melanjutkan ke sesi berikutnya.");
-                  return;
+                if (nextMenu.id.startsWith("sesi-")) {
+                  const targetSession = parseInt(nextMenu.id.replace("sesi-", ""), 10);
+                  if (!canAccessSession(targetSession)) {
+                    toast.error(`Selesaikan sesi ${targetSession - 1} terlebih dahulu sebelum melanjutkan ke sesi ${targetSession}.`);
+                    return;
+                  }
                 }
                 handleNavigate(nextMenu.id);
               }}

@@ -2527,6 +2527,66 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
   })
 
   // ---------------------------------------------------------
+  // SESSION ANGKET PROGRESS (for navigation gating)
+  // ---------------------------------------------------------
+  .get("/session-angket/progress", async (context: any) => {
+    const { headers, jwt, query, set } = context;
+    const authError = await verifyUser(headers, jwt, set);
+    if (authError) return authError;
+
+    try {
+      const setupId = Number(query.setupId);
+      const authHeader = headers["authorization"];
+      const token = authHeader.split(" ")[1];
+      const payload = await jwt.verify(token);
+
+      if (payload.role !== "siswa") {
+        return { success: true, data: [] };
+      }
+
+      const studentId = Number(payload.id);
+
+      const setup = await db.select().from(elearningSetups).where(eq(elearningSetups.id, setupId)).get();
+      if (!setup) { set.status = 404; return { success: false, message: "Setup not found" }; }
+
+      const program = deriveProgram(setup.kelas);
+
+      const course = await db.select().from(elearningCourses)
+        .where(and(
+          eq(elearningCourses.namaMapel, setup.mapel),
+          eq(elearningCourses.program, program)
+        )).get();
+      if (!course) return { success: true, data: [] };
+
+      const sessions = await db.select().from(elearningSessions)
+        .where(eq(elearningSessions.courseId, course.id)).all();
+
+      const sessionIds = sessions.map(s => s.id);
+
+      const completedAngkets = sessionIds.length > 0 ? await db
+        .select()
+        .from(elearningSessionAngkets)
+        .where(and(
+          inArray(elearningSessionAngkets.sessionId, sessionIds),
+          eq(elearningSessionAngkets.studentId, studentId)
+        ))
+        .all() : [];
+
+      const completedSessionIds = new Set(completedAngkets.map(a => a.sessionId));
+
+      const data = sessions.map(s => ({
+        sessionNumber: s.sessionNumber,
+        completed: completedSessionIds.has(s.id)
+      }));
+
+      return { success: true, data };
+    } catch (error: any) {
+      set.status = 500;
+      return { success: false, message: error.message };
+    }
+  })
+
+  // ---------------------------------------------------------
   // SESSION ANGKET (Tutor Evaluation per Session)
   // ---------------------------------------------------------
   .get("/session-angket", async (context: any) => {
