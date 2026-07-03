@@ -2019,6 +2019,13 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         const waliKelas = rombelList.length > 0 && rombelList[0].waliKelasId
           ? (await db.select().from(tutors).where(eq(tutors.id, rombelList[0].waliKelasId)).get())?.nama || "-" : "-";
 
+        // Label kelas untuk template (declared before usage)
+        const kelasLabel = filterKelas
+          ? filterKelas.toUpperCase()
+          : filterLevel
+            ? `KELAS ${filterLevel.toUpperCase()}`
+            : "-";
+
         const siswaData = studentsList.map((student, idx) => {
           const studentAtt = allAttendances.filter(a => a.studentId === student.id);
           const { dayData, rekap } = buildAttendanceGrid(
@@ -2036,13 +2043,6 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           )
         ).get();
         const namaKepalaPkbm = kepalaPkbm?.nama || "-";
-
-        // Label kelas untuk template
-        const kelasLabel = filterKelas
-          ? filterKelas.toUpperCase()
-          : filterLevel
-            ? `KELAS ${filterLevel.toUpperCase()}`
-            : "-";
 
         const buffer = fillTemplate("DAFTAR HADIR WARGA BELAJAR REKAP.xlsx", {
           program, semester: (filteredSetups[0].semester || "Ganjil").toUpperCase(),
@@ -2417,7 +2417,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           nipPemilik: "-", nipKepalaPkbm: "-", nipWaliKelas: "-",
           namaKepalaPkbm: namaKepalaPkbm.toUpperCase(), namaPemilik: "-",
           siswa: siswaData.map(s => ({ ...s, namaSiswa: s.namaSiswa.toUpperCase(), jenisKelamin: s.jenisKelamin.toUpperCase(), rombel: s.rombel.toUpperCase() })),
-        });
+        }, 18);
 
         set.headers = {
           "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
