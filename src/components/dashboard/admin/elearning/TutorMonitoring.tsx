@@ -14,6 +14,9 @@ interface TutorMonitoringData {
 
 export default function TutorMonitoring() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("Semua");
+  const [selectedKelas, setSelectedKelas] = useState("Semua");
+  const [kelasList, setKelasList] = useState<string[]>([]);
   const [tutors, setTutors] = useState<TutorMonitoringData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,12 +27,23 @@ export default function TutorMonitoring() {
   useEffect(() => {
     const fetchTutors = async () => {
       try {
-        const res = await fetch("/api/elearning/monitoring/tutors", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        const data = await res.json();
-        if (data.success) {
-          setTutors(data.data);
+        const token = localStorage.getItem("token");
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const [monitoringRes, setupsRes] = await Promise.all([
+          fetch("/api/elearning/monitoring/tutors", { headers }),
+          fetch("/api/elearning/setups", { headers }),
+        ]);
+
+        const monitoringData = await monitoringRes.json();
+        if (monitoringData.success) {
+          setTutors(monitoringData.data);
+        }
+
+        const setupsData = await setupsRes.json();
+        if (setupsData.success) {
+          const uniqueKelas = [...new Set(setupsData.data.map((s: any) => s.kelas))] as string[];
+          setKelasList(uniqueKelas.sort());
         }
       } catch (err) {
         console.error("Failed to load tutors for monitoring", err);
@@ -40,6 +54,30 @@ export default function TutorMonitoring() {
     fetchTutors();
   }, []);
 
+  // Derive level dari nama kelas (misal "XA" → "X", "XIIA" → "XII")
+  const getLevel = (kelas: string): string => {
+    return kelas.replace(/[A-Z]$/, "");
+  };
+
+  // Ambil daftar level unik dari kelasList
+  const levelList = [...new Set(kelasList.map(getLevel))].sort((a, b) => {
+    const romanToNum = (r: string) => {
+      const map: Record<string, number> = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10, XI: 11, XII: 12 };
+      return map[r] || 99;
+    };
+    return romanToNum(a) - romanToNum(b);
+  });
+
+  // Ambil sub-kelas berdasarkan level yang dipilih
+  const subKelasList = selectedLevel !== "Semua"
+    ? kelasList.filter((k) => getLevel(k) === selectedLevel)
+    : [];
+
+  // Reset sub-kelas saat level berubah
+  useEffect(() => {
+    setSelectedKelas("Semua");
+  }, [selectedLevel]);
+
   const filtered = tutors.filter(
     (t) =>
       t.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -47,7 +85,19 @@ export default function TutorMonitoring() {
   );
 
   const handleExportLaporan = () => {
-    downloadFromTemplate("/api/elearning/laporan/tutor-attendance", "laporan_kehadiran_tutor.xlsx");
+    const today = new Date().toISOString().split("T")[0];
+    const filterLabel = selectedKelas !== "Semua"
+      ? selectedKelas.replace(/\s+/g, "_")
+      : selectedLevel !== "Semua"
+        ? `KELAS_${selectedLevel}`
+        : "SEMUA_KELAS";
+    let params = "";
+    if (selectedKelas !== "Semua") {
+      params = `?kelas=${encodeURIComponent(selectedKelas)}`;
+    } else if (selectedLevel !== "Semua") {
+      params = `?level=${encodeURIComponent(selectedLevel)}`;
+    }
+    downloadFromTemplate(`/api/elearning/laporan/tutor-attendance${params}`, `laporan_kehadiran_tutor_${filterLabel}_${today}.xlsx`);
   };
 
   const paginatedTutors = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -62,7 +112,7 @@ export default function TutorMonitoring() {
           </h3>
           <p className="text-sm text-slate-500 font-medium">Lacak performa dan aktivitas mengajar tutor.</p>
         </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap">
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
@@ -71,11 +121,33 @@ export default function TutorMonitoring() {
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                setCurrentPage(1); // Reset page on search
+                setCurrentPage(1);
               }}
               className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-[#280f91] shadow-xs"
             />
           </div>
+          <select
+            value={selectedLevel}
+            onChange={(e) => setSelectedLevel(e.target.value)}
+            className="h-9 px-3 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-700 focus:outline-none focus:border-[#280f91] shadow-xs cursor-pointer"
+          >
+            <option value="Semua">Semua Level</option>
+            {levelList.map((l) => (
+              <option key={l} value={l}>Kelas {l}</option>
+            ))}
+          </select>
+          {selectedLevel !== "Semua" && subKelasList.length > 1 && (
+            <select
+              value={selectedKelas}
+              onChange={(e) => setSelectedKelas(e.target.value)}
+              className="h-9 px-3 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-700 focus:outline-none focus:border-[#280f91] shadow-xs cursor-pointer"
+            >
+              <option value="Semua">Semua {selectedLevel}</option>
+              {subKelasList.map((k) => (
+                <option key={k} value={k}>{k}</option>
+              ))}
+            </select>
+          )}
           <Button onClick={handleExportLaporan} className="bg-[#ff6105] hover:bg-[#e55800] text-white font-bold text-xs h-9 px-4 rounded-xl shadow-sm cursor-pointer shrink-0">
             <FileSpreadsheet className="w-4 h-4 mr-1.5" /> Laporan (.XLSX)
           </Button>

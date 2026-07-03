@@ -1732,14 +1732,30 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
   .get(
     "/laporan/tutor-attendance",
     async (context: any) => {
-      const { headers, jwt, set } = context;
+      const { headers, jwt, query, set } = context;
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
 
       try {
-        const tutorsList = await db.select().from(tutors).all();
+        const filterKelas = query.kelas && query.kelas !== "Semua" ? query.kelas : null;
+        const filterLevel = query.level && query.level !== "Semua" ? query.level : null;
+
         const allSetups = await db.select().from(elearningSetups).all();
+        let filteredSetups = allSetups;
+        if (filterKelas) {
+          filteredSetups = allSetups.filter(s => s.kelas === filterKelas);
+        } else if (filterLevel) {
+          filteredSetups = allSetups.filter(s => s.kelas.startsWith(filterLevel));
+        }
+
+        // Ambil tutor yang punya setup di kelas tersebut
+        const tutorIds = [...new Set(filteredSetups.map(s => s.tutorId))];
+        const tutorsList = (filterKelas || filterLevel)
+          ? (await db.select().from(tutors).all()).filter(t => tutorIds.includes(t.id))
+          : await db.select().from(tutors).all();
+
         const allPosts = await db.select().from(elearningForumPosts).where(eq(elearningForumPosts.authorRole, "tutor")).all();
+        const allTutorAttendances = await db.select().from(tutorAttendances).all();
 
         const now = new Date();
         const currentMonth = now.getMonth();
@@ -1747,23 +1763,31 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
         const tutorsData = tutorsList.map((tutor, idx) => {
-          const tutorSetups = allSetups.filter(s => s.tutorId === tutor.id);
+          const tutorSetups = filteredSetups.filter(s => s.tutorId === tutor.id);
           const mapel = tutorSetups.length > 0 ? tutorSetups.map(s => s.mapel).join(", ") : "-";
           const kelas = tutorSetups.length > 0 ? tutorSetups.map(s => s.kelas).join(", ") : "-";
           const tutorPosts = allPosts.filter(p => p.authorId === tutor.id && p.authorRole === "tutor");
+          const tutorAtt = allTutorAttendances.filter(a => a.tutorId === tutor.id);
+
+          // Gabungkan aktivitas dari forum posts dan tutor_attendances
+          const allActivities = [...tutorPosts, ...tutorAtt];
 
           const { dayData, rekap } = buildAttendanceGrid(
-            tutorPosts, p => p.createdAt, currentMonth, currentYear, daysInMonth
+            allActivities, item => item.createdAt || item.date, currentMonth, currentYear, daysInMonth
           );
           return { no: idx + 1, namaTutor: tutor.nama, mapel, kelas, ...dayData, rekap };
         });
 
-        // Derive semester from the most common semester among all setups
+        // Derive program, semester from filtered setups
+        const programCounts = new Map<string, number>();
         const semesterCounts = new Map<string, number>();
-        for (const s of allSetups) {
+        for (const s of filteredSetups) {
+          const prog = deriveProgram(s.kelas);
+          programCounts.set(prog, (programCounts.get(prog) || 0) + 1);
           const sem = s.semester || "Ganjil";
           semesterCounts.set(sem, (semesterCounts.get(sem) || 0) + 1);
         }
+        const program = [...programCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || "Paket C";
         const semester = [...semesterCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || "Ganjil";
 
         const kepalaPkbm = await db.select().from(managers).where(
@@ -1774,17 +1798,54 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         ).get();
         const namaKepalaPkbm = kepalaPkbm?.nama || "-";
 
+        // Ambil wali kelas dari rombel
+        let namaWaliKelas = "-";
+        let waliKelasLabel = "-";
+        if (filterKelas) {
+          // Filter spesifik kelas (misal XA)
+          waliKelasLabel = filterKelas;
+          const rombel = await db.select().from(rombels).where(eq(rombels.nama, filterKelas)).get();
+          if (rombel?.waliKelasId) {
+            const wali = await db.select().from(tutors).where(eq(tutors.id, rombel.waliKelasId)).get();
+            namaWaliKelas = wali?.nama || "-";
+          }
+        } else if (filterLevel) {
+          // Filter level (misal X) → ambil wali kelas dari rombel pertama di level tsb
+          waliKelasLabel = filterLevel;
+          const allRombels = await db.select().from(rombels).all();
+          const levelRombels = allRombels.filter(r => r.nama.startsWith(filterLevel)).sort((a, b) => a.nama.localeCompare(b.nama));
+          if (levelRombels.length > 0) {
+            const firstRombel = levelRombels[0];
+            if (firstRombel.waliKelasId) {
+              const wali = await db.select().from(tutors).where(eq(tutors.id, firstRombel.waliKelasId)).get();
+              namaWaliKelas = wali?.nama || "-";
+            }
+          }
+        }
+
+        // Label kelas untuk template
+        const kelasLabel = filterKelas
+          ? filterKelas.toUpperCase()
+          : filterLevel
+            ? `KELAS ${filterLevel.toUpperCase()}`
+            : "SEMUA KELAS";
+
         const buffer = fillTemplate("DAFTAR HADIR TUTOR.xlsx", {
-          program: "PAKET A/B/C", semester,
+          program: program.toUpperCase(), semester: semester.toUpperCase(),
           tahunAjaran: currentYear + "/" + (currentYear + 1),
-          kelas: "Semua Kelas",
-          bulan: now.toLocaleDateString("id-ID", { month: "long" }),
-          waliKelas: "-", namaWaliKelas: "-",
-          tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
-          kecamatan: "Jatinagara", namaPkbm: "Menuju Makmur",
-          nipPenilik: "-", nipKepalaPkbm: "-", nipWaliKelas: "-",
-          namaKepalaPkbm, namaPemilik: "-",
-          tutors: tutorsData,
+          kelas: kelasLabel,
+          bulan: now.toLocaleDateString("id-ID", { month: "long" }).toUpperCase(),
+          waliKelas: waliKelasLabel.toUpperCase(), namaWaliKelas: namaWaliKelas.toUpperCase(),
+          tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }).toUpperCase(),
+          kecamatan: "JATINAGARA", namaPkbm: "MENUJU MAKMUR",
+          nipPemilik: "-", nipKepalaPkbm: "-", nipWaliKelas: "-",
+          namaKepalaPkbm: namaKepalaPkbm.toUpperCase(), namaPemilik: "-",
+          tutors: tutorsData.map(t => ({
+            ...t,
+            namaTutor: t.namaTutor.toUpperCase(),
+            mapel: t.mapel.toUpperCase(),
+            kelas: t.kelas.toUpperCase(),
+          })),
         });
 
         set.headers = {
@@ -1855,14 +1916,14 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         });
 
         const buffer = fillTemplate("DAFTAR HADIR WARGA BELAJAR PER MAPEL.xlsx", {
-          program: program.toUpperCase(), semester: setup.semester || "Ganjil",
+          program: program.toUpperCase(), semester: (setup.semester || "Ganjil").toUpperCase(),
           tahunAjaran: currentYear + "/" + (currentYear + 1),
-          mapel: setup.mapel, kelas: setup.kelas,
-          namaTutor: tutor?.nama || "-",
-          bulan: now.toLocaleDateString("id-ID", { month: "long", year: "numeric" }),
-          tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
+          mapel: setup.mapel.toUpperCase(), kelas: setup.kelas.toUpperCase(),
+          namaTutor: (tutor?.nama || "-").toUpperCase(),
+          bulan: now.toLocaleDateString("id-ID", { month: "long", year: "numeric" }).toUpperCase(),
+          tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }).toUpperCase(),
           nipTutor: "-",
-          siswa: siswaData,
+          siswa: siswaData.map(s => ({ ...s, namaSiswa: s.namaSiswa.toUpperCase(), jenisKelamin: s.jenisKelamin.toUpperCase(), rombel: s.rombel.toUpperCase() })),
         });
 
         set.headers = {
@@ -1886,10 +1947,21 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
       if (authError) return authError;
 
       try {
-        const kelas = query.kelas;
-        if (!kelas) { set.status = 400; return { success: false, message: "kelas diperlukan" }; }
+        const filterKelas = query.kelas && query.kelas !== "Semua" ? query.kelas : null;
+        const filterLevel = query.level && query.level !== "Semua" ? query.level : null;
 
-        const rombelList = await db.select().from(rombels).where(eq(rombels.nama, kelas)).all();
+        // Cari rombel berdasarkan filter
+        const allRombels = await db.select().from(rombels).all();
+        let rombelList: typeof allRombels;
+        if (filterKelas) {
+          rombelList = allRombels.filter(r => r.nama === filterKelas);
+        } else if (filterLevel) {
+          rombelList = allRombels.filter(r => r.nama.startsWith(filterLevel));
+        } else {
+          set.status = 400;
+          return { success: false, message: "kelas atau level diperlukan" };
+        }
+
         const rombelIds = rombelList.map(r => r.id);
         const studentsListRaw = rombelIds.length > 0 ? await db
           .select({ id: students.id, nama: students.nama, nis: students.nis, nisn: students.nisn, jenisKelamin: students.jenisKelamin })
@@ -1897,13 +1969,18 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           .where(inArray(rombelStudents.rombelId, rombelIds)).all() : [];
         const studentsList = studentsListRaw.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
 
-        const setups = await db.select().from(elearningSetups).where(eq(elearningSetups.kelas, kelas)).all();
-        if (setups.length === 0) {
+        const setups = filterKelas
+          ? await db.select().from(elearningSetups).where(eq(elearningSetups.kelas, filterKelas)).all()
+          : await db.select().from(elearningSetups).all();
+        const filteredSetups = filterLevel && !filterKelas
+          ? setups.filter(s => s.kelas.startsWith(filterLevel))
+          : setups;
+        if (filteredSetups.length === 0) {
           set.status = 404;
-          return { success: false, message: "Tidak ditemukan setup elearning untuk kelas " + kelas };
+          return { success: false, message: "Tidak ditemukan setup elearning untuk kelas tersebut" };
         }
         // Batch course lookup using Drizzle or()
-        const courseConditions = setups.map(s => and(
+        const courseConditions = filteredSetups.map(s => and(
           eq(elearningCourses.namaMapel, s.mapel),
           eq(elearningCourses.program, deriveProgram(s.kelas))
         ));
@@ -1913,7 +1990,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
             ).all()
           : [];
         const courseIds: number[] = [];
-        for (const s of setups) {
+        for (const s of filteredSetups) {
           const prog = deriveProgram(s.kelas);
           const c = allCourses.find(c => c.namaMapel === s.mapel && c.program === prog);
           if (c) courseIds.push(c.id);
@@ -1947,10 +2024,10 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           const { dayData, rekap } = buildAttendanceGrid(
             studentAtt, a => a.attendedAt || a.createdAt, currentMonth, currentYear, daysInMonth, sessionDates
           );
-          return { no: idx + 1, nis: student.nis || "", nisn: student.nisn || "", namaSiswa: student.nama, jenisKelamin: student.jenisKelamin || "", rombel: kelas, ...dayData, rekap };
+          return { no: idx + 1, nis: student.nis || "", nisn: student.nisn || "", namaSiswa: student.nama, jenisKelamin: student.jenisKelamin || "", rombel: kelasLabel, ...dayData, rekap };
         });
 
-        const program = deriveProgram(setups[0].kelas).toUpperCase();
+        const program = deriveProgram(filteredSetups[0].kelas).toUpperCase();
 
         const kepalaPkbm = await db.select().from(managers).where(
           or(
@@ -1960,16 +2037,23 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         ).get();
         const namaKepalaPkbm = kepalaPkbm?.nama || "-";
 
+        // Label kelas untuk template
+        const kelasLabel = filterKelas
+          ? filterKelas.toUpperCase()
+          : filterLevel
+            ? `KELAS ${filterLevel.toUpperCase()}`
+            : "-";
+
         const buffer = fillTemplate("DAFTAR HADIR WARGA BELAJAR REKAP.xlsx", {
-          program, semester: setups[0].semester || "Ganjil",
+          program, semester: (filteredSetups[0].semester || "Ganjil").toUpperCase(),
           tahunAjaran: currentYear + "/" + (currentYear + 1),
-          kelas, waliKelas: waliKelas, namaWaliKelas: waliKelas,
-          bulan: now.toLocaleDateString("id-ID", { month: "long" }),
-          tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
-          kecamatan: "Jatinagara", namaPkbm: "Menuju Makmur",
-          nipPenilik: "-", nipKepalaPkbm: "-", nipWaliKelas: "-",
-          namaKepalaPkbm, namaPemilik: "-",
-          siswa: siswaData,
+          kelas: kelasLabel, waliKelas: waliKelas.toUpperCase(), namaWaliKelas: waliKelas.toUpperCase(),
+          bulan: now.toLocaleDateString("id-ID", { month: "long" }).toUpperCase(),
+          tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }).toUpperCase(),
+          kecamatan: "JATINAGARA", namaPkbm: "MENUJU MAKMUR",
+          nipPemilik: "-", nipKepalaPkbm: "-", nipWaliKelas: "-",
+          namaKepalaPkbm: namaKepalaPkbm.toUpperCase(), namaPemilik: "-",
+          siswa: siswaData.map(s => ({ ...s, namaSiswa: s.namaSiswa.toUpperCase(), jenisKelamin: s.jenisKelamin.toUpperCase(), rombel: s.rombel.toUpperCase() })),
         });
 
         set.headers = {
@@ -2122,13 +2206,13 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         });
 
         const buffer = fillTemplate("NILAI WARGA BELAJAR PER MAPEL.xlsx", {
-          program: program.toUpperCase(), semester: setup.semester || "Ganjil",
+          program: program.toUpperCase(), semester: (setup.semester || "Ganjil").toUpperCase(),
           tahunAjaran: currentYear + "/" + (currentYear + 1),
-          mapel: setup.mapel, kelas: setup.kelas,
-          namaTutor: tutor?.nama || "-",
-          tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
+          mapel: setup.mapel.toUpperCase(), kelas: setup.kelas.toUpperCase(),
+          namaTutor: (tutor?.nama || "-").toUpperCase(),
+          tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }).toUpperCase(),
           nipTutor: "-",
-          siswa: siswaData,
+          siswa: siswaData.map(s => ({ ...s, namaSiswa: s.namaSiswa.toUpperCase(), jenisKelamin: s.jenisKelamin.toUpperCase(), rombel: s.rombel.toUpperCase() })),
         });
 
         set.headers = {
@@ -2152,24 +2236,33 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
       if (authError) return authError;
 
       try {
+        const filterKelas = query.kelas && query.kelas !== "Semua" ? query.kelas : null;
+        const filterLevel = query.level && query.level !== "Semua" ? query.level : null;
+
         let setupsFilter: any = undefined;
-        let kelasName = "Semua Kelas";
-        if (query.kelas) {
-          setupsFilter = eq(elearningSetups.kelas, query.kelas);
-          kelasName = query.kelas;
+        let kelasName = "SEMUA KELAS";
+        if (filterKelas) {
+          setupsFilter = eq(elearningSetups.kelas, filterKelas);
+          kelasName = filterKelas.toUpperCase();
+        } else if (filterLevel) {
+          // Level filter - will filter after query
+          kelasName = `KELAS ${filterLevel.toUpperCase()}`;
         }
 
         const setups = await db.select().from(elearningSetups).where(setupsFilter).all();
-        if (setups.length === 0) {
+        const filteredSetups = filterLevel && !filterKelas
+          ? setups.filter(s => s.kelas.startsWith(filterLevel))
+          : setups;
+        if (filteredSetups.length === 0) {
           set.status = 404;
           return { success: false, message: "Tidak ditemukan setup elearning" };
         }
 
         // Get unique courses from setups to know how many mapels
-        const mapelNames = [...new Set(setups.map(s => s.mapel))].sort();
+        const mapelNames = [...new Set(filteredSetups.map(s => s.mapel))].sort();
 
         // Get all classes
-        const allKelas = [...new Set(setups.map(s => s.kelas))];
+        const allKelas = [...new Set(filteredSetups.map(s => s.kelas))];
         const rombelList = await db.select().from(rombels).where(inArray(rombels.nama, allKelas)).all();
         const rombelIds = rombelList.map(r => r.id);
         const studentsListRaw = rombelIds.length > 0 ? await db
@@ -2181,7 +2274,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         const studentsList = studentsListRaw.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
 
         // Pre-fetch courses, sessions, attendances, forum posts, submissions
-        const courseConditions = setups.map(s => and(
+        const courseConditions = filteredSetups.map(s => and(
           eq(elearningCourses.namaMapel, s.mapel),
           eq(elearningCourses.program, deriveProgram(s.kelas))
         ));
@@ -2204,7 +2297,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
 
         // Optimizations: Map-based caching
         const setupsMap = new Map();
-        for (const s of setups) setupsMap.set(`${s.kelas}-${s.mapel}`, s);
+        for (const s of filteredSetups) setupsMap.set(`${s.kelas}-${s.mapel}`, s);
 
         const courseMap = new Map();
         for (const c of allCourses) courseMap.set(`${c.namaMapel}-${c.program}`, c);
@@ -2292,10 +2385,19 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           return sData;
         });
 
-        const program = setups.length > 0 ? deriveProgram(setups[0].kelas).toUpperCase() : "PAKET A/B/C";
-        const semester = setups.length > 0 ? (setups[0].semester || "Ganjil") : "Ganjil";
-        const waliKelas = kelasName === "Semua Kelas" ? "-" : (rombelList.length > 0 && rombelList[0].waliKelasId
-          ? (await db.select().from(tutors).where(eq(tutors.id, rombelList[0].waliKelasId)).get())?.nama || "-" : "-");
+        const program = filteredSetups.length > 0 ? deriveProgram(filteredSetups[0].kelas).toUpperCase() : "PAKET A/B/C";
+        const semester = filteredSetups.length > 0 ? (filteredSetups[0].semester || "Ganjil").toUpperCase() : "GANJIL";
+
+        // Ambil wali kelas dari rombel pertama di filter
+        let waliKelasNama = "-";
+        const rombelForWali = filterKelas
+          ? rombelList.filter(r => r.nama === filterKelas)
+          : filterLevel
+            ? rombelList.filter(r => r.nama.startsWith(filterLevel)).sort((a, b) => a.nama.localeCompare(b.nama))
+            : [];
+        if (rombelForWali.length > 0 && rombelForWali[0].waliKelasId) {
+          waliKelasNama = (await db.select().from(tutors).where(eq(tutors.id, rombelForWali[0].waliKelasId)).get())?.nama || "-";
+        }
 
         const kepalaPkbm = await db.select().from(managers).where(
           or(
@@ -2309,12 +2411,12 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           program, semester,
           tahunAjaran: currentYear + "/" + (currentYear + 1),
           kelas: kelasName, kelas2: kelasName,
-          waliKelas: waliKelas, namaWaliKelas: waliKelas,
-          tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
-          kecamatan: "Jatinagara", namaPkbm: "Menuju Makmur",
-          nipPenilik: "-", nipKepalaPkbm: "-", nipWaliKelas: "-",
-          namaKepalaPkbm, namaPemilik: "-",
-          siswa: siswaData,
+          waliKelas: waliKelasNama.toUpperCase(), namaWaliKelas: waliKelasNama.toUpperCase(),
+          tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }).toUpperCase(),
+          kecamatan: "JATINAGARA", namaPkbm: "MENUJU MAKMUR",
+          nipPemilik: "-", nipKepalaPkbm: "-", nipWaliKelas: "-",
+          namaKepalaPkbm: namaKepalaPkbm.toUpperCase(), namaPemilik: "-",
+          siswa: siswaData.map(s => ({ ...s, namaSiswa: s.namaSiswa.toUpperCase(), jenisKelamin: s.jenisKelamin.toUpperCase(), rombel: s.rombel.toUpperCase() })),
         });
 
         set.headers = {
