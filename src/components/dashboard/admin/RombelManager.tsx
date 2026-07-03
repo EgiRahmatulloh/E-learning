@@ -66,7 +66,6 @@ export default function RombelManager() {
   const [rombels, setRombels] = useState<Rombel[]>([]);
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [search, setSearch] = useState("");
@@ -91,6 +90,14 @@ export default function RombelManager() {
   const [selectedStudentIds, setSelectedStudentIds] = useState<number[]>([]);
   const [studentSearch, setStudentSearch] = useState("");
   const [addStudentsLoading, setAddStudentsLoading] = useState(false);
+
+  // Unassigned students modal
+  const [unassignedOpen, setUnassignedOpen] = useState(false);
+  const [unassignedStudents, setUnassignedStudents] = useState<Student[]>([]);
+  const [unassignedSearch, setUnassignedSearch] = useState("");
+  const [assignTargetRombel, setAssignTargetRombel] = useState<string>("");
+  const [assignSelectedIds, setAssignSelectedIds] = useState<number[]>([]);
+  const [assigning, setAssigning] = useState(false);
 
   // ==========================================
   // Fetch Data
@@ -156,45 +163,23 @@ export default function RombelManager() {
   };
 
   useEffect(() => {
-    fetchRombels();
-    fetchTutors();
-    fetchAllStudents();
-  }, []);
-
-  // ==========================================
-  // Sync
-  // ==========================================
-  const handleSync = async () => {
-    if (
-      !(await confirm({
-        title: "Sinkron Rombel",
-        message:
-          "Sistem akan membuat rombel otomatis berdasarkan kolom kelas pada data siswa. Lanjutkan?",
-        variant: "info",
-      }))
-    )
-      return;
-
-    setSyncing(true);
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("/api/rombels/sync", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(data.message);
-        fetchRombels();
-      } else {
-        toast.error(data.message || "Gagal sinkron");
+    // Auto-sync rombels saat halaman dimuat
+    const init = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        await fetch("/api/rombels/sync", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch {
+        // silent - sync gagal tidak masalah, rombels tetap di-fetch
       }
-    } catch {
-      toast.error("Terjadi kesalahan saat sinkron");
-    } finally {
-      setSyncing(false);
-    }
-  };
+      fetchRombels();
+      fetchTutors();
+      fetchAllStudents();
+    };
+    init();
+  }, []);
 
   // ==========================================
   // CRUD Rombel
@@ -300,10 +285,19 @@ export default function RombelManager() {
     setDetailStudents([]);
   };
 
+  // Derive level dari nama rombel (XA → X, XIIA → XII)
+  const getLevel = (nama: string): string => nama.replace(/[A-Z]$/, "");
+
   const openAddStudents = () => {
     if (!selectedRombel) return;
     const assignedIds = new Set(detailStudents.map((s) => s.id));
-    const available = allStudents.filter((s) => !assignedIds.has(s.id));
+    const rombelLevel = getLevel(selectedRombel.nama);
+    // Filter siswa: belum di-assign DAN level kelas sesuai dengan level rombel
+    const available = allStudents.filter((s) => {
+      if (assignedIds.has(s.id)) return false;
+      // s.kelas bisa "X", "XI", "XII" (Roman numeral level)
+      return s.kelas === rombelLevel;
+    });
     setAvailableStudents(available);
     setSelectedStudentIds([]);
     setStudentSearch("");
@@ -403,6 +397,87 @@ export default function RombelManager() {
       s.nisn.includes(studentSearch) ||
       s.kelas.toLowerCase().includes(studentSearch.toLowerCase())
   );
+
+  // ==========================================
+  // Unassigned Students (kelas tanpa suffix rombel)
+  // ==========================================
+  const isLevelOnly = (kelas: string): boolean => {
+    // "X", "XI", "XII", "VII", "VIII", "IX", "III", "IV", "V", "VI" → true
+    // "XA", "XB", "XIIA", "VIIA" → false
+    return /^[IVX]+$/.test(kelas);
+  };
+
+  const openUnassigned = () => {
+    const unassigned = allStudents.filter((s) => isLevelOnly(s.kelas));
+    setUnassignedStudents(unassigned);
+    setAssignSelectedIds([]);
+    setAssignTargetRombel("");
+    setUnassignedSearch("");
+    setUnassignedOpen(true);
+  };
+
+  // Ambil level dari nama rombel (XA → X, XIIA → XII)
+  const getLevelFromRombel = (nama: string): string => nama.replace(/[A-Z]$/, "");
+
+  // Filter siswa unassigned berdasarkan level rombel yang dipilih
+  const filteredUnassigned = unassignedStudents.filter((s) => {
+    // Jika rombel target dipilih, filter hanya siswa dengan level yang cocok
+    if (assignTargetRombel) {
+      const targetLevel = getLevelFromRombel(assignTargetRombel);
+      if (s.kelas !== targetLevel) return false;
+    }
+    // Filter search
+    if (unassignedSearch) {
+      const q = unassignedSearch.toLowerCase();
+      return s.nama.toLowerCase().includes(q) || s.nisn.includes(q) || s.kelas.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  const toggleAssignStudent = (id: number) => {
+    setAssignSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleAssignToRombel = async () => {
+    if (!assignTargetRombel || assignSelectedIds.length === 0) {
+      toast.warning("Pilih rombel dan siswa terlebih dahulu");
+      return;
+    }
+    const target = rombels.find((r) => r.nama === assignTargetRombel);
+    if (!target) return;
+
+    setAssigning(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`/api/rombels/${target.id}/students`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ studentIds: assignSelectedIds }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`${data.added || assignSelectedIds.length} siswa berhasil di-assign ke ${assignTargetRombel}`);
+        // Refresh data
+        const updatedUnassigned = unassignedStudents.filter((s) => !assignSelectedIds.includes(s.id));
+        setUnassignedStudents(updatedUnassigned);
+        setAssignSelectedIds([]);
+        setAssignTargetRombel("");
+        fetchRombels();
+        fetchAllStudents();
+      } else {
+        toast.error(data.message || "Gagal assign siswa");
+      }
+    } catch {
+      toast.error("Terjadi kesalahan");
+    } finally {
+      setAssigning(false);
+    }
+  };
 
   // ==========================================
   // RENDER
@@ -612,16 +687,16 @@ export default function RombelManager() {
 
                 <div className="flex gap-2 col-span-1 sm:col-span-3 items-center flex-wrap">
                   <Button
-                    onClick={handleSync}
-                    disabled={syncing}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
+                    onClick={openUnassigned}
+                    className="bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
                   >
-                    {syncing ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="h-4 w-4" />
-                    )}
-                    {syncing ? "MENYINKRON..." : "SINKRON DARI DATA SISWA"}
+                    <UserPlus className="h-4 w-4" /> SISWA BELUM KELAS
+                    {(() => {
+                      const count = allStudents.filter((s) => isLevelOnly(s.kelas)).length;
+                      return count > 0 ? (
+                        <span className="ml-1 bg-white text-amber-600 rounded-full px-1.5 py-0.5 text-[10px] font-black">{count}</span>
+                      ) : null;
+                    })()}
                   </Button>
                   <Button
                     onClick={openAddForm}
@@ -1026,6 +1101,139 @@ export default function RombelManager() {
                   TAMBAH
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Unassigned Students Modal ── */}
+      {unassignedOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl mx-4 max-h-[85vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-slate-100">
+              <div>
+                <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                  <UserPlus className="h-5 w-5 text-amber-500" />
+                  Siswa Belum Dapat Kelas
+                </h3>
+                <p className="text-xs text-slate-400 font-semibold mt-1">
+                  Siswa yang kelasnya masih berupa level (X, XI, XII) dan belum di-assign ke rombel spesifik
+                </p>
+              </div>
+              <button
+                onClick={() => setUnassignedOpen(false)}
+                className="p-2 rounded-xl hover:bg-slate-100 transition-colors"
+              >
+                <X className="h-5 w-5 text-slate-400" />
+              </button>
+            </div>
+
+            {/* Assign Controls */}
+            <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-black text-slate-500 uppercase">Assign Ke:</label>
+                <select
+                  value={assignTargetRombel}
+                  onChange={(e) => {
+                    setAssignTargetRombel(e.target.value);
+                    setAssignSelectedIds([]);
+                  }}
+                  className="h-9 px-3 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-700 focus:outline-none focus:border-[#280f91] shadow-xs cursor-pointer"
+                >
+                  <option value="">Pilih Rombel</option>
+                  {rombels.sort((a, b) => a.nama.localeCompare(b.nama)).map((r) => (
+                    <option key={r.id} value={r.nama}>{r.nama}</option>
+                  ))}
+                </select>
+                {assignTargetRombel && (
+                  <span className="text-[10px] font-bold text-amber-600">
+                    Siswa kelas {getLevelFromRombel(assignTargetRombel)} saja
+                  </span>
+                )}
+              </div>
+              <Button
+                onClick={handleAssignToRombel}
+                disabled={!assignTargetRombel || assignSelectedIds.length === 0 || assigning}
+                className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 py-2 rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+              >
+                {assigning ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+                ASSIGN ({assignSelectedIds.length})
+              </Button>
+              <div className="flex-1" />
+              <div className="relative w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Cari siswa..."
+                  value={unassignedSearch}
+                  onChange={(e) => setUnassignedSearch(e.target.value)}
+                  className="w-full h-9 pl-9 pr-3 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500"
+                />
+              </div>
+              <Button
+                onClick={() => setAssignSelectedIds(filteredUnassigned.map((s) => s.id))}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold text-[10px] px-3 rounded-xl"
+              >
+                Pilih Semua
+              </Button>
+              <Button
+                onClick={() => setAssignSelectedIds([])}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold text-[10px] px-3 rounded-xl"
+              >
+                Reset
+              </Button>
+            </div>
+
+            {/* Student List */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-1">
+              {filteredUnassigned.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <Users className="h-12 w-12 text-emerald-400 mb-3" />
+                  <p className="text-sm font-black text-slate-500 uppercase">Semua Sudah Dapat Kelas</p>
+                  <p className="text-xs text-slate-400 mt-1">Tidak ada siswa yang belum di-assign ke rombel</p>
+                </div>
+              ) : (
+                filteredUnassigned.map((siswa) => (
+                  <label
+                    key={siswa.id}
+                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${
+                      assignSelectedIds.includes(siswa.id)
+                        ? "bg-amber-50 border border-amber-200"
+                        : "hover:bg-slate-50 border border-transparent"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={assignSelectedIds.includes(siswa.id)}
+                      onChange={() => toggleAssignStudent(siswa.id)}
+                      className="h-4 w-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-slate-700 truncate">{siswa.nama}</p>
+                      <p className="text-[10px] text-slate-400 font-semibold">
+                        NISN: {siswa.nisn} · Kelas: <span className="text-amber-600 font-black">{siswa.kelas}</span> · {siswa.program}
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-black text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">
+                      {siswa.kelas}
+                    </span>
+                  </label>
+                ))
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <p className="text-xs font-bold text-slate-400">
+                {filteredUnassigned.length} siswa belum dapat kelas · {assignSelectedIds.length} dipilih
+              </p>
+              <Button
+                onClick={() => setUnassignedOpen(false)}
+                className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold text-xs px-4 py-2 rounded-xl"
+              >
+                Tutup
+              </Button>
             </div>
           </div>
         </div>

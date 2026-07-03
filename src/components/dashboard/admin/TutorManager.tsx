@@ -33,6 +33,7 @@ export default function TutorManager() {
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [rombels, setRombels] = useState<{ id: number; nama: string; waliKelasId: number | null }[]>([]);
 
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
@@ -80,6 +81,7 @@ export default function TutorManager() {
 
   useEffect(() => {
     fetchTutors();
+    fetchRombels();
   }, []);
 
   const fetchTutors = () => {
@@ -93,6 +95,28 @@ export default function TutorManager() {
       })
       .catch((err) => console.error("Failed to load tutors:", err))
       .finally(() => setLoading(false));
+  };
+
+  const fetchRombels = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch("/api/rombels", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        const list = data.data.map((r: any) => ({
+          id: r.id,
+          nama: r.nama,
+          waliKelasId: r.waliKelasId ?? null,
+        }));
+        setRombels(list);
+        return list;
+      }
+    } catch (err) {
+      console.error("Failed to load rombels:", err);
+    }
+    return [];
   };
 
   const handleSearch = () => {
@@ -211,7 +235,8 @@ export default function TutorManager() {
     e.target.value = "";
   };
 
-  const openAddForm = () => {
+  const openAddForm = async () => {
+    await fetchRombels();
     setIsAdding(true);
     setSelectedTutor(null);
     setOriginalFormData({});
@@ -240,12 +265,29 @@ export default function TutorManager() {
     setFormOpen(true);
   };
 
-  const openEditForm = (tutor: Tutor) => {
+  const openEditForm = async (tutor: Tutor) => {
+    // Selalu fetch rombels terbaru dan gunakan return value langsung
+    const rombelsList = await fetchRombels();
+
+    // Cari rombel yang waliKelasId-nya adalah tutor ini
+    const waliRombel = rombelsList.find((r: any) => r.waliKelasId === tutor.id);
+
+    // Normalisasi program karena API bisa mengembalikan "PAKET C" (uppercase)
+    const programMap: Record<string, string> = {
+      "paket a": "Paket A",
+      "paket b": "Paket B",
+      "paket c": "Paket C",
+    };
+    const normalizedProgram = programMap[tutor.program?.toLowerCase()] || tutor.program;
+
     setIsAdding(false);
     setSelectedTutor(tutor);
-    setOriginalFormData({ ...tutor, password: "" });
+    setOriginalFormData({ ...tutor, password: "", program: normalizedProgram });
     setFormData({
       ...tutor,
+      program: normalizedProgram,
+      // Jika tutor adalah wali kelas, gunakan nama rombel sebagai kelas
+      kelas: tutor.kelas || (waliRombel ? waliRombel.nama : ""),
       password: "", // Keep empty to indicate unchanged unless typed
     });
     setIsEditing(false);
@@ -686,29 +728,30 @@ export default function TutorManager() {
                         className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       >
                         <option value="" disabled>Pilih Kelas</option>
-                        {formData.program === "Paket A" && (
-                          <>
-                            <option value="Kelas I">Kelas I</option>
-                            <option value="Kelas II">Kelas II</option>
-                            <option value="Kelas III">Kelas III</option>
-                            <option value="Kelas IV">Kelas IV</option>
-                            <option value="Kelas V">Kelas V</option>
-                            <option value="Kelas VI">Kelas VI</option>
-                          </>
-                        )}
-                        {formData.program === "Paket B" && (
-                          <>
-                            <option value="Kelas VII">Kelas VII</option>
-                            <option value="Kelas VIII">Kelas VIII</option>
-                            <option value="Kelas IX">Kelas IX</option>
-                          </>
-                        )}
-                        {formData.program === "Paket C" && (
-                          <>
-                            <option value="Kelas X">Kelas X</option>
-                            <option value="Kelas XI">Kelas XI</option>
-                            <option value="Kelas XII">Kelas XII</option>
-                          </>
+                        {rombels.length === 0 ? (
+                          <option value="" disabled>Belum ada rombel</option>
+                        ) : (
+                          rombels
+                            .filter((r) => {
+                              const nama = r.nama.toUpperCase();
+                              const level = nama.length > 1 && /^[A-Z]$/.test(nama.slice(-1))
+                                ? nama.slice(0, -1)
+                                : nama;
+                              if (formData.program === "Paket A") {
+                                return ["I", "II", "III", "IV", "V", "VI"].includes(level);
+                              }
+                              if (formData.program === "Paket B") {
+                                return ["VII", "VIII", "IX"].includes(level);
+                              }
+                              if (formData.program === "Paket C") {
+                                return ["X", "XI", "XII"].includes(level);
+                              }
+                              return false;
+                            })
+                            .sort((a, b) => a.nama.localeCompare(b.nama))
+                            .map((r) => (
+                              <option key={r.id} value={r.nama}>{r.nama}</option>
+                            ))
                         )}
                       </select>
                     </div>
