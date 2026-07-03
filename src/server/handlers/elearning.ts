@@ -2047,18 +2047,18 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         const buffer = fillTemplate("DAFTAR HADIR WARGA BELAJAR REKAP.xlsx", {
           program, semester: (filteredSetups[0].semester || "Ganjil").toUpperCase(),
           tahunAjaran: currentYear + "/" + (currentYear + 1),
-          kelas: kelasLabel, waliKelas: waliKelas.toUpperCase(), namaWaliKelas: waliKelas.toUpperCase(),
+          kelas: kelasLabel, waliKelas: kelasLabel.toUpperCase(), namaWaliKelas: waliKelas.toUpperCase(),
           bulan: now.toLocaleDateString("id-ID", { month: "long" }).toUpperCase(),
           tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }).toUpperCase(),
           kecamatan: "JATINAGARA", namaPkbm: "MENUJU MAKMUR",
           nipPemilik: "-", nipKepalaPkbm: "-", nipWaliKelas: "-",
           namaKepalaPkbm: namaKepalaPkbm.toUpperCase(), namaPemilik: "-",
           siswa: siswaData.map(s => ({ ...s, namaSiswa: s.namaSiswa.toUpperCase(), jenisKelamin: s.jenisKelamin.toUpperCase(), rombel: s.rombel.toUpperCase() })),
-        });
+        }, 18);
 
         set.headers = {
           "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          "Content-Disposition": "attachment; filename=\"rekap_kehadiran_wb_" + sanitizeFilename(kelas) + "_" + currentYear + "_" + (currentMonth + 1) + ".xlsx\"",
+          "Content-Disposition": "attachment; filename=\"rekap_kehadiran_wb_" + sanitizeFilename(kelasLabel) + "_" + currentYear + "_" + (currentMonth + 1) + ".xlsx\"",
         };
         return buffer;
       } catch (error: any) {
@@ -2549,6 +2549,18 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
       const setup = await db.select().from(elearningSetups).where(eq(elearningSetups.id, setupId)).get();
       if (!setup) { set.status = 404; return { success: false, message: "Setup not found" }; }
 
+      // Verify student belongs to the setup's rombel
+      const studentRombel = await db.select().from(rombelStudents)
+        .innerJoin(rombels, eq(rombelStudents.rombelId, rombels.id))
+        .where(and(
+          eq(rombelStudents.studentId, studentId),
+          eq(rombels.nama, setup.kelas)
+        )).get();
+      if (!studentRombel) {
+        set.status = 403;
+        return { success: false, message: "Anda tidak terdaftar di kelas ini" };
+      }
+
       const program = deriveProgram(setup.kelas);
 
       const course = await db.select().from(elearningCourses)
@@ -2606,6 +2618,30 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
 
       const studentId = Number(payload.id);
 
+      // Verify student belongs to this session's rombel
+      const session = await db.select().from(elearningSessions).where(eq(elearningSessions.id, sessionId)).get();
+      if (session) {
+        const course = await db.select().from(elearningCourses).where(eq(elearningCourses.id, session.courseId)).get();
+        if (course) {
+          const allSetups = await db.select().from(elearningSetups).all();
+          const matchingKelas = allSetups
+            .filter(s => s.mapel === course.namaMapel && deriveProgram(s.kelas) === course.program)
+            .map(s => s.kelas);
+          if (matchingKelas.length > 0) {
+            const rombelCheck = await db.select().from(rombelStudents)
+              .innerJoin(rombels, eq(rombelStudents.rombelId, rombels.id))
+              .where(and(
+                eq(rombelStudents.studentId, studentId),
+                inArray(rombels.nama, matchingKelas)
+              )).get();
+            if (!rombelCheck) {
+              set.status = 403;
+              return { success: false, message: "Anda tidak terdaftar di kelas ini" };
+            }
+          }
+        }
+      }
+
       // Check if there's any record for this session + student
       const record = await db.select().from(elearningSessionAngkets)
         .where(and(
@@ -2637,6 +2673,30 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
 
       const studentId = Number(payload.id);
 
+      // Verify student belongs to this session's rombel
+      const session = await db.select().from(elearningSessions).where(eq(elearningSessions.id, Number(sessionId))).get();
+      if (session) {
+        const course = await db.select().from(elearningCourses).where(eq(elearningCourses.id, session.courseId)).get();
+        if (course) {
+          const allSetups = await db.select().from(elearningSetups).all();
+          const matchingKelas = allSetups
+            .filter(s => s.mapel === course.namaMapel && deriveProgram(s.kelas) === course.program)
+            .map(s => s.kelas);
+          if (matchingKelas.length > 0) {
+            const rombelCheck = await db.select().from(rombelStudents)
+              .innerJoin(rombels, eq(rombelStudents.rombelId, rombels.id))
+              .where(and(
+                eq(rombelStudents.studentId, studentId),
+                inArray(rombels.nama, matchingKelas)
+              )).get();
+            if (!rombelCheck) {
+              set.status = 403;
+              return { success: false, message: "Anda tidak terdaftar di kelas ini" };
+            }
+          }
+        }
+      }
+
       for (const res of responses) {
         try {
           await db.insert(elearningSessionAngkets).values({
@@ -2646,7 +2706,11 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
             score: Number(res.score),
           });
         } catch (e: any) {
-          // ignore unique constraint errors if already submitted
+          // Only ignore unique constraint violations (already submitted)
+          // Re-throw other errors so they propagate to the outer catch
+          if (!e?.message?.includes("UNIQUE constraint failed")) {
+            throw e;
+          }
         }
       }
 

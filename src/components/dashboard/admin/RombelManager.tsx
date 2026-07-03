@@ -416,14 +416,11 @@ export default function RombelManager() {
     setUnassignedOpen(true);
   };
 
-  // Ambil level dari nama rombel (XA → X, XIIA → XII)
-  const getLevelFromRombel = (nama: string): string => nama.replace(/[A-Z]$/, "");
-
   // Filter siswa unassigned berdasarkan level rombel yang dipilih
   const filteredUnassigned = unassignedStudents.filter((s) => {
     // Jika rombel target dipilih, filter hanya siswa dengan level yang cocok
     if (assignTargetRombel) {
-      const targetLevel = getLevelFromRombel(assignTargetRombel);
+      const targetLevel = getLevel(assignTargetRombel);
       if (s.kelas !== targetLevel) return false;
     }
     // Filter search
@@ -859,7 +856,7 @@ export default function RombelManager() {
                     </p>
                     <p className="text-xs text-slate-400 font-semibold text-center max-w-sm">
                       {rombels.length === 0
-                        ? 'Belum ada rombel. Klik "Sinkron dari Data Siswa" atau "Tambah Rombel" untuk memulai.'
+                        ? 'Belum ada rombel. Klik "Tambah Rombel" untuk memulai.'
                         : "Tidak ada rombel yang sesuai dengan pencarian."}
                     </p>
                   </div>
@@ -1148,7 +1145,7 @@ export default function RombelManager() {
                 </select>
                 {assignTargetRombel && (
                   <span className="text-[10px] font-bold text-amber-600">
-                    Siswa kelas {getLevelFromRombel(assignTargetRombel)} saja
+                    Siswa kelas {getLevel(assignTargetRombel)} saja
                   </span>
                 )}
               </div>

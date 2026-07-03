@@ -160,8 +160,12 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
   }
 
   // Fetch angket progress for the current subject (which sessions have completed evaluation)
-  const fetchAngketProgress = useCallback(() => {
+  const fetchAngketProgress = useCallback((eagerSession?: number) => {
     if (!setupId) { setAngketCompletedSessions(new Set()); return; }
+    // Eagerly mark the just-completed session so navigation unlocks instantly
+    if (eagerSession !== undefined) {
+      setAngketCompletedSessions(prev => new Set([...prev, eagerSession]));
+    }
     fetch(`/api/elearning/session-angket/progress?setupId=${setupId}`, {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
     })
@@ -169,13 +173,18 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
       .then(data => {
         if (data.success) {
           const completed = new Set(data.data.filter((d: any) => d.completed).map((d: any) => d.sessionNumber));
-          setAngketCompletedSessions(completed);
+          // Merge with existing set (preserves eagerly-added sessions if server response is stale)
+          setAngketCompletedSessions(prev => {
+            const merged = new Set(completed);
+            for (const s of prev) merged.add(s);
+            return merged;
+          });
         }
       })
       .catch(() => {});
   }, [setupId]);
 
-  useEffect(() => { fetchAngketProgress(); }, [fetchAngketProgress, subPart]);
+  useEffect(() => { fetchAngketProgress(); }, [fetchAngketProgress]);
 
   const matchedSubject = allSubjects.find((s) => s.setupId === setupId);
 
@@ -197,7 +206,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
     if (subPart.startsWith("sesi-")) {
       const sessionNumber = parseInt(subPart.replace("sesi-", ""), 10);
       if (!isNaN(sessionNumber)) {
-        return <MapelSesi subjectName={subjectName} sessionNumber={sessionNumber} user={user} setupId={currentSetupId} />;
+        return <MapelSesi subjectName={subjectName} sessionNumber={sessionNumber} user={user} setupId={currentSetupId} onAngketCompleted={(sn) => fetchAngketProgress(sn)} />;
       }
     }
     return (

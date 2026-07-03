@@ -111,15 +111,38 @@ function removeClonedMerges(template: any, originalMergeRefs: string[], headerEn
   mergeCellsEl.attrib.count = (currentChildren.length - toRemove.length).toString();
 
   // Collect columns that are part of header merges
-  const headerCols = new Set<string>();
-  for (const ref of originalMergeRefs) {
-    const parts = ref.split(":");
-    const startCol = parts[0].replace(/[0-9]+/g, "");
-    const endCol = parts[1].replace(/[0-9]+/g, "");
-    for (let c = startCol.charCodeAt(0); c <= endCol.charCodeAt(0); c++) {
-      headerCols.add(String.fromCharCode(c));
+  // Helper to convert column letters (A, B, ..., Z, AA, AB, ...) to Set entries
+  function collectHeaderCols(refs: string[]): Set<string> {
+    const cols = new Set<string>();
+    for (const ref of refs) {
+      const parts = ref.split(":");
+      const startCol = parts[0].replace(/[0-9]+/g, "");
+      const endCol = parts[1].replace(/[0-9]+/g, "");
+      const startNum = colToNum(startCol);
+      const endNum = colToNum(endCol);
+      for (let n = startNum; n <= endNum; n++) {
+        cols.add(numToCol(n));
+      }
     }
+    return cols;
   }
+  function colToNum(col: string): number {
+    let n = 0;
+    for (let i = 0; i < col.length; i++) {
+      n = n * 26 + (col.charCodeAt(i) - 64);
+    }
+    return n;
+  }
+  function numToCol(n: number): string {
+    let col = "";
+    while (n > 0) {
+      const rem = (n - 1) % 26;
+      col = String.fromCharCode(65 + rem) + col;
+      n = Math.floor((n - 1) / 26);
+    }
+    return col;
+  }
+  const headerCols = collectHeaderCols(originalMergeRefs);
 
   // Find the row numbers where clones were removed, but only rows
   // BEYOND the original header area (rows > headerEndRow).
@@ -256,7 +279,7 @@ export function fillTemplate(
   // Snapshot original merge refs and header cells before substitution
   let originalMergeRefs: string[] = [];
   let originalHeaderCells: any[] = [];
-  if (headerEndRow) {
+  if (headerEndRow !== undefined) {
     const sheetEntry = template.archive.file("xl/worksheets/sheet1.xml");
     if (sheetEntry) {
       originalMergeRefs = parseMergeRefs(sheetEntry.asText());
@@ -289,7 +312,7 @@ export function fillTemplate(
 
   template.substitute(1, data);
 
-  if (headerEndRow && originalMergeRefs.length > 0) {
+  if (headerEndRow !== undefined && originalMergeRefs.length > 0) {
     removeClonedMerges(template, originalMergeRefs, headerEndRow, originalHeaderCells);
   }
 

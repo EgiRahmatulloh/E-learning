@@ -8,10 +8,10 @@ interface MapelSesiProps {
   sessionNumber: number;
   user?: any;
   setupId?: number | null;
-  setCanNavigateNext?: (val: boolean) => void;
+  onAngketCompleted?: (sessionNumber: number) => void;
 }
 
-export function MapelSesi({ subjectName, sessionNumber, user, setupId, setCanNavigateNext }: MapelSesiProps) {
+export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketCompleted }: MapelSesiProps) {
 
 
   const [discussions, setDiscussions] = useState<any[]>([]);
@@ -216,9 +216,12 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, setCanNav
   }, [subjectName, sessionNumber, setupId]);
 
   useEffect(() => {
-    setCanNavigateNext?.(angketCompleted);
-    return () => setCanNavigateNext?.(true);
-  }, [angketCompleted, setCanNavigateNext]);
+    if (angketCompleted) {
+      // Eagerly notify parent with the session that was just completed
+      // so navigation unlock is instant (no waiting for fetch round-trip)
+      onAngketCompleted?.(sessionNumber);
+    }
+  }, [angketCompleted, onAngketCompleted, sessionNumber]);
 
   const handleSendDiscussion = async () => {
     if (!discussionInput.trim() || !sessionId || !courseId) return;
