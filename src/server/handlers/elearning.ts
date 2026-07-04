@@ -14,7 +14,6 @@ import {
   elearningSubmissions,
   elearningQuestions,
   elearningQuizSubmissions,
-  elearningEvaluationResponses,
   elearningSectionCompletions,
   tutors,
   students,
@@ -419,18 +418,22 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
 
         const responses = await db
           .select({
-            id: elearningEvaluationResponses.id,
-            evaluationId: elearningEvaluationResponses.evaluationId,
-            studentId: elearningEvaluationResponses.studentId,
+            id: elearningSessionAngkets.id,
+            evaluationId: elearningSessionAngkets.evaluationId,
+            studentId: elearningSessionAngkets.studentId,
             studentName: students.nama,
-            courseId: elearningEvaluationResponses.courseId,
+            sessionId: elearningSessionAngkets.sessionId,
+            sessionName: elearningSessions.title,
+            courseId: elearningCourses.id,
             courseName: elearningCourses.namaMapel,
-            score: elearningEvaluationResponses.score,
-            createdAt: elearningEvaluationResponses.createdAt,
+            kelas: elearningCourses.kelas,
+            score: elearningSessionAngkets.score,
+            createdAt: elearningSessionAngkets.createdAt,
           })
-          .from(elearningEvaluationResponses)
-          .innerJoin(students, eq(elearningEvaluationResponses.studentId, students.id))
-          .leftJoin(elearningCourses, eq(elearningEvaluationResponses.courseId, elearningCourses.id))
+          .from(elearningSessionAngkets)
+          .innerJoin(students, eq(elearningSessionAngkets.studentId, students.id))
+          .leftJoin(elearningSessions, eq(elearningSessionAngkets.sessionId, elearningSessions.id))
+          .leftJoin(elearningCourses, eq(elearningSessions.courseId, elearningCourses.id))
           .all();
 
         // Aggregate: rata-rata skor per pertanyaan
@@ -1322,8 +1325,20 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         const setups = await db.select().from(elearningSetups).where(eq(elearningSetups.tutorId, tutorId)).all();
         const mapelAktif = setups.length;
 
-        // Tugas Masuk from elearningEvaluations (Phase 4 mock, return 0)
-        const tugasMasuk = 0;
+        let tugasMasuk = 0;
+        if (setups.length > 0) {
+          const tutorMapels = setups.map(s => s.mapel);
+          const submissions = await db
+            .select({ id: elearningSubmissions.id })
+            .from(elearningSubmissions)
+            .innerJoin(elearningAssignments, eq(elearningSubmissions.assignmentId, elearningAssignments.id))
+            .innerJoin(elearningSessions, eq(elearningAssignments.sessionId, elearningSessions.id))
+            .innerJoin(elearningCourses, eq(elearningSessions.courseId, elearningCourses.id))
+            .where(inArray(elearningCourses.namaMapel, tutorMapels))
+            .all();
+          tugasMasuk = submissions.length;
+        }
+
         const ip = "0.0"; // Placeholder
 
         return { success: true, data: { mapelAktif, tugasMasuk, ip } };

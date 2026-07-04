@@ -10,7 +10,7 @@ interface MapelPendahuluanProps {
 }
 
 export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahuluanProps) {
-  const [messages, setMessages] = useState<{id: number; sender: string; text: string; isSelf: boolean; initial: string; color: string}[]>([]);
+  const [messages, setMessages] = useState<{ id: number; sender: string; text: string; isSelf: boolean; initial: string; color: string }[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [editInputValue, setEditInputValue] = useState("");
@@ -26,7 +26,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
       if (data.success) {
         setCompletions(new Set(data.data.map((c: any) => c.sectionKey)));
       }
-    } catch (err) {}
+    } catch (err) { }
   };
 
   const handleMarkComplete = async (sectionKey: string) => {
@@ -34,7 +34,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
     try {
       const res = await fetch("/api/elearning/completions", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem("token")}`
         },
@@ -44,13 +44,13 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
       if (data.success) {
         setCompletions(prev => new Set(prev).add(sectionKey));
       }
-    } catch (err) {}
+    } catch (err) { }
   };
 
   const [loading, setLoading] = useState(true);
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [courseId, setCourseId] = useState<number | null>(null);
-  
+
   const [teksPembuka, setTeksPembuka] = useState("Halo semuanya, selamat datang di mata pelajaran ini.");
   const [ratUrl, setRatUrl] = useState<string | null>(null);
   const [tertibUrl, setTertibUrl] = useState<string | null>(null);
@@ -61,7 +61,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
       try {
         const courseRes = await fetch("/api/elearning/course", {
           method: "POST",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${localStorage.getItem("token")}`
           },
@@ -75,7 +75,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
         });
         const sessionData = await sessionRes.json();
         if (!sessionData.success) return;
-        
+
         const session = sessionData.data.session;
         setSessionId(session.id);
         setCourseId(courseData.data.id);
@@ -89,10 +89,10 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
         const materials = sessionData.data.materials || [];
         const rat = materials.find((m: any) => m.type === "RAT");
         if (rat) setRatUrl(rat.fileUrl);
-        
+
         const tertib = materials.find((m: any) => m.type === "TATA_TERTIB");
         if (tertib) setTertibUrl(tertib.fileUrl);
-        
+
         // Fetch forum posts
         const forumRes = await fetch(`/api/elearning/forum?sessionId=${session.id}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
@@ -164,7 +164,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
         });
         setMessages(loadedMessages);
       }
-    } catch (err) {}
+    } catch (err) { }
   };
 
   const handleEditSubmit = async (msgId: number) => {
@@ -230,12 +230,11 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
               </div>
               <h3 className="font-black text-slate-800 text-lg">Pengantar Mata Pelajaran</h3>
             </div>
-            <SectionCompleteButton sectionKey="pendahuluan_pengantar" completions={completions} handleMarkComplete={handleMarkComplete} className="m-0" />
           </div>
           {teksPembuka ? (
-            <div 
-              className="text-slate-600 leading-relaxed text-sm relative prose max-w-none" 
-              dangerouslySetInnerHTML={{ __html: teksPembuka }} 
+            <div
+              className="text-slate-600 leading-relaxed text-sm relative prose max-w-none"
+              dangerouslySetInnerHTML={{ __html: teksPembuka }}
             />
           ) : (
             <p className="text-slate-400 italic text-sm">Tutor belum menambahkan teks pengantar.</p>
@@ -250,11 +249,11 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
               </div>
               <div className="flex gap-2 items-center">
                 {ratUrl && (
-                  <Button 
+                  <Button
                     onClick={() => {
                       handleMarkComplete("pendahuluan_rat");
                       window.open(ratUrl, "_blank");
-                    }} 
+                    }}
                     size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full text-emerald-600 hover:bg-emerald-100">
                     <Download className="h-4 w-4" />
                   </Button>
@@ -289,7 +288,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
                 <SectionCompleteButton sectionKey="pendahuluan_tertib" completions={completions} handleMarkComplete={handleMarkComplete} className="m-0 h-8 text-xs px-3" />
               </div>
             </div>
-            <h4 className="font-bold text-amber-900 mb-1">Tata Tertib E-Learning</h4>
+            <h4 className="font-bold text-amber-900 mb-1">Tata Tertib</h4>
             <p className="text-xs text-amber-700/80 mb-3 line-clamp-2">Peraturan yang harus ditaati selama mengikuti pembelajaran.</p>
             {tertibUrl ? (
               <Button onClick={() => window.open(tertibUrl, "_blank")} className="w-full bg-amber-600 hover:bg-amber-700 text-white shadow-sm font-semibold rounded-xl text-xs h-9">
@@ -319,11 +318,11 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
           <SectionCompleteButton sectionKey="pendahuluan_perkenalan" completions={completions} handleMarkComplete={handleMarkComplete} className="m-0" />
         </div>
         <div className="bg-slate-50 rounded-xl border border-slate-100 p-4 space-y-4">
-          
+
           {messages.length === 0 && (
-            <p className="text-center text-slate-400 text-sm italic py-4">Belum ada diskusi. Jadilah yang pertama menyapa!</p>
+            <p className="text-center text-slate-400 text-sm italic py-4">Belum ada perkenalan. Jadilah yang pertama menyapa!</p>
           )}
-          
+
           {messages.map((msg) => (
             <div key={msg.id} className="flex gap-3 mt-4">
               <div className={`h-8 w-8 rounded-full ${msg.color} text-white flex items-center justify-center font-bold text-xs shrink-0`}>
@@ -334,17 +333,17 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
                   <p className={`text-xs font-bold ${msg.isSelf ? 'text-cyan-700' : 'text-slate-600'}`}>{msg.sender}</p>
                   {msg.isSelf && (
                     <div className="flex items-center gap-2">
-                      <button 
+                      <button
                         onClick={() => {
                           setEditingMessageId(msg.id);
                           setEditInputValue(msg.text.replace(/<[^>]+>/g, ''));
-                        }} 
+                        }}
                         className="text-slate-400 hover:text-cyan-600 transition-colors"
                         title="Edit pesan"
                       >
                         <Pencil className="w-3 h-3" />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDeleteMessage(msg.id)}
                         className="text-slate-400 hover:text-red-600 transition-colors"
                         title="Hapus pesan"
@@ -375,15 +374,15 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
           ))}
 
           <div className="flex gap-3 mt-4">
-             <input 
-               type="text" 
-               placeholder="Tulis perkenalan Anda di sini..." 
-               value={inputValue}
-               onChange={(e) => setInputValue(e.target.value)}
-               onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-               className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91]" 
-             />
-             <Button onClick={handleSendMessage} className="rounded-xl bg-[#280f91] hover:bg-[#3a1bca] text-white font-bold px-6">Kirim</Button>
+            <input
+              type="text"
+              placeholder="Tulis perkenalan Anda di sini..."
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91]"
+            />
+            <Button onClick={handleSendMessage} className="rounded-xl bg-[#280f91] hover:bg-[#3a1bca] text-white font-bold px-6">Kirim</Button>
           </div>
         </div>
       </div>
@@ -395,20 +394,19 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
 function SectionCompleteButton({ sectionKey, completions, handleMarkComplete, className = "" }: { sectionKey: string, completions: Set<string>, handleMarkComplete: (key: string) => void, className?: string }) {
   const isDone = completions.has(sectionKey);
   return (
-      <Button
-        size="sm"
-        onClick={() => !isDone && handleMarkComplete(sectionKey)}
-        disabled={isDone}
-        className={`font-bold ${
-          isDone ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 cursor-not-allowed border-emerald-200" 
-                 : "bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200"
+    <Button
+      size="sm"
+      onClick={() => !isDone && handleMarkComplete(sectionKey)}
+      disabled={isDone}
+      className={`font-bold ${isDone ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 cursor-not-allowed border-emerald-200"
+        : "bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200"
         } border ${className || 'mt-4 w-full sm:w-auto'}`}
-      >
-        {isDone ? (
-          <><CheckCircle2 className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">Selesai</span></>
-        ) : (
-          <><CheckCircle2 className="w-4 h-4 sm:hidden" /> <span className="hidden sm:inline">Tandai Selesai</span></>
-        )}
-      </Button>
+    >
+      {isDone ? (
+        <><CheckCircle2 className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">Selesai</span></>
+      ) : (
+        <><CheckCircle2 className="w-4 h-4 sm:hidden" /> <span className="hidden sm:inline">Tandai Selesai</span></>
+      )}
+    </Button>
   );
 }

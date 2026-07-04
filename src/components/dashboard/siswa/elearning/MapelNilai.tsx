@@ -59,7 +59,7 @@ export function MapelNilai({ subjectName, setupId, user }: MapelNilaiProps) {
       <div className="grid grid-cols-1 gap-6">
         {/* Kehadiran */}
         <div className="rounded-2xl border border-emerald-100/50 overflow-hidden">
-          <button 
+          <button
             onClick={() => setExpandedKehadiran(!expandedKehadiran)}
             className="w-full p-6 bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-between text-left transition-colors hover:from-emerald-100 hover:to-teal-100"
           >
@@ -74,7 +74,7 @@ export function MapelNilai({ subjectName, setupId, user }: MapelNilaiProps) {
               {expandedKehadiran ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
             </div>
           </button>
-          
+
           {expandedKehadiran && (
             <div className="p-6 bg-white border-t border-emerald-100/50 space-y-4 animate-in slide-in-from-top-2">
               <h4 className="text-sm font-bold text-emerald-800 mb-2">Bobot per sesi: {kehadiranBobotPerSesi}%</h4>
@@ -98,7 +98,7 @@ export function MapelNilai({ subjectName, setupId, user }: MapelNilaiProps) {
 
         {/* Diskusi */}
         <div className="rounded-2xl border border-blue-100/50 overflow-hidden">
-          <button 
+          <button
             onClick={() => setExpandedDiskusi(!expandedDiskusi)}
             className="w-full p-6 bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-between text-left transition-colors hover:from-blue-100 hover:to-indigo-100"
           >
@@ -137,7 +137,7 @@ export function MapelNilai({ subjectName, setupId, user }: MapelNilaiProps) {
 
         {/* Tugas */}
         <div className="rounded-2xl border border-orange-100/50 overflow-hidden">
-          <button 
+          <button
             onClick={() => setExpandedTugas(!expandedTugas)}
             className="w-full p-6 bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-between text-left transition-colors hover:from-orange-100 hover:to-amber-100"
           >
@@ -183,7 +183,7 @@ export function MapelNilai({ subjectName, setupId, user }: MapelNilaiProps) {
 
       <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-black text-slate-800">Nilai Akhir Semester</h3>
+          <h3 className="text-lg font-black text-slate-800">Nilai Akhir</h3>
           <p className="text-sm text-slate-500">Kalkulasi keseluruhan komponen</p>
         </div>
         <div className="text-4xl font-black text-[#280f91]">{gradeData?.final ? gradeData.final.toFixed(1) : "0.0"}</div>

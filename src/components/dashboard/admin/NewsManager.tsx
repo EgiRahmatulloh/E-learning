@@ -35,13 +35,13 @@ const getSafeItem = (key: string): string | null => {
 const setSafeItem = (key: string, value: string) => {
   try {
     localStorage.setItem(key, value);
-  } catch {}
+  } catch { }
 };
 
 // Date Formatter in Indonesian uppercase
 const getIndonesianDate = () => {
   const months = [
-    "JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", 
+    "JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI",
     "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"
   ];
   const d = new Date();
@@ -53,11 +53,11 @@ export default function NewsManager() {
   const [newsList, setNewsList] = useState<News[]>([]);
   const [categories, setCategories] = useState<NewsCategory[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Modals Visibility
   const [newsModalVisible, setNewsModalVisible] = useState(false);
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
-  
+
   // News Form States
   const [editId, setEditId] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -317,7 +317,7 @@ export default function NewsManager() {
       message: "Apakah Anda yakin ingin menghapus kategori ini?",
       variant: "danger"
     })) return;
-    
+
     const token = getSafeItem("token");
     try {
       const res = await fetch(`/api/news-categories/${id}`, {
@@ -357,7 +357,7 @@ export default function NewsManager() {
 
   return (
     <div className="space-y-6 relative pb-16 animate-in fade-in duration-300">
-      
+
       {/* HEADER SECTION */}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
         <div>
@@ -394,7 +394,7 @@ export default function NewsManager() {
               onClick={() => setCategoryModalVisible(true)}
               className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
             >
-              <Plus className="h-4 w-4" /> KATEGORI BERITA
+              <Plus className="h-4 w-4" /> DATA KATEGORI
             </Button>
             <Button
               onClick={() => {
@@ -405,7 +405,7 @@ export default function NewsManager() {
               }}
               className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
             >
-              <Plus className="h-4 w-4" /> TAMBAH BERITA
+              <Plus className="h-4 w-4" /> TAMBAH DATA
             </Button>
           </div>
         </div>
@@ -458,11 +458,10 @@ export default function NewsManager() {
                       {item.hits}
                     </td>
                     <td className="py-4 px-6 border-r border-slate-100 text-center">
-                      <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${
-                        item.status === 'PUBLISH' 
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                          : 'bg-amber-50 text-amber-700 border border-amber-200'
-                      }`}>
+                      <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${item.status === 'PUBLISH'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-amber-50 text-amber-700 border border-amber-200'
+                        }`}>
                         {item.status}
                       </span>
                     </td>
@@ -532,7 +531,7 @@ export default function NewsManager() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={resetNewsForm} />
 
           <div className="relative bg-[#00badb] rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border-4 border-cyan-400 animate-in zoom-in-95 duration-200 p-6 sm:p-8 text-white">
-            
+
             <button
               onClick={resetNewsForm}
               className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
@@ -542,13 +541,13 @@ export default function NewsManager() {
 
             <div className="mb-6 text-left">
               <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                {editId !== null ? "TAMPILAN EDIT DATA" : "TAMPILAN TAMBAH BARU"}
+                {editId !== null ? (isEditing ? "EDIT DATA" : "DETAIL DATA") : "TAMBAH DATA"}
               </span>
             </div>
 
             <form className="grid grid-cols-1 md:grid-cols-4 gap-6 text-left" onSubmit={(e) => e.preventDefault()}>
               <div className="md:col-span-3 space-y-4">
-                
+
                 {/* JUDUL */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
@@ -773,7 +772,7 @@ export default function NewsManager() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setCategoryModalVisible(false)} />
 
           <div className="relative bg-[#00badb] rounded-3xl overflow-hidden shadow-2xl w-full max-w-md border-4 border-cyan-400 animate-in zoom-in-95 duration-200 p-6 text-white">
-            
+
             <button
               onClick={() => setCategoryModalVisible(false)}
               className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
@@ -783,7 +782,7 @@ export default function NewsManager() {
 
             <div className="mb-4 text-left">
               <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                KELOLA KATEGORI BERITA
+                TAMBAH DATA KATEGORI
               </span>
             </div>
 

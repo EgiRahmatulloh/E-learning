@@ -240,7 +240,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
     }
     if (activeTab === "profil") {
       return (
-        <div className="max-w-2xl animate-in fade-in duration-300">
+        <div className="max-w-5xl animate-in fade-in duration-300">
           <div className="rounded-2xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-sm space-y-6">
             <div className="border-b border-slate-100 pb-4">
               <h3 className="text-lg font-black text-cyan-900">Profil Akun Saya</h3>
@@ -257,7 +257,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
             )}
 
             <form onSubmit={handleUpdateProfile} className="space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 <div className="space-y-1.5">
                   <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Nama Lengkap</label>
                   <input
@@ -414,7 +414,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                   </>
                 )}
 
-                <div className="space-y-1.5 sm:col-span-2">
+                <div className="space-y-1.5 sm:col-span-2 lg:col-span-4">
                   <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Alamat</label>
                   <textarea
                     value={formData.alamat}
@@ -424,7 +424,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                   />
                 </div>
 
-                <div className="border-t border-slate-100 my-2 sm:col-span-2" />
+                <div className="border-t border-slate-100 my-2 sm:col-span-2 lg:col-span-4" />
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Password Baru (Opsional)</label>
