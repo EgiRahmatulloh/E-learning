@@ -761,7 +761,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
             </div>
             <div className="p-6 space-y-6">
               {angketQuestions.map((q, idx) => (
-                <div key={q.id ? `q-${q.id}` : `idx-${idx}`} className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                <div key={q.id !== undefined && q.id !== null ? `q-${q.id}` : `idx-${idx}`} className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
                   <p className="font-bold text-slate-800 text-sm mb-4">{idx + 1}. {q.question}</p>
                   <div className="flex justify-between items-center gap-2">
                     {["Sangat Kurang", "Kurang", "Cukup", "Baik", "Sangat Baik"].map((label, i) => (

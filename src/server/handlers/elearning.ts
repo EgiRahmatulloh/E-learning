@@ -1327,25 +1327,16 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
 
         let tugasMasuk = 0;
         if (setups.length > 0) {
-          const allCourses = await db.select().from(elearningCourses).all();
-          const validCourseIds = allCourses
-            .filter(c => setups.some(s => s.mapel === c.namaMapel))
-            .map(c => c.id);
-          
-          if (validCourseIds.length > 0) {
-            const sessions = await db.select().from(elearningSessions).where(inArray(elearningSessions.courseId, validCourseIds)).all();
-            const sessionIds = sessions.map(s => s.id);
-            if (sessionIds.length > 0) {
-              const assignments = await db.select().from(elearningAssignments).where(inArray(elearningAssignments.sessionId, sessionIds)).all();
-              const assignmentIds = assignments.map(a => a.id);
-              if (assignmentIds.length > 0) {
-                const submissions = await db.select().from(elearningSubmissions).where(
-                  inArray(elearningSubmissions.assignmentId, assignmentIds)
-                ).all();
-                tugasMasuk = submissions.length;
-              }
-            }
-          }
+          const tutorMapels = setups.map(s => s.mapel);
+          const submissions = await db
+            .select({ id: elearningSubmissions.id })
+            .from(elearningSubmissions)
+            .innerJoin(elearningAssignments, eq(elearningSubmissions.assignmentId, elearningAssignments.id))
+            .innerJoin(elearningSessions, eq(elearningAssignments.sessionId, elearningSessions.id))
+            .innerJoin(elearningCourses, eq(elearningSessions.courseId, elearningCourses.id))
+            .where(inArray(elearningCourses.namaMapel, tutorMapels))
+            .all();
+          tugasMasuk = submissions.length;
         }
 
         const ip = "0.0"; // Placeholder

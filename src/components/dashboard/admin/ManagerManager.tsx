@@ -859,7 +859,7 @@ export default function ManagerManager() {
             {/* PANEL TITLE */}
             <div className="mb-4 pr-10 shrink-0 flex justify-between items-center border-b border-white/20 pb-4">
               <h3 className="bg-[#9c27b0] text-white font-extrabold text-xs px-4 py-1.5 rounded-full uppercase tracking-widest shadow-md">
-                DETAIL DATA
+                {isNew ? "TAMBAH DATA" : (isEditing ? "EDIT DATA" : "DETAIL DATA")}
               </h3>
             </div>
 
