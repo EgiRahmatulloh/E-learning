@@ -288,7 +288,7 @@ export default function GalleryManager() {
               onClick={startAdd}
               className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 h-10 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
             >
-              <Plus className="h-4 w-4" /> TAMBAH BARU
+              <Plus className="h-4 w-4" /> TAMBAH DATA
             </Button>
           </div>
         </div>
@@ -352,11 +352,10 @@ export default function GalleryManager() {
                     </td>
                     <td className="py-4 px-6 border-r border-slate-100 text-center">
                       <span
-                        className={`inline-flex items-center rounded-lg px-2.5 py-0.5 text-xs font-black uppercase tracking-wider ${
-                          item.status === "PUBLISH"
+                        className={`inline-flex items-center rounded-lg px-2.5 py-0.5 text-xs font-black uppercase tracking-wider ${item.status === "PUBLISH"
                             ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
                             : "bg-amber-100 text-amber-800 border border-amber-200"
-                        }`}
+                          }`}
                       >
                         {item.status}
                       </span>
@@ -433,7 +432,7 @@ export default function GalleryManager() {
 
               <div className="mb-6">
                 <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                  {isAdding ? "TAMBAH FOTO GALERI" : (!isEditing ? "LIHAT FOTO GALERI" : "EDIT FOTO GALERI")}
+                  {isAdding ? "TAMBAH DATA" : (!isEditing ? "DETAIL DATA" : "EDIT DATA")}
                 </span>
               </div>
 
@@ -505,9 +504,8 @@ export default function GalleryManager() {
                     onDragOver={handleDrag}
                     onDrop={handleDrop}
                     onClick={() => fileInputRef.current?.click()}
-                    className={`relative w-full rounded-xl border-2 border-dashed cursor-pointer transition flex flex-col items-center justify-center text-center overflow-hidden min-h-[110px] ${
-                      dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
-                    } ${!isEditing && "pointer-events-none opacity-60"}`}
+                    className={`relative w-full rounded-xl border-2 border-dashed cursor-pointer transition flex flex-col items-center justify-center text-center overflow-hidden min-h-[110px] ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
+                      } ${!isEditing && "pointer-events-none opacity-60"}`}
                   >
                     {uploading ? (
                       <div className="py-6 flex flex-col items-center gap-2">

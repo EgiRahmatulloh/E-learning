@@ -644,10 +644,9 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
           <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
             <div>
               <h3 className="text-lg font-black text-[#280f91]">Penilaian Tugas Warga Belajar Sesi {sessionNumber}</h3>
-              <p className="text-xs font-semibold text-slate-500">Data ini menunggu integrasi data siswa real.</p>
             </div>
             <Button size="sm" variant="outline" className="border-[#280f91] text-[#280f91] hover:bg-[#280f91] hover:text-white font-bold h-9">
-              <DownloadCloud className="w-4 h-4 mr-2" /> Bulk Download (.ZIP)
+              <DownloadCloud className="w-4 h-4 mr-2" /> Donwload Semua (.ZIP)
             </Button>
           </div>
 

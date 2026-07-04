@@ -107,7 +107,7 @@ export function HeaderManager() {
         // Edit mode (database record)
         const res = await fetch(`/api/sliders/${editId}`, {
           method: "PUT",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
           },
@@ -128,7 +128,7 @@ export function HeaderManager() {
         // Add mode (database record)
         const res = await fetch("/api/sliders", {
           method: "POST",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
           },
@@ -173,11 +173,11 @@ export function HeaderManager() {
         updatedSlides = slides.map((slide) =>
           slide.id === editId
             ? {
-                ...slide,
-                title: formTitle,
-                status: formStatus,
-                image: formImage,
-              }
+              ...slide,
+              title: formTitle,
+              status: formStatus,
+              image: formImage,
+            }
             : slide
         );
         toast.info("Slider diperbarui secara lokal (Offline)!");
@@ -392,7 +392,7 @@ export function HeaderManager() {
               onClick={openAddForm}
               className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
             >
-              <Plus className="h-4 w-4" /> TAMBAH BARU
+              <Plus className="h-4 w-4" /> TAMBAH DATA
             </Button>
           </div>
         </div>
@@ -434,11 +434,10 @@ export function HeaderManager() {
                     </td>
                     <td className="py-4 px-6 border-r border-slate-100 text-center">
                       <span
-                        className={`inline-flex items-center rounded-lg px-3 py-1 text-xs font-black uppercase tracking-wider ${
-                          slide.status === "AKTIF"
-                            ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                            : "bg-rose-100 text-rose-800 border border-rose-200"
-                        }`}
+                        className={`inline-flex items-center rounded-lg px-3 py-1 text-xs font-black uppercase tracking-wider ${slide.status === "AKTIF"
+                          ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                          : "bg-rose-100 text-rose-800 border border-rose-200"
+                          }`}
                       >
                         {slide.status}
                       </span>
@@ -488,7 +487,7 @@ export function HeaderManager() {
 
           {/* Form Container */}
           <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 border-4 border-cyan-400">
-            
+
             {/* Actual Form Column */}
             <div className="bg-[#00badb] p-6 relative text-white">
               {/* Close Button */}
@@ -501,7 +500,7 @@ export function HeaderManager() {
 
               <div className="mb-6">
                 <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                  {editId ? (isEditing ? "TAMPILAN EDIT DATA" : "TAMPILAN DETAIL DATA") : "TAMPILAN TAMBAH BARU"}
+                  {editId ? (isEditing ? "EDIT DATA" : "DETAIL DATA") : "TAMBAH DATA"}
                 </span>
               </div>
 
@@ -550,11 +549,10 @@ export function HeaderManager() {
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                     onClick={() => { if (isEditing) document.getElementById("file-upload")?.click(); }}
-                    className={`${!isEditing ? "pointer-events-none opacity-60 " : ""}border-4 border-dashed rounded-xl p-5 text-center transition-all duration-200 cursor-pointer flex flex-col items-center justify-center relative overflow-hidden bg-white/5 ${
-                      dragOver
-                        ? "border-[#9c27b0] bg-white/20 scale-[0.99]"
-                        : "border-white/40 hover:border-white/80 hover:bg-white/10"
-                    }`}
+                    className={`${!isEditing ? "pointer-events-none opacity-60 " : ""}border-4 border-dashed rounded-xl p-5 text-center transition-all duration-200 cursor-pointer flex flex-col items-center justify-center relative overflow-hidden bg-white/5 ${dragOver
+                      ? "border-[#9c27b0] bg-white/20 scale-[0.99]"
+                      : "border-white/40 hover:border-white/80 hover:bg-white/10"
+                      }`}
                   >
                     <input
                       id="file-upload"

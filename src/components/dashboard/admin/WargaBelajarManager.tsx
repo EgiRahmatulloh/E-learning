@@ -155,8 +155,8 @@ export default function WargaBelajarManager() {
 
   // Cek apakah siswa sudah di akhir program (untuk sembunyikan "Melanjutkan Program")
   const MAX_GRADE: Record<string, number> = { "PAKET A": 6, "PAKET B": 9, "PAKET C": 12 };
-  const romanKeys = ["XII","XI","X","IX","VIII","VII","VI","V","IV","III","II","I"];
-  const romanMap: Record<string, number> = { I:1,II:2,III:3,IV:4,V:5,VI:6,VII:7,VIII:8,IX:9,X:10,XI:11,XII:12 };
+  const romanKeys = ["XII", "XI", "X", "IX", "VIII", "VII", "VI", "V", "IV", "III", "II", "I"];
+  const romanMap: Record<string, number> = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10, XI: 11, XII: 12 };
 
   const getGradeFromKelas = (kelas: string): number => {
     const upper = (kelas || "").toUpperCase().trim();
@@ -770,7 +770,7 @@ export default function WargaBelajarManager() {
             >
               <option value="">SEMUA ROMBEL</option>
               {rombels.slice().sort((a, b) => {
-                const roman: Record<string, number> = { I:1, II:2, III:3, IV:4, V:5, VI:6, VII:7, VIII:8, IX:9, X:10, XI:11, XII:12 };
+                const roman: Record<string, number> = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10, XI: 11, XII: 12 };
                 const romanKeys = Object.keys(roman).sort((a, b) => b.length - a.length);
                 const getGrade = (n: string) => {
                   const upper = n.toUpperCase();
@@ -820,7 +820,7 @@ export default function WargaBelajarManager() {
               onClick={openAddForm}
               className="rounded-xl bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 h-10 cursor-pointer transition-all shadow-md shadow-purple-200 flex items-center gap-2"
             >
-              <Plus className="h-4 w-4" /> TAMBAH WB
+              <Plus className="h-4 w-4" /> TAMBAH DATA
             </Button>
             <Button
               onClick={handleSearch}
@@ -1024,9 +1024,8 @@ export default function WargaBelajarManager() {
                           <td className="py-4 px-6 text-center border-r border-slate-100 font-mono">{student.nisn || "-"}</td>
                           <td className="py-4 px-6 text-center border-r border-slate-100 font-mono">{student.nis || "-"}</td>
                           <td className="py-4 px-6 text-center">
-                            <span className={`inline-block text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase text-white ${
-                              student.status === "LULUS" ? "bg-purple-600" : "bg-emerald-600"
-                            }`}>
+                            <span className={`inline-block text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase text-white ${student.status === "LULUS" ? "bg-purple-600" : "bg-emerald-600"
+                              }`}>
                               {student.status || "AKTIF"}
                             </span>
                           </td>
@@ -1071,7 +1070,7 @@ export default function WargaBelajarManager() {
 
               <div className="mb-3 pr-10 shrink-0">
                 <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                  {isAdding ? "Tambah Warga Belajar Baru" : (!isEditing ? `Profil Warga Belajar: ${selectedStudent?.nama}` : `Edit Warga Belajar: ${selectedStudent?.nama}`)}
+                  {isAdding ? "TAMBAH DATA" : (!isEditing ? `DETAIL DATA: ${selectedStudent?.nama}` : `EDIT DATA: ${selectedStudent?.nama}`)}
                 </span>
               </div>
 
@@ -1118,220 +1117,220 @@ export default function WargaBelajarManager() {
                   {/* LEFT COLUMN: FORM INPUT PANEL */}
                   <div className="flex-1 lg:min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1.5">
 
-                      {/* Row 1: NAMA | NIK */}
-                      <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA</label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="Nama lengkap warga belajar"
-                          value={formData.nama || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, nama: e.target.value }))}
-                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                          disabled={!isEditing}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIK</label>
-                        <input
-                          type="text"
-                          placeholder="Nomor Induk Kependudukan (16 digit)"
-                          value={formData.nik || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, nik: e.target.value }))}
-                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                          disabled={!isEditing}
-                        />
-                      </div>
+                    {/* Row 1: NAMA | NIK */}
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Nama lengkap warga belajar"
+                        value={formData.nama || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, nama: e.target.value }))}
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIK</label>
+                      <input
+                        type="text"
+                        placeholder="Nomor Induk Kependudukan (16 digit)"
+                        value={formData.nik || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, nik: e.target.value }))}
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        disabled={!isEditing}
+                      />
+                    </div>
 
-                      {/* Row 2: PROGRAM | KELAS */}
-                      <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PROGRAM</label>
-                        <select
-                          value={formData.program || "PAKET C"}
-                          onChange={(e) => {
-                            const prog = e.target.value;
-                            const kelasList = KELAS_BY_PROGRAM[prog];
-                            setFormData(prev => ({ ...prev, program: prog, kelas: kelasList[0] }));
-                          }}
-                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                    {/* Row 2: PROGRAM | KELAS */}
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PROGRAM</label>
+                      <select
+                        value={formData.program || "PAKET C"}
+                        onChange={(e) => {
+                          const prog = e.target.value;
+                          const kelasList = KELAS_BY_PROGRAM[prog];
+                          setFormData(prev => ({ ...prev, program: prog, kelas: kelasList[0] }));
+                        }}
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        disabled={!isEditing}
+                      >
+                        <option value="PAKET A">PAKET A</option>
+                        <option value="PAKET B">PAKET B</option>
+                        <option value="PAKET C">PAKET C</option>
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KELAS</label>
+                      <select
+                        value={formData.kelas || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, kelas: e.target.value }))}
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        disabled={!isEditing}
+                      >
+                        {(KELAS_BY_PROGRAM[formData.program || "PAKET C"] || []).map((k) => (
+                          <option key={k} value={k}>{k}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Row 3: NISN | NIS */}
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NISN</label>
+                      <input
+                        type="text"
+                        placeholder="Nomor Induk Siswa Nasional"
+                        value={formData.nisn || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, nisn: e.target.value }))}
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIS</label>
+                      <input
+                        type="text"
+                        placeholder="Nomor Induk Siswa"
+                        value={formData.nis || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, nis: e.target.value }))}
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        disabled={!isEditing}
+                      />
+                    </div>
+
+                    {/* Row 4: TEMPAT, TGL. LAHIR | JENIS KELAMIN */}
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TEMPAT, TGL. LAHIR</label>
+                      <input
+                        type="text"
+                        placeholder="Contoh: Ciamis, 05-02-2008"
+                        value={formData.tempatTglLahir || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, tempatTglLahir: e.target.value }))}
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">JENIS KELAMIN</label>
+                      <select
+                        value={formData.jenisKelamin || "Laki-laki"}
+                        onChange={(e) => setFormData(prev => ({ ...prev, jenisKelamin: e.target.value }))}
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        disabled={!isEditing}
+                      >
+                        <option value="Laki-laki">Laki-laki</option>
+                        <option value="Perempuan">Perempuan</option>
+                      </select>
+                    </div>
+
+                    {/* Row 5: AGAMA | EMAIL */}
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">AGAMA</label>
+                      <input
+                        type="text"
+                        placeholder="Agama"
+                        value={formData.agama || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, agama: e.target.value }))}
+                        className="w-full h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-850 placeholder-slate-400 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">EMAIL</label>
+                      <input
+                        type="email"
+                        placeholder="Alamat email warga belajar"
+                        value={formData.email || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                        className="w-full h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-850 placeholder-slate-400 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        disabled={!isEditing}
+                      />
+                    </div>
+
+                    {/* Row 6: ALAMAT (full width) */}
+                    <div className="flex flex-col gap-0.5 sm:col-span-2">
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">ALAMAT</label>
+                      <textarea
+                        placeholder="Alamat tempat tinggal lengkap warga belajar"
+                        value={formData.alamat || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, alamat: e.target.value }))}
+                        className="w-full p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
+                        rows={2}
+                        disabled={!isEditing}
+                      />
+                    </div>
+
+                    {/* Row 7: TITIK LAYANAN | NO. HP */}
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TITIK LAYANAN</label>
+                      <input
+                        type="text"
+                        placeholder="Titik layanan belajar"
+                        value={formData.titikLayanan || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, titikLayanan: e.target.value }))}
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NO. HP</label>
+                      <input
+                        type="text"
+                        placeholder="Nomor Handphone aktif"
+                        value={formData.noHp || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, noHp: e.target.value }))}
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        disabled={!isEditing}
+                      />
+                    </div>
+
+                    {/* Row 8: NAMA AYAH | NAMA IBU */}
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA AYAH</label>
+                      <input
+                        type="text"
+                        placeholder="Nama lengkap ayah kandung"
+                        value={formData.namaAyah || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, namaAyah: e.target.value }))}
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA IBU</label>
+                      <input
+                        type="text"
+                        placeholder="Nama lengkap ibu kandung"
+                        value={formData.namaIbu || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, namaIbu: e.target.value }))}
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        disabled={!isEditing}
+                      />
+                    </div>
+
+                    {/* Row 9: PASSWORD (full width) */}
+                    <div className="flex flex-col gap-0.5 sm:col-span-2">
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                        PASSWORD AKUN LOGIN {!isAdding && "(KOSONGKAN JIKA TIDAK INGIN MENGUBAH)"}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          placeholder={isAdding ? "Buat password login warga belajar" : "Masukkan password baru jika ingin diubah"}
+                          value={formData.password || ""}
+                          onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                          className="w-full h-9 pl-3 pr-10 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                           disabled={!isEditing}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                         >
-                          <option value="PAKET A">PAKET A</option>
-                          <option value="PAKET B">PAKET B</option>
-                          <option value="PAKET C">PAKET C</option>
-                        </select>
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
                       </div>
-                      <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KELAS</label>
-                        <select
-                          value={formData.kelas || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, kelas: e.target.value }))}
-                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                          disabled={!isEditing}
-                        >
-                          {(KELAS_BY_PROGRAM[formData.program || "PAKET C"] || []).map((k) => (
-                            <option key={k} value={k}>{k}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Row 3: NISN | NIS */}
-                      <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NISN</label>
-                        <input
-                          type="text"
-                          placeholder="Nomor Induk Siswa Nasional"
-                          value={formData.nisn || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, nisn: e.target.value }))}
-                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                          disabled={!isEditing}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIS</label>
-                        <input
-                          type="text"
-                          placeholder="Nomor Induk Siswa"
-                          value={formData.nis || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, nis: e.target.value }))}
-                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                          disabled={!isEditing}
-                        />
-                      </div>
-
-                      {/* Row 4: TEMPAT, TGL. LAHIR | JENIS KELAMIN */}
-                      <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TEMPAT, TGL. LAHIR</label>
-                        <input
-                          type="text"
-                          placeholder="Contoh: Ciamis, 05-02-2008"
-                          value={formData.tempatTglLahir || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, tempatTglLahir: e.target.value }))}
-                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                          disabled={!isEditing}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">JENIS KELAMIN</label>
-                        <select
-                          value={formData.jenisKelamin || "Laki-laki"}
-                          onChange={(e) => setFormData(prev => ({ ...prev, jenisKelamin: e.target.value }))}
-                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                          disabled={!isEditing}
-                        >
-                          <option value="Laki-laki">Laki-laki</option>
-                          <option value="Perempuan">Perempuan</option>
-                        </select>
-                      </div>
-
-                      {/* Row 5: AGAMA | EMAIL */}
-                      <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">AGAMA</label>
-                        <input
-                          type="text"
-                          placeholder="Agama"
-                          value={formData.agama || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, agama: e.target.value }))}
-                          className="w-full h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-850 placeholder-slate-400 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                          disabled={!isEditing}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">EMAIL</label>
-                        <input
-                          type="email"
-                          placeholder="Alamat email warga belajar"
-                          value={formData.email || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                          className="w-full h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-850 placeholder-slate-400 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                          disabled={!isEditing}
-                        />
-                      </div>
-
-                      {/* Row 6: ALAMAT (full width) */}
-                      <div className="flex flex-col gap-0.5 sm:col-span-2">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">ALAMAT</label>
-                        <textarea
-                          placeholder="Alamat tempat tinggal lengkap warga belajar"
-                          value={formData.alamat || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, alamat: e.target.value }))}
-                          className="w-full p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
-                          rows={2}
-                          disabled={!isEditing}
-                        />
-                      </div>
-
-                      {/* Row 7: TITIK LAYANAN | NO. HP */}
-                      <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TITIK LAYANAN</label>
-                        <input
-                          type="text"
-                          placeholder="Titik layanan belajar"
-                          value={formData.titikLayanan || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, titikLayanan: e.target.value }))}
-                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                          disabled={!isEditing}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NO. HP</label>
-                        <input
-                          type="text"
-                          placeholder="Nomor Handphone aktif"
-                          value={formData.noHp || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, noHp: e.target.value }))}
-                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                          disabled={!isEditing}
-                        />
-                      </div>
-
-                      {/* Row 8: NAMA AYAH | NAMA IBU */}
-                      <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA AYAH</label>
-                        <input
-                          type="text"
-                          placeholder="Nama lengkap ayah kandung"
-                          value={formData.namaAyah || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, namaAyah: e.target.value }))}
-                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                          disabled={!isEditing}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA IBU</label>
-                        <input
-                          type="text"
-                          placeholder="Nama lengkap ibu kandung"
-                          value={formData.namaIbu || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, namaIbu: e.target.value }))}
-                          className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                          disabled={!isEditing}
-                        />
-                      </div>
-
-                      {/* Row 9: PASSWORD (full width) */}
-                      <div className="flex flex-col gap-0.5 sm:col-span-2">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
-                          PASSWORD AKUN LOGIN {!isAdding && "(KOSONGKAN JIKA TIDAK INGIN MENGUBAH)"}
-                        </label>
-                        <div className="relative">
-                          <input
-                            type={showPassword ? "text" : "password"}
-                            placeholder={isAdding ? "Buat password login warga belajar" : "Masukkan password baru jika ingin diubah"}
-                            value={formData.password || ""}
-                            onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                            className="w-full h-9 pl-3 pr-10 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                            disabled={!isEditing}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                          >
-                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </button>
-                        </div>
-                      </div>
+                    </div>
 
                   </div>
 
@@ -1346,9 +1345,8 @@ export default function WargaBelajarManager() {
                         onDragOver={handleDrag}
                         onDragLeave={handleDrag}
                         onDrop={handleDrop}
-                        className={`border-2 border-dashed rounded-xl p-2.5 text-center transition-all ${
-                          dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
-                        } h-44 flex flex-col justify-center items-center relative overflow-hidden ${!isEditing && "pointer-events-none opacity-60"}`}
+                        className={`border-2 border-dashed rounded-xl p-2.5 text-center transition-all ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
+                          } h-44 flex flex-col justify-center items-center relative overflow-hidden ${!isEditing && "pointer-events-none opacity-60"}`}
                       >
                         {formData.foto ? (
                           <div className="w-full h-full relative group">

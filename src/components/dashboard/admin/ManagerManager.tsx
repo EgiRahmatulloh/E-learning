@@ -159,7 +159,7 @@ export default function ManagerManager() {
     try {
       const list: ManagerData[] = JSON.parse(saved);
       const token = getSafeItem("token");
-      
+
       toast.info("Sinkronisasi data pengelola ke server...");
 
       // 1. Sync offline deletions first
@@ -180,20 +180,20 @@ export default function ManagerManager() {
         }
         setSafeItem("pkbm_managers_deleted_ids", "[]");
       }
-      
+
       // 2. Sync creations and updates
       let updatedList = [...list];
-      
+
       for (let i = 0; i < updatedList.length; i++) {
         const manager = updatedList[i];
-        
+
         // Determine method based on whether the ID exists in our known server database records
         const method = manager.id && dbManagerIds.has(Number(manager.id)) ? "PUT" : "POST";
         const url = method === "PUT" ? `/api/managers/${manager.id}` : "/api/managers";
-        
+
         // Strip the id property from the body payload for both POST and PUT requests to prevent validation failures
         const { id: _, ...bodyToSend } = manager;
-        
+
         const res = await fetch(url, {
           method,
           headers: {
@@ -202,7 +202,7 @@ export default function ManagerManager() {
           },
           body: JSON.stringify(bodyToSend),
         });
-        
+
         const resData = await res.json();
         if (resData.success && resData.data) {
           // Update the specific record in the local list with the server-returned data (has correct DB id)
@@ -214,7 +214,7 @@ export default function ManagerManager() {
           throw new Error(resData.message || "Gagal sinkronisasi data");
         }
       }
-      
+
       toast.success("Sinkronisasi data ke server berhasil!");
       setHasUnsyncedOfflineData(false);
       fetchManagers();
@@ -281,10 +281,10 @@ export default function ManagerManager() {
     try {
       const method = isNew ? "POST" : "PUT";
       const url = isNew ? "/api/managers" : `/api/managers/${selectedManager.id}`;
-      
+
       // Strip ID from the request body to prevent backend schema validation failures
       const { id, ...payload } = selectedManager;
-      
+
       const res = await fetch(url, {
         method,
         headers: {
@@ -615,7 +615,7 @@ export default function ManagerManager() {
 
   return (
     <div className="space-y-6 relative pb-16 animate-in fade-in duration-300">
-      
+
       {/* MOCKUP NAV TOP BAR */}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
         <div>
@@ -697,13 +697,12 @@ export default function ManagerManager() {
               onClick={handleAddNew}
               className="h-10 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all active:scale-95"
             >
-              <UserPlus className="h-4 w-4" /> TAMBAH PENGELOLA
+              <UserPlus className="h-4 w-4" /> TAMBAH DATA
             </Button>
             <Button
               onClick={handleSearch}
-              className={`h-10 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                activeFilter ? "bg-[#009cb9] hover:bg-[#008aa7] text-white" : "bg-[#00badb] hover:bg-[#009cb9] text-white"
-              }`}
+              className={`h-10 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${activeFilter ? "bg-[#009cb9] hover:bg-[#008aa7] text-white" : "bg-[#00badb] hover:bg-[#009cb9] text-white"
+                }`}
             >
               <Filter className="h-4 w-4" /> FILTER
             </Button>
@@ -755,9 +754,8 @@ export default function ManagerManager() {
                       <div
                         key={m.id || m.nama}
                         onClick={() => handleSelectManager(m)}
-                        className={`bg-white rounded-2xl overflow-hidden border-2 cursor-pointer transition flex flex-col group ${
-                          isActive ? "border-purple-600 shadow-md ring-2 ring-purple-100" : "border-slate-100 hover:border-purple-300"
-                        }`}
+                        className={`bg-white rounded-2xl overflow-hidden border-2 cursor-pointer transition flex flex-col group ${isActive ? "border-purple-600 shadow-md ring-2 ring-purple-100" : "border-slate-100 hover:border-purple-300"
+                          }`}
                       >
                         {/* Photo Frame with Position badge overlay */}
                         <div className="h-44 bg-slate-50 relative overflow-hidden">
@@ -812,9 +810,8 @@ export default function ManagerManager() {
                         <tr
                           key={m.id || m.nama}
                           onClick={() => handleSelectManager(m)}
-                          className={`hover:bg-cyan-50/20 cursor-pointer transition ${
-                            selectedManager.id === m.id && !isNew ? "bg-purple-50/75 text-purple-900 font-bold" : ""
-                          }`}
+                          className={`hover:bg-cyan-50/20 cursor-pointer transition ${selectedManager.id === m.id && !isNew ? "bg-purple-50/75 text-purple-900 font-bold" : ""
+                            }`}
                         >
                           <td className="py-4 px-6 text-center text-slate-500 font-mono border-r border-slate-100">{idx + 1}</td>
                           <td className="py-4 px-6 font-bold text-slate-800 border-r border-slate-100">{m.nama || "-"}</td>
@@ -859,410 +856,410 @@ export default function ManagerManager() {
               ✕
             </button>
 
-        {/* PANEL TITLE */}
-        <div className="mb-4 pr-10 shrink-0 flex justify-between items-center border-b border-white/20 pb-4">
-          <h3 className="bg-[#9c27b0] text-white font-extrabold text-xs px-4 py-1.5 rounded-full uppercase tracking-widest shadow-md">
-            TAMPILAN TAMBAH PENGELOLA DAN DETAIL PROFIL
-          </h3>
-        </div>
-
-        <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-y-auto pr-1">
-
-          {/* FORM INPUT PANEL */}
-          <div className="flex-1 lg:min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1.5">
-
-              {/* Row 1: NAMA | NIK */}
-              <div className="flex flex-col gap-0.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA</label>
-                <input
-                  type="text"
-                  disabled={!isEditing}
-                  placeholder="Masukkan nama lengkap dengan gelar (contoh: H. Maman Suparman, S.Pd.)"
-                  value={selectedManager.nama}
-                  onChange={(e) => handleFieldChange("nama", e.target.value)}
-                  className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIK</label>
-                <input
-                  type="text"
-                  disabled={!isEditing}
-                  placeholder="Masukkan 16 digit Nomor Induk Kependudukan"
-                  value={selectedManager.nik}
-                  onChange={(e) => handleFieldChange("nik", e.target.value)}
-                  className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                />
-              </div>
-
-              {/* Row 2: JABATAN | NUPTK */}
-              <div className="flex flex-col gap-0.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">JABATAN</label>
-                <input
-                  type="text"
-                  disabled={!isEditing}
-                  placeholder="Masukkan jabatan (contoh: Ketua PKBM, Bendahara)"
-                  value={selectedManager.jabatan}
-                  onChange={(e) => handleFieldChange("jabatan", e.target.value)}
-                  className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NUPTK</label>
-                <input
-                  type="text"
-                  disabled={!isEditing}
-                  placeholder="Masukkan Nomor Unik Pendidik dan Tenaga Kependidikan (jika ada)"
-                  value={selectedManager.nuptk}
-                  onChange={(e) => handleFieldChange("nuptk", e.target.value)}
-                  className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                />
-              </div>
-
-              {/* Row 3: TEMPAT/TGL.LAHIR | JK */}
-              <div className="flex flex-col gap-0.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TEMPAT, TGL. LAHIR</label>
-                <input
-                  type="text"
-
-                  placeholder="Contoh: Ciamis, 12-05-1970"
-                  value={selectedManager.tempatTglLahir}
-                  onChange={(e) => handleFieldChange("tempatTglLahir", e.target.value)}
-                  disabled={!isEditing}
-                  className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">JENIS KELAMIN</label>
-                <select
-                  value={selectedManager.jenisKelamin}
-                  onChange={(e) => handleFieldChange("jenisKelamin", e.target.value)}
-                  disabled={!isEditing}
-                  className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                >
-                  <option value="" disabled>Pilih Jenis Kelamin</option>
-                  <option value="Laki-laki">Laki-laki</option>
-                  <option value="Perempuan">Perempuan</option>
-                </select>
-              </div>
-
-              {/* Row 4: AGAMA | PENDIDIKAN */}
-              <div className="flex flex-col gap-0.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">AGAMA</label>
-                <input
-                  type="text"
-
-                  placeholder="Contoh: Islam, Kristen, dll"
-                  value={selectedManager.agama}
-                  onChange={(e) => handleFieldChange("agama", e.target.value)}
-                  disabled={!isEditing}
-                  className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PENDIDIKAN</label>
-                <input
-                  type="text"
-
-                  placeholder="Contoh: S1 Pendidikan, SMA, dll"
-                  value={selectedManager.pendidikan}
-                  onChange={(e) => handleFieldChange("pendidikan", e.target.value)}
-                  disabled={!isEditing}
-                  className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                />
-              </div>
-
-              {/* Row 5: EMAIL | TANGGAL MULAI TUGAS */}
-              <div className="flex flex-col gap-0.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">EMAIL</label>
-                <input
-                  type="email"
-
-                  placeholder="Contoh: nama@pkbmmakmur.org"
-                  value={selectedManager.email}
-                  onChange={(e) => handleFieldChange("email", e.target.value)}
-                  disabled={!isEditing}
-                  className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TANGGAL MULAI TUGAS</label>
-                <input
-                  type="text"
-
-                  placeholder="Masukkan tanggal mulai tugas (contoh: YYYY-MM-DD)"
-                  value={selectedManager.tanggalMulaiTugas}
-                  onChange={(e) => handleFieldChange("tanggalMulaiTugas", e.target.value)}
-                  disabled={!isEditing}
-                  className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                />
-              </div>
-
-              {/* Row 6: NOMOR SK PENGANGKATAN | LEMBAGA PENGANGKAT */}
-              <div className="flex flex-col gap-0.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NOMOR SK PENGANGKATAN</label>
-                <input
-                  type="text"
-
-                  placeholder="Masukkan nomor SK pengangkatan"
-                  value={selectedManager.nomorSkPengangkatan}
-                  onChange={(e) => handleFieldChange("nomorSkPengangkatan", e.target.value)}
-                  disabled={!isEditing}
-                  className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">LEMBAGA PENGANGKAT</label>
-                <input
-                  type="text"
-
-                  placeholder="Masukkan nama lembaga yang mengeluarkan SK"
-                  value={selectedManager.lembagaPengangkat}
-                  onChange={(e) => handleFieldChange("lembagaPengangkat", e.target.value)}
-                  disabled={!isEditing}
-                  className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                />
-              </div>
-
-              {/* Row 7: NOMOR SK PENUGASAN | LEMBAGA PENUGAS */}
-              <div className="flex flex-col gap-0.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NOMOR SK PENUGASAN</label>
-                <input
-                  type="text"
-
-                  placeholder="Masukkan nomor SK penugasan"
-                  value={selectedManager.nomorSkPenugasan}
-                  onChange={(e) => handleFieldChange("nomorSkPenugasan", e.target.value)}
-                  disabled={!isEditing}
-                  className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">LEMBAGA PENUGAS</label>
-                <input
-                  type="text"
-
-                  placeholder="Masukkan nama lembaga yang menugaskan"
-                  value={selectedManager.lembagaPenugas}
-                  onChange={(e) => handleFieldChange("lembagaPenugas", e.target.value)}
-                  disabled={!isEditing}
-                  className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                />
-              </div>
-
-              {/* Row 8: ALAMAT (full width) */}
-              <div className="sm:col-span-2 flex flex-col gap-0.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">ALAMAT</label>
-                <textarea
-                  rows={2}
-
-                  placeholder="Masukkan alamat domisili lengkap pengelola"
-                  value={selectedManager.alamat}
-                  onChange={(e) => handleFieldChange("alamat", e.target.value)}
-                  disabled={!isEditing}
-                  className="p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
-                />
-              </div>
-
-              {/* Row 9: PASSWORD (full width) */}
-              <div className="sm:col-span-2 flex flex-col gap-0.5">
-                <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PASWORD</label>
-                <div className="flex gap-2">
-                  <input
-                    type={showPassword ? "text" : "password"}
-
-                    placeholder="Masukkan sandi baru (kosongkan jika tidak ingin diubah)"
-                    value={selectedManager.password}
-                    onChange={(e) => handleFieldChange("password", e.target.value)}
-                    disabled={!isEditing}
-                    className="flex-1 h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="h-10 px-4 rounded-lg border-none bg-white/10 hover:bg-white/20 text-[10px] font-black text-white shrink-0 cursor-pointer"
-                  >
-                    {showPassword ? "SEMBUNYIKAN" : "LIHAT"}
-                  </button>
-                </div>
-              </div>
-
+            {/* PANEL TITLE */}
+            <div className="mb-4 pr-10 shrink-0 flex justify-between items-center border-b border-white/20 pb-4">
+              <h3 className="bg-[#9c27b0] text-white font-extrabold text-xs px-4 py-1.5 rounded-full uppercase tracking-widest shadow-md">
+                DETAIL DATA
+              </h3>
             </div>
 
-          {/* FOTO UPLOAD PANEL — compact sidebar */}
-          <div className="lg:w-[230px] lg:shrink-0 w-full flex flex-col gap-4">
+            <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-y-auto pr-1">
 
-            {/* PHOTO UPLOAD */}
-            <div className="w-full text-center">
-              <h4 className="text-[10px] font-black text-cyan-50 uppercase tracking-wider mb-1.5">
-                FOTO
-              </h4>
+              {/* FORM INPUT PANEL */}
+              <div className="flex-1 lg:min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1.5">
 
-              <div
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  if (!isEditing) { toast.warning("Klik EDIT terlebih dahulu untuk mengubah foto!"); return; }
-                  const file = e.dataTransfer.files?.[0];
-                  if (file) processUpload(file);
-                }}
-                onClick={() => {
-                  if (isEditing) fileInputRef.current?.click();
-                }}
-                className={`${!isEditing ? "pointer-events-none opacity-60 " : ""}w-full h-44 border-4 border-dashed rounded-xl flex flex-col items-center justify-center p-3 relative overflow-hidden transition-all text-center bg-white border-purple-400 hover:border-purple-600 hover:bg-purple-50/20 cursor-pointer`}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  disabled={!isEditing}
+                {/* Row 1: NAMA | NIK */}
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA</label>
+                  <input
+                    type="text"
+                    disabled={!isEditing}
+                    placeholder="Masukkan nama lengkap dengan gelar (contoh: H. Maman Suparman, S.Pd.)"
+                    value={selectedManager.nama}
+                    onChange={(e) => handleFieldChange("nama", e.target.value)}
+                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                  />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIK</label>
+                  <input
+                    type="text"
+                    disabled={!isEditing}
+                    placeholder="Masukkan 16 digit Nomor Induk Kependudukan"
+                    value={selectedManager.nik}
+                    onChange={(e) => handleFieldChange("nik", e.target.value)}
+                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                  />
+                </div>
 
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      processUpload(file);
-                      e.target.value = "";
-                    }
-                  }}
-                  className="hidden"
-                />
+                {/* Row 2: JABATAN | NUPTK */}
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">JABATAN</label>
+                  <input
+                    type="text"
+                    disabled={!isEditing}
+                    placeholder="Masukkan jabatan (contoh: Ketua PKBM, Bendahara)"
+                    value={selectedManager.jabatan}
+                    onChange={(e) => handleFieldChange("jabatan", e.target.value)}
+                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                  />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NUPTK</label>
+                  <input
+                    type="text"
+                    disabled={!isEditing}
+                    placeholder="Masukkan Nomor Unik Pendidik dan Tenaga Kependidikan (jika ada)"
+                    value={selectedManager.nuptk}
+                    onChange={(e) => handleFieldChange("nuptk", e.target.value)}
+                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                  />
+                </div>
 
-                {uploadingFoto ? (
-                  <div className="flex flex-col items-center text-slate-400">
-                    <div className="animate-spin rounded-full h-6 w-6 border-3 border-slate-200 border-t-purple-600 mb-1.5" />
-                    <span className="text-[9px] font-bold uppercase">UPLOADING...</span>
-                  </div>
-                ) : selectedManager.foto ? (
-                  <div className="w-full h-full relative group">
-                    <img
-                      src={selectedManager.foto}
-                      alt="Foto Pengelola"
-                      className="w-full h-full object-contain rounded-lg"
+                {/* Row 3: TEMPAT/TGL.LAHIR | JK */}
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TEMPAT, TGL. LAHIR</label>
+                  <input
+                    type="text"
+
+                    placeholder="Contoh: Ciamis, 12-05-1970"
+                    value={selectedManager.tempatTglLahir}
+                    onChange={(e) => handleFieldChange("tempatTglLahir", e.target.value)}
+                    disabled={!isEditing}
+                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                  />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">JENIS KELAMIN</label>
+                  <select
+                    value={selectedManager.jenisKelamin}
+                    onChange={(e) => handleFieldChange("jenisKelamin", e.target.value)}
+                    disabled={!isEditing}
+                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                  >
+                    <option value="" disabled>Pilih Jenis Kelamin</option>
+                    <option value="Laki-laki">Laki-laki</option>
+                    <option value="Perempuan">Perempuan</option>
+                  </select>
+                </div>
+
+                {/* Row 4: AGAMA | PENDIDIKAN */}
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">AGAMA</label>
+                  <input
+                    type="text"
+
+                    placeholder="Contoh: Islam, Kristen, dll"
+                    value={selectedManager.agama}
+                    onChange={(e) => handleFieldChange("agama", e.target.value)}
+                    disabled={!isEditing}
+                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                  />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PENDIDIKAN</label>
+                  <input
+                    type="text"
+
+                    placeholder="Contoh: S1 Pendidikan, SMA, dll"
+                    value={selectedManager.pendidikan}
+                    onChange={(e) => handleFieldChange("pendidikan", e.target.value)}
+                    disabled={!isEditing}
+                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                  />
+                </div>
+
+                {/* Row 5: EMAIL | TANGGAL MULAI TUGAS */}
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">EMAIL</label>
+                  <input
+                    type="email"
+
+                    placeholder="Contoh: nama@pkbmmakmur.org"
+                    value={selectedManager.email}
+                    onChange={(e) => handleFieldChange("email", e.target.value)}
+                    disabled={!isEditing}
+                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                  />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TANGGAL MULAI TUGAS</label>
+                  <input
+                    type="text"
+
+                    placeholder="Masukkan tanggal mulai tugas (contoh: YYYY-MM-DD)"
+                    value={selectedManager.tanggalMulaiTugas}
+                    onChange={(e) => handleFieldChange("tanggalMulaiTugas", e.target.value)}
+                    disabled={!isEditing}
+                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                  />
+                </div>
+
+                {/* Row 6: NOMOR SK PENGANGKATAN | LEMBAGA PENGANGKAT */}
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NOMOR SK PENGANGKATAN</label>
+                  <input
+                    type="text"
+
+                    placeholder="Masukkan nomor SK pengangkatan"
+                    value={selectedManager.nomorSkPengangkatan}
+                    onChange={(e) => handleFieldChange("nomorSkPengangkatan", e.target.value)}
+                    disabled={!isEditing}
+                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                  />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">LEMBAGA PENGANGKAT</label>
+                  <input
+                    type="text"
+
+                    placeholder="Masukkan nama lembaga yang mengeluarkan SK"
+                    value={selectedManager.lembagaPengangkat}
+                    onChange={(e) => handleFieldChange("lembagaPengangkat", e.target.value)}
+                    disabled={!isEditing}
+                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                  />
+                </div>
+
+                {/* Row 7: NOMOR SK PENUGASAN | LEMBAGA PENUGAS */}
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NOMOR SK PENUGASAN</label>
+                  <input
+                    type="text"
+
+                    placeholder="Masukkan nomor SK penugasan"
+                    value={selectedManager.nomorSkPenugasan}
+                    onChange={(e) => handleFieldChange("nomorSkPenugasan", e.target.value)}
+                    disabled={!isEditing}
+                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                  />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">LEMBAGA PENUGAS</label>
+                  <input
+                    type="text"
+
+                    placeholder="Masukkan nama lembaga yang menugaskan"
+                    value={selectedManager.lembagaPenugas}
+                    onChange={(e) => handleFieldChange("lembagaPenugas", e.target.value)}
+                    disabled={!isEditing}
+                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                  />
+                </div>
+
+                {/* Row 8: ALAMAT (full width) */}
+                <div className="sm:col-span-2 flex flex-col gap-0.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">ALAMAT</label>
+                  <textarea
+                    rows={2}
+
+                    placeholder="Masukkan alamat domisili lengkap pengelola"
+                    value={selectedManager.alamat}
+                    onChange={(e) => handleFieldChange("alamat", e.target.value)}
+                    disabled={!isEditing}
+                    className="p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
+                  />
+                </div>
+
+                {/* Row 9: PASSWORD (full width) */}
+                <div className="sm:col-span-2 flex flex-col gap-0.5">
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PASWORD</label>
+                  <div className="flex gap-2">
+                    <input
+                      type={showPassword ? "text" : "password"}
+
+                      placeholder="Masukkan sandi baru (kosongkan jika tidak ingin diubah)"
+                      value={selectedManager.password}
+                      onChange={(e) => handleFieldChange("password", e.target.value)}
+                      disabled={!isEditing}
+                      className="flex-1 h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                     />
-                    {isEditing && (
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
-                      <span className="text-white text-[9px] font-black uppercase tracking-wider">UBAH FOTO</span>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="h-10 px-4 rounded-lg border-none bg-white/10 hover:bg-white/20 text-[10px] font-black text-white shrink-0 cursor-pointer"
+                    >
+                      {showPassword ? "SEMBUNYIKAN" : "LIHAT"}
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* FOTO UPLOAD PANEL — compact sidebar */}
+              <div className="lg:w-[230px] lg:shrink-0 w-full flex flex-col gap-4">
+
+                {/* PHOTO UPLOAD */}
+                <div className="w-full text-center">
+                  <h4 className="text-[10px] font-black text-cyan-50 uppercase tracking-wider mb-1.5">
+                    FOTO
+                  </h4>
+
+                  <div
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (!isEditing) { toast.warning("Klik EDIT terlebih dahulu untuk mengubah foto!"); return; }
+                      const file = e.dataTransfer.files?.[0];
+                      if (file) processUpload(file);
+                    }}
+                    onClick={() => {
+                      if (isEditing) fileInputRef.current?.click();
+                    }}
+                    className={`${!isEditing ? "pointer-events-none opacity-60 " : ""}w-full h-44 border-4 border-dashed rounded-xl flex flex-col items-center justify-center p-3 relative overflow-hidden transition-all text-center bg-white border-purple-400 hover:border-purple-600 hover:bg-purple-50/20 cursor-pointer`}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      disabled={!isEditing}
+
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          processUpload(file);
+                          e.target.value = "";
+                        }
+                      }}
+                      className="hidden"
+                    />
+
+                    {uploadingFoto ? (
+                      <div className="flex flex-col items-center text-slate-400">
+                        <div className="animate-spin rounded-full h-6 w-6 border-3 border-slate-200 border-t-purple-600 mb-1.5" />
+                        <span className="text-[9px] font-bold uppercase">UPLOADING...</span>
+                      </div>
+                    ) : selectedManager.foto ? (
+                      <div className="w-full h-full relative group">
+                        <img
+                          src={selectedManager.foto}
+                          alt="Foto Pengelola"
+                          className="w-full h-full object-contain rounded-lg"
+                        />
+                        {isEditing && (
+                          <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+                            <span className="text-white text-[9px] font-black uppercase tracking-wider">UBAH FOTO</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        <UploadCloud className="h-7 w-7 text-purple-600 mb-1.5" />
+                        <span className="text-[9px] font-black text-cyan-900 uppercase block tracking-wider leading-relaxed">
+                          DRAG AND DROP
+                        </span>
+                        <span className="text-[7px] font-bold text-cyan-600 block mt-0.5">
+                          KLIK UNTUK BROWSE
+                        </span>
+                      </>
                     )}
                   </div>
-                ) : (
-                  <>
-                    <UploadCloud className="h-7 w-7 text-purple-600 mb-1.5" />
-                    <span className="text-[9px] font-black text-cyan-900 uppercase block tracking-wider leading-relaxed">
-                      DRAG AND DROP
-                    </span>
-                    <span className="text-[7px] font-bold text-cyan-600 block mt-0.5">
-                      KLIK UNTUK BROWSE
-                    </span>
-                  </>
-                )}
-              </div>
-              <p className="text-[8px] font-medium text-white/70 mt-1 italic text-center">
-                  * Maks 5MB
-                </p>
+                  <p className="text-[8px] font-medium text-white/70 mt-1 italic text-center">
+                    * Maks 5MB
+                  </p>
 
-                <div className="w-full mt-2 flex flex-col gap-0.5 text-left">
-                <label className="text-[9px] font-black uppercase text-cyan-50">URL Foto</label>
-                <input
-                  type="text"
+                  <div className="w-full mt-2 flex flex-col gap-0.5 text-left">
+                    <label className="text-[9px] font-black uppercase text-cyan-50">URL Foto</label>
+                    <input
+                      type="text"
 
-                  placeholder="atau masukkan URL..."
-                  value={selectedManager.foto || ""}
-                  onChange={(e) => handleFieldChange("foto", e.target.value)}
-                  disabled={!isEditing}
-                  className="w-full text-[11px] font-semibold border border-transparent rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-purple-400 focus:outline-none bg-white text-slate-800 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
-                />
+                      placeholder="atau masukkan URL..."
+                      value={selectedManager.foto || ""}
+                      onChange={(e) => handleFieldChange("foto", e.target.value)}
+                      disabled={!isEditing}
+                      className="w-full text-[11px] font-semibold border border-transparent rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-purple-400 focus:outline-none bg-white text-slate-800 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
+
+            {/* BUTTON PANEL */}
+            <div className="mt-3 pt-4 border-t border-white/10 flex flex-wrap items-center justify-end gap-3 shrink-0">
+              {isNew && isEditing ? (
+                <>
+                  <Button
+                    type="button"
+                    disabled={saving}
+                    onClick={() => {
+                      setIsFormOpen(false);
+                      setIsEditing(false);
+                      setIsNew(false);
+                    }}
+                    className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all disabled:opacity-70"
+                  >
+                    BATAL
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" /> SIMPAN
+                      </>
+                    )}
+                  </Button>
+                </>
+              ) : !isNew && !isEditing ? (
+                <>
+                  <Button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); handleDelete(); }}
+                    className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all flex items-center gap-1.5"
+                  >
+                    <Trash2 className="h-4 w-4" /> HAPUS
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
+                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
+                  >
+                    <Edit3 className="h-4 w-4" /> EDIT
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (originalManager) {
+                        setSelectedManager(originalManager);
+                      }
+                      setIsEditing(false);
+                    }}
+                    className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
+                  >
+                    BATAL
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" /> SIMPAN
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
+            </div>
+
           </div>
         </div>
-
-        {/* BUTTON PANEL */}
-        <div className="mt-3 pt-4 border-t border-white/10 flex flex-wrap items-center justify-end gap-3 shrink-0">
-          {isNew && isEditing ? (
-            <>
-              <Button
-                type="button"
-                disabled={saving}
-                onClick={() => {
-                  setIsFormOpen(false);
-                  setIsEditing(false);
-                  setIsNew(false);
-                }}
-                className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all disabled:opacity-70"
-              >
-                BATAL
-              </Button>
-              <Button
-                type="button"
-                onClick={handleSave}
-                disabled={saving}
-                className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4" /> SIMPAN
-                  </>
-                )}
-              </Button>
-            </>
-          ) : !isNew && !isEditing ? (
-            <>
-              <Button
-                type="button"
-                onClick={(e) => { e.preventDefault(); handleDelete(); }}
-                className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all flex items-center gap-1.5"
-              >
-                <Trash2 className="h-4 w-4" /> HAPUS
-              </Button>
-              <Button
-                type="button"
-                onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
-                className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all"
-              >
-                <Edit3 className="h-4 w-4" /> EDIT
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                type="button"
-                onClick={() => {
-                  if (originalManager) {
-                    setSelectedManager(originalManager);
-                  }
-                  setIsEditing(false);
-                }}
-                className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
-              >
-                BATAL
-              </Button>
-              <Button
-                type="button"
-                onClick={handleSave}
-                disabled={saving}
-                className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-8 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest flex items-center gap-1.5 transition-all disabled:opacity-70"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> MENYIMPAN...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4" /> SIMPAN
-                  </>
-                )}
-              </Button>
-            </>
-          )}
-        </div>
-
-       </div>
-      </div>
       )}
     </div>
   );

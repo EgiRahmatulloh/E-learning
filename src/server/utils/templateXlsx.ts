@@ -87,7 +87,7 @@ function removeClonedMerges(template: any, originalMergeRefs: string[], headerEn
 
     const parts = ref.split(":");
     const startRow = parseInt(parts[0].replace(/[A-Z]+/g, ""), 10);
-    const endRow = parseInt(parts[1].replace(/[A-Z]+/g, ""), 10);
+
     const startCol = parts[0].replace(/[0-9]+/g, "");
     const endCol = parts[1].replace(/[0-9]+/g, "");
     const key = startCol + ":" + endCol;
@@ -259,7 +259,7 @@ function removeClonedMerges(template: any, originalMergeRefs: string[], headerEn
   }
 
   // Write the modified etree back to the archive
-  template.archive.file(sheet.filename, etree.tostring(sheet.root));
+  template.archive.file(sheet.filename, etree.tostring(sheet.root, {}));
 }
 
 /**
@@ -286,7 +286,7 @@ export function fillTemplate(
     }
     // Snapshot cells in the header end row (row 18) before they get overwritten
     try {
-      const sheet = template.loadSheet(1);
+      const sheet = (template as any).loadSheet(1);
       if (sheet && sheet.root) {
         const sheetData = sheet.root.find("sheetData");
         if (sheetData) {

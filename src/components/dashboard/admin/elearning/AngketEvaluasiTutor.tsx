@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Plus, Trash2, Save, FileQuestion, FileSpreadsheet, BarChart3 } from "lucide-react";
@@ -10,26 +10,55 @@ interface EvaluationResponse {
   evaluationId: number;
   studentId: number;
   studentName: string;
+  sessionId: number;
+  sessionName: string;
   courseId: number;
   courseName: string;
+  kelas: string;
   score: number;
   createdAt: string;
 }
 
-interface AggregatedItem {
-  questionId: number;
-  question: string;
-  scaleMax: number;
-  responseCount: number;
-  avgScore: number;
-}
+
 
 export default function AngketEvaluasiTutor() {
   const [questions, setQuestions] = useState<{id: number, text: string}[]>([]);
   const [responses, setResponses] = useState<EvaluationResponse[]>([]);
-  const [aggregated, setAggregated] = useState<AggregatedItem[]>([]);
   const [loadingReport, setLoadingReport] = useState(true);
+
   const [reportError, setReportError] = useState<string | null>(null);
+
+  const [selectedKelas, setSelectedKelas] = useState<string>("Semua");
+  const [selectedMapel, setSelectedMapel] = useState<string>("Semua");
+  const [selectedSesi, setSelectedSesi] = useState<string>("Semua");
+
+  const uniqueKelas = useMemo(() => Array.from(new Set(responses.map(r => r.kelas || "-"))).filter(Boolean), [responses]);
+  const uniqueMapel = useMemo(() => Array.from(new Set(responses.map(r => r.courseName || "-"))).filter(Boolean), [responses]);
+  const uniqueSesi = useMemo(() => Array.from(new Set(responses.map(r => r.sessionName || "-"))).filter(Boolean), [responses]);
+
+  const filteredResponses = useMemo(() => {
+    return responses.filter(r => {
+      const matchKelas = selectedKelas === "Semua" || (r.kelas || "-") === selectedKelas;
+      const matchMapel = selectedMapel === "Semua" || (r.courseName || "-") === selectedMapel;
+      const matchSesi = selectedSesi === "Semua" || (r.sessionName || "-") === selectedSesi;
+      return matchKelas && matchMapel && matchSesi;
+    });
+  }, [responses, selectedKelas, selectedMapel, selectedSesi]);
+
+  const filteredAggregated = useMemo(() => {
+    return questions.map(q => {
+      const evResponses = filteredResponses.filter(r => r.evaluationId === q.id);
+      const totalScore = evResponses.reduce((sum, r) => sum + r.score, 0);
+      const avgScore = evResponses.length > 0 ? Math.round((totalScore / evResponses.length) * 100) / 100 : 0;
+      return {
+        questionId: q.id,
+        question: q.text,
+        scaleMax: 5,
+        responseCount: evResponses.length,
+        avgScore,
+      };
+    });
+  }, [questions, filteredResponses]);
 
   useEffect(() => {
     async function fetchQuestions() {
@@ -62,7 +91,7 @@ export default function AngketEvaluasiTutor() {
         const json = await res.json();
         if (json.success) {
           setResponses(json.data.responses || []);
-          setAggregated(json.data.aggregated || []);
+
         } else {
           setReportError(json.message || "Gagal memuat data laporan");
         }
@@ -118,12 +147,12 @@ export default function AngketEvaluasiTutor() {
   };
 
   const handleExportRekap = () => {
-    if (aggregated.length === 0) {
+    if (filteredAggregated.length === 0) {
       toast.error("Tidak ada data rekap untuk diekspor");
       return;
     }
     const headers = ["No", "Pertanyaan", "Skala Maks", "Jumlah Respons", "Rata-rata Skor"];
-    const rows = aggregated.map((item, idx) => [
+    const rows = filteredAggregated.map((item, idx) => [
       idx + 1,
       item.question || "",
       item.scaleMax,
@@ -135,17 +164,19 @@ export default function AngketEvaluasiTutor() {
   };
 
   const handleExportDetail = () => {
-    if (responses.length === 0) {
+    if (filteredResponses.length === 0) {
       toast.error("Tidak ada data detail untuk diekspor");
       return;
     }
-    const headers = ["No", "Nama Warga Belajar", "Mata Pelajaran", "Pertanyaan", "Skor", "Tanggal"];
-    const rows = responses.map((r, idx) => {
-      const evaluation = aggregated.find(a => a.questionId === r.evaluationId);
+    const headers = ["No", "Nama Warga Belajar", "Kelas", "Mata Pelajaran", "Sesi", "Pertanyaan", "Skor", "Tanggal"];
+    const rows = filteredResponses.map((r, idx) => {
+      const evaluation = filteredAggregated.find(a => a.questionId === r.evaluationId);
       return [
         idx + 1,
         r.studentName || "",
+        r.kelas || "",
         r.courseName || "",
+        r.sessionName || "",
         evaluation?.question || `Evaluasi #${r.evaluationId}`,
         r.score,
         r.createdAt ? new Date(r.createdAt).toLocaleDateString("id-ID") : "",
@@ -236,46 +267,91 @@ export default function AngketEvaluasiTutor() {
             <p className="text-red-500 font-medium text-sm">Gagal memuat data laporan.</p>
             <p className="text-red-400 text-xs mt-1">{reportError}</p>
           </div>
-        ) : aggregated.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
-              <thead>
-                <tr className="bg-slate-50 text-slate-600 font-bold text-xs uppercase tracking-wider border-b border-slate-200">
-                  <th className="py-3 px-4 text-center w-12">NO</th>
-                  <th className="py-3 px-4">Pertanyaan</th>
-                  <th className="py-3 px-4 text-center">Skala</th>
-                  <th className="py-3 px-4 text-center">Respons</th>
-                  <th className="py-3 px-4 text-center">Rata-rata</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {aggregated.map((item, idx) => (
-                  <tr key={item.questionId} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-3 px-4 text-center text-slate-500 font-mono">{idx + 1}</td>
-                    <td className="py-3 px-4 font-medium text-slate-800">{item.question}</td>
-                    <td className="py-3 px-4 text-center text-slate-600">/{item.scaleMax}</td>
-                    <td className="py-3 px-4 text-center font-bold text-slate-700">{item.responseCount}</td>
-                    <td className="py-3 px-4 text-center">
-                      <span className={`font-black text-sm px-2.5 py-1 rounded-full ${
-                        item.avgScore >= 4 ? 'bg-emerald-100 text-emerald-800' :
-                        item.avgScore >= 3 ? 'bg-blue-100 text-blue-800' :
-                        item.avgScore >= 2 ? 'bg-amber-100 text-amber-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {item.avgScore.toFixed(2)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         ) : (
-          <div className="py-8 text-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
-            <BarChart3 className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-            <p className="text-slate-500 font-medium text-sm">Belum ada data respons angket.</p>
-            <p className="text-slate-400 text-xs mt-1">Data akan muncul setelah warga belajar mengisi evaluasi.</p>
-          </div>
+          <>
+            <div className="flex flex-wrap gap-4 border-b pb-4">
+              <div className="flex flex-col gap-1.5 min-w-[150px] flex-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">Kelas</label>
+                <select
+                  value={selectedKelas}
+                  onChange={(e) => setSelectedKelas(e.target.value)}
+                  className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5"
+                >
+                  <option value="Semua">Semua Kelas</option>
+                  {uniqueKelas.map(k => (
+                    <option key={k} value={k}>{k}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5 min-w-[150px] flex-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">Mata Pelajaran</label>
+                <select
+                  value={selectedMapel}
+                  onChange={(e) => setSelectedMapel(e.target.value)}
+                  className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5"
+                >
+                  <option value="Semua">Semua Mapel</option>
+                  {uniqueMapel.map(m => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5 min-w-[150px] flex-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">Sesi</label>
+                <select
+                  value={selectedSesi}
+                  onChange={(e) => setSelectedSesi(e.target.value)}
+                  className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5"
+                >
+                  <option value="Semua">Semua Sesi</option>
+                  {uniqueSesi.map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {filteredAggregated.length > 0 && filteredResponses.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-600 font-bold text-xs uppercase tracking-wider border-b border-slate-200">
+                      <th className="py-3 px-4 text-center w-12">NO</th>
+                      <th className="py-3 px-4">Pertanyaan</th>
+                      <th className="py-3 px-4 text-center">Skala</th>
+                      <th className="py-3 px-4 text-center">Respons</th>
+                      <th className="py-3 px-4 text-center">Rata-rata</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredAggregated.map((item, idx) => (
+                      <tr key={item.questionId} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="py-3 px-4 text-center text-slate-500 font-mono">{idx + 1}</td>
+                        <td className="py-3 px-4 font-medium text-slate-800">{item.question}</td>
+                        <td className="py-3 px-4 text-center text-slate-600">/{item.scaleMax}</td>
+                        <td className="py-3 px-4 text-center font-bold text-slate-700">{item.responseCount}</td>
+                        <td className="py-3 px-4 text-center">
+                          <span className={`font-black text-sm px-2.5 py-1 rounded-full ${
+                            item.avgScore >= 4 ? 'bg-emerald-100 text-emerald-800' :
+                            item.avgScore >= 3 ? 'bg-blue-100 text-blue-800' :
+                            item.avgScore >= 2 ? 'bg-amber-100 text-amber-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {item.avgScore.toFixed(2)}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="py-8 text-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                <BarChart3 className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                <p className="text-slate-500 font-medium text-sm">Tidak ada data respons angket untuk filter yang dipilih.</p>
+              </div>
+            )}
+          </>
         )}
       </Card>
 

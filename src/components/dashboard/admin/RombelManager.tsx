@@ -699,7 +699,7 @@ export default function RombelManager() {
                     onClick={openAddForm}
                     className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
                   >
-                    <Plus className="h-4 w-4" /> TAMBAH ROMBEL
+                    <Plus className="h-4 w-4" /> TAMBAH DATA
                   </Button>
                   <Button
                     onClick={() => setFilter(search)}
@@ -856,7 +856,7 @@ export default function RombelManager() {
                     </p>
                     <p className="text-xs text-slate-400 font-semibold text-center max-w-sm">
                       {rombels.length === 0
-                        ? 'Belum ada rombel. Klik "Tambah Rombel" untuk memulai.'
+                        ? 'Belum ada rombel. Klik "Tambah Data" untuk memulai.'
                         : "Tidak ada rombel yang sesuai dengan pencarian."}
                     </p>
                   </div>
@@ -875,7 +875,7 @@ export default function RombelManager() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4">
             <div className="flex items-center justify-between p-5 border-b border-slate-100">
               <h3 className="text-lg font-black text-slate-800">
-                {isAdding ? "Tambah Rombel Baru" : !isEditing ? "Detail Rombel" : "Edit Rombel"}
+                {isAdding ? "TAMBAH DATA" : !isEditing ? "DETAIL DATA" : "EDIT DATA"}
               </h3>
               <button
                 onClick={() => setFormOpen(false)}
@@ -950,7 +950,7 @@ export default function RombelManager() {
               ) : !isEditing ? (
                 <>
                   <Button
-                    onClick={(e) => { e.preventDefault(); if(selectedRombel) handleDelete(selectedRombel); }}
+                    onClick={(e) => { e.preventDefault(); if (selectedRombel) handleDelete(selectedRombel); }}
                     className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all flex items-center gap-1.5"
                   >
                     <Trash2 className="h-4 w-4" /> HAPUS
@@ -1050,11 +1050,10 @@ export default function RombelManager() {
                 filteredAvailable.map((siswa) => (
                   <label
                     key={siswa.id}
-                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${
-                      selectedStudentIds.includes(siswa.id)
+                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${selectedStudentIds.includes(siswa.id)
                         ? "bg-cyan-50 border border-cyan-200"
                         : "hover:bg-slate-50 border border-transparent"
-                    }`}
+                      }`}
                   >
                     <input
                       type="checkbox"
@@ -1194,11 +1193,10 @@ export default function RombelManager() {
                 filteredUnassigned.map((siswa) => (
                   <label
                     key={siswa.id}
-                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${
-                      assignSelectedIds.includes(siswa.id)
+                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${assignSelectedIds.includes(siswa.id)
                         ? "bg-amber-50 border border-amber-200"
                         : "hover:bg-slate-50 border border-transparent"
-                    }`}
+                      }`}
                   >
                     <input
                       type="checkbox"

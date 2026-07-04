@@ -269,7 +269,7 @@ export default function ProductsManager() {
 
   return (
     <div className="space-y-6 relative pb-16 animate-in fade-in duration-300">
-      
+
       {/* HEADER SECTION */}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
         <div>
@@ -303,7 +303,7 @@ export default function ProductsManager() {
               onClick={openAddForm}
               className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
             >
-              <Plus className="h-4 w-4" /> TAMBAH PRODUK
+              <Plus className="h-4 w-4" /> TAMBAH DATA
             </Button>
             <Button
               onClick={handleFilter}
@@ -388,11 +388,10 @@ export default function ProductsManager() {
                     </td>
                     <td className="py-4 px-6 border-r border-slate-100 text-center">
                       <span
-                        className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${
-                          item.status === "AKTIF"
+                        className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${item.status === "AKTIF"
                             ? "bg-green-50 text-green-700 border border-green-200"
                             : "bg-red-50 text-red-700 border border-red-200"
-                        }`}
+                          }`}
                       >
                         {item.status}
                       </span>
@@ -466,7 +465,7 @@ export default function ProductsManager() {
 
               <div className="mb-6">
                 <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                  {isAdding ? "TAMBAH PRODUK BARU" : (!isEditing ? "LIHAT PRODUK" : "EDIT PRODUK")}
+                  {isAdding ? "TAMBAH DATA" : (!isEditing ? "DETAIL DATA" : "EDIT DATA")}
                 </span>
               </div>
 
@@ -579,9 +578,8 @@ export default function ProductsManager() {
 
                 {/* Drag & Drop Upload Block */}
                 <div
-                  className={`border-2 border-dashed rounded-xl p-3 text-center transition cursor-pointer text-xs ${
-                    dragActive ? "border-yellow-300 bg-white/20" : "border-white/40 hover:border-white hover:bg-white/10"
-                  } ${!isEditing && "pointer-events-none opacity-60"}`}
+                  className={`border-2 border-dashed rounded-xl p-3 text-center transition cursor-pointer text-xs ${dragActive ? "border-yellow-300 bg-white/20" : "border-white/40 hover:border-white hover:bg-white/10"
+                    } ${!isEditing && "pointer-events-none opacity-60"}`}
                   onDragEnter={handleDrag}
                   onDragOver={handleDrag}
                   onDragLeave={handleDrag}
