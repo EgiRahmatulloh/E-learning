@@ -1745,7 +1745,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         if (filterKelas) {
           filteredSetups = allSetups.filter(s => s.kelas === filterKelas);
         } else if (filterLevel) {
-          filteredSetups = allSetups.filter(s => s.kelas.startsWith(filterLevel));
+          filteredSetups = allSetups.filter(s => s.kelas.replace(/[A-Z]$/, "") === filterLevel);
         }
 
         // Ambil tutor yang punya setup di kelas tersebut
@@ -1813,7 +1813,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           // Filter level (misal X) → ambil wali kelas dari rombel pertama di level tsb
           waliKelasLabel = filterLevel;
           const allRombels = await db.select().from(rombels).all();
-          const levelRombels = allRombels.filter(r => r.nama.startsWith(filterLevel)).sort((a, b) => a.nama.localeCompare(b.nama));
+          const levelRombels = allRombels.filter(r => r.nama.replace(/[A-Z]$/, "") === filterLevel).sort((a, b) => a.nama.localeCompare(b.nama));
           if (levelRombels.length > 0) {
             const firstRombel = levelRombels[0];
             if (firstRombel.waliKelasId) {
@@ -1956,7 +1956,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         if (filterKelas) {
           rombelList = allRombels.filter(r => r.nama === filterKelas);
         } else if (filterLevel) {
-          rombelList = allRombels.filter(r => r.nama.startsWith(filterLevel));
+          rombelList = allRombels.filter(r => r.nama.replace(/[A-Z]$/, "") === filterLevel);
         } else {
           set.status = 400;
           return { success: false, message: "kelas atau level diperlukan" };
@@ -1973,7 +1973,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           ? await db.select().from(elearningSetups).where(eq(elearningSetups.kelas, filterKelas)).all()
           : await db.select().from(elearningSetups).all();
         const filteredSetups = filterLevel && !filterKelas
-          ? setups.filter(s => s.kelas.startsWith(filterLevel))
+          ? setups.filter(s => s.kelas.replace(/[A-Z]$/, "") === filterLevel)
           : setups;
         if (filteredSetups.length === 0) {
           set.status = 404;
@@ -2251,7 +2251,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
 
         const setups = await db.select().from(elearningSetups).where(setupsFilter).all();
         const filteredSetups = filterLevel && !filterKelas
-          ? setups.filter(s => s.kelas.startsWith(filterLevel))
+          ? setups.filter(s => s.kelas.replace(/[A-Z]$/, "") === filterLevel)
           : setups;
         if (filteredSetups.length === 0) {
           set.status = 404;
@@ -2335,10 +2335,9 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
             rombel: student.kelas
           };
 
-          // Assign mapel scores dynamically
           mapelNames.forEach((mapelName, mIdx) => {
             const mKey = `mapel${mIdx + 1}`;
-            sData[mKey] = mapelName; // ${table:siswa.mapel1} contains the mapel name
+            sData[mKey] = mapelName.toUpperCase(); // contains the mapel name
 
             const setup = setupsMap.get(`${student.kelas}-${mapelName}`);
             if (!setup) {
@@ -2393,7 +2392,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
         const rombelForWali = filterKelas
           ? rombelList.filter(r => r.nama === filterKelas)
           : filterLevel
-            ? rombelList.filter(r => r.nama.startsWith(filterLevel)).sort((a, b) => a.nama.localeCompare(b.nama))
+            ? rombelList.filter(r => r.nama.replace(/[A-Z]$/, "") === filterLevel).sort((a, b) => a.nama.localeCompare(b.nama))
             : [];
         if (rombelForWali.length > 0 && rombelForWali[0].waliKelasId) {
           waliKelasNama = (await db.select().from(tutors).where(eq(tutors.id, rombelForWali[0].waliKelasId)).get())?.nama || "-";
@@ -2417,7 +2416,7 @@ export const elearningHandlers = new Elysia({ prefix: "/api/elearning" })
           nipPemilik: "-", nipKepalaPkbm: "-", nipWaliKelas: "-",
           namaKepalaPkbm: namaKepalaPkbm.toUpperCase(), namaPemilik: "-",
           siswa: siswaData.map(s => ({ ...s, namaSiswa: s.namaSiswa.toUpperCase(), jenisKelamin: s.jenisKelamin.toUpperCase(), rombel: s.rombel.toUpperCase() })),
-        }, 18);
+        }, 18, mapelNames.length);
 
         set.headers = {
           "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

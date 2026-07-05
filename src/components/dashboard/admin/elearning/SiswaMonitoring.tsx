@@ -79,7 +79,6 @@ export default function SiswaMonitoring() {
         s.nis.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const sanitizeFilename = (s: string) => s.replace(/[^a-zA-Z0-9._\-\s]/g, "_").replace(/\s+/g, "_");
 
   const buildFilterParam = () => {
     if (selectedKelas) return `kelas=${encodeURIComponent(selectedKelas)}`;

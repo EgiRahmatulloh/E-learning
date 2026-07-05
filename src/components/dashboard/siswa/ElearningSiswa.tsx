@@ -172,10 +172,10 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          const completed = new Set(data.data.filter((d: any) => d.completed).map((d: any) => d.sessionNumber));
+          const completed = new Set<number>(data.data.filter((d: any) => d.completed).map((d: any) => Number(d.sessionNumber)));
           // Merge with existing set (preserves eagerly-added sessions if server response is stale)
           setAngketCompletedSessions(prev => {
-            const merged = new Set(completed);
+            const merged = new Set<number>(completed);
             for (const s of prev) merged.add(s);
             return merged;
           });
