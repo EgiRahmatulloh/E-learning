@@ -33,7 +33,13 @@ const app = new Elysia()
   .use(contentHandlers)
   .use(elearningHandlers)
   .use(uploadServices)
-  .use(statsServices);
+  .use(statsServices)
+  .onError(({ code, set }) => {
+    if (code === 'NOT_FOUND') {
+      set.status = 404;
+      return 'Not Found';
+    }
+  });
 
 // Hello Endpoint
 app.get("/api/hello", () => ({

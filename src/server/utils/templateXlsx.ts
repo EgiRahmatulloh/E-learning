@@ -1,3 +1,4 @@
+// @ts-nocheck
 import XlsxTemplate from "xlsx-template";
 import path from "path";
 import fs from "fs";

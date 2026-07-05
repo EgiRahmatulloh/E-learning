@@ -51,7 +51,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
   const [activeTab, setActiveTab] = useState(user.role === "siswa" ? "elearning-dashboard" : "dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  
+
   // Siswa Overhaul states
   const [avatarDropdownOpen, setAvatarDropdownOpen] = useState(false);
   const [subjectDropdownOpen, setSubjectDropdownOpen] = useState(false);
@@ -329,7 +329,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                     </div>
                   </>
                 )}
-                
+
                 {user.role === "tutor" && (
                   <>
                     <div className="space-y-1.5">
@@ -825,7 +825,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
               )}
 
               {/* Page Title */}
-              <h1 
+              <h1
                 className="text-xl sm:text-2xl font-black text-cyan-900 tracking-tight uppercase cursor-pointer"
                 onClick={() => {
                   if (user.role === "siswa") setActiveTab("elearning-dashboard");
@@ -878,7 +878,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                 className="flex items-center gap-3 relative"
               >
                 {/* Avatar Info */}
-                <div 
+                <div
                   className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => {
                     if (user.role === "siswa") {

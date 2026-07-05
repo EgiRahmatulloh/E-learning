@@ -44,12 +44,11 @@ interface KelasLevel {
 // Mapping program berdasarkan level kelas
 const getProgramByLevel = (levelId: string): string => {
   const id = levelId.toUpperCase();
-  if (["I", "II", "III", "IV"].includes(id)) return "Paket A (Kelas I-IV)";
-  if (["V", "VI"].includes(id)) return "Paket A";
-  if (["VII", "VIII", "IX"].includes(id)) return "Paket B";
-  if (id === "X") return "Paket C (Kelas X)";
-  if (["XI", "XII"].includes(id)) return "Paket C (Kelas XI dan XII)";
-  return "Paket A";
+  if (["I", "II", "III", "IV", "V", "VI", "1", "2", "3", "4", "5", "6"].includes(id)) return "Paket A (Kelas I-VI)";
+  if (["VII", "VIII", "IX", "7", "8", "9"].includes(id)) return "Paket B (Kelas VII-IX)";
+  if (["X", "XI", "10", "11"].includes(id)) return "Paket C (Kelas X-XI)";
+  if (["XII", "12"].includes(id)) return "Paket C (Kelas XII)";
+  return "Paket A (Kelas I-VI)";
 };
 
 // Mapping foto berdasarkan program
@@ -252,8 +251,8 @@ export default function KelolaElearning() {
       levelMap.get(levelId)!.push(rombel);
     }
 
-    // Buat array KelasLevel, urutkan berdasarkan urutan romawi
-    const romanOrder = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+    // Buat array KelasLevel, urutkan berdasarkan urutan romawi dan angka
+    const romanOrder = ["1", "I", "2", "II", "3", "III", "4", "IV", "5", "V", "6", "VI", "7", "VII", "8", "VIII", "9", "IX", "10", "X", "11", "XI", "12", "XII"];
     const levels: KelasLevel[] = [];
 
     for (const [levelId, levelRombels] of levelMap) {
@@ -285,6 +284,13 @@ export default function KelolaElearning() {
     () => (selectedKelasId ? kelasLevels.find(l => l.id === selectedKelasId) ?? null : null),
     [kelasLevels, selectedKelasId]
   );
+
+  // Auto-select first class on load if none selected
+  useEffect(() => {
+    if (!selectedKelasId && kelasLevels.length > 0) {
+      setSelectedKelasId(kelasLevels[0].id);
+    }
+  }, [kelasLevels, selectedKelasId]);
 
   // Daftar kelas hasil filter search (nama, nama Indonesia, program, atau nama rombel)
   const filteredKelasLevels = useMemo(() => {
