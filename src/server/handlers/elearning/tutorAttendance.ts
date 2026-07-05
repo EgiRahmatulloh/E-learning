@@ -46,7 +46,7 @@ export const tutorAttendanceHandlers = new Elysia()
         return { success: true, attended: false }; // Not a tutor
       }
 
-      const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }); // YYYY-MM-DD
       const record = await db.select().from(tutorAttendances)
         .where(and(
           eq(tutorAttendances.tutorId, Number(payload.id)),

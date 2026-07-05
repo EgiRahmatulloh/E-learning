@@ -117,7 +117,7 @@ export const attendanceHandlers = new Elysia()
     {
       body: t.Object({
         sessionId: t.Number(),
-        studentId: t.Number(),
+        studentId: t.Optional(t.Number()),
       }),
     }
   )

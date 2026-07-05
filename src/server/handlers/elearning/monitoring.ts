@@ -337,17 +337,25 @@ export const monitoringHandlers = new Elysia()
         const mapelAktif = setups.length;
 
         let tugasMasuk = 0;
-        if (setups.length > 0) {
-          const tutorMapels = setups.map(s => s.mapel);
-          const submissions = await db
-            .select({ id: elearningSubmissions.id })
-            .from(elearningSubmissions)
-            .innerJoin(elearningAssignments, eq(elearningSubmissions.assignmentId, elearningAssignments.id))
-            .innerJoin(elearningSessions, eq(elearningAssignments.sessionId, elearningSessions.id))
-            .innerJoin(elearningCourses, eq(elearningSessions.courseId, elearningCourses.id))
-            .where(inArray(elearningCourses.namaMapel, tutorMapels))
-            .all();
-          tugasMasuk = submissions.length;
+                if (setups.length > 0) {
+          const tutorCourses = [];
+          for (const setup of setups) {
+            const actualProgram = deriveProgram(setup.kelas);
+            const course = await db.select().from(elearningCourses)
+              .where(and(eq(elearningCourses.namaMapel, setup.mapel), eq(elearningCourses.program, actualProgram)))
+              .get();
+            if (course) tutorCourses.push(course.id);
+          }
+          if (tutorCourses.length > 0) {
+            const submissions = await db
+              .select({ id: elearningSubmissions.id })
+              .from(elearningSubmissions)
+              .innerJoin(elearningAssignments, eq(elearningSubmissions.assignmentId, elearningAssignments.id))
+              .innerJoin(elearningSessions, eq(elearningAssignments.sessionId, elearningSessions.id))
+              .where(inArray(elearningSessions.courseId, tutorCourses))
+              .all();
+            tugasMasuk = submissions.length;
+          }
         }
 
         const ip = "0.0"; // Placeholder
