@@ -31,7 +31,7 @@ const getSafeItem = (key: string): string | null => {
 const setSafeItem = (key: string, value: string) => {
   try {
     localStorage.setItem(key, value);
-  } catch {}
+  } catch { }
 };
 
 export default function EducationProgramManager() {
@@ -39,7 +39,7 @@ export default function EducationProgramManager() {
   const [programs, setPrograms] = useState<EducationProgram[]>([]);
   const [managers, setManagers] = useState<Manager[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Form states
   const [formVisible, setFormVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -49,7 +49,7 @@ export default function EducationProgramManager() {
   const [penjab, setPenjab] = useState("");
   const [keterangan, setKeterangan] = useState("");
   const [foto, setFoto] = useState("");
-  
+
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -250,7 +250,7 @@ export default function EducationProgramManager() {
 
   return (
     <div className="space-y-6 relative pb-16 animate-in fade-in duration-300">
-      
+
       {/* HEADER SECTION */}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
         <div>
@@ -292,7 +292,7 @@ export default function EducationProgramManager() {
               }}
               className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
             >
-              <Plus className="h-4 w-4" /> TAMBAH BARU
+              <Plus className="h-4 w-4" /> TAMBAH DATA
             </Button>
           </div>
         </div>
@@ -378,7 +378,7 @@ export default function EducationProgramManager() {
 
           {/* Form Container */}
           <div className="relative bg-[#00badb] rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border-4 border-cyan-400 animate-in zoom-in-95 duration-200 p-6 sm:p-8 text-white">
-            
+
             {/* Close button inside modal */}
             <button
               onClick={resetForm}
@@ -390,14 +390,14 @@ export default function EducationProgramManager() {
             {/* Modal Form Title */}
             <div className="mb-6 text-left">
               <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                {editId !== null ? "TAMPILAN EDIT DATA" : "TAMPILAN TAMBAH BARU"}
+                {editId !== null ? "EDIT DATA" : "TAMBAH DATA"}
               </span>
             </div>
 
             <form className="grid grid-cols-1 md:grid-cols-4 gap-6 text-left" onSubmit={(e) => e.preventDefault()}>
               {/* Form Inputs Grid */}
               <div className="md:col-span-3 space-y-4">
-                
+
                 {/* NAMA PROGRAM */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">

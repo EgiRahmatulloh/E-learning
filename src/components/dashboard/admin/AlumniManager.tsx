@@ -351,7 +351,7 @@ export default function AlumniManager() {
         if (rows.length <= 1) return;
 
         const token = localStorage.getItem("token");
-        
+
         const mapped = mapCsvRows(rows, [
           { key: "nama", aliases: ["nama", "name"], defaultIndex: 0 },
           { key: "nik", aliases: ["nik", "identitas"], defaultIndex: 1 },
@@ -436,7 +436,7 @@ export default function AlumniManager() {
 
   return (
     <div className="space-y-6 relative pb-16 animate-in fade-in duration-300">
-      
+
       {/* HEADER */}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
         <div>
@@ -523,7 +523,7 @@ export default function AlumniManager() {
             <Upload className="h-3.5 w-3.5" /> UPLOAD EXCEL
           </Button>
           <Button
-              onClick={handleExportExcel}
+            onClick={handleExportExcel}
             className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] px-4 h-9 rounded-xl cursor-pointer uppercase tracking-wider shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
           >
             <Download className="h-3.5 w-3.5" /> DOWNLOAD EXCEL
@@ -592,9 +592,8 @@ export default function AlumniManager() {
                     <div
                       key={item.id}
                       onClick={() => selectAlumni(item)}
-                      className={`rounded-2xl overflow-hidden border-2 cursor-pointer transition flex flex-col group ${
-                        isActive ? "border-purple-600 shadow-md ring-2 ring-purple-100" : "border-slate-100 hover:border-purple-300"
-                      }`}
+                      className={`rounded-2xl overflow-hidden border-2 cursor-pointer transition flex flex-col group ${isActive ? "border-purple-600 shadow-md ring-2 ring-purple-100" : "border-slate-100 hover:border-purple-300"
+                        }`}
                     >
                       <div className="h-44 bg-slate-50 relative overflow-hidden">
                         {item.foto ? (
@@ -604,9 +603,8 @@ export default function AlumniManager() {
                             FOTO
                           </div>
                         )}
-                        <span className={`absolute top-3 left-3 text-[9px] font-black uppercase px-2 py-0.5 rounded-full text-white ${
-                          item.program === "PAKET A" ? "bg-green-600" : item.program === "PAKET B" ? "bg-blue-600" : "bg-orange-500"
-                        }`}>
+                        <span className={`absolute top-3 left-3 text-[9px] font-black uppercase px-2 py-0.5 rounded-full text-white ${item.program === "PAKET A" ? "bg-green-600" : item.program === "PAKET B" ? "bg-blue-600" : "bg-orange-500"
+                          }`}>
                           {item.program}
                         </span>
                       </div>
@@ -637,9 +635,8 @@ export default function AlumniManager() {
                       <tr
                         key={item.id}
                         onClick={() => selectAlumni(item)}
-                        className={`hover:bg-cyan-50/20 cursor-pointer transition ${
-                          selectedId === item.id ? "bg-purple-50/75 text-purple-900 font-bold" : ""
-                        }`}
+                        className={`hover:bg-cyan-50/20 cursor-pointer transition ${selectedId === item.id ? "bg-purple-50/75 text-purple-900 font-bold" : ""
+                          }`}
                       >
                         <td className="py-4 px-6 text-center text-slate-500 font-mono border-r border-slate-100">{indexOfFirstItem + idx + 1}</td>
                         <td className="py-4 px-6 font-bold text-slate-800 border-r border-slate-100">{item.nama}</td>
@@ -702,7 +699,7 @@ export default function AlumniManager() {
 
               <div className="mb-3 pr-10 shrink-0">
                 <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                  {isAdding ? "TAMBAH ALUMNI BARU" : (!isEditing ? "LIHAT PROFIL ALUMNI" : "EDIT PROFIL ALUMNI")}
+                  {isAdding ? "TAMBAH DATA ALUMNI" : (!isEditing ? "DETAIL DATA" : "EDIT DATA")}
                 </span>
               </div>
 
@@ -915,9 +912,8 @@ export default function AlumniManager() {
                         onDragOver={handleDrag}
                         onDragLeave={handleDrag}
                         onDrop={handleDrop}
-                        className={`border-2 border-dashed rounded-xl p-2.5 text-center transition-all ${!isEditing && "pointer-events-none opacity-60"} ${
-                          dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
-                        } h-44 flex flex-col justify-center items-center relative overflow-hidden`}
+                        className={`border-2 border-dashed rounded-xl p-2.5 text-center transition-all ${!isEditing && "pointer-events-none opacity-60"} ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
+                          } h-44 flex flex-col justify-center items-center relative overflow-hidden`}
                       >
                         {foto ? (
                           <div className="w-full h-full relative group">

@@ -69,7 +69,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
       const data = await res.json();
       if (data.success) {
         setCompletions(prev => new Set([...prev, sectionKey]));
-        toast.success("Bagian ini telah ditandai selesai!");
+        // toast.success("Bagian ini telah ditandai selesai!");
       }
     } catch (err) { }
   };
@@ -80,7 +80,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
     setQuizGrade(null);
     setQuestions([]);
     setAnswers([]);
-    
+
     try {
       const res = await fetch(`/api/elearning/quiz/${sessionId}?studentId=${user.id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
@@ -116,7 +116,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
       setAnswers([]);
       setQuestions([]);
       setShowLatihan(false);
-      
+
       try {
         const courseRes = await fetch("/api/elearning/course", {
           method: "POST",
@@ -151,7 +151,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
         const video = materials.find((m: any) => m.type === "VIDEO");
         if (video) setVideoUrl(video.fileUrl);
         else setVideoUrl(null);
-        
+
         // Fetch Angket status & questions
         const angketStatusRes = await fetch(`/api/elearning/session-angket?sessionId=${session.id}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
@@ -445,8 +445,8 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
               onClick={handleKehadiran}
               disabled={isHadir}
               className={`flex-1 sm:flex-none font-bold rounded-xl px-6 ${isHadir
-                  ? "bg-slate-200 text-slate-500 hover:bg-slate-200 cursor-not-allowed"
-                  : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-600/20 shadow-lg"
+                ? "bg-slate-200 text-slate-500 hover:bg-slate-200 cursor-not-allowed"
+                : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-600/20 shadow-lg"
                 }`}
             >
               {isHadir ? "Sudah Hadir" : "Konfirmasi Hadir"}
@@ -459,7 +459,6 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
         <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 prose prose-sm max-w-none prose-slate relative">
           <div className="flex items-center justify-between not-prose mb-3">
             <h3 className="font-bold text-[#280f91]">Pengantar Sesi {sessionNumber}</h3>
-            <SectionCompleteButton completions={completions} handleMarkComplete={handleMarkComplete} sectionKey={`sesi_${sessionNumber}_pengantar`} className="m-0" />
           </div>
           {teksPembuka ? (
             <div dangerouslySetInnerHTML={{ __html: teksPembuka }} />
@@ -473,7 +472,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
           <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 space-y-4 flex flex-col relative">
             <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
               <FileText className="h-5 w-5 text-[#280f91]" />
-              <h3 className="font-bold text-slate-700 flex-1">Materi Inisiasi (PPT)</h3>
+              <h3 className="font-bold text-slate-700 flex-1">Materi Inisiasi Sesi {sessionNumber}</h3>
               <SectionCompleteButton completions={completions} handleMarkComplete={handleMarkComplete} sectionKey={`sesi_${sessionNumber}_inisiasi`} className="m-0" />
             </div>
             <div className="flex-1 min-h-[160px] bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center p-6 text-center flex-col gap-4">
@@ -494,7 +493,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
           <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 space-y-4 flex flex-col relative">
             <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
               <PlayCircle className="h-5 w-5 text-red-600" />
-              <h3 className="font-bold text-slate-700 flex-1">Materi Pengayaan (Video)</h3>
+              <h3 className="font-bold text-slate-700 flex-1">Materi Pengayaan Sesi {sessionNumber}</h3>
               <SectionCompleteButton completions={completions} handleMarkComplete={handleMarkComplete} sectionKey={`sesi_${sessionNumber}_pengayaan`} className="m-0" />
             </div>
             <div className="flex-1 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center p-6 text-center flex-col gap-4">
@@ -528,7 +527,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
         <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 space-y-4 relative">
           <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
             <MessageCircle className="h-5 w-5 text-blue-600" />
-            <h3 className="font-bold text-slate-700 flex-1">Forum Diskusi</h3>
+            <h3 className="font-bold text-slate-700 flex-1">Forum Diskusi Sesi {sessionNumber}</h3>
             <SectionCompleteButton completions={completions} handleMarkComplete={handleMarkComplete} sectionKey={`sesi_${sessionNumber}_diskusi`} className="m-0" />
           </div>
           <div className="space-y-4 my-4 max-h-96 overflow-y-auto pr-2">
@@ -762,17 +761,17 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
             </div>
             <div className="p-6 space-y-6">
               {angketQuestions.map((q, idx) => (
-                <div key={q.id || idx} className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                <div key={q.id !== undefined && q.id !== null ? `q-${q.id}` : `idx-${idx}`} className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
                   <p className="font-bold text-slate-800 text-sm mb-4">{idx + 1}. {q.question}</p>
                   <div className="flex justify-between items-center gap-2">
                     {["Sangat Kurang", "Kurang", "Cukup", "Baik", "Sangat Baik"].map((label, i) => (
                       <label key={i} className="flex flex-col items-center gap-2 cursor-pointer group">
-                        <input 
-                          type="radio" 
-                          name={`q_${q.id}`} 
+                        <input
+                          type="radio"
+                          name={`q_${q.id}`}
                           checked={angketAnswers[q.id] === label}
                           onChange={() => setAngketAnswers(prev => ({ ...prev, [q.id]: label }))}
-                          className="w-4 h-4 text-rose-600 accent-rose-600 focus:ring-rose-500" 
+                          className="w-4 h-4 text-rose-600 accent-rose-600 focus:ring-rose-500"
                         />
                         <span className="text-[10px] sm:text-xs font-bold text-slate-500 group-hover:text-rose-600 text-center leading-tight">
                           {label}
@@ -790,9 +789,16 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
                     }
                     const toastId = toast.loading("Mengirim angket...");
                     try {
+                      const labelToScore: Record<string, number> = {
+                        "Sangat Kurang": 1,
+                        "Kurang": 2,
+                        "Cukup": 3,
+                        "Baik": 4,
+                        "Sangat Baik": 5
+                      };
                       const responses = Object.keys(angketAnswers).map(qid => ({
                         evaluationId: Number(qid),
-                        score: Number(angketAnswers[Number(qid)])
+                        score: labelToScore[angketAnswers[Number(qid)]] || 5
                       }));
                       const res = await fetch("/api/elearning/session-angket", {
                         method: "POST",
@@ -938,35 +944,35 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
                     <Button variant="outline" onClick={() => setShowLatihan(false)} className="font-bold">Batal</Button>
                     <Button
 
-                  onClick={async () => {
-                    if (answers.includes(-1)) return toast.error("Harap jawab semua pertanyaan!");
-                    const toastId = toast.loading("Mengirim jawaban...");
-                    try {
-                      const res = await fetch(`/api/elearning/quiz/${sessionId}/submit`, {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
-                          "Authorization": `Bearer ${localStorage.getItem("token")}`
-                        },
-                        body: JSON.stringify({ answers })
-                      });
-                      const data = await res.json();
-                      if (data.success) {
-                        toast.success(data.message, { id: toastId });
-                        localStorage.setItem(`quiz_answers_${sessionId}_${user.id}`, JSON.stringify(answers));
-                        setQuizGrade(data.grade);
-                        handleMarkComplete(`sesi_${sessionNumber}_latihan`);
-                      } else {
-                        toast.error(data.message, { id: toastId });
-                      }
-                    } catch (err: any) {
-                      toast.error("Gagal mengirim jawaban", { id: toastId });
-                    }
-                  }}
-                  className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-6"
-                >
-                  Kirim Jawaban
-                </Button>
+                      onClick={async () => {
+                        if (answers.includes(-1)) return toast.error("Harap jawab semua pertanyaan!");
+                        const toastId = toast.loading("Mengirim jawaban...");
+                        try {
+                          const res = await fetch(`/api/elearning/quiz/${sessionId}/submit`, {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                              "Authorization": `Bearer ${localStorage.getItem("token")}`
+                            },
+                            body: JSON.stringify({ answers })
+                          });
+                          const data = await res.json();
+                          if (data.success) {
+                            toast.success(data.message, { id: toastId });
+                            localStorage.setItem(`quiz_answers_${sessionId}_${user.id}`, JSON.stringify(answers));
+                            setQuizGrade(data.grade);
+                            handleMarkComplete(`sesi_${sessionNumber}_latihan`);
+                          } else {
+                            toast.error(data.message, { id: toastId });
+                          }
+                        } catch (err: any) {
+                          toast.error("Gagal mengirim jawaban", { id: toastId });
+                        }
+                      }}
+                      className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-6"
+                    >
+                      Kirim Jawaban
+                    </Button>
                   </>
                 ) : (
                   <Button onClick={() => setShowLatihan(false)} className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-8">Tutup</Button>
@@ -989,7 +995,7 @@ const SectionCompleteButton = ({ sectionKey, completions, handleMarkComplete, cl
       onClick={() => !isDone && handleMarkComplete(sectionKey)}
       disabled={isDone}
       className={`font-bold ${isDone ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 cursor-not-allowed border-emerald-200'
-          : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200'
+        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200'
         } border ${className || 'mt-4 w-full sm:w-auto'}`}
     >
       {isDone ? (

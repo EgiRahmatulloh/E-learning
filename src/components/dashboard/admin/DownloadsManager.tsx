@@ -251,7 +251,7 @@ export default function DownloadsManager() {
 
   return (
     <div className="space-y-6 relative pb-16 animate-in fade-in duration-300">
-      
+
       {/* HEADER SECTION */}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
         <div>
@@ -353,11 +353,10 @@ export default function DownloadsManager() {
                       </span>
                     </td>
                     <td className="py-4 px-6 border-r border-slate-100 text-center">
-                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                        item.status === 'PUBLISH'
-                          ? "bg-emerald-50 border border-emerald-200 text-emerald-700"
-                          : "bg-amber-50 border border-amber-200 text-amber-700"
-                      }`}>
+                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${item.status === 'PUBLISH'
+                        ? "bg-emerald-50 border border-emerald-200 text-emerald-700"
+                        : "bg-amber-50 border border-amber-200 text-amber-700"
+                        }`}>
                         {item.status}
                       </span>
                     </td>
@@ -447,7 +446,7 @@ export default function DownloadsManager() {
 
               <div className="mb-6">
                 <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                  {isAdding ? "TAMBAH DOKUMEN BARU" : (!isEditing ? "LIHAT DATA DOKUMEN" : "EDIT DATA DOKUMEN")}
+                  {isAdding ? "TAMBAH DATA" : (!isEditing ? "DETAIL DATA" : "EDIT DATA")}
                 </span>
               </div>
 
@@ -517,9 +516,8 @@ export default function DownloadsManager() {
                     onDragOver={handleDrag}
                     onDragLeave={handleDrag}
                     onDrop={handleDrop}
-                    className={`border-2 border-dashed rounded-xl p-4 text-center transition-all ${
-                      dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
-                    } h-36 flex flex-col justify-center items-center relative overflow-hidden ${!isEditing && "pointer-events-none opacity-60"}`}
+                    className={`border-2 border-dashed rounded-xl p-4 text-center transition-all ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
+                      } h-36 flex flex-col justify-center items-center relative overflow-hidden ${!isEditing && "pointer-events-none opacity-60"}`}
                   >
                     {fileUrl ? (
                       <div className="space-y-2 text-white">

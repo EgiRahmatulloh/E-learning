@@ -550,4 +550,30 @@ CREATE TABLE IF NOT EXISTS elearning_section_completions (
 );
 `);
 
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS tutor_attendances (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  tutor_id INTEGER NOT NULL,
+  date TEXT NOT NULL,
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  UNIQUE(tutor_id, date),
+  FOREIGN KEY (tutor_id) REFERENCES tutors(id) ON DELETE CASCADE
+);
+`);
+
+sqlite.exec(`
+CREATE TABLE IF NOT EXISTS elearning_session_angkets (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id INTEGER NOT NULL,
+  student_id INTEGER NOT NULL,
+  evaluation_id INTEGER NOT NULL,
+  score INTEGER NOT NULL,
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  UNIQUE(session_id, student_id, evaluation_id),
+  FOREIGN KEY (session_id) REFERENCES elearning_sessions(id) ON DELETE CASCADE,
+  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+  FOREIGN KEY (evaluation_id) REFERENCES elearning_evaluations(id) ON DELETE CASCADE
+);
+`);
+
 export const db = drizzle(sqlite, { schema });

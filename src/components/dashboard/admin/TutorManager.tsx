@@ -422,9 +422,9 @@ export default function TutorManager() {
 
   // Filtered tutors based on search criteria
   const filteredTutors = tutors.filter((tutor) => {
-    const matchesName = 
+    const matchesName =
       !filterName || tutor.nama.toLowerCase().includes(filterName.toLowerCase());
-    const matchesNik = 
+    const matchesNik =
       !filterNik || tutor.nik.includes(filterNik);
     return matchesName && matchesNik;
   });
@@ -500,7 +500,7 @@ export default function TutorManager() {
               onClick={openAddForm}
               className="h-10 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all active:scale-95"
             >
-              <Plus className="h-4 w-4" /> TAMBAH TUTOR
+              <Plus className="h-4 w-4" /> TAMBAH DATA
             </Button>
             <Button
               onClick={handleSearch}
@@ -663,7 +663,7 @@ export default function TutorManager() {
 
               <div className="mb-3 pr-10 shrink-0">
                 <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                  {isAdding ? "TAMBAH TUTOR BARU" : (!isEditing ? `LIHAT PROFIL TUTOR: ${selectedTutor?.nama}` : `EDIT TUTOR: ${selectedTutor?.nama}`)}
+                  {isAdding ? "TAMBAH DATA" : (!isEditing ? `DETAIL DATA: ${selectedTutor?.nama}` : `EDIT DATA: ${selectedTutor?.nama}`)}
                 </span>
               </div>
 
@@ -938,9 +938,8 @@ export default function TutorManager() {
                         onDragOver={handleDrag}
                         onDragLeave={handleDrag}
                         onDrop={handleDrop}
-                        className={`border-2 border-dashed rounded-xl p-2.5 text-center transition-all ${
-                          dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
-                        } h-44 flex flex-col justify-center items-center relative overflow-hidden ${!isEditing ? "pointer-events-none opacity-60" : ""}`}
+                        className={`border-2 border-dashed rounded-xl p-2.5 text-center transition-all ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
+                          } h-44 flex flex-col justify-center items-center relative overflow-hidden ${!isEditing ? "pointer-events-none opacity-60" : ""}`}
                       >
                         {formData.foto ? (
                           <div className="w-full h-full relative group">

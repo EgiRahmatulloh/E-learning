@@ -190,6 +190,13 @@ export const authHandlers = new Elysia()
             foto: tutor.foto,
             tutorMapel: tutor.tutorMapel,
             program: tutor.program,
+            nuptk: tutor.nuptk,
+            pendidikan: tutor.pendidikan,
+            tanggalMulaiTugas: tutor.tanggalMulaiTugas,
+            nomorSkPengangkatan: tutor.nomorSkPengangkatan,
+            lembagaPengangkat: tutor.lembagaPengangkat,
+            nomorSkPenugasan: tutor.nomorSkPenugasan,
+            lembagaPenugas: tutor.lembagaPenugas,
           },
         };
       }
@@ -223,6 +230,9 @@ export const authHandlers = new Elysia()
             kelas: student.kelas,
             nisn: student.nisn,
             nis: student.nis,
+            namaAyah: student.namaAyah,
+            namaIbu: student.namaIbu,
+            titikLayanan: student.titikLayanan,
           },
         };
       }
@@ -339,6 +349,13 @@ export const authHandlers = new Elysia()
               foto: updated.foto,
               tutorMapel: updated.tutorMapel,
               program: updated.program,
+              nuptk: updated.nuptk,
+              pendidikan: updated.pendidikan,
+              tanggalMulaiTugas: updated.tanggalMulaiTugas,
+              nomorSkPengangkatan: updated.nomorSkPengangkatan,
+              lembagaPengangkat: updated.lembagaPengangkat,
+              nomorSkPenugasan: updated.nomorSkPenugasan,
+              lembagaPenugas: updated.lembagaPenugas,
             },
           };
         }
@@ -384,6 +401,9 @@ export const authHandlers = new Elysia()
               kelas: updated.kelas,
               nisn: updated.nisn,
               nis: updated.nis,
+              namaAyah: updated.namaAyah,
+              namaIbu: updated.namaIbu,
+              titikLayanan: updated.titikLayanan,
             },
           };
         }

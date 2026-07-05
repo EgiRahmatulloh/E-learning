@@ -88,6 +88,8 @@ function removeClonedMerges(template: any, originalMergeRefs: string[], headerEn
 
     const parts = ref.split(":");
     const startRow = parseInt(parts[0].replace(/[A-Z]+/g, ""), 10);
+
+
     const startCol = parts[0].replace(/[0-9]+/g, "");
     const endCol = parts[1].replace(/[0-9]+/g, "");
     const key = startCol + ":" + endCol;
@@ -259,7 +261,7 @@ function removeClonedMerges(template: any, originalMergeRefs: string[], headerEn
   }
 
   // Write the modified etree back to the archive
-  template.archive.file(sheet.filename, etree.tostring(sheet.root));
+  template.archive.file(sheet.filename, etree.tostring(sheet.root, {}));
 }
 
 function colToIdx(col: string): number {
