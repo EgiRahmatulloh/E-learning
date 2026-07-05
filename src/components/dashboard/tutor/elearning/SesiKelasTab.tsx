@@ -435,7 +435,7 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
               <div className="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center text-teal-600 shrink-0">
                 <Users className="w-5 h-5" />
               </div>
-              <h4 className="font-black text-[#280f91] text-lg leading-tight">Presensi Kehadiran</h4>
+              <h4 className="font-black text-[#280f91] text-lg leading-tight">Presensi Kehadiran Sesi {sessionNumber}</h4>
             </div>
             <p className="text-sm text-slate-500 mb-4">Daftar kehadiran warga belajar pada sesi ini. Sistem otomatis mencatat siswa yang telah mengklik tombol 'Hadir'.</p>
           </div>
@@ -458,7 +458,7 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
               <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
                 <MessageSquare className="w-5 h-5" />
               </div>
-              <h4 className="font-black text-[#280f91] text-lg leading-tight">Forum Diskusi</h4>
+              <h4 className="font-black text-[#280f91] text-lg leading-tight">Forum Diskusi Sesi {sessionNumber}</h4>
             </div>
             <p className="text-sm text-slate-500 mb-4">Ruang tanya jawab interaktif antara tutor dan warga belajar terkait topik pembahasan sesi {sessionNumber}.</p>
           </div>
@@ -482,7 +482,7 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
             <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
               <FileText className="w-5 h-5" />
             </div>
-            <h4 className="font-black text-[#280f91] text-lg leading-tight">Materi Inisiasi (Berkas)</h4>
+            <h4 className="font-black text-[#280f91] text-lg leading-tight">Materi Inisiasi Sesi {sessionNumber}</h4>
           </div>
           <p className="text-sm text-slate-500 mb-4">Unggah salinan presentasi atau dokumen bacaan utama.</p>
           <div onClick={() => pptInputRef.current?.click()} className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 cursor-pointer transition-colors group">
@@ -508,7 +508,7 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
             <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
               <PlayCircle className="w-5 h-5" />
             </div>
-            <h4 className="font-black text-[#280f91] text-lg leading-tight">Materi Pengayaan (YouTube)</h4>
+            <h4 className="font-black text-[#280f91] text-lg leading-tight">Materi Pengayaan Sesi {sessionNumber}</h4>
           </div>
           <p className="text-sm text-slate-500 mb-4">Tambahkan video referensi eksternal dari YouTube untuk melengkapi pemahaman.</p>
           <div className="space-y-4">
@@ -534,7 +534,7 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
               <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600 shrink-0">
                 <PenTool className="w-5 h-5" />
               </div>
-              <h4 className="font-black text-[#280f91] text-lg leading-tight">Latihan Mandiri</h4>
+              <h4 className="font-black text-[#280f91] text-lg leading-tight">Latihan Mandiri Sesi {sessionNumber}</h4>
             </div>
             <p className="text-sm text-slate-500 mb-4">Soal pilihan ganda singkat (Quiz) untuk mengevaluasi pemahaman warga belajar usai membaca materi.</p>
           </div>

@@ -291,7 +291,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
             <h4 className="font-bold text-amber-900 mb-1">Tata Tertib</h4>
             <p className="text-xs text-amber-700/80 mb-3 line-clamp-2">Peraturan yang harus ditaati selama mengikuti pembelajaran.</p>
             {tertibUrl ? (
-              <Button onClick={() => window.open(tertibUrl, "_blank")} className="w-full bg-amber-600 hover:bg-amber-700 text-white shadow-sm font-semibold rounded-xl text-xs h-9">
+              <Button onClick={() => { handleMarkComplete("pendahuluan_tertib"); window.open(tertibUrl, "_blank"); }} className="w-full bg-amber-600 hover:bg-amber-700 text-white shadow-sm font-semibold rounded-xl text-xs h-9">
                 Unduh Tata Tertib
               </Button>
             ) : (

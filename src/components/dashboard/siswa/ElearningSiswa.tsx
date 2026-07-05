@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -64,7 +64,9 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
   const [hiddenSubjects, setHiddenSubjects] = useState<Set<string>>(new Set());
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [siswaSetups, setSiswaSetups] = useState<any[]>([]);
-  const [angketCompletedSessions, setAngketCompletedSessions] = useState<Set<number>>(new Set());
+  const [angketCompletedSessionsCache, setAngketCompletedSessionsCache] = useState<Record<number, Set<number>>>({});
+  const [angketLoading, setAngketLoading] = useState(false);
+  const fetchingSetupIdRef = useRef<number | null>(null);
   const [progresses, setProgresses] = useState<Record<number, number>>({});
 
   useEffect(() => {
@@ -161,11 +163,20 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
 
   // Fetch angket progress for the current subject (which sessions have completed evaluation)
   const fetchAngketProgress = useCallback((eagerSession?: number) => {
-    if (!setupId) { setAngketCompletedSessions(new Set()); return; }
+    if (!setupId) return;
+    
     // Eagerly mark the just-completed session so navigation unlocks instantly
     if (eagerSession !== undefined) {
-      setAngketCompletedSessions(prev => new Set([...prev, eagerSession]));
+      setAngketCompletedSessionsCache(prev => {
+        const existing = prev[setupId] || new Set();
+        return { ...prev, [setupId]: new Set([...existing, eagerSession]) };
+      });
     }
+
+    if (fetchingSetupIdRef.current === setupId) return;
+    fetchingSetupIdRef.current = setupId;
+    setAngketLoading(true);
+
     fetch(`/api/elearning/session-angket/progress?setupId=${setupId}`, {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
     })
@@ -173,18 +184,28 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
       .then(data => {
         if (data.success) {
           const completed = new Set<number>(data.data.filter((d: any) => d.completed).map((d: any) => Number(d.sessionNumber)));
-          // Merge with existing set (preserves eagerly-added sessions if server response is stale)
-          setAngketCompletedSessions((prev: Set<number>) => {
+          setAngketCompletedSessionsCache((prev: Record<number, Set<number>>) => {
+            const existing = prev[setupId] || new Set();
             const merged = new Set<number>(completed);
-            prev.forEach(s => merged.add(s));
-            return merged;
+            existing.forEach(s => merged.add(s));
+            return { ...prev, [setupId]: merged };
           });
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (fetchingSetupIdRef.current === setupId) {
+          fetchingSetupIdRef.current = null;
+          setAngketLoading(false);
+        }
+      });
   }, [setupId]);
 
   useEffect(() => { fetchAngketProgress(); }, [fetchAngketProgress]);
+
+  const angketCompletedSessions = useMemo(() => {
+    return setupId ? (angketCompletedSessionsCache[setupId] || new Set()) : new Set();
+  }, [angketCompletedSessionsCache, setupId]);
 
   const matchedSubject = allSubjects.find((s) => s.setupId === setupId);
 
@@ -244,6 +265,8 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
     };
 
     const handleNavigate = (menuId: string) => {
+      if (angketLoading) return; // Blokir saat sedang loading
+      
       if (menuId.startsWith("sesi-")) {
         const targetSession = parseInt(menuId.replace("sesi-", ""), 10);
         if (!canAccessSession(targetSession)) {
@@ -311,7 +334,9 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
 
           {nextMenu ? (
             <Button
+              disabled={angketLoading}
               onClick={() => {
+                if (angketLoading) return;
                 if (nextMenu.id.startsWith("sesi-")) {
                   const targetSession = parseInt(nextMenu.id.replace("sesi-", ""), 10);
                   if (!canAccessSession(targetSession)) {
@@ -321,10 +346,10 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
                 }
                 handleNavigate(nextMenu.id);
               }}
-              className="rounded-xl bg-[#280f91] hover:bg-[#3a1bca] text-white font-bold px-6 h-12 shadow-md shadow-[#280f91]/20"
+              className="rounded-xl bg-[#280f91] hover:bg-[#3a1bca] text-white font-bold px-6 h-12 shadow-md shadow-[#280f91]/20 disabled:opacity-50"
             >
-              {nextMenu.label}
-              <ChevronLeft className="h-4 w-4 ml-2 rotate-180" />
+              {angketLoading ? "Memuat..." : nextMenu.label}
+              {!angketLoading && <ChevronLeft className="h-4 w-4 ml-2 rotate-180" />}
             </Button>
           ) : <div />}
         </div>
