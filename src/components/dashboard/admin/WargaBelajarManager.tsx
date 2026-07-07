@@ -4,8 +4,7 @@ import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
 import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, GraduationCap, ArrowUpCircle, RefreshCw, List, LayoutGrid, Filter, RotateCcw, Loader2, Edit3 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
-import BerkasUpload from "@/components/ui/BerkasUpload";
-import type { BerkasItem } from "@/components/ui/BerkasUpload";
+import BerkasUpload, { type BerkasItem } from "@/components/ui/BerkasUpload";
 
 interface Student {
   id: number;
