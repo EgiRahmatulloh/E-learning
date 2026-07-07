@@ -194,7 +194,7 @@ export default function RombelManager() {
 
   const openEditForm = (rombel: Rombel) => {
     setIsAdding(false);
-    setIsEditing(false);
+    setIsEditing(true);
     setOriginalFormData({ nama: rombel.nama, waliKelasId: rombel.waliKelasId });
     setFormData({ nama: rombel.nama, waliKelasId: rombel.waliKelasId });
     setSelectedRombel(rombel);
@@ -968,6 +968,7 @@ export default function RombelManager() {
                     onClick={() => {
                       setFormData(originalFormData);
                       setIsEditing(false);
+                      setFormOpen(false);
                     }}
                     className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                   >
