@@ -12,5 +12,29 @@
   <body>
     <div id="root"></div>
     <script type="module" src="./src/main.tsx"></script>
+    <script>
+      // Update browser tab icon and title with institution data
+      (function() {
+        fetch('/api/institution-profile')
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (data.success && data.data) {
+              if (data.data.foto) {
+                var link = document.querySelector("link[rel~='icon']");
+                if (!link) {
+                  link = document.createElement('link');
+                  link.rel = 'icon';
+                  document.head.appendChild(link);
+                }
+                link.href = data.data.foto;
+              }
+              if (data.data.namaLembaga) {
+                document.title = data.data.namaLembaga;
+              }
+            }
+          })
+          .catch(function() {});
+      })();
+    </script>
   </body>
 </html>
