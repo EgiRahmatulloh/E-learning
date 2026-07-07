@@ -109,10 +109,8 @@ export default function KelolaElearning() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Search & Pagination untuk Daftar Kelas (kiri)
+  // Search untuk Daftar Kelas
   const [kelasSearch, setKelasSearch] = useState("");
-  const [kelasPage, setKelasPage] = useState(1);
-  const kelasPerPage = 3;
 
   const fetchSetups = async () => {
     try {
@@ -303,24 +301,6 @@ export default function KelolaElearning() {
       level.rombels.some((r) => r.nama.toLowerCase().includes(q))
     );
   }, [kelasLevels, kelasSearch]);
-
-  const kelasTotalPages = Math.max(1, Math.ceil(filteredKelasLevels.length / kelasPerPage));
-
-  // Halaman kelas yang ditampilkan saat ini
-  const paginatedKelasLevels = useMemo(() => {
-    const start = (kelasPage - 1) * kelasPerPage;
-    return filteredKelasLevels.slice(start, start + kelasPerPage);
-  }, [filteredKelasLevels, kelasPage]);
-
-  // Reset ke halaman 1 saat kata kunci berubah
-  useEffect(() => {
-    setKelasPage(1);
-  }, [kelasSearch]);
-
-  // Jaga agar halaman tidak melebihi total halaman (mis. setelah filter mengecil)
-  useEffect(() => {
-    if (kelasPage > kelasTotalPages) setKelasPage(kelasTotalPages);
-  }, [kelasPage, kelasTotalPages]);
 
   // Get setups for selected kelas level (deduplicated by mapel)
   const filteredItems = useMemo(() => {
@@ -570,139 +550,100 @@ export default function KelolaElearning() {
         </div>
       </div>
 
-      {/* MAIN LAYOUT: KIRI - KANAN */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* KIRI: DAFTAR KELAS */}
-        <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="bg-[#280f91] text-white p-4">
-            <h3 className="font-black text-sm uppercase tracking-wider flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              DAFTAR KELAS
-            </h3>
-          </div>
-          {/* Search Daftar Kelas */}
-          <div className="p-4 pb-0">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                value={kelasSearch}
-                onChange={(e) => setKelasSearch(e.target.value)}
-                placeholder="Cari kelas / rombel..."
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-9 pr-9 py-2.5 text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-[#280f91] outline-none"
-              />
-              {kelasSearch && (
-                <button
-                  type="button"
-                  onClick={() => setKelasSearch("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          </div>
-          <div className="p-4 space-y-3 max-h-[900px] overflow-y-auto">
-            {paginatedKelasLevels.length === 0 && (
-              <div className="py-10 text-center text-sm text-slate-400 font-medium">
-                Tidak ada kelas yang cocok.
-              </div>
+      {/* DAFTAR KELAS — Horizontal Scrollable */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-[#280f91] text-white px-4 py-3 flex items-center justify-between gap-3">
+          <h3 className="font-black text-sm uppercase tracking-wider flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            DAFTAR KELAS
+          </h3>
+          <div className="relative w-56">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/50" />
+            <input
+              type="text"
+              value={kelasSearch}
+              onChange={(e) => setKelasSearch(e.target.value)}
+              placeholder="Cari kelas..."
+              className="w-full rounded-lg border border-white/20 bg-white/10 text-white placeholder:text-white/40 pl-8 pr-8 py-1.5 text-xs font-medium outline-none focus:bg-white/20 focus:border-white/40"
+            />
+            {kelasSearch && (
+              <button
+                type="button"
+                onClick={() => setKelasSearch("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
             )}
-            {paginatedKelasLevels.map((level) => (
-              <button
-                key={level.id}
-                onClick={() => {
-                  setSelectedKelasId(level.id);
-                  setSearchTerm("");
-                  setCurrentPage(1);
-                }}
-                className={`w-full text-left rounded-xl border-2 transition-all overflow-hidden ${
-                  selectedKelas?.id === level.id
-                    ? "border-[#280f91] bg-purple-50 shadow-md"
-                    : "border-slate-100 hover:border-slate-200 hover:bg-slate-50"
-                }`}
-              >
-                {/* Foto Paket */}
-                <div className="w-full h-64 bg-slate-100 overflow-hidden rounded-t-lg relative">
-                  <img
-                    src={level.image}
-                    alt={level.nama}
-                    className="w-full h-full object-cover"
-                  />
-                  {/* Nama Kelas overlay di tengah bawah foto */}
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 pt-8">
-                    <span className="font-black text-lg text-white text-center block drop-shadow-lg">
-                      {level.nama}
-                    </span>
-                    <span className="text-xs text-white/80 text-center block font-semibold mt-0.5">
-                      {level.namaIndonesia}
-                    </span>
-                  </div>
-                </div>
-                {/* Info Kelas */}
-                <div className="p-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      {(() => {
-                        const now = new Date();
-                        const bulan = now.getMonth() + 1;
-                        const tahun = now.getFullYear();
-                        if (bulan >= 6) {
-                          return `Tahun Ajaran ${tahun}/${tahun + 1}`;
-                        } else {
-                          return `Tahun Ajaran ${tahun - 1}/${tahun}`;
-                        }
-                      })()}
-                    </span>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                      level.rombels.length > 0
-                        ? "bg-green-100 text-green-700"
-                        : "bg-slate-100 text-slate-500"
-                    }`}>
-                      {level.rombels.length} rombel
-                    </span>
-                  </div>
-                  {level.rombels.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {level.rombels.map(r => (
-                        <span key={r.id} className="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
-                          {r.nama}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </button>
-            ))}
           </div>
-          {/* Pagination Daftar Kelas */}
-          {kelasTotalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
-              <button
-                type="button"
-                onClick={() => setKelasPage((p) => Math.max(1, p - 1))}
-                disabled={kelasPage === 1}
-                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                Sebelumnya
-              </button>
-              <span className="text-xs font-semibold text-slate-500">
-                Hal {kelasPage} / {kelasTotalPages}
-              </span>
-              <button
-                type="button"
-                onClick={() => setKelasPage((p) => Math.min(kelasTotalPages, p + 1))}
-                disabled={kelasPage === kelasTotalPages}
-                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                Berikutnya
-              </button>
+        </div>
+        <div className="p-4">
+          {filteredKelasLevels.length === 0 ? (
+            <div className="py-6 text-center text-sm text-slate-400 font-medium">
+              Tidak ada kelas yang cocok.
+            </div>
+          ) : (
+            <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+              {filteredKelasLevels.map((level) => (
+                <button
+                  key={level.id}
+                  onClick={() => {
+                    setSelectedKelasId(level.id);
+                    setSearchTerm("");
+                    setCurrentPage(1);
+                  }}
+                  className={`flex-shrink-0 w-40 rounded-xl border-2 transition-all overflow-hidden group ${
+                    selectedKelas?.id === level.id
+                      ? "border-[#280f91] shadow-md ring-2 ring-purple-100"
+                      : "border-slate-100 hover:border-slate-200 hover:shadow-sm"
+                  }`}
+                >
+                  {/* Foto Paket */}
+                  <div className="w-full h-40 bg-slate-100 overflow-hidden relative">
+                    <img
+                      src={level.image}
+                      alt={level.nama}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 pt-10">
+                      <span className="font-black text-sm text-white block text-center drop-shadow-lg">
+                        {level.nama}
+                      </span>
+                    </div>
+                  </div>
+                  {/* Info Kelas */}
+                  <div className="px-2 py-2">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+                        level.rombels.length > 0
+                          ? "bg-green-100 text-green-700"
+                          : "bg-slate-100 text-slate-500"
+                      }`}>
+                        {level.rombels.length} rombel
+                      </span>
+                    </div>
+                    {level.rombels.length > 0 && (
+                      <div className="mt-1.5 flex flex-wrap gap-0.5">
+                        {level.rombels.slice(0, 3).map(r => (
+                          <span key={r.id} className="text-[8px] bg-slate-100 text-slate-600 px-1 py-0.5 rounded">
+                            {r.nama}
+                          </span>
+                        ))}
+                        {level.rombels.length > 3 && (
+                          <span className="text-[8px] bg-slate-100 text-slate-500 px-1 py-0.5 rounded">+{level.rombels.length - 3}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              ))}
             </div>
           )}
         </div>
+      </div>
 
-        {/* KANAN: KONFIGURASI MAPEL */}
-        <div className="lg:col-span-3 space-y-6">
+      {/* KONFIGURASI MAPEL */}
+      <div className="space-y-6">
           {selectedKelas ? (
             <>
               {/* INFO KELAS YANG DIPILIH */}
@@ -846,12 +787,11 @@ export default function KelolaElearning() {
               </div>
               <h3 className="text-lg font-black text-slate-700">Pilih Kelas Terlebih Dahulu</h3>
               <p className="text-sm text-slate-500 mt-2">
-                Klik salah satu kelas di panel kiri untuk melihat dan mengkonfigurasi mata pelajaran
+                Klik salah satu kelas di atas untuk melihat dan mengkonfigurasi mata pelajaran
               </p>
             </div>
           )}
         </div>
-      </div>
 
       {/* FORM MODAL */}
       {isFormModalOpen && selectedKelas && (
