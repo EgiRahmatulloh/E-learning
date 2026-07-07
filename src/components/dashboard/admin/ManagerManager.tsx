@@ -19,7 +19,8 @@ import {
 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
-import BerkasUpload, { BerkasItem } from "@/components/ui/BerkasUpload";
+import BerkasUpload from "@/components/ui/BerkasUpload";
+import type { BerkasItem } from "@/components/ui/BerkasUpload";
 
 interface ManagerData {
   id?: number;
