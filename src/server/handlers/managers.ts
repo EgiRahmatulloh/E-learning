@@ -42,16 +42,14 @@ export const managersHandlers = new Elysia()
   // Ambil data pengelola untuk publik (landing page)
   .get("/api/public-managers", async ({ set }) => {
     try {
-      const list = await db
-        .select({
-          id: managers.id,
-          nama: managers.nama,
-          jabatan: managers.jabatan,
-          foto: managers.foto,
-        })
-        .from(managers)
-        .all();
-      return { success: true, data: list };
+      const list = await db.select().from(managers).all();
+      const safeList = list.map((item) => {
+        const rest = { ...item };
+        delete (rest as any).password;
+        delete (rest as any).nik;
+        return rest;
+      });
+      return { success: true, data: safeList };
     } catch {
       set.status = 500;
       return { success: false, message: "Gagal mengambil data pengelola" };
@@ -89,7 +87,7 @@ export const managersHandlers = new Elysia()
         nama: t.String(),
         nik: t.String(),
         jabatan: t.String(),
-        nuptk: t.String(),
+        nip: t.String(),
         tempatTglLahir: t.String(),
         jenisKelamin: t.String(),
         agama: t.String(),
@@ -154,7 +152,7 @@ export const managersHandlers = new Elysia()
         nama: t.String(),
         nik: t.String(),
         jabatan: t.String(),
-        nuptk: t.String(),
+        nip: t.String(),
         tempatTglLahir: t.String(),
         jenisKelamin: t.String(),
         agama: t.String(),
@@ -222,7 +220,7 @@ export const managersHandlers = new Elysia()
           nama: item.nama,
           nik: typeof item.nik === "string" ? item.nik : "",
           jabatan: typeof item.jabatan === "string" ? item.jabatan : "",
-          nuptk: typeof item.nuptk === "string" ? item.nuptk : "",
+          nip: typeof item.nip === "string" ? item.nip : "",
           tempatTglLahir: typeof item.tempatTglLahir === "string" ? item.tempatTglLahir : "",
           jenisKelamin: typeof item.jenisKelamin === "string" ? item.jenisKelamin : "",
           agama: typeof item.agama === "string" ? item.agama : "",
@@ -265,7 +263,7 @@ export const managersHandlers = new Elysia()
           nama: t.String({ minLength: 1 }),
           nik: t.Optional(t.String()),
           jabatan: t.Optional(t.String()),
-          nuptk: t.Optional(t.String()),
+          nip: t.Optional(t.String()),
           tempatTglLahir: t.Optional(t.String()),
           jenisKelamin: t.Optional(t.String()),
           agama: t.Optional(t.String()),

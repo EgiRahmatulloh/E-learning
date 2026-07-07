@@ -12,7 +12,7 @@ interface Tutor {
   tutorMapel: string;
   program: string;
   kelas?: string;
-  nuptk: string;
+  nip: string;
   tempatTglLahir: string;
   jenisKelamin: string;
   agama: string;
@@ -66,7 +66,7 @@ export default function TutorManager() {
     tutorMapel: "",
     program: "",
     kelas: "",
-    nuptk: "",
+    nip: "",
     tempatTglLahir: "",
     jenisKelamin: "Laki-laki",
     agama: "Islam",
@@ -148,11 +148,11 @@ export default function TutorManager() {
       toast.error("Tidak ada data untuk diekspor!");
       return;
     }
-    const headers = ["NAMA", "PROGRAM", "NUPTK", "TEMPAT TGL LAHIR", "JENIS KELAMIN", "AGAMA", "PENDIDIKAN", "EMAIL", "NIK", "ALAMAT", "FOTO", "TANGGAL MULAI TUGAS", "NOMOR SK PENGANGKATAN", "LEMBAGA PENGANGKAT", "NOMOR SK PENUGASAN", "LEMBAGA PENUGAS"];
+    const headers = ["NAMA", "PROGRAM", "NIP", "TEMPAT TGL LAHIR", "JENIS KELAMIN", "AGAMA", "PENDIDIKAN", "EMAIL", "NIK", "ALAMAT", "FOTO", "TANGGAL MULAI TUGAS", "NOMOR SK PENGANGKATAN", "LEMBAGA PENGANGKAT", "NOMOR SK PENUGASAN", "LEMBAGA PENUGAS"];
     const rows = tutors.map(t => [
       t.nama || "",
       t.program || "",
-      t.nuptk || "",
+      t.nip || "",
       t.tempatTglLahir || "",
       t.jenisKelamin || "",
       t.agama || "",
@@ -182,7 +182,7 @@ export default function TutorManager() {
       const mapped = mapCsvRows(rows, [
         { key: "nama", aliases: ["nama", "name"], defaultIndex: 0 },
         { key: "program", aliases: ["program", "paket"], defaultIndex: 1 },
-        { key: "nuptk", aliases: ["nuptk"], defaultIndex: 2 },
+        { key: "nip", aliases: ["nip"], defaultIndex: 2 },
         { key: "tempatTglLahir", aliases: ["tempat/tgl lahir", "tempat lahir", "tanggal lahir", "tempat tgllahir", "birth"], defaultIndex: 3 },
         { key: "jenisKelamin", aliases: ["jenis kelamin", "gender", "jk"], defaultIndex: 4 },
         { key: "agama", aliases: ["agama", "religion"], defaultIndex: 5 },
@@ -203,7 +203,7 @@ export default function TutorManager() {
         .map((item) => ({
           nama: item.nama,
           program: item.program || "",
-          nuptk: item.nuptk || "",
+          nip: item.nip || "",
           tempatTglLahir: item.tempatTglLahir || "",
           jenisKelamin: item.jenisKelamin || "",
           agama: item.agama || "",
@@ -257,7 +257,7 @@ export default function TutorManager() {
       tutorMapel: "",
       program: "",
       kelas: "",
-      nuptk: "",
+      nip: "",
       tempatTglLahir: "",
       jenisKelamin: "Laki-laki",
       agama: "Islam",
@@ -601,7 +601,7 @@ export default function TutorManager() {
                           {tutor.nama}
                         </h4>
                         <p className="text-slate-500 text-[10px] font-semibold uppercase">
-                          {tutor.nuptk || "NUPTK: -"}
+                          {tutor.nip || "NIP: -"}
                         </p>
                       </div>
                     </div>
@@ -616,7 +616,7 @@ export default function TutorManager() {
                         <th className="py-4 px-6 w-16 text-center border-r border-[#009cb9]">NO</th>
                         <th className="py-4 px-6 border-r border-[#009cb9]">NAMA</th>
                         <th className="py-4 px-6 border-r border-[#009cb9] w-48 text-center">PROGRAM</th>
-                        <th className="py-4 px-6 border-r border-[#009cb9] w-48 text-center">NUPTK</th>
+                        <th className="py-4 px-6 border-r border-[#009cb9] w-48 text-center">NIP</th>
                         <th className="py-4 px-6 border-r border-[#009cb9] w-36 text-center">PENDIDIKAN</th>
                         <th className="py-4 px-6 text-center">EMAIL</th>
                       </tr>
@@ -631,7 +631,7 @@ export default function TutorManager() {
                           <td className="py-4 px-6 text-center text-slate-500 font-mono border-r border-slate-100">{idx + 1}</td>
                           <td className="py-4 px-6 font-bold text-slate-800 border-r border-slate-100">{tutor.nama}</td>
                           <td className="py-4 px-6 text-center border-r border-slate-100 font-bold text-purple-700">{tutor.program}</td>
-                          <td className="py-4 px-6 text-center border-r border-slate-100 font-mono">{tutor.nuptk || "-"}</td>
+                          <td className="py-4 px-6 text-center border-r border-slate-100 font-mono">{tutor.nip || "-"}</td>
                           <td className="py-4 px-6 text-center border-r border-slate-100">{tutor.pendidikan || "-"}</td>
                           <td className="py-4 px-6 text-center text-slate-500 font-mono">{tutor.email || "-"}</td>
                         </tr>
@@ -768,15 +768,15 @@ export default function TutorManager() {
                       </select>
                     </div>
 
-                    {/* Row 3: NUPTK | TEMPAT/TGL.LAHIR */}
+                    {/* Row 3: NIP | TEMPAT/TGL.LAHIR */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NUPTK</label>
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIP</label>
                       <input
                         type="text"
                         disabled={!isEditing}
-                        placeholder="Masukkan 16 digit NUPTK (jika ada)"
-                        value={formData.nuptk || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, nuptk: e.target.value }))}
+                        placeholder="Masukkan NIP (jika ada)"
+                        value={formData.nip || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, nip: e.target.value }))}
                         className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>

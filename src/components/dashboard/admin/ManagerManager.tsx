@@ -26,7 +26,7 @@ interface ManagerData {
   nama: string;
   nik: string;
   jabatan: string;
-  nuptk: string;
+  nip: string;
   tempatTglLahir: string;
   jenisKelamin: string;
   agama: string;
@@ -49,7 +49,7 @@ const DEFAULT_MANAGER: ManagerData = {
   nama: "",
   nik: "",
   jabatan: "",
-  nuptk: "",
+  nip: "",
   tempatTglLahir: "",
   jenisKelamin: "",
   agama: "",
@@ -504,12 +504,12 @@ export default function ManagerManager() {
       toast.error("Tidak ada data untuk diekspor!");
       return;
     }
-    const headers = ["NAMA", "NIK", "JABATAN", "NUPTK", "TEMPAT TGL LAHIR", "JENIS KELAMIN", "AGAMA", "PENDIDIKAN", "EMAIL", "TANGGAL MULAI TUGAS", "NOMOR SK PENGANGKATAN", "LEMBAGA PENGANGKAT", "NOMOR SK PENUGASAN", "LEMBAGA PENUGAS", "ALAMAT", "FOTO"];
+    const headers = ["NAMA", "NIK", "JABATAN", "NIP", "TEMPAT TGL LAHIR", "JENIS KELAMIN", "AGAMA", "PENDIDIKAN", "EMAIL", "TANGGAL MULAI TUGAS", "NOMOR SK PENGANGKATAN", "LEMBAGA PENGANGKAT", "NOMOR SK PENUGASAN", "LEMBAGA PENUGAS", "ALAMAT", "FOTO"];
     const rows = managersList.map(m => [
       m.nama || "",
       m.nik || "",
       m.jabatan || "",
-      m.nuptk || "",
+      m.nip || "",
       m.tempatTglLahir || "",
       m.jenisKelamin || "",
       m.agama || "",
@@ -539,7 +539,7 @@ export default function ManagerManager() {
         { key: "nama", aliases: ["nama", "name"], defaultIndex: 0 },
         { key: "nik", aliases: ["nik", "identitas"], defaultIndex: 1 },
         { key: "jabatan", aliases: ["jabatan", "role", "position"], defaultIndex: 2 },
-        { key: "nuptk", aliases: ["nuptk"], defaultIndex: 3 },
+        { key: "nip", aliases: ["nip"], defaultIndex: 3 },
         { key: "tempatTglLahir", aliases: ["tempat/tgl lahir", "tempat lahir", "tanggal lahir", "tempat tgllahir", "birth"], defaultIndex: 4 },
         { key: "jenisKelamin", aliases: ["jenis kelamin", "gender", "jk"], defaultIndex: 5 },
         { key: "agama", aliases: ["agama", "religion"], defaultIndex: 6 },
@@ -560,7 +560,7 @@ export default function ManagerManager() {
           nama: item.nama,
           nik: item.nik || "",
           jabatan: item.jabatan || "",
-          nuptk: item.nuptk || "",
+          nip: item.nip || "",
           tempatTglLahir: item.tempatTglLahir || "",
           jenisKelamin: item.jenisKelamin || "",
           agama: item.agama || "",
@@ -904,7 +904,7 @@ export default function ManagerManager() {
                   />
                 </div>
 
-                {/* Row 2: JABATAN | NUPTK */}
+                {/* Row 2: JABATAN | NIP */}
                 <div className="flex flex-col gap-0.5">
                   <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">JABATAN</label>
                   <input
@@ -917,13 +917,13 @@ export default function ManagerManager() {
                   />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NUPTK</label>
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIP</label>
                   <input
                     type="text"
                     disabled={!isEditing}
                     placeholder="Masukkan Nomor Unik Pendidik dan Tenaga Kependidikan (jika ada)"
-                    value={selectedManager.nuptk}
-                    onChange={(e) => handleFieldChange("nuptk", e.target.value)}
+                    value={selectedManager.nip}
+                    onChange={(e) => handleFieldChange("nip", e.target.value)}
                     className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                   />
                 </div>

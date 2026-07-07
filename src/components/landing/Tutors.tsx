@@ -16,7 +16,7 @@ interface Tutor {
   nama: string;
   tutorMapel: string;
   program: string;
-  nuptk: string;
+  nip: string;
   tempatTglLahir: string;
   jenisKelamin: string;
   agama: string;
@@ -251,8 +251,8 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                           </div>
 
                           <div className="space-y-1">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">NUPTK</span>
-                            <span className="text-slate-800 font-bold">{tutor.nuptk || "-"}</span>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">NIP</span>
+                            <span className="text-slate-800 font-bold">{tutor.nip || "-"}</span>
                           </div>
 
                           <div className="space-y-1">
@@ -504,8 +504,8 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                               <span className="text-slate-800 font-bold uppercase">{tutor.program || "-"}</span>
                             </div>
                             <div className="space-y-1">
-                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">NUPTK</span>
-                              <span className="text-slate-800 font-bold">{tutor.nuptk || "-"}</span>
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">NIP</span>
+                              <span className="text-slate-800 font-bold">{tutor.nip || "-"}</span>
                             </div>
                             <div className="space-y-1">
                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Tempat, Tgl Lahir</span>

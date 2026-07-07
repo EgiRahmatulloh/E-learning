@@ -190,7 +190,7 @@ export const authHandlers = new Elysia()
             foto: tutor.foto,
             tutorMapel: tutor.tutorMapel,
             program: tutor.program,
-            nuptk: tutor.nuptk,
+            nip: tutor.nip,
             pendidikan: tutor.pendidikan,
             tanggalMulaiTugas: tutor.tanggalMulaiTugas,
             nomorSkPengangkatan: tutor.nomorSkPengangkatan,
@@ -265,7 +265,7 @@ export const authHandlers = new Elysia()
       const id = Number(payload.id);
       const { 
         name, email, password, noHp, alamat,
-        nik, nuptk, tempatTglLahir, jenisKelamin, agama, pendidikan,
+        nik, nip, tempatTglLahir, jenisKelamin, agama, pendidikan,
         tanggalMulaiTugas, nomorSkPengangkatan, lembagaPengangkat, nomorSkPenugasan, lembagaPenugas,
         nisn, nis, titikLayanan, namaAyah, namaIbu
       } = body as any;
@@ -312,7 +312,7 @@ export const authHandlers = new Elysia()
         if (role === "tutor") {
           // Fields specific to Tutor
           if (nik !== undefined) updateData.nik = nik;
-          if (nuptk !== undefined) updateData.nuptk = nuptk;
+          if (nip !== undefined) updateData.nip = nip;
           if (tempatTglLahir !== undefined) updateData.tempatTglLahir = tempatTglLahir;
           if (jenisKelamin !== undefined) updateData.jenisKelamin = jenisKelamin;
           if (agama !== undefined) updateData.agama = agama;
@@ -349,7 +349,7 @@ export const authHandlers = new Elysia()
               foto: updated.foto,
               tutorMapel: updated.tutorMapel,
               program: updated.program,
-              nuptk: updated.nuptk,
+              nip: updated.nip,
               pendidikan: updated.pendidikan,
               tanggalMulaiTugas: updated.tanggalMulaiTugas,
               nomorSkPengangkatan: updated.nomorSkPengangkatan,
@@ -423,7 +423,7 @@ export const authHandlers = new Elysia()
         noHp: t.Optional(t.String()),
         alamat: t.Optional(t.String()),
         nik: t.Optional(t.String()),
-        nuptk: t.Optional(t.String()),
+        nip: t.Optional(t.String()),
         tempatTglLahir: t.Optional(t.String()),
         jenisKelamin: t.Optional(t.String()),
         agama: t.Optional(t.String()),

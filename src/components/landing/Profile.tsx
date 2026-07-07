@@ -1,9 +1,18 @@
 import { useState, useEffect } from "react";
-import { 
-  Info, Users, Target, BookOpen, Layers, Award, MapPin, 
+import {
+  Info, Users, Target, BookOpen, Layers, Award, MapPin,
   Phone, Mail, Shield, Landmark, UserCheck, Clock, Group, CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
 
 interface InstitutionProfile {
   namaLembaga: string;
@@ -29,6 +38,18 @@ interface Manager {
   id: number;
   nama: string;
   jabatan: string;
+  nip: string;
+  tempatTglLahir: string;
+  jenisKelamin: string;
+  agama: string;
+  pendidikan: string;
+  email: string;
+  tanggalMulaiTugas: string;
+  nomorSkPengangkatan: string;
+  lembagaPengangkat: string;
+  nomorSkPenugasan: string;
+  lembagaPenugas: string;
+  alamat: string;
   foto: string;
 }
 
@@ -496,30 +517,141 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                   <>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                       {(showAllManagers ? managers : managers.slice(0, 8)).map((m) => (
-                        <div 
-                          key={m.id} 
-                          className="p-6 rounded-2xl border border-slate-50 bg-slate-50/40 hover:bg-white hover:border-[#280f91]/15 hover:shadow-xl hover:-translate-y-1.5 transition-all text-center flex flex-col items-center gap-4 group"
-                        >
-                          <div className="h-24 w-24 rounded-full overflow-hidden shadow-md border-4 border-white bg-slate-200 flex items-center justify-center">
-                            {m.foto ? (
-                              <img 
-                                src={m.foto} 
-                                alt={m.nama}
-                                className="h-full w-full object-cover group-hover:scale-110 transition-transform"
-                              />
-                            ) : (
-                              <Users className="h-10 w-10 text-slate-400" />
-                            )}
-                          </div>
-                          <div className="space-y-1 text-center min-w-0 w-full">
-                            <h4 className="text-xs font-black text-slate-900 group-hover:text-[#280f91] transition-colors truncate">
-                              {m.nama}
-                            </h4>
-                            <span className="inline-block text-[9px] font-black text-white bg-[#9c27b0] rounded-full px-3 py-1 uppercase tracking-wider truncate max-w-full">
-                              {m.jabatan}
-                            </span>
-                          </div>
-                        </div>
+                        <Dialog key={m.id}>
+                          <DialogTrigger asChild>
+                            <div
+                              className="p-6 rounded-2xl border border-slate-50 bg-slate-50/40 hover:bg-white hover:border-[#280f91]/15 hover:shadow-xl hover:-translate-y-1.5 transition-all text-center flex flex-col items-center gap-4 group cursor-pointer"
+                            >
+                              <div className="h-24 w-24 rounded-full overflow-hidden shadow-md border-4 border-white bg-slate-200 flex items-center justify-center">
+                                {m.foto ? (
+                                  <img
+                                    src={m.foto}
+                                    alt={m.nama}
+                                    className="h-full w-full object-cover group-hover:scale-110 transition-transform"
+                                  />
+                                ) : (
+                                  <Users className="h-10 w-10 text-slate-400" />
+                                )}
+                              </div>
+                              <div className="space-y-1 text-center min-w-0 w-full">
+                                <h4 className="text-xs font-black text-slate-900 group-hover:text-[#280f91] transition-colors truncate">
+                                  {m.nama}
+                                </h4>
+                                <span className="inline-block text-[9px] font-black text-white bg-[#9c27b0] rounded-full px-3 py-1 uppercase tracking-wider truncate max-w-full">
+                                  {m.jabatan}
+                                </span>
+                              </div>
+                            </div>
+                          </DialogTrigger>
+
+                          {/* DETAIL DIALOG POP-UP */}
+                          <DialogContent className="sm:max-w-2xl bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl text-left overflow-y-auto max-h-[85vh]">
+                            <DialogHeader className="border-b border-slate-100 pb-3">
+                              <DialogTitle className="text-xl font-black text-[#280f91] uppercase flex items-center gap-2">
+                                <UserCheck className="h-5 w-5 text-[#ff6105]" /> Detail Profil Pengelola
+                              </DialogTitle>
+                            </DialogHeader>
+
+                            <div className="py-4 grid grid-cols-1 sm:grid-cols-3 gap-6">
+                              {/* Photo Column */}
+                              <div className="sm:col-span-1 space-y-4">
+                                <div className="aspect-[3/4] w-full rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm">
+                                  {m.foto ? (
+                                    <img
+                                      src={m.foto}
+                                      alt={m.nama}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-400">
+                                      No Photo
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-center space-y-1">
+                                  <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Mulai Tugas</span>
+                                  <span className="text-xs font-black text-slate-700">{m.tanggalMulaiTugas || "-"}</span>
+                                </div>
+                              </div>
+
+                              {/* Detail Fields Column */}
+                              <div className="sm:col-span-2 space-y-4 text-slate-700">
+                                <div className="border-b border-slate-100 pb-2">
+                                  <h2 className="text-xl font-black text-[#280f91] uppercase leading-tight">{m.nama}</h2>
+                                  <span className="inline-block bg-orange-100 text-[#ff6105] font-extrabold text-[10px] px-3.5 py-1 rounded-full uppercase tracking-wider mt-1.5 shadow-xs">
+                                    {m.jabatan}
+                                  </span>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-semibold text-xs leading-relaxed">
+                                  <div className="space-y-1">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">NIP</span>
+                                    <span className="text-slate-800 font-bold">{m.nip || "-"}</span>
+                                  </div>
+
+                                  <div className="space-y-1">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Tempat, Tgl Lahir</span>
+                                    <span className="text-slate-800 font-bold">{m.tempatTglLahir || "-"}</span>
+                                  </div>
+
+                                  <div className="space-y-1">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Jenis Kelamin</span>
+                                    <span className="text-slate-800 font-bold">{m.jenisKelamin || "-"}</span>
+                                  </div>
+
+                                  <div className="space-y-1">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Agama</span>
+                                    <span className="text-slate-800 font-bold">{m.agama || "-"}</span>
+                                  </div>
+
+                                  <div className="space-y-1">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Pendidikan</span>
+                                    <span className="text-slate-800 font-bold">{m.pendidikan || "-"}</span>
+                                  </div>
+
+                                  <div className="space-y-1 sm:col-span-2">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Alamat Lengkap</span>
+                                    <span className="text-slate-800 font-bold leading-normal block">{m.alamat || "-"}</span>
+                                  </div>
+
+                                  <div className="space-y-1 sm:col-span-2">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block flex items-center gap-1">
+                                      <Mail className="h-3 w-3" /> Email
+                                    </span>
+                                    <a href={`mailto:${m.email}`} className="text-[#ff6105] hover:underline font-bold text-[11px] block">
+                                      {m.email || "-"}
+                                    </a>
+                                  </div>
+                                </div>
+
+                                {/* SK Details */}
+                                <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl space-y-2.5 text-xs text-slate-800">
+                                  <span className="block text-[9px] font-black text-[#280f91] uppercase tracking-wider border-b border-slate-200 pb-1">Keterangan SK Pengangkatan / Penugasan</span>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-bold">
+                                    <div>
+                                      <p className="text-[9px] text-slate-400 font-black uppercase">SK PENGANGKATAN</p>
+                                      <p>{m.nomorSkPengangkatan || "-"}</p>
+                                      <p className="text-[9px] text-slate-400 font-normal italic mt-0.5">{m.lembagaPengangkat}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-[9px] text-slate-400 font-black uppercase">SK PENUGASAN</p>
+                                      <p>{m.nomorSkPenugasan || "-"}</p>
+                                      <p className="text-[9px] text-slate-400 font-normal italic mt-0.5">{m.lembagaPenugas}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <DialogFooter className="border-t border-slate-100 pt-4">
+                              <DialogClose asChild>
+                                <Button className="rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 px-6 w-full sm:w-auto cursor-pointer">
+                                  Tutup Profil
+                                </Button>
+                              </DialogClose>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
                       ))}
                     </div>
                     {managers.length > 8 && !showAllManagers && (

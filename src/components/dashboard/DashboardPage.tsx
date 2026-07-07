@@ -86,7 +86,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
     noHp: user.noHp || "",
     alamat: user.alamat || "",
     nik: user.nik || "",
-    nuptk: (user as any).nuptk || "",
+    nip: (user as any).nip || "",
     tempatTglLahir: (user as any).tempatTglLahir || "",
     jenisKelamin: (user as any).jenisKelamin || "",
     agama: (user as any).agama || "",
@@ -112,7 +112,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
         noHp: user.noHp || "",
         alamat: user.alamat || "",
         nik: user.nik || "",
-        nuptk: (user as any).nuptk || "",
+        nip: (user as any).nip || "",
         tempatTglLahir: (user as any).tempatTglLahir || "",
         jenisKelamin: (user as any).jenisKelamin || "",
         agama: (user as any).agama || "",
@@ -155,7 +155,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
           noHp: formData.noHp || undefined,
           alamat: formData.alamat || undefined,
           nik: formData.nik || undefined,
-          nuptk: formData.nuptk || undefined,
+          nip: formData.nip || undefined,
           tempatTglLahir: formData.tempatTglLahir || undefined,
           jenisKelamin: formData.jenisKelamin || undefined,
           agama: formData.agama || undefined,
@@ -333,11 +333,11 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                 {user.role === "tutor" && (
                   <>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">NUPTK</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">NIP</label>
                       <input
                         type="text"
-                        value={formData.nuptk}
-                        onChange={(e) => setFormData({ ...formData, nuptk: e.target.value })}
+                        value={formData.nip}
+                        onChange={(e) => setFormData({ ...formData, nip: e.target.value })}
                         className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
                       />
                     </div>

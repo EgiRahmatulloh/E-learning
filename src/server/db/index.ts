@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS managers (
   nama TEXT NOT NULL DEFAULT '',
   nik TEXT NOT NULL DEFAULT '',
   jabatan TEXT NOT NULL DEFAULT '',
-  nuptk TEXT NOT NULL DEFAULT '',
+  nip TEXT NOT NULL DEFAULT '',
   tempat_tgl_lahir TEXT NOT NULL DEFAULT '',
   jenis_kelamin TEXT NOT NULL DEFAULT '',
   agama TEXT NOT NULL DEFAULT '',
@@ -225,7 +225,7 @@ CREATE TABLE IF NOT EXISTS tutors (
   nama TEXT NOT NULL DEFAULT '',
   tutor_mapel TEXT NOT NULL DEFAULT '',
   program TEXT NOT NULL DEFAULT '',
-  nuptk TEXT NOT NULL DEFAULT '',
+  nip TEXT NOT NULL DEFAULT '',
   tempat_tgl_lahir TEXT NOT NULL DEFAULT '',
   jenis_kelamin TEXT NOT NULL DEFAULT '',
   agama TEXT NOT NULL DEFAULT '',
@@ -432,6 +432,18 @@ try {
   sqlite.exec("ALTER TABLE elearning_sessions ADD COLUMN is_open INTEGER NOT NULL DEFAULT 1;");
 } catch (e) {
   // Kolom mungkin sudah ada, abaikan error
+}
+
+// Migration: rename nuptk → nip di tabel managers dan tutors
+try {
+  sqlite.exec("ALTER TABLE managers RENAME COLUMN nuptk TO nip;");
+} catch (e) {
+  // Kolom mungkin sudah di-rename, abaikan error
+}
+try {
+  sqlite.exec("ALTER TABLE tutors RENAME COLUMN nuptk TO nip;");
+} catch (e) {
+  // Kolom mungkin sudah di-rename, abaikan error
 }
 
 sqlite.exec(`
