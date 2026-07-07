@@ -4,6 +4,7 @@ import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
 import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, List, LayoutGrid, Filter, RotateCcw, Loader2, Edit3 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
+import BerkasUpload, { BerkasItem } from "@/components/ui/BerkasUpload";
 
 interface Tutor {
   id: number;
@@ -21,6 +22,7 @@ interface Tutor {
   alamat: string;
   password?: string;
   foto: string;
+  berkas?: Record<string, string>;
   tanggalMulaiTugas: string;
   nomorSkPengangkatan: string;
   lembagaPengangkat: string;
@@ -30,6 +32,14 @@ interface Tutor {
 
 export default function TutorManager() {
   const confirm = useConfirm();
+
+  const TUTOR_BERKAS_TYPES: BerkasItem[] = [
+    { label: "KK (Kartu Keluarga)", key: "kk" },
+    { label: "KTP", key: "ktp" },
+    { label: "Ijazah", key: "ijazah" },
+    { label: "SK Pengangkatan", key: "sk_pengangkatan" },
+    { label: "SK Penugasan", key: "sk_penugasan" },
+  ];
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -66,6 +76,7 @@ export default function TutorManager() {
     alamat: "",
     password: "",
     foto: "",
+    berkas: {},
     tanggalMulaiTugas: "",
     nomorSkPengangkatan: "",
     lembagaPengangkat: "",
@@ -201,6 +212,7 @@ export default function TutorManager() {
           nik: item.nik || "",
           alamat: item.alamat || "",
           foto: item.foto || "",
+          berkas: {},
           tanggalMulaiTugas: item.tanggalMulaiTugas || "",
           nomorSkPengangkatan: item.nomorSkPengangkatan || "",
           lembagaPengangkat: item.lembagaPengangkat || "",
@@ -987,6 +999,14 @@ export default function TutorManager() {
                         className="w-full text-[11px] font-semibold border border-transparent rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-purple-400 focus:outline-none bg-white text-slate-800"
                       />
                     </div>
+
+                    {/* BERKAS DOKUMEN */}
+                    <BerkasUpload
+                      berkasTypes={TUTOR_BERKAS_TYPES}
+                      value={formData.berkas || {}}
+                      onChange={(data) => setFormData((prev) => ({ ...prev, berkas: data }))}
+                      isEditing={isEditing}
+                    />
 
                   </div>
 

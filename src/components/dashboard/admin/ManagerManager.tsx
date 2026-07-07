@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
+import BerkasUpload, { BerkasItem } from "@/components/ui/BerkasUpload";
 
 interface ManagerData {
   id?: number;
@@ -39,6 +40,7 @@ interface ManagerData {
   alamat: string;
   password: string;
   foto: string;
+  berkas?: Record<string, string>;
 }
 
 const STORAGE_KEY = "pkbm_managers_data";
@@ -61,6 +63,7 @@ const DEFAULT_MANAGER: ManagerData = {
   alamat: "",
   password: "",
   foto: "",
+  berkas: {},
 };
 
 // Safe LocalStorage helpers
@@ -82,6 +85,14 @@ const setSafeItem = (key: string, value: string) => {
 
 export default function ManagerManager() {
   const confirm = useConfirm();
+
+  const MANAGER_BERKAS_TYPES: BerkasItem[] = [
+    { label: "KK (Kartu Keluarga)", key: "kk" },
+    { label: "KTP", key: "ktp" },
+    { label: "SK Pengangkatan", key: "sk_pengangkatan" },
+    { label: "SK Penugasan", key: "sk_penugasan" },
+    { label: "Ijazah", key: "ijazah" },
+  ];
   const [managersList, setManagersList] = useState<ManagerData[]>([]);
   const [selectedManager, setSelectedManager] = useState<ManagerData>(DEFAULT_MANAGER);
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
@@ -562,6 +573,7 @@ export default function ManagerManager() {
           lembagaPenugas: item.lembagaPenugas || "",
           alamat: item.alamat || "",
           foto: item.foto || "",
+          berkas: {},
         }));
 
       if (importedData.length === 0) {
@@ -1168,6 +1180,16 @@ export default function ManagerManager() {
                       onChange={(e) => handleFieldChange("foto", e.target.value)}
                       disabled={!isEditing}
                       className="w-full text-[11px] font-semibold border border-transparent rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-purple-400 focus:outline-none bg-white text-slate-800 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                    />
+                  </div>
+
+                  {/* BERKAS DOKUMEN */}
+                  <div className="mt-3">
+                    <BerkasUpload
+                      berkasTypes={MANAGER_BERKAS_TYPES}
+                      value={selectedManager.berkas || {}}
+                      onChange={(data) => setSelectedManager((prev) => ({ ...prev, berkas: data }))}
+                      isEditing={isEditing}
                     />
                   </div>
                 </div>

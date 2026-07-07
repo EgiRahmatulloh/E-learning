@@ -3,6 +3,9 @@ import { jwt } from "@elysia/jwt";
 import { finalJwtSecret } from "../config/jwt";
 import { verifyUser } from "../middleware/auth";
 import fs from "fs";
+import path from "path";
+
+const SECURE_UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
 export const uploadServices = new Elysia()
   .use(
@@ -18,7 +21,7 @@ export const uploadServices = new Elysia()
       }),
     })
   )
-  // Endpoint untuk Unggah Berkas Gambar Fisik (Aman & Efisien)
+  // Endpoint untuk Unggah Berkas (Aman — simpan di luar public/)
   .post(
     "/api/upload",
     async ({ body, headers, jwt, set }) => {
@@ -87,21 +90,55 @@ export const uploadServices = new Elysia()
         };
       }
 
-      const uploadDir = "public/uploads";
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
+      // Simpan di folder aman (bukan public/)
+      if (!fs.existsSync(SECURE_UPLOAD_DIR)) {
+        fs.mkdirSync(SECURE_UPLOAD_DIR, { recursive: true });
       }
 
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-      const filePath = `${uploadDir}/${fileName}`;
+      const filePath = path.join(SECURE_UPLOAD_DIR, fileName);
 
       await Bun.write(filePath, file);
 
-      return { success: true, url: `/uploads/${fileName}` };
+      return { success: true, url: `/api/files/${fileName}` };
     },
     {
       body: t.Object({
         file: t.File(),
       }),
+    }
+  )
+  // Endpoint untuk mengakses berkas aman (butuh auth via header atau query param)
+  .get(
+    "/api/files/:filename",
+    async ({ params, headers, query, jwt, set }) => {
+      // Auth via header atau query param (untuk preview di img/iframe)
+      let authError = await verifyUser(headers, jwt, set);
+      if (authError && query.token) {
+        try {
+          const payload = await jwt.verify(query.token);
+          if (!payload) authError = null;
+        } catch {
+          // token invalid, tetap error
+        }
+      }
+      if (authError) return authError;
+
+      const filePath = path.join(SECURE_UPLOAD_DIR, params.filename);
+
+      // Validasi: cegah path traversal
+      const resolved = path.resolve(filePath);
+      if (!resolved.startsWith(SECURE_UPLOAD_DIR)) {
+        set.status = 403;
+        return { success: false, message: "Akses ditolak" };
+      }
+
+      if (!fs.existsSync(filePath)) {
+        set.status = 404;
+        return { success: false, message: "Berkas tidak ditemukan" };
+      }
+
+      const file = Bun.file(filePath);
+      return new Response(file);
     }
   );

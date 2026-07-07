@@ -4,6 +4,7 @@ import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
 import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, GraduationCap, ArrowUpCircle, RefreshCw, List, LayoutGrid, Filter, RotateCcw, Loader2, Edit3 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
+import BerkasUpload, { BerkasItem } from "@/components/ui/BerkasUpload";
 
 interface Student {
   id: number;
@@ -24,6 +25,7 @@ interface Student {
   alamat: string;
   password?: string;
   foto: string;
+  berkas?: Record<string, string>;
   status: string; // 'AKTIF', 'LULUS'
   rombels?: { id: number; nama: string }[];
 }
@@ -47,6 +49,14 @@ const NEXT_PROGRAM: Record<string, string> = {
 
 export default function WargaBelajarManager() {
   const confirm = useConfirm();
+
+  const WB_BERKAS_TYPES: BerkasItem[] = [
+    { label: "KK (Kartu Keluarga)", key: "kk" },
+    { label: "KTP / Akta Kelahiran", key: "ktp" },
+    { label: "Ijazah Sebelumnya", key: "ijazah" },
+    { label: "SKHUN", key: "skhun" },
+    { label: "Pas Foto", key: "pasfoto" },
+  ];
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -102,6 +112,7 @@ export default function WargaBelajarManager() {
     alamat: "",
     password: "",
     foto: "",
+    berkas: {},
     status: "AKTIF",
   });
 
@@ -259,6 +270,7 @@ export default function WargaBelajarManager() {
           namaIbu: item.namaIbu || "",
           alamat: item.alamat || "",
           foto: item.foto || "",
+          berkas: {},
           status: item.status || "AKTIF",
         }));
 
@@ -1393,6 +1405,14 @@ export default function WargaBelajarManager() {
                         disabled={!isEditing}
                       />
                     </div>
+
+                    {/* BERKAS DOKUMEN */}
+                    <BerkasUpload
+                      berkasTypes={WB_BERKAS_TYPES}
+                      value={formData.berkas || {}}
+                      onChange={(data) => setFormData((prev) => ({ ...prev, berkas: data }))}
+                      isEditing={isEditing}
+                    />
 
                     {/* Additional Info / Status */}
                     <div className="bg-white/10 p-3 rounded-xl border border-white/10 space-y-2.5 text-left text-white">

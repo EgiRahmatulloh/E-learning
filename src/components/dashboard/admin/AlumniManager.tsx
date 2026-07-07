@@ -4,6 +4,7 @@ import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
 import { Upload, Plus, Trash2, Save, HelpCircle, Download, LayoutGrid, List, Search, X, Loader2, ChevronLeft, ChevronRight, Filter, RotateCcw, Edit3 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
+import BerkasUpload, { BerkasItem } from "@/components/ui/BerkasUpload";
 
 interface AlumniItem {
   id: number;
@@ -23,10 +24,19 @@ interface AlumniItem {
   alamat: string;
   cerita: string;
   foto: string;
+  berkas?: Record<string, string>;
 }
 
 export default function AlumniManager() {
   const confirm = useConfirm();
+
+  const ALUMNI_BERKAS_TYPES: BerkasItem[] = [
+    { label: "KK (Kartu Keluarga)", key: "kk" },
+    { label: "KTP", key: "ktp" },
+    { label: "Ijazah", key: "ijazah" },
+    { label: "SKHUN", key: "skhun" },
+    { label: "Akta Kelahiran", key: "akta" },
+  ];
   const [alumniList, setAlumniList] = useState<AlumniItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -50,7 +60,7 @@ export default function AlumniManager() {
   const [isAdding, setIsAdding] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [originalData, setOriginalData] = useState<{ nama: string; nik: string; program: string; tahunLulus: string; nisn: string; nis: string; tempatTglLahir: string; noHp: string; namaAyah: string; namaIbu: string; jenisKelamin: string; agama: string; email: string; alamat: string; cerita: string; foto: string }>({ nama: "", nik: "", program: "", tahunLulus: "", nisn: "", nis: "", tempatTglLahir: "", noHp: "", namaAyah: "", namaIbu: "", jenisKelamin: "", agama: "", email: "", alamat: "", cerita: "", foto: "" });
+  const [originalData, setOriginalData] = useState<{ nama: string; nik: string; program: string; tahunLulus: string; nisn: string; nis: string; tempatTglLahir: string; noHp: string; namaAyah: string; namaIbu: string; jenisKelamin: string; agama: string; email: string; alamat: string; cerita: string; foto: string; berkas: Record<string, string> }>({ nama: "", nik: "", program: "", tahunLulus: "", nisn: "", nis: "", tempatTglLahir: "", noHp: "", namaAyah: "", namaIbu: "", jenisKelamin: "", agama: "", email: "", alamat: "", cerita: "", foto: "", berkas: {} });
 
   // Form inputs
   const [nama, setNama] = useState("");
@@ -69,6 +79,7 @@ export default function AlumniManager() {
   const [alamat, setAlamat] = useState("");
   const [cerita, setCerita] = useState("");
   const [foto, setFoto] = useState("");
+  const [berkas, setBerkas] = useState<Record<string, string>>({});
 
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -125,7 +136,7 @@ export default function AlumniManager() {
   const selectAlumni = (item: AlumniItem) => {
     setIsAdding(false);
     setSelectedId(item.id);
-    setOriginalData({ nama: item.nama, nik: item.nik, program: item.program, tahunLulus: item.tahunLulus, nisn: item.nisn, nis: item.nis, tempatTglLahir: item.tempatTglLahir, noHp: item.noHp, namaAyah: item.namaAyah, namaIbu: item.namaIbu, jenisKelamin: item.jenisKelamin, agama: item.agama, email: item.email, alamat: item.alamat, cerita: item.cerita, foto: item.foto });
+    setOriginalData({ nama: item.nama, nik: item.nik, program: item.program, tahunLulus: item.tahunLulus, nisn: item.nisn, nis: item.nis, tempatTglLahir: item.tempatTglLahir, noHp: item.noHp, namaAyah: item.namaAyah, namaIbu: item.namaIbu, jenisKelamin: item.jenisKelamin, agama: item.agama, email: item.email, alamat: item.alamat, cerita: item.cerita, foto: item.foto, berkas: item.berkas || {} });
     setNama(item.nama);
     setNik(item.nik);
     setProgram(item.program);
@@ -142,6 +153,7 @@ export default function AlumniManager() {
     setAlamat(item.alamat);
     setCerita(item.cerita);
     setFoto(item.foto);
+    setBerkas(item.berkas || {});
     setIsEditing(false);
     setIsFormOpen(true);
   };
@@ -149,7 +161,7 @@ export default function AlumniManager() {
   const startAddAlumni = () => {
     setIsAdding(true);
     setSelectedId(null);
-    setOriginalData({ nama: "", nik: "", program: "", tahunLulus: "", nisn: "", nis: "", tempatTglLahir: "", noHp: "", namaAyah: "", namaIbu: "", jenisKelamin: "", agama: "", email: "", alamat: "", cerita: "", foto: "" });
+    setOriginalData({ nama: "", nik: "", program: "", tahunLulus: "", nisn: "", nis: "", tempatTglLahir: "", noHp: "", namaAyah: "", namaIbu: "", jenisKelamin: "", agama: "", email: "", alamat: "", cerita: "", foto: "", berkas: {} });
     setNama("");
     setNik("");
     setProgram("PAKET C");
@@ -166,6 +178,7 @@ export default function AlumniManager() {
     setAlamat("");
     setCerita("");
     setFoto("");
+    setBerkas({});
     setIsEditing(true);
     setIsFormOpen(true);
   };
@@ -242,7 +255,7 @@ export default function AlumniManager() {
 
     const payload = {
       nama, nik, program, tahunLulus, nisn, nis, tempatTglLahir,
-      noHp, namaAyah, namaIbu, jenisKelamin, agama, email, alamat, cerita, foto
+      noHp, namaAyah, namaIbu, jenisKelamin, agama, email, alamat, cerita, foto, berkas
     };
 
     try {
@@ -388,7 +401,8 @@ export default function AlumniManager() {
             email: item.email || "",
             alamat: item.alamat || "",
             cerita: item.cerita || "",
-            foto: ""
+            foto: "",
+            berkas: {}
           }));
 
         if (imports.length === 0) {
@@ -967,6 +981,14 @@ export default function AlumniManager() {
                       />
                     </div>
 
+                    {/* BERKAS DOKUMEN */}
+                    <BerkasUpload
+                      berkasTypes={ALUMNI_BERKAS_TYPES}
+                      value={berkas}
+                      onChange={setBerkas}
+                      isEditing={isEditing}
+                    />
+
                   </div>
                 </div>
 
@@ -1018,6 +1040,7 @@ export default function AlumniManager() {
                           setAlamat(originalData.alamat);
                           setCerita(originalData.cerita);
                           setFoto(originalData.foto);
+                          setBerkas(originalData.berkas);
                           setIsEditing(false);
                         }}
                         className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
