@@ -402,24 +402,25 @@ export default function AgendaManager() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={resetForm} />
 
           {/* Form Container */}
-          <div className="relative bg-[#00badb] rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border-4 border-cyan-400 animate-in zoom-in-95 duration-200 p-6 sm:p-8 text-white">
+          <div className="relative bg-[#00badb] rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col border-4 border-cyan-400 animate-in zoom-in-95 duration-200 text-white">
 
             {/* Close button */}
             <button
               onClick={resetForm}
-              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer z-10"
             >
               <X className="h-5 w-5" />
             </button>
 
             {/* Modal Form Title */}
-            <div className="mb-6 text-left">
+            <div className="p-6 sm:p-8 pb-4 shrink-0 border-b border-white/10 text-left">
               <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
                 {editId !== null ? (isEditing ? "EDIT DATA" : "DETAIL DATA") : "TAMBAH DATA"}
               </span>
             </div>
 
-            <form className="grid grid-cols-1 md:grid-cols-4 gap-6 text-left" onSubmit={(e) => e.preventDefault()}>
+            <form className="flex-1 min-h-0 flex flex-col text-left" onSubmit={(e) => e.preventDefault()}>
+              <div className="flex-1 overflow-y-auto p-6 sm:p-8 grid grid-cols-1 md:grid-cols-4 gap-6">
               {/* Inputs Column */}
               <div className="md:col-span-3 space-y-4">
 
@@ -623,8 +624,10 @@ export default function AgendaManager() {
                 </div>
               </div>
 
+              </div>
+
               {/* ACTION BUTTONS */}
-              <div className="col-span-1 md:col-span-4 pt-4 border-t border-white/10 flex items-center justify-end gap-3">
+              <div className="p-6 sm:p-8 pt-4 shrink-0 border-t border-white/10 flex items-center justify-end gap-3 bg-[#00badb] rounded-b-3xl">
                 {isEditing ? (
                   <>
                     <Button

@@ -854,11 +854,11 @@ export default function ManagerManager() {
 
       {/* DETAIL PROFILE AND FORM EDIT PANEL POPUP MODAL */}
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-300">
           {/* Backdrop Click Closes Popup */}
           <div className="absolute inset-0 cursor-default" onClick={handleCloseForm} />
 
-          <div className="bg-[#00badb] w-full max-w-4xl max-h-[85vh] sm:max-h-[90vh] flex flex-col p-3 rounded-t-3xl sm:rounded-3xl border-4 border-cyan-400 border-b-0 sm:border-b-4 shadow-2xl relative animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 text-white select-text">
+          <div className="bg-[#00badb] w-full max-w-4xl max-h-[90vh] flex flex-col p-3 rounded-3xl border-4 border-cyan-400 shadow-2xl relative animate-in zoom-in-95 duration-200 text-white select-text">
 
             {/* Elegant Close Button */}
             <button

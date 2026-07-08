@@ -240,7 +240,7 @@ export default function AngketEvaluasiTutor() {
 
       {/* Laporan Hasil Angket */}
       <Card className="p-6 border-slate-200/60 shadow-sm rounded-2xl bg-white space-y-6">
-        <div className="flex items-center justify-between border-b pb-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-emerald-50 rounded-xl">
               <BarChart3 className="w-5 h-5 text-emerald-600" />
@@ -250,7 +250,7 @@ export default function AngketEvaluasiTutor() {
               <p className="text-xs text-slate-500 font-medium">Rekapitulasi hasil evaluasi dari warga belajar.</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <Button onClick={handleExportRekap} disabled={loadingReport || !!reportError} className="bg-[#ff6105] hover:bg-[#e55800] text-white font-bold text-xs h-9 px-4 rounded-xl shadow-sm cursor-pointer disabled:opacity-50">
               <FileSpreadsheet className="w-4 h-4 mr-1.5" /> Rekap (.XLSX)
             </Button>
@@ -275,7 +275,7 @@ export default function AngketEvaluasiTutor() {
                 <select
                   value={selectedKelas}
                   onChange={(e) => setSelectedKelas(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5"
+                  className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 truncate"
                 >
                   <option value="Semua">Semua Kelas</option>
                   {uniqueKelas.map(k => (
@@ -288,7 +288,7 @@ export default function AngketEvaluasiTutor() {
                 <select
                   value={selectedMapel}
                   onChange={(e) => setSelectedMapel(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5"
+                  className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 truncate"
                 >
                   <option value="Semua">Semua Mapel</option>
                   {uniqueMapel.map(m => (

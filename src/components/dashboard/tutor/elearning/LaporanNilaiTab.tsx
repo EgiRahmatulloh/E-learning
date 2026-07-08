@@ -174,11 +174,11 @@ export default function LaporanNilaiTab({ activeTab, user }: Props) {
           <h3 className="text-xl font-black mb-1">Laporan Daftar Hadir & Nilai</h3>
           <p className="text-sm text-indigo-200 font-medium">Unduh data daftar hadir dan rekap nilai akhir warga belajar.</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-row flex-wrap items-center gap-2 w-full md:w-auto mt-4 md:mt-0">
           <Button onClick={handleExportHadir} className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm h-10 px-4 transition-colors shadow-lg cursor-pointer">
             <FileSpreadsheet className="w-4 h-4 mr-2" /> Daftar Hadir
           </Button>
-          <Button onClick={handleExportNilai} className="bg-[#ff6105] hover:bg-white hover:text-[#ff6105] font-bold text-sm h-10 px-4 transition-colors shadow-lg cursor-pointer">
+          <Button onClick={handleExportNilai} className="bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm h-10 px-4 transition-colors shadow-lg cursor-pointer">
             <FileSpreadsheet className="w-4 h-4 mr-2" /> Nilai Akhir
           </Button>
         </div>
