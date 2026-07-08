@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
+import { PWAInstallButton } from "../PWAInstallButton";
 
 // Separate ClockBadge component to completely isolate render scope and prevent Header re-renders
 function ClockBadge({ isScrolled }: { isScrolled: boolean }) {
@@ -144,8 +145,9 @@ export default function Header({ currentPath = "/", onNavigate }: HeaderProps) {
           <a href="#galeri" onClick={(e) => handleNavClick(e, "galeri")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? (currentPath === "/galeri" ? "text-[#ff6105]" : "text-slate-600 hover:text-[#280f91]") : "text-white/80 hover:text-white"}`}>Galeri</a>
         </nav>
 
-        {/* Desktop Date/Time Badge (Isolated Component) */}
-        <div className="hidden lg:block shrink-0">
+        {/* Desktop Date/Time Badge & Install Button */}
+        <div className="hidden lg:flex items-center gap-3 shrink-0">
+          <PWAInstallButton className="hidden xl:flex" />
           <ClockBadge isScrolled={isScrolled} />
         </div>
 
@@ -176,6 +178,8 @@ export default function Header({ currentPath = "/", onNavigate }: HeaderProps) {
             <a href="#produk" onClick={(e) => handleNavClick(e, "produk")} className={`text-base font-semibold ${currentPath === "/produk-wb" ? "text-[#ff6105]" : "text-slate-600"}`}>Produk Warga Belajar</a>
             <a href="#alumni" onClick={(e) => handleNavClick(e, "alumni")} className={`text-base font-semibold ${currentPath === "/alumni" ? "text-[#ff6105]" : "text-slate-600"}`}>Alumni</a>
             <a href="#galeri" onClick={(e) => handleNavClick(e, "galeri")} className={`text-base font-semibold ${currentPath === "/galeri" ? "text-[#ff6105]" : "text-slate-600"}`}>Galeri</a>
+            
+            <PWAInstallButton className="w-full justify-center mt-2" />
           </nav>
         </div>
       )}
