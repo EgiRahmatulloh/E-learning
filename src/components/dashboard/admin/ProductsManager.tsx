@@ -298,13 +298,7 @@ export default function ProductsManager() {
             />
           </div>
 
-          <div className="flex gap-2">
-            <Button
-              onClick={openAddForm}
-              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
-            >
-              <Plus className="h-4 w-4" /> TAMBAH DATA
-            </Button>
+          <div className="flex gap-2 flex-wrap pr-1">
             <Button
               onClick={handleFilter}
               className="flex-1 h-10 rounded-xl bg-[#00badb] hover:bg-[#009cb9] text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
@@ -316,6 +310,12 @@ export default function ProductsManager() {
               className="flex-1 h-10 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
             >
               <RotateCcw className="h-4 w-4" /> RESET
+            </Button>
+            <Button
+              onClick={openAddForm}
+              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 h-10 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shrink-0"
+            >
+              <Plus className="h-4 w-4" /> TAMBAH DATA
             </Button>
           </div>
         </div>
@@ -452,24 +452,24 @@ export default function ProductsManager() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setFormOpen(false)} />
 
           {/* Form Container */}
-          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
-            {/* Form Column (Cyan Background) */}
-            <div className="bg-[#00badb] p-6 relative text-white">
-              {/* Close Button */}
-              <button
-                onClick={() => setFormOpen(false)}
-                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
-              >
-                <X className="h-5 w-5" />
-              </button>
+          <div className="relative bg-[#00badb] rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col border-4 border-cyan-400 animate-in zoom-in-95 duration-200 text-white z-10">
+            
+            {/* Close Button */}
+            <button
+              onClick={() => setFormOpen(false)}
+              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer z-10"
+            >
+              <X className="h-5 w-5" />
+            </button>
 
-              <div className="mb-6">
-                <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                  {isAdding ? "TAMBAH DATA" : (!isEditing ? "DETAIL DATA" : "EDIT DATA")}
-                </span>
-              </div>
+            <div className="p-6 shrink-0 border-b border-white/10 text-left">
+              <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                {isAdding ? "TAMBAH DATA" : (!isEditing ? "DETAIL DATA" : "EDIT DATA")}
+              </span>
+            </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4 text-slate-800">
+            <form onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col text-left">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4 text-slate-800">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-black tracking-wider uppercase text-cyan-50 mb-1">Nama Produk</label>
@@ -603,9 +603,10 @@ export default function ProductsManager() {
                   </span>
                   <span className="text-[10px] text-cyan-100 block mt-0.5">Mendukung format JPG, PNG, WEBP (Maksimal 5MB)</span>
                 </div>
+              </div>
 
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
-                  {isAdding ? (
+              <div className="p-6 shrink-0 border-t border-white/10 flex items-center justify-end gap-3 bg-[#00badb] rounded-b-3xl">
+                {isAdding ? (
                     <>
                       <Button
                         type="button"
@@ -684,10 +685,9 @@ export default function ProductsManager() {
                         <Edit3 size={15} /> EDIT
                       </Button>
                     </>
-                  )}
-                </div>
-              </form>
-            </div>
+                )}
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -836,17 +836,17 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
             </div>
 
             {/* Center: Dropdown Mapel (Siswa) */}
-            <div className="hidden sm:flex flex-1 justify-center">
+            <div className="flex flex-1 justify-center sm:justify-center px-2 sm:px-0">
               {user.role === "siswa" && siswaSetups.length > 0 && (
                 <div className="relative">
                   <button
                     onClick={() => setSubjectDropdownOpen(!subjectDropdownOpen)}
                     onBlur={() => setTimeout(() => setSubjectDropdownOpen(false), 200)}
-                    className="flex items-center gap-2 bg-cyan-50 hover:bg-cyan-100 text-cyan-900 px-4 py-2 rounded-xl text-sm font-bold border border-cyan-200 transition-colors"
+                    className="flex items-center gap-2 bg-cyan-50 hover:bg-cyan-100 text-cyan-900 px-3 sm:px-4 py-2 rounded-xl text-sm font-bold border border-cyan-200 transition-colors"
                   >
-                    <BookOpen className="h-4 w-4" />
-                    <span>Mata Pelajaran</span>
-                    <ChevronDown className="h-4 w-4" />
+                    <BookOpen className="h-4 w-4 shrink-0" />
+                    <span className="hidden sm:inline">Mata Pelajaran</span>
+                    <ChevronDown className="h-4 w-4 shrink-0" />
                   </button>
                   {subjectDropdownOpen && (
                     <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-white rounded-xl shadow-lg border border-cyan-100 py-2 z-50">

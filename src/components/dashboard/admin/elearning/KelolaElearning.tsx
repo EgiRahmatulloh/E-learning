@@ -523,7 +523,7 @@ export default function KelolaElearning() {
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* HEADER */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-black text-[#280f91] flex items-center gap-2">
               <Settings className="h-6 w-6" />
@@ -828,7 +828,7 @@ export default function KelolaElearning() {
                   required
                   value={formData.mapel}
                   onChange={(e) => setFormData(prev => ({ ...prev, mapel: e.target.value }))}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] outline-none"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] outline-none truncate"
                 >
                   <option value="" disabled>-- Pilih Mata Pelajaran --</option>
                   {getAvailableMapel().map((m: string) => (
@@ -846,7 +846,7 @@ export default function KelolaElearning() {
                   required
                   value={formData.tutorId}
                   onChange={(e) => setFormData(prev => ({ ...prev, tutorId: e.target.value }))}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] outline-none"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] outline-none truncate"
                 >
                   <option value="" disabled>-- Pilih Tutor --</option>
                   {tutors.length > 0 ? (

@@ -5,7 +5,6 @@ import {
   Search,
   LayoutGrid,
   List as ListIcon,
-  MoreVertical,
   PlayCircle,
   BookOpen,
   SortAsc,
@@ -18,7 +17,7 @@ import { MapelSesi } from "./elearning/MapelSesi";
 
 interface ElearningSiswaProps {
   activeTab: string;
-  user: { program?: string; kelas?: string; [key: string]: unknown };
+  user: { program?: string; kelas?: string;[key: string]: unknown };
   setActiveTab?: (tab: string) => void;
 }
 
@@ -61,8 +60,6 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
   const [filter, setFilter] = useState<"semua" | "progres" | "selesai">("semua");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"nama" | "terakhir_diakses">("nama");
-  const [hiddenSubjects, setHiddenSubjects] = useState<Set<string>>(new Set());
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [siswaSetups, setSiswaSetups] = useState<any[]>([]);
   const [angketCompletedSessionsCache, setAngketCompletedSessionsCache] = useState<Record<number, Set<number>>>({});
   const [angketLoading, setAngketLoading] = useState(false);
@@ -78,7 +75,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
         .then(async data => {
           if (data.success && data.data) {
             setSiswaSetups(data.data);
-            
+
             // Fetch progress for each setup
             const progressData: Record<number, number> = {};
             await Promise.all(data.data.map(async (setup: any) => {
@@ -90,7 +87,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
                 if (progData.success) {
                   progressData[setup.id] = progData.progress;
                 }
-              } catch (e) {}
+              } catch (e) { }
             }));
             setProgresses(progressData);
           }
@@ -126,7 +123,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
   }, [siswaSetups, progresses]);
 
   const filteredSubjects = useMemo(() => {
-    let result = allSubjects.filter((s) => !hiddenSubjects.has(s.id));
+    let result = [...allSubjects];
 
     if (filter === "progres") result = result.filter((s) => s.status === "progres");
     if (filter === "selesai") result = result.filter((s) => s.status === "selesai");
@@ -143,7 +140,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
     });
 
     return result;
-  }, [allSubjects, hiddenSubjects, filter, searchQuery, sortBy]);
+  }, [allSubjects, filter, searchQuery, sortBy]);
 
   // Parsing activeTab: mapel-setup-{setupId}-{subPart}
   let setupId: number | null = null;
@@ -164,7 +161,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
   // Fetch angket progress for the current subject (which sessions have completed evaluation)
   const fetchAngketProgress = useCallback((eagerSession?: number) => {
     if (!setupId) return;
-    
+
     // Eagerly mark the just-completed session so navigation unlocks instantly
     if (eagerSession !== undefined) {
       setAngketCompletedSessionsCache(prev => {
@@ -192,7 +189,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
           });
         }
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => {
         if (fetchingSetupIdRef.current === setupId) {
           fetchingSetupIdRef.current = null;
@@ -211,16 +208,16 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
 
   const subLabel =
     subPart === "partisipasi" ? "Partisipasi"
-    : subPart === "nilai" ? "Nilai"
-    : subPart === "pendahuluan" ? "Pendahuluan"
-    : subPart.startsWith("sesi-") ? `Sesi ${subPart.replace("sesi-", "")}`
-    : subPart;
+      : subPart === "nilai" ? "Nilai"
+        : subPart === "pendahuluan" ? "Pendahuluan"
+          : subPart.startsWith("sesi-") ? `Sesi ${subPart.replace("sesi-", "")}`
+            : subPart;
 
   const mapelContent = useMemo(() => {
     const subjectName = matchedSubject?.name || "Mata Pelajaran";
     const tutorName = matchedSubject?.tutor || "Tutor";
     const currentSetupId = matchedSubject?.setupId;
-    
+
     if (subPart === "partisipasi") return <MapelPartisipasi subjectName={subjectName} tutorName={tutorName} setupId={currentSetupId} />;
     if (subPart === "nilai") return <MapelNilai subjectName={subjectName} setupId={currentSetupId} user={user} />;
     if (subPart === "pendahuluan") return <MapelPendahuluan subjectName={subjectName} user={user} setupId={currentSetupId} />;
@@ -266,7 +263,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
 
     const handleNavigate = (menuId: string) => {
       if (angketLoading) return; // Blokir saat sedang loading
-      
+
       if (menuId.startsWith("sesi-")) {
         const targetSession = parseInt(menuId.replace("sesi-", ""), 10);
         if (!canAccessSession(targetSession)) {
@@ -305,11 +302,10 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
             <button
               key={menu.id}
               onClick={() => handleNavigate(menu.id)}
-              className={`whitespace-nowrap px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                subPart === menu.id
+              className={`whitespace-nowrap px-4 py-2 rounded-xl text-sm font-bold transition-all ${subPart === menu.id
                   ? "bg-[#280f91] text-white shadow-md"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
+                }`}
             >
               {menu.label}
             </button>
@@ -372,11 +368,10 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  filter === f
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === f
                     ? "bg-white text-[#280f91] shadow-sm"
                     : "text-slate-500 hover:text-slate-700"
-                }`}
+                  }`}
               >
                 {f === "semua" ? "Semua" : f === "progres" ? "Dalam Progres" : "Selesai"}
               </button>
@@ -444,54 +439,26 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
           {filteredSubjects.map((subject) => (
             <div
               key={subject.id}
-              className={`bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${
-                viewMode === "list" ? "flex flex-col sm:flex-row" : "flex flex-col"
-              }`}
-            >
-              {/* Cover */}
-              <div
-                className={`relative bg-gradient-to-br ${subject.gradient} flex items-center justify-center ${
-                  viewMode === "card" ? "h-36 w-full" : "h-28 sm:h-auto sm:w-40 w-full shrink-0"
+              className={`bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${viewMode === "list" ? "flex flex-col sm:flex-row" : "flex flex-col"
                 }`}
-              >
-                <BookOpen className="h-12 w-12 text-white/30" />
-                {subject.status === "selesai" && (
-                  <div className="absolute top-2 right-2 bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
-                    ✓ SELESAI
-                  </div>
-                )}
-
-                {/* 3-dot menu — kiri atas */}
-                <div className="absolute top-2 left-2">
-                  <button
-                    onClick={() => setOpenMenuId(openMenuId === subject.id ? null : subject.id)}
-                    className="h-7 w-7 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-all"
-                  >
-                    <MoreVertical className="h-3.5 w-3.5" />
-                  </button>
-
-                  {openMenuId === subject.id && (
-                    <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-xl shadow-xl border border-slate-100 z-20 py-1 animate-in fade-in duration-150">
-                      <button
-                        onClick={() => { setOpenMenuId(null); setActiveTab?.(`mapel-setup-${subject.setupId}-pendahuluan`); }}
-                        className="w-full text-left px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer"
-                      >
-                        <PlayCircle className="h-3.5 w-3.5 inline mr-2 text-[#280f91]" />
-                        Mulai Materi ini
-                      </button>
-                      <button
-                        onClick={() => {
-                          setHiddenSubjects((prev) => new Set([...prev, subject.id]));
-                          setOpenMenuId(null);
-                        }}
-                        className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 cursor-pointer"
-                      >
-                        Hapus dari tampilan
-                      </button>
+            >
+              {/* Cover (Hidden in List View on Mobile) */}
+              {(viewMode === "card" || viewMode === "list") && (
+                <div
+                  className={`relative bg-gradient-to-br ${subject.gradient} flex items-center justify-center ${
+                    viewMode === "list"
+                      ? "hidden sm:flex sm:h-auto sm:w-64 shrink-0 sm:rounded-l-2xl sm:rounded-tr-none rounded-t-2xl"
+                      : "h-36 w-full rounded-t-2xl"
+                  }`}
+                >
+                  <BookOpen className="h-12 w-12 text-white/30" />
+                  {subject.status === "selesai" && (
+                    <div className="absolute top-2 right-2 bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                      ✓ SELESAI
                     </div>
                   )}
                 </div>
-              </div>
+              )}
 
               {/* Content */}
               <div className={`p-4 flex-1 flex flex-col gap-3 ${viewMode === "list" ? "justify-between sm:flex-row sm:items-center" : ""}`}>
@@ -513,9 +480,8 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
                     </div>
                     <div className="w-full bg-slate-100 rounded-full h-1.5">
                       <div
-                        className={`h-1.5 rounded-full transition-all duration-700 ${
-                          subject.progress === 100 ? "bg-emerald-500" : "bg-[#280f91]"
-                        }`}
+                        className={`h-1.5 rounded-full transition-all duration-700 ${subject.progress === 100 ? "bg-emerald-500" : "bg-[#280f91]"
+                          }`}
                         style={{ width: `${subject.progress}%` }}
                       />
                     </div>
@@ -524,9 +490,8 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
                   {/* CTA Button */}
                   <Button
                     onClick={() => setActiveTab?.(`mapel-setup-${subject.setupId}-${subject.slug}-pendahuluan`)}
-                    className={`rounded-xl font-bold bg-[#ff6105] hover:bg-[#e05404] text-white text-xs shadow-md shadow-orange-400/20 transition-all cursor-pointer ${
-                      viewMode === "card" ? "w-full" : ""
-                    }`}
+                    className={`rounded-xl font-bold bg-[#ff6105] hover:bg-[#e05404] text-white text-xs shadow-md shadow-orange-400/20 transition-all cursor-pointer ${viewMode === "card" ? "w-full" : ""
+                      }`}
                     size="sm"
                   >
                     <PlayCircle className="h-3.5 w-3.5 mr-1.5" />

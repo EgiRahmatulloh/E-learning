@@ -657,12 +657,12 @@ export default function TutorManager() {
 
       {/* FORM DIALOG: ADD/EDIT TUTOR & VIEW DETAIL PROFIL (Mockup 2 Tampilan Tambah Tutor) */}
       {formOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setFormOpen(false)} />
 
           {/* Form Container */}
-          <div className="relative bg-[#00badb] rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl max-h-[85vh] sm:max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 border-4 border-cyan-400 border-b-0 sm:border-b-4 z-10">
+          <div className="relative bg-[#00badb] rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
             {/* Form Column (Cyan Background) */}
             <div className="p-3 relative text-white flex flex-col flex-1 min-h-0">
               {/* Close Button */}

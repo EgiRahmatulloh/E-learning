@@ -551,7 +551,6 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
                     <div className="flex justify-between items-start mb-1">
                       <p className={`text-xs font-bold flex items-center gap-2 ${isSelf ? 'text-blue-700' : 'text-slate-600'}`}>
                         {displayName}
-                        {isTutor && !isSelf && <span className="bg-[#ff6105] text-white px-1.5 py-0.5 rounded text-[9px]">TUTOR</span>}
                       </p>
                       <div className="flex gap-2">
                         {isSelf && (
@@ -613,7 +612,6 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
                             <div className="flex justify-between items-start">
                               <h5 className="font-bold text-slate-700 text-xs flex items-center gap-2">
                                 {replyDisplayName}
-                                {replyIsTutor && !replyIsSelf && <span className="bg-[#ff6105] text-white px-1.5 py-0.5 rounded text-[9px]">TUTOR</span>}
                               </h5>
                               {replyIsSelf && (
                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -664,16 +662,16 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
               );
             })}
           </div>
-          <div className="flex gap-3 border-t border-slate-100 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 border-t border-slate-100 pt-4">
             <input
               type="text"
               placeholder="Tulis tanggapan Anda..."
               value={discussionInput}
               onChange={(e) => setDiscussionInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSendDiscussion()}
-              className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 w-full"
             />
-            <Button onClick={handleSendDiscussion} className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold px-6">Kirim</Button>
+            <Button onClick={handleSendDiscussion} className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 w-full sm:w-auto">Kirim</Button>
           </div>
         </div>
 

@@ -373,16 +373,16 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
             </div>
           ))}
 
-          <div className="flex gap-3 mt-4">
+          <div className="flex flex-col sm:flex-row gap-3 mt-4">
             <input
               type="text"
               placeholder="Tulis perkenalan Anda di sini..."
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-              className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91]"
+              className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] w-full"
             />
-            <Button onClick={handleSendMessage} className="rounded-xl bg-[#280f91] hover:bg-[#3a1bca] text-white font-bold px-6">Kirim</Button>
+            <Button onClick={handleSendMessage} className="rounded-xl bg-[#280f91] hover:bg-[#3a1bca] text-white font-bold px-6 w-full sm:w-auto">Kirim</Button>
           </div>
         </div>
       </div>

@@ -377,7 +377,7 @@ export default function NewsManager() {
           <span className="text-xs font-black text-slate-500 uppercase tracking-widest">
             Daftar Berita ({filteredNews.length})
           </span>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                 <Search className="h-4 w-4" />
@@ -392,7 +392,7 @@ export default function NewsManager() {
             </div>
             <Button
               onClick={() => setCategoryModalVisible(true)}
-              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
+              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shrink-0"
             >
               <Plus className="h-4 w-4" /> DATA KATEGORI
             </Button>
@@ -403,7 +403,7 @@ export default function NewsManager() {
                 setIsEditing(true);
                 setNewsModalVisible(true);
               }}
-              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
+              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shrink-0"
             >
               <Plus className="h-4 w-4" /> TAMBAH DATA
             </Button>
@@ -530,22 +530,23 @@ export default function NewsManager() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={resetNewsForm} />
 
-          <div className="relative bg-[#00badb] rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border-4 border-cyan-400 animate-in zoom-in-95 duration-200 p-6 sm:p-8 text-white">
+          <div className="relative bg-[#00badb] rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col border-4 border-cyan-400 animate-in zoom-in-95 duration-200 text-white">
 
             <button
               onClick={resetNewsForm}
-              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer z-10"
             >
               <X className="h-5 w-5" />
             </button>
 
-            <div className="mb-6 text-left">
+            <div className="p-6 sm:p-8 pb-4 shrink-0 border-b border-white/10 text-left">
               <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
                 {editId !== null ? (isEditing ? "EDIT DATA" : "DETAIL DATA") : "TAMBAH DATA"}
               </span>
             </div>
 
-            <form className="grid grid-cols-1 md:grid-cols-4 gap-6 text-left" onSubmit={(e) => e.preventDefault()}>
+            <form className="flex-1 min-h-0 flex flex-col text-left" onSubmit={(e) => e.preventDefault()}>
+              <div className="flex-1 overflow-y-auto p-6 sm:p-8 grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="md:col-span-3 space-y-4">
 
                 {/* JUDUL */}
@@ -706,8 +707,10 @@ export default function NewsManager() {
                 </div>
               </div>
 
+              </div>
+
               {/* ACTION BUTTONS */}
-              <div className="col-span-1 md:col-span-4 pt-4 border-t border-white/10 flex items-center justify-end gap-3">
+              <div className="p-6 sm:p-8 pt-4 shrink-0 border-t border-white/10 flex items-center justify-end gap-3 bg-[#00badb] rounded-b-3xl">
                 {isEditing ? (
                   <>
                     <Button
@@ -771,21 +774,22 @@ export default function NewsManager() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setCategoryModalVisible(false)} />
 
-          <div className="relative bg-[#00badb] rounded-3xl overflow-hidden shadow-2xl w-full max-w-md border-4 border-cyan-400 animate-in zoom-in-95 duration-200 p-6 text-white">
+          <div className="relative bg-[#00badb] rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col border-4 border-cyan-400 animate-in zoom-in-95 duration-200 text-white text-center">
 
             <button
               onClick={() => setCategoryModalVisible(false)}
-              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer z-10"
             >
               <X className="h-5 w-5" />
             </button>
 
-            <div className="mb-4 text-left">
+            <div className="p-6 pb-4 shrink-0 border-b border-white/10 text-left">
               <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
                 TAMBAH DATA KATEGORI
               </span>
             </div>
 
+            <div className="flex-1 overflow-y-auto p-6 text-left">
             {/* Add input row */}
             <div className="flex gap-2 mb-6">
               <input
@@ -797,7 +801,7 @@ export default function NewsManager() {
               />
               <Button
                 onClick={handleAddCategory}
-                className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-5 h-10 rounded-lg cursor-pointer shadow-sm transition-all"
+                className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-black text-xs px-5 h-10 rounded-lg cursor-pointer shadow-sm transition-all shrink-0"
               >
                 TAMBAH
               </Button>
@@ -828,8 +832,10 @@ export default function NewsManager() {
               )}
             </div>
 
+            </div>
+            
             {/* Close button */}
-            <div className="flex justify-end pt-4 border-t border-white/10">
+            <div className="p-6 pt-4 shrink-0 border-t border-white/10 flex justify-end bg-[#00badb] rounded-b-3xl">
               <Button
                 onClick={() => setCategoryModalVisible(false)}
                 className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-10 rounded-lg cursor-pointer uppercase tracking-widest transition-all"

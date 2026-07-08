@@ -550,7 +550,7 @@ export default function AlumniManager() {
           </Button>
           <Button
             onClick={handleReset}
-            className="h-9 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-[10px] px-4 cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase shadow-sm ml-auto"
+            className="h-9 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-[10px] px-4 cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase shadow-sm"
           >
             <RotateCcw className="h-3.5 w-3.5" /> RESET
           </Button>

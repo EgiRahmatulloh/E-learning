@@ -257,15 +257,13 @@ export default function DashboardSidebar({
                     <div className="ml-3 mt-1 space-y-0.5 border-l border-white/10 pl-3 animate-in slide-in-from-top-1 duration-200">
                       {siswaSetups.map((setup) => {
                         const subject = setup.mapel;
-                        const slug = toSlug(subject);
-                        const parentId = `mapel-setup-${setup.id}-${slug}`;
                         const isMapelActive = activeTab.startsWith(`mapel-setup-${setup.id}-`);
 
                         return (
                           <div key={setup.id}>
-                            {/* Nama Mata Pelajaran (collapsible) */}
+                            {/* Nama Mata Pelajaran (Direct Link) */}
                             <button
-                              onClick={() => toggleExpand(parentId)}
+                              onClick={() => handleLeafClick(`mapel-setup-${setup.id}-pendahuluan`)}
                               className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-bold text-left transition-all cursor-pointer ${
                                 isMapelActive
                                   ? "bg-white/10 text-white"
@@ -274,37 +272,7 @@ export default function DashboardSidebar({
                             >
                               <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shrink-0"></span>
                               <span className="flex-1 leading-tight">{subject}</span>
-                              <span className="text-white/30 shrink-0">
-                                {expandedMenus[parentId] ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                              </span>
                             </button>
-
-                            {/* Sub-menu: Partisipasi, Nilai, Pendahuluan, Sesi 1–8 */}
-                            {expandedMenus[parentId] && (
-                              <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-2 animate-in slide-in-from-top-1 duration-150">
-                                {["partisipasi", "nilai", "pendahuluan", ...Array.from({ length: setup.jumlahSesi || 8 }, (_, i) => `sesi-${i + 1}`)].map((sub) => {
-                                  const tabId = `mapel-setup-${setup.id}-${sub}`;
-                                  const label = sub === "partisipasi" ? "Partisipasi"
-                                    : sub === "nilai" ? "Nilai"
-                                    : sub === "pendahuluan" ? "Pendahuluan"
-                                    : `Sesi ${sub.replace("sesi-", "")}`;
-                                  return (
-                                    <button
-                                      key={tabId}
-                                      onClick={() => handleLeafClick(tabId)}
-                                      className={`w-full flex items-center gap-2 px-2 py-1 rounded-md text-[10px] font-bold text-left transition-all cursor-pointer ${
-                                        activeTab === tabId
-                                          ? "bg-white/15 text-cyan-300"
-                                          : "text-white/40 hover:bg-white/10 hover:text-white/80"
-                                      }`}
-                                    >
-                                      <span className={`h-1 w-1 rounded-full shrink-0 ${activeTab === tabId ? "bg-cyan-300" : "bg-white/30"}`}></span>
-                                      {label}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            )}
                           </div>
                         );
                       })}

@@ -280,7 +280,7 @@ export default function DownloadsManager() {
             ))}
           </select>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap pr-1">
             <Button
               onClick={handleFilter}
               className="flex-1 h-10 rounded-xl bg-[#00badb] hover:bg-[#009cb9] text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
@@ -295,7 +295,7 @@ export default function DownloadsManager() {
             </Button>
             <Button
               onClick={openAddForm}
-              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 h-10 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
+              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 h-10 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shrink-0"
             >
               <Plus className="h-4 w-4" /> TAMBAH DATA
             </Button>
