@@ -57,8 +57,10 @@ export function PWAInstallButton({ className = "" }: { className?: string }) {
     // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice;
     
+    // Reset the deferred prompt variable, since it can only be used once.
+    setDeferredPrompt(null);
+    
     if (outcome === "accepted") {
-      setDeferredPrompt(null);
       setIsInstallable(false);
     }
   };
