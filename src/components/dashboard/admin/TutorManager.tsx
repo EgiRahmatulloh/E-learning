@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
-import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, List, LayoutGrid, Filter, RotateCcw, Loader2, Edit3 } from "lucide-react";
+import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, List, LayoutGrid, Loader2, Edit3 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
 import BerkasUpload, { type BerkasItem } from "@/components/ui/BerkasUpload";
@@ -20,6 +20,12 @@ interface Tutor {
   email: string;
   nik: string;
   alamat: string;
+  rt: string;
+  rw: string;
+  desa: string;
+  kecamatan: string;
+  kabupaten: string;
+  provinsi: string;
   password?: string;
   foto: string;
   berkas?: Record<string, string>;
@@ -47,11 +53,9 @@ export default function TutorManager() {
 
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
-  // Search & Filters
+  // Search
   const [searchName, setSearchName] = useState("");
   const [searchNik, setSearchNik] = useState("");
-  const [filterName, setFilterName] = useState("");
-  const [filterNik, setFilterNik] = useState("");
 
   // Selected tutor for details / edit / add form
   const [selectedTutor, setSelectedTutor] = useState<Tutor | null>(null);
@@ -74,6 +78,12 @@ export default function TutorManager() {
     email: "",
     nik: "",
     alamat: "",
+    rt: "",
+    rw: "",
+    desa: "",
+    kecamatan: "",
+    kabupaten: "",
+    provinsi: "",
     password: "",
     foto: "",
     berkas: {},
@@ -89,6 +99,7 @@ export default function TutorManager() {
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const importInputRef = useRef<HTMLInputElement>(null);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
 
   useEffect(() => {
     fetchTutors();
@@ -130,43 +141,41 @@ export default function TutorManager() {
     return [];
   };
 
-  const handleSearch = () => {
-    setFilterName(searchName);
-    setFilterNik(searchNik);
-  };
-
-  const handleReset = () => {
-    setSearchName("");
-    setSearchNik("");
-    setFilterName("");
-    setFilterNik("");
-  };
-
   // Excel Export
   const handleExportExcel = () => {
     if (tutors.length === 0) {
       toast.error("Tidak ada data untuk diekspor!");
       return;
     }
-    const headers = ["NAMA", "PROGRAM", "NIP", "TEMPAT TGL LAHIR", "JENIS KELAMIN", "AGAMA", "PENDIDIKAN", "EMAIL", "NIK", "ALAMAT", "FOTO", "TANGGAL MULAI TUGAS", "NOMOR SK PENGANGKATAN", "LEMBAGA PENGANGKAT", "NOMOR SK PENUGASAN", "LEMBAGA PENUGAS"];
-    const rows = tutors.map(t => [
+    const headers = ["No", "Nama", "NIK", "NIP", "JK", "Tempat Lahir", "Tanggal Lahir", "Agama", "Alamat", "RT", "RW", "Desa", "Kecamatan", "Kabupaten", "Provinsi", "HP", "E-Mail", "Status Kepegawaian", "No. SK Pengangkatan Awal", "No. SK Penugasan Terakhir", "TMT Kerja"];
+    const rows = tutors.map((t, idx) => {
+      const tempatTgl = (t.tempatTglLahir || "").split(",").map(p => p.trim());
+      const tempat = tempatTgl[0] || "";
+      const tglLahir = tempatTgl.length > 1 ? tempatTgl.slice(1).join(", ") : "";
+      return [
+      idx + 1,
       t.nama || "",
-      t.program || "",
-      t.nip || "",
-      t.tempatTglLahir || "",
-      t.jenisKelamin || "",
-      t.agama || "",
-      t.pendidikan || "",
-      t.email || "",
       t.nik || "",
+      t.nip || "",
+      t.jenisKelamin || "",
+      tempat,
+      tglLahir,
+      t.agama || "",
       t.alamat || "",
-      t.foto || "",
-      t.tanggalMulaiTugas || "",
+      t.rt || "",
+      t.rw || "",
+      t.desa || "",
+      t.kecamatan || "",
+      t.kabupaten || "",
+      t.provinsi || "",
+      "", // HP (no phone field in Tutor)
+      t.email || "",
+      "", // Status Kepegawaian (no field)
       t.nomorSkPengangkatan || "",
-      t.lembagaPengangkat || "",
       t.nomorSkPenugasan || "",
-      t.lembagaPenugas || ""
-    ]);
+      t.tanggalMulaiTugas || ""
+    ];
+    });
     downloadExcel(headers, rows, "tutor.xlsx");
     toast.success("Berhasil mengekspor Excel");
   };
@@ -180,45 +189,60 @@ export default function TutorManager() {
       const rows = await parseExcel(file);
 
       const mapped = mapCsvRows(rows, [
-        { key: "nama", aliases: ["nama", "name"], defaultIndex: 0 },
-        { key: "program", aliases: ["program", "paket"], defaultIndex: 1 },
-        { key: "nip", aliases: ["nip"], defaultIndex: 2 },
-        { key: "tempatTglLahir", aliases: ["tempat/tgl lahir", "tempat lahir", "tanggal lahir", "tempat tgllahir", "birth"], defaultIndex: 3 },
+        { key: "nama", aliases: ["nama", "name"], defaultIndex: 1 },
+        { key: "nik", aliases: ["nik", "identitas"], defaultIndex: 2 },
+        { key: "nip", aliases: ["nip"], defaultIndex: 3 },
         { key: "jenisKelamin", aliases: ["jenis kelamin", "gender", "jk"], defaultIndex: 4 },
-        { key: "agama", aliases: ["agama", "religion"], defaultIndex: 5 },
-        { key: "pendidikan", aliases: ["pendidikan", "education"], defaultIndex: 6 },
-        { key: "email", aliases: ["email", "e-mail"], defaultIndex: 7 },
-        { key: "nik", aliases: ["nik", "identitas"], defaultIndex: 8 },
-        { key: "alamat", aliases: ["alamat", "address"], defaultIndex: 9 },
-        { key: "foto", aliases: ["foto", "photo", "image", "gambar"], defaultIndex: 10 },
-        { key: "tanggalMulaiTugas", aliases: ["tanggal mulai tugas", "tmt", "start date", "tanggalmulaitugas"], defaultIndex: 11 },
-        { key: "nomorSkPengangkatan", aliases: ["nomor sk pengangkatan", "sk pengangkatan", "skpengangkatan"], defaultIndex: 12 },
-        { key: "lembagaPengangkat", aliases: ["lembaga pengangkat", "lembagapengangkat"], defaultIndex: 13 },
-        { key: "nomorSkPenugasan", aliases: ["nomor sk penugasan", "sk penugasan", "skpenugasan"], defaultIndex: 14 },
-        { key: "lembagaPenugas", aliases: ["lembaga penugas", "lembagapenugas"], defaultIndex: 15 },
+        { key: "tempatLahir", aliases: ["tempat lahir", "tempat"], defaultIndex: 5 },
+        { key: "tanggalLahir", aliases: ["tanggal lahir", "tgl lahir", "tanggal"], defaultIndex: 6 },
+        { key: "agama", aliases: ["agama", "religion"], defaultIndex: 7 },
+        { key: "alamat", aliases: ["alamat", "address"], defaultIndex: 8 },
+        { key: "rt", aliases: ["rt"], defaultIndex: 9 },
+        { key: "rw", aliases: ["rw"], defaultIndex: 10 },
+        { key: "desa", aliases: ["desa", "kelurahan"], defaultIndex: 11 },
+        { key: "kecamatan", aliases: ["kecamatan"], defaultIndex: 12 },
+        { key: "kabupaten", aliases: ["kabupaten", "kota"], defaultIndex: 13 },
+        { key: "provinsi", aliases: ["provinsi"], defaultIndex: 14 },
+        { key: "hp", aliases: ["hp", "no hp", "telepon", "phone", "no. hp"], defaultIndex: 15 },
+        { key: "email", aliases: ["email", "e-mail"], defaultIndex: 16 },
+        { key: "statusKepegawaian", aliases: ["status kepegawaian", "status"], defaultIndex: 17 },
+        { key: "nomorSkPengangkatan", aliases: ["no. sk pengangkatan awal", "nomor sk pengangkatan", "sk pengangkatan", "skpengangkatan"], defaultIndex: 18 },
+        { key: "nomorSkPenugasan", aliases: ["no. sk penugasan terakhir", "nomor sk penugasan", "sk penugasan", "skpenugasan"], defaultIndex: 19 },
+        { key: "tanggalMulaiTugas", aliases: ["tmt kerja", "tanggal mulai tugas", "tmt", "start date", "tanggalmulaitugas"], defaultIndex: 20 },
       ]);
 
       const importedData = mapped
         .filter((item) => item.nama)
-        .map((item) => ({
-          nama: item.nama,
-          program: item.program || "",
-          nip: item.nip || "",
-          tempatTglLahir: item.tempatTglLahir || "",
-          jenisKelamin: item.jenisKelamin || "",
-          agama: item.agama || "",
-          pendidikan: item.pendidikan || "",
-          email: item.email || "",
-          nik: item.nik || "",
-          alamat: item.alamat || "",
-          foto: item.foto || "",
-          berkas: {},
-          tanggalMulaiTugas: item.tanggalMulaiTugas || "",
-          nomorSkPengangkatan: item.nomorSkPengangkatan || "",
-          lembagaPengangkat: item.lembagaPengangkat || "",
-          nomorSkPenugasan: item.nomorSkPenugasan || "",
-          lembagaPenugas: item.lembagaPenugas || "",
-        }));
+        .map((item) => {
+          // Combine tempat lahir and tanggal lahir into tempatTglLahir
+          const tempatTglLahir = [item.tempatLahir, item.tanggalLahir].filter(Boolean).join(", ");
+
+          return {
+            nama: item.nama,
+            program: "",
+            nip: item.nip || "",
+            tempatTglLahir: tempatTglLahir || "",
+            jenisKelamin: item.jenisKelamin || "",
+            agama: item.agama || "",
+            pendidikan: "",
+            email: item.email || "",
+            nik: item.nik || "",
+            alamat: item.alamat || "",
+            rt: item.rt || "",
+            rw: item.rw || "",
+            desa: item.desa || "",
+            kecamatan: item.kecamatan || "",
+            kabupaten: item.kabupaten || "",
+            provinsi: item.provinsi || "",
+            foto: "",
+            berkas: {},
+            tanggalMulaiTugas: item.tanggalMulaiTugas || "",
+            nomorSkPengangkatan: item.nomorSkPengangkatan || "",
+            lembagaPengangkat: "",
+            nomorSkPenugasan: item.nomorSkPenugasan || "",
+            lembagaPenugas: "",
+          };
+        });
 
       if (importedData.length === 0) {
         toast.error("Format data kosong atau tidak valid! Pastikan Nama tidak kosong.");
@@ -238,6 +262,7 @@ export default function TutorManager() {
       if (resData.success) {
         toast.success(resData.message || "Berhasil mengimpor data!");
         fetchTutors();
+        setShowUploadDialog(false);
       } else {
         toast.error(resData.message || "Gagal mengimpor data");
       }
@@ -435,9 +460,9 @@ export default function TutorManager() {
   // Filtered tutors based on search criteria
   const filteredTutors = tutors.filter((tutor) => {
     const matchesName =
-      !filterName || tutor.nama.toLowerCase().includes(filterName.toLowerCase());
+      !searchName || tutor.nama.toLowerCase().includes(searchName.toLowerCase());
     const matchesNik =
-      !filterNik || tutor.nik.includes(filterNik);
+      !searchNik || tutor.nik.includes(searchNik);
     return matchesName && matchesNik;
   });
 
@@ -456,7 +481,7 @@ export default function TutorManager() {
         </div>
       </div>
 
-      {/* FILTER & SEARCH PANEL */}
+      {/* SEARCH & ACTIONS PANEL */}
       <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
           <div className="grid grid-cols-1 gap-3 md:col-span-2">
@@ -486,7 +511,7 @@ export default function TutorManager() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 md:col-span-3">
+          <div className="grid grid-cols-3 gap-2 md:col-span-3">
             <input
               type="file"
               ref={importInputRef}
@@ -494,9 +519,8 @@ export default function TutorManager() {
               accept=".xlsx, .xls"
               onChange={handleImportExcel}
             />
-            {/* Row 1 */}
             <Button
-              onClick={() => importInputRef.current?.click()}
+              onClick={() => setShowUploadDialog(true)}
               className="h-10 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95"
             >
               <Upload className="h-4 w-4" /> UPLOAD EXCEL
@@ -507,25 +531,11 @@ export default function TutorManager() {
             >
               <Download className="h-4 w-4" /> DOWNLOAD EXCEL
             </Button>
-            {/* Row 2 */}
             <Button
               onClick={openAddForm}
               className="h-10 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all active:scale-95"
             >
               <Plus className="h-4 w-4" /> TAMBAH DATA
-            </Button>
-            <Button
-              onClick={handleSearch}
-              className="h-10 rounded-xl bg-[#00badb] hover:bg-[#009cb9] text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
-            >
-              <Filter className="h-4 w-4" /> FILTER
-            </Button>
-            {/* Row 3: Reset full width */}
-            <Button
-              onClick={handleReset}
-              className="col-span-2 h-10 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
-            >
-              <RotateCcw className="h-4 w-4" /> RESET
             </Button>
           </div>
         </div>
@@ -654,6 +664,60 @@ export default function TutorManager() {
           </div>
         </div>
       </div>
+
+      {/* UPLOAD EXCEL DIALOG */}
+      {showUploadDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setShowUploadDialog(false)} />
+          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 border-4 border-[#9c27b0] z-10">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-black text-slate-800 uppercase tracking-wider">
+                  Upload Data Tutor
+                </h3>
+                <button
+                  onClick={() => setShowUploadDialog(false)}
+                  className="text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <p className="text-sm text-slate-600 mb-6">
+                Silakan download format template terlebih dahulu, lalu isi data sesuai format dan upload file Excel.
+              </p>
+
+              <div className="space-y-3">
+                <a
+                  href="/templates/format-upload-tutor.xlsx"
+                  download
+                  className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md flex items-center justify-center gap-2 transition-all active:scale-95 block text-center"
+                >
+                  <Download className="h-5 w-5" /> DOWNLOAD FORMAT
+                </a>
+
+                <Button
+                  onClick={() => {
+                    setShowUploadDialog(false);
+                    importInputRef.current?.click();
+                  }}
+                  className="w-full h-12 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-2 transition-all active:scale-95"
+                >
+                  <Upload className="h-5 w-5" /> PILIH FILE EXCEL
+                </Button>
+
+                <Button
+                  onClick={() => setShowUploadDialog(false)}
+                  variant="outline"
+                  className="w-full h-12 border-2 border-slate-200 text-slate-600 hover:bg-slate-50 font-extrabold text-sm px-4 rounded-xl cursor-pointer uppercase tracking-wider flex items-center justify-center gap-2 transition-all"
+                >
+                  BATAL
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* FORM DIALOG: ADD/EDIT TUTOR & VIEW DETAIL PROFIL (Mockup 2 Tampilan Tambah Tutor) */}
       {formOpen && (
@@ -901,17 +965,51 @@ export default function TutorManager() {
                         className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
-                    {/* Row 9: ALAMAT (full width) */}
+                    {/* Row 9: ALAMAT JALAN (full width) */}
                     <div className="sm:col-span-2 flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">ALAMAT</label>
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">ALAMAT JALAN</label>
                       <textarea
                         disabled={!isEditing}
-                        placeholder="Alamat tempat tinggal lengkap tutor"
+                        placeholder="Alamat tempat tinggal tutor (nama jalan/dusun)"
                         value={formData.alamat || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, alamat: e.target.value }))}
                         className="p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
                         rows={2}
                       />
+                    </div>
+
+                    {/* Row 9b: RT, RW, Desa, Kecamatan, Kabupaten, Provinsi */}
+                    <div className="sm:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-x-2 gap-y-1.5">
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">RT</label>
+                        <input type="text" maxLength={3} disabled={!isEditing} placeholder="001" value={formData.rt || ""} onChange={(e) => setFormData(prev => ({ ...prev, rt: e.target.value }))}
+                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">RW</label>
+                        <input type="text" maxLength={3} disabled={!isEditing} placeholder="002" value={formData.rw || ""} onChange={(e) => setFormData(prev => ({ ...prev, rw: e.target.value }))}
+                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">DESA/KELURAHAN</label>
+                        <input type="text" disabled={!isEditing} placeholder="Nama desa/kelurahan" value={formData.desa || ""} onChange={(e) => setFormData(prev => ({ ...prev, desa: e.target.value }))}
+                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KECAMATAN</label>
+                        <input type="text" disabled={!isEditing} placeholder="Nama kecamatan" value={formData.kecamatan || ""} onChange={(e) => setFormData(prev => ({ ...prev, kecamatan: e.target.value }))}
+                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KABUPATEN/KOTA</label>
+                        <input type="text" disabled={!isEditing} placeholder="Nama kabupaten/kota" value={formData.kabupaten || ""} onChange={(e) => setFormData(prev => ({ ...prev, kabupaten: e.target.value }))}
+                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PROVINSI</label>
+                        <input type="text" disabled={!isEditing} placeholder="Nama provinsi" value={formData.provinsi || ""} onChange={(e) => setFormData(prev => ({ ...prev, provinsi: e.target.value }))}
+                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      </div>
                     </div>
 
                     {/* Row 10: PASSWORD (full width) */}

@@ -7,8 +7,6 @@ import {
   UploadCloud,
   UserPlus,
   Search,
-  Filter,
-  RotateCcw,
   Download,
   Upload,
   List,
@@ -38,6 +36,12 @@ interface ManagerData {
   nomorSkPenugasan: string;
   lembagaPenugas: string;
   alamat: string;
+  rt: string;
+  rw: string;
+  desa: string;
+  kecamatan: string;
+  kabupaten: string;
+  provinsi: string;
   password: string;
   foto: string;
   berkas?: Record<string, string>;
@@ -61,6 +65,12 @@ const DEFAULT_MANAGER: ManagerData = {
   nomorSkPenugasan: "",
   lembagaPenugas: "",
   alamat: "",
+  rt: "",
+  rw: "",
+  desa: "",
+  kecamatan: "",
+  kabupaten: "",
+  provinsi: "",
   password: "",
   foto: "",
   berkas: {},
@@ -101,13 +111,11 @@ export default function ManagerManager() {
   const [uploadingFoto, setUploadingFoto] = useState(false);
   const [searchName, setSearchName] = useState("");
   const [searchNik, setSearchNik] = useState("");
-  const [filterName, setFilterName] = useState("");
-  const [filterNik, setFilterNik] = useState("");
-  const [activeFilter, setActiveFilter] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isFormDirty, setIsFormDirty] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [hasUnsyncedOfflineData, setHasUnsyncedOfflineData] = useState(false);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [saving, setSaving] = useState(false);
   const [originalManager, setOriginalManager] = useState<ManagerData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -504,25 +512,31 @@ export default function ManagerManager() {
       toast.error("Tidak ada data untuk diekspor!");
       return;
     }
-    const headers = ["NAMA", "NIK", "JABATAN", "NIP", "TEMPAT TGL LAHIR", "JENIS KELAMIN", "AGAMA", "PENDIDIKAN", "EMAIL", "TANGGAL MULAI TUGAS", "NOMOR SK PENGANGKATAN", "LEMBAGA PENGANGKAT", "NOMOR SK PENUGASAN", "LEMBAGA PENUGAS", "ALAMAT", "FOTO"];
-    const rows = managersList.map(m => [
+    const headers = ["No", "Nama", "NIK", "NUPTK", "JK", "Tempat Lahir", "Tanggal Lahir", "Agama", "Alamat", "RT", "RW", "Desa", "Kecamatan", "Kabupaten", "Provinsi", "HP", "E-Mail", "Status Kepegawaian", "No. SK Pengangkatan Awal", "No. SK Penugasan Terakhir", "Jabatan", "TMT Kerja"];
+    const rows = managersList.map((m, idx) => {
+      const tempatTgl = (m.tempatTglLahir || "").split(",").map(p => p.trim());
+      const tempat = tempatTgl[0] || "";
+      const tglLahir = tempatTgl.length > 1 ? tempatTgl.slice(1).join(", ") : "";
+      return [
+      idx + 1,
       m.nama || "",
       m.nik || "",
-      m.jabatan || "",
       m.nip || "",
-      m.tempatTglLahir || "",
       m.jenisKelamin || "",
+      tempat,
+      tglLahir,
       m.agama || "",
-      m.pendidikan || "",
-      m.email || "",
-      m.tanggalMulaiTugas || "",
-      m.nomorSkPengangkatan || "",
-      m.lembagaPengangkat || "",
-      m.nomorSkPenugasan || "",
-      m.lembagaPenugas || "",
       m.alamat || "",
-      m.foto || ""
-    ]);
+      m.rt || "", m.rw || "", m.desa || "", m.kecamatan || "", m.kabupaten || "", m.provinsi || "",
+      "", // HP (no phone field in ManagerData)
+      m.email || "",
+      "", // Status Kepegawaian
+      m.nomorSkPengangkatan || "",
+      m.nomorSkPenugasan || "",
+      m.jabatan || "",
+      m.tanggalMulaiTugas || "",
+    ];
+    });
     downloadExcel(headers, rows, "data_pengelola.xlsx");
     toast.success("Berhasil mengunduh Excel!");
   };
@@ -536,45 +550,64 @@ export default function ManagerManager() {
       const rows = await parseExcel(file);
 
       const mapped = mapCsvRows(rows, [
-        { key: "nama", aliases: ["nama", "name"], defaultIndex: 0 },
-        { key: "nik", aliases: ["nik", "identitas"], defaultIndex: 1 },
-        { key: "jabatan", aliases: ["jabatan", "role", "position"], defaultIndex: 2 },
-        { key: "nip", aliases: ["nip"], defaultIndex: 3 },
-        { key: "tempatTglLahir", aliases: ["tempat/tgl lahir", "tempat lahir", "tanggal lahir", "tempat tgllahir", "birth"], defaultIndex: 4 },
-        { key: "jenisKelamin", aliases: ["jenis kelamin", "gender", "jk"], defaultIndex: 5 },
-        { key: "agama", aliases: ["agama", "religion"], defaultIndex: 6 },
-        { key: "pendidikan", aliases: ["pendidikan", "education"], defaultIndex: 7 },
-        { key: "email", aliases: ["email", "e-mail"], defaultIndex: 8 },
-        { key: "tanggalMulaiTugas", aliases: ["tanggal mulai tugas", "tmt", "start date", "tanggalmulaitugas"], defaultIndex: 9 },
-        { key: "nomorSkPengangkatan", aliases: ["nomor sk pengangkatan", "sk pengangkatan", "skpengangkatan"], defaultIndex: 10 },
-        { key: "lembagaPengangkat", aliases: ["lembaga pengangkat", "lembagapengangkat"], defaultIndex: 11 },
-        { key: "nomorSkPenugasan", aliases: ["nomor sk penugasan", "sk penugasan", "skpenugasan"], defaultIndex: 12 },
-        { key: "lembagaPenugas", aliases: ["lembaga penugas", "lembagapenugas"], defaultIndex: 13 },
-        { key: "alamat", aliases: ["alamat", "address"], defaultIndex: 14 },
-        { key: "foto", aliases: ["foto", "photo", "image", "gambar"], defaultIndex: 15 },
+        { key: "nama", aliases: ["nama", "name"], defaultIndex: 1 },
+        { key: "nik", aliases: ["nik", "identitas"], defaultIndex: 2 },
+        { key: "nip", aliases: ["nip", "nuptk"], defaultIndex: 3 },
+        { key: "jenisKelamin", aliases: ["jenis kelamin", "gender", "jk"], defaultIndex: 4 },
+        { key: "tempatTglLahir", aliases: ["tempat lahir", "tempat/tgl lahir", "tempat tgllahir", "birth"], defaultIndex: 5 },
+        { key: "tanggalLahir", aliases: ["tanggal lahir", "tgl lahir"], defaultIndex: 6 },
+        { key: "agama", aliases: ["agama", "religion"], defaultIndex: 7 },
+        { key: "alamat", aliases: ["alamat", "address"], defaultIndex: 8 },
+        { key: "rt", aliases: ["rt"], defaultIndex: 9 },
+        { key: "rw", aliases: ["rw"], defaultIndex: 10 },
+        { key: "desa", aliases: ["desa", "kelurahan"], defaultIndex: 11 },
+        { key: "kecamatan", aliases: ["kecamatan"], defaultIndex: 12 },
+        { key: "kabupaten", aliases: ["kabupaten", "kota"], defaultIndex: 13 },
+        { key: "provinsi", aliases: ["provinsi"], defaultIndex: 14 },
+        { key: "hp", aliases: ["hp", "no hp", "telepon", "phone"], defaultIndex: 15 },
+        { key: "email", aliases: ["email", "e-mail"], defaultIndex: 16 },
+        { key: "statusKepegawaian", aliases: ["status kepegawaian", "status"], defaultIndex: 17 },
+        { key: "nomorSkPengangkatan", aliases: ["no. sk pengangkatan awal", "nomor sk pengangkatan", "sk pengangkatan", "skpengangkatan"], defaultIndex: 18 },
+        { key: "nomorSkPenugasan", aliases: ["no. sk penugasan terakhir", "nomor sk penugasan", "sk penugasan", "skpenugasan"], defaultIndex: 19 },
+        { key: "jabatan", aliases: ["jabatan", "role", "position"], defaultIndex: 20 },
+        { key: "tanggalMulaiTugas", aliases: ["tmt kerja", "tanggal mulai tugas", "tmt", "start date", "tanggalmulaitugas"], defaultIndex: 21 },
+        { key: "foto", aliases: ["foto", "photo", "image", "gambar"], defaultIndex: -1 },
       ]);
 
       const importedData = mapped
         .filter((item) => item.nama)
-        .map((item) => ({
-          nama: item.nama,
-          nik: item.nik || "",
-          jabatan: item.jabatan || "",
-          nip: item.nip || "",
-          tempatTglLahir: item.tempatTglLahir || "",
-          jenisKelamin: item.jenisKelamin || "",
-          agama: item.agama || "",
-          pendidikan: item.pendidikan || "",
-          email: item.email || "",
-          tanggalMulaiTugas: item.tanggalMulaiTugas || "",
-          nomorSkPengangkatan: item.nomorSkPengangkatan || "",
-          lembagaPengangkat: item.lembagaPengangkat || "",
-          nomorSkPenugasan: item.nomorSkPenugasan || "",
-          lembagaPenugas: item.lembagaPenugas || "",
-          alamat: item.alamat || "",
-          foto: item.foto || "",
-          berkas: {},
-        }));
+        .map((item) => {
+          // Combine Tempat Lahir and Tanggal Lahir into tempatTglLahir
+          const tempat = item.tempatTglLahir || "";
+          const tgl = item.tanggalLahir || "";
+          const tempatTglLahir = tempat && tgl ? `${tempat}, ${tgl}` : tempat || tgl;
+
+          return {
+            nama: item.nama,
+            nik: item.nik || "",
+            jabatan: item.jabatan || "",
+            nip: item.nip || "",
+            tempatTglLahir,
+            jenisKelamin: item.jenisKelamin || "",
+            agama: item.agama || "",
+            pendidikan: "",
+            email: item.email || "",
+            tanggalMulaiTugas: item.tanggalMulaiTugas || "",
+            nomorSkPengangkatan: item.nomorSkPengangkatan || "",
+            lembagaPengangkat: "",
+            nomorSkPenugasan: item.nomorSkPenugasan || "",
+            lembagaPenugas: "",
+            alamat: item.alamat || "",
+            rt: item.rt || "",
+            rw: item.rw || "",
+            desa: item.desa || "",
+            kecamatan: item.kecamatan || "",
+            kabupaten: item.kabupaten || "",
+            provinsi: item.provinsi || "",
+            foto: item.foto || "",
+            berkas: {},
+          };
+        });
 
       if (importedData.length === 0) {
         toast.error("Format data kosong atau tidak valid!");
@@ -594,6 +627,7 @@ export default function ManagerManager() {
       if (resData.success) {
         toast.success(resData.message || "Berhasil mengimpor data!");
         fetchManagers();
+        setShowUploadDialog(false);
       } else {
         toast.error(resData.message || "Gagal mengimpor data");
       }
@@ -604,28 +638,15 @@ export default function ManagerManager() {
   };
 
 
-  const handleSearch = () => {
-    setFilterName(searchName);
-    setFilterNik(searchNik);
-    setActiveFilter(true);
-  };
-
-  const handleReset = () => {
-    setSearchName("");
-    setSearchNik("");
-    setFilterName("");
-    setFilterNik("");
-    setActiveFilter(false);
-  };
-
   // Filtered List based on Search inputs
   const filteredList = managersList.filter((m) => {
-    const matchName = !filterName || (m.nama || "").toLowerCase().includes(filterName.toLowerCase());
-    const matchNik = !filterNik || (m.nik || "").toLowerCase().includes(filterNik.toLowerCase());
+    const matchName = !searchName || (m.nama || "").toLowerCase().includes(searchName.toLowerCase());
+    const matchNik = !searchNik || (m.nik || "").toLowerCase().includes(searchNik.toLowerCase());
     return matchName && matchNik;
   });
 
   return (
+    <>
     <div className="space-y-6 relative pb-16 animate-in fade-in duration-300">
 
       {/* MOCKUP NAV TOP BAR */}
@@ -685,7 +706,7 @@ export default function ManagerManager() {
           </div>
 
           {/* BUTTONS */}
-          <div className="grid grid-cols-2 gap-2 md:col-span-3">
+          <div className="grid grid-cols-3 gap-2 md:col-span-3">
             <input
               type="file"
               accept=".xlsx, .xls"
@@ -694,7 +715,7 @@ export default function ManagerManager() {
               className="hidden"
             />
             <Button
-              onClick={() => csvInputRef.current?.click()}
+              onClick={() => setShowUploadDialog(true)}
               className="h-10 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95"
             >
               <Upload className="h-4 w-4" /> UPLOAD EXCEL
@@ -710,19 +731,6 @@ export default function ManagerManager() {
               className="h-10 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all active:scale-95"
             >
               <UserPlus className="h-4 w-4" /> TAMBAH DATA
-            </Button>
-            <Button
-              onClick={handleSearch}
-              className={`h-10 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${activeFilter ? "bg-[#009cb9] hover:bg-[#008aa7] text-white" : "bg-[#00badb] hover:bg-[#009cb9] text-white"
-                }`}
-            >
-              <Filter className="h-4 w-4" /> FILTER
-            </Button>
-            <Button
-              onClick={handleReset}
-              className="col-span-2 h-10 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 transition-all uppercase active:scale-95"
-            >
-              <RotateCcw className="h-4 w-4" /> RESET
             </Button>
           </div>
         </div>
@@ -1059,18 +1067,51 @@ export default function ManagerManager() {
                   />
                 </div>
 
-                {/* Row 8: ALAMAT (full width) */}
+                {/* Row 8: ALAMAT JALAN (full width) */}
                 <div className="sm:col-span-2 flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">ALAMAT</label>
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">ALAMAT JALAN</label>
                   <textarea
                     rows={2}
-
-                    placeholder="Masukkan alamat domisili lengkap pengelola"
+                    placeholder="Masukkan alamat domisili (nama jalan/dusun)"
                     value={selectedManager.alamat}
                     onChange={(e) => handleFieldChange("alamat", e.target.value)}
                     disabled={!isEditing}
                     className="p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
                   />
+                </div>
+
+                {/* Row 8b: RT, RW, Desa, Kecamatan, Kabupaten, Provinsi */}
+                <div className="sm:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-x-2 gap-y-1.5">
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">RT</label>
+                    <input type="text" maxLength={3} disabled={!isEditing} placeholder="001" value={selectedManager.rt || ""} onChange={(e) => handleFieldChange("rt", e.target.value)}
+                      className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">RW</label>
+                    <input type="text" maxLength={3} disabled={!isEditing} placeholder="002" value={selectedManager.rw || ""} onChange={(e) => handleFieldChange("rw", e.target.value)}
+                      className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">DESA/KELURAHAN</label>
+                    <input type="text" disabled={!isEditing} placeholder="Nama desa/kelurahan" value={selectedManager.desa || ""} onChange={(e) => handleFieldChange("desa", e.target.value)}
+                      className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KECAMATAN</label>
+                    <input type="text" disabled={!isEditing} placeholder="Nama kecamatan" value={selectedManager.kecamatan || ""} onChange={(e) => handleFieldChange("kecamatan", e.target.value)}
+                      className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KABUPATEN/KOTA</label>
+                    <input type="text" disabled={!isEditing} placeholder="Nama kabupaten/kota" value={selectedManager.kabupaten || ""} onChange={(e) => handleFieldChange("kabupaten", e.target.value)}
+                      className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PROVINSI</label>
+                    <input type="text" disabled={!isEditing} placeholder="Nama provinsi" value={selectedManager.provinsi || ""} onChange={(e) => handleFieldChange("provinsi", e.target.value)}
+                      className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                  </div>
                 </div>
 
                 {/* Row 9: PASSWORD (full width) */}
@@ -1284,5 +1325,52 @@ export default function ManagerManager() {
         </div>
       )}
     </div>
+
+      {/* UPLOAD EXCEL DIALOG */}
+      {showUploadDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-300">
+          <div className="absolute inset-0 cursor-default" onClick={() => setShowUploadDialog(false)} />
+          <div className="bg-white w-full max-w-md flex flex-col p-6 rounded-3xl border-4 border-purple-400 shadow-2xl relative animate-in zoom-in-95 duration-200 select-text">
+            <button
+              onClick={() => setShowUploadDialog(false)}
+              className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition-colors cursor-pointer text-sm font-black"
+            >
+              ✕
+            </button>
+
+            <h3 className="text-lg font-black text-slate-800 uppercase tracking-wider mb-1">UPLOAD DATA PENGELOLA</h3>
+            <p className="text-xs text-slate-500 font-semibold mb-6">Unduh format terlebih dahulu, isi data, lalu unggah file Excel.</p>
+
+            <div className="flex flex-col gap-3">
+              <a
+                href="/templates/format-upload-pengelola.xlsx"
+                download
+                className="h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all uppercase tracking-wider"
+              >
+                <Download className="h-4 w-4" /> DOWNLOAD FORMAT
+              </a>
+
+              <Button
+                onClick={() => {
+                  setShowUploadDialog(false);
+                  setTimeout(() => csvInputRef.current?.click(), 100);
+                }}
+                className="h-12 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all uppercase tracking-wider"
+              >
+                <Upload className="h-4 w-4" /> PILIH FILE EXCEL
+              </Button>
+
+              <Button
+                onClick={() => setShowUploadDialog(false)}
+                variant="outline"
+                className="h-12 text-xs font-extrabold rounded-xl uppercase tracking-wider"
+              >
+                BATAL
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

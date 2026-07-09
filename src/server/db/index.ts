@@ -133,6 +133,12 @@ CREATE TABLE IF NOT EXISTS managers (
   nomor_sk_penugasan TEXT NOT NULL DEFAULT '',
   lembaga_penugas TEXT NOT NULL DEFAULT '',
   alamat TEXT NOT NULL DEFAULT '',
+  rt TEXT NOT NULL DEFAULT '',
+  rw TEXT NOT NULL DEFAULT '',
+  desa TEXT NOT NULL DEFAULT '',
+  kecamatan TEXT NOT NULL DEFAULT '',
+  kabupaten TEXT NOT NULL DEFAULT '',
+  provinsi TEXT NOT NULL DEFAULT '',
   password TEXT NOT NULL DEFAULT '',
   foto TEXT NOT NULL DEFAULT '',
   role TEXT NOT NULL DEFAULT 'admin',
@@ -233,6 +239,12 @@ CREATE TABLE IF NOT EXISTS tutors (
   email TEXT NOT NULL DEFAULT '',
   nik TEXT NOT NULL DEFAULT '',
   alamat TEXT NOT NULL DEFAULT '',
+  rt TEXT NOT NULL DEFAULT '',
+  rw TEXT NOT NULL DEFAULT '',
+  desa TEXT NOT NULL DEFAULT '',
+  kecamatan TEXT NOT NULL DEFAULT '',
+  kabupaten TEXT NOT NULL DEFAULT '',
+  provinsi TEXT NOT NULL DEFAULT '',
   password TEXT NOT NULL DEFAULT '',
   foto TEXT NOT NULL DEFAULT '',
   tanggal_mulai_tugas TEXT NOT NULL DEFAULT '',
@@ -264,6 +276,13 @@ CREATE TABLE IF NOT EXISTS students (
   email TEXT NOT NULL DEFAULT '',
   nama_ibu TEXT NOT NULL DEFAULT '',
   alamat TEXT NOT NULL DEFAULT '',
+  rt TEXT NOT NULL DEFAULT '',
+  rw TEXT NOT NULL DEFAULT '',
+  desa TEXT NOT NULL DEFAULT '',
+  kecamatan TEXT NOT NULL DEFAULT '',
+  kabupaten TEXT NOT NULL DEFAULT '',
+  provinsi TEXT NOT NULL DEFAULT '',
+  sekolah_asal TEXT NOT NULL DEFAULT '',
   password TEXT NOT NULL DEFAULT '',
   foto TEXT NOT NULL DEFAULT '',
   status TEXT NOT NULL DEFAULT 'AKTIF',
@@ -322,12 +341,36 @@ CREATE TABLE IF NOT EXISTS alumni (
   agama TEXT NOT NULL DEFAULT '',
   email TEXT NOT NULL DEFAULT '',
   alamat TEXT NOT NULL DEFAULT '',
+  rt TEXT NOT NULL DEFAULT '',
+  rw TEXT NOT NULL DEFAULT '',
+  desa TEXT NOT NULL DEFAULT '',
+  kecamatan TEXT NOT NULL DEFAULT '',
+  kabupaten TEXT NOT NULL DEFAULT '',
+  provinsi TEXT NOT NULL DEFAULT '',
+  melanjutkan_ke TEXT NOT NULL DEFAULT '',
+  pekerjaan TEXT NOT NULL DEFAULT '',
   cerita TEXT NOT NULL DEFAULT '',
   foto TEXT NOT NULL DEFAULT '',
   created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 `);
+
+// Migration: tambah kolom melanjutkan_ke dan pekerjaan jika belum ada (untuk database existing)
+try { sqlite.exec(`ALTER TABLE alumni ADD COLUMN melanjutkan_ke TEXT NOT NULL DEFAULT ''`); } catch {}
+try { sqlite.exec(`ALTER TABLE alumni ADD COLUMN pekerjaan TEXT NOT NULL DEFAULT ''`); } catch {}
+
+// Migration: tambah kolom alamat sub-fields untuk semua tabel
+const _addrTables = ['managers', 'tutors', 'students', 'alumni'];
+const _addrCols = ['rt', 'rw', 'desa', 'kecamatan', 'kabupaten', 'provinsi'];
+for (const _t of _addrTables) {
+  for (const _c of _addrCols) {
+    try { sqlite.exec(`ALTER TABLE ${_t} ADD COLUMN ${_c} TEXT NOT NULL DEFAULT ''`); } catch {}
+  }
+}
+
+// Migration: tambah kolom sekolah_asal pada students jika belum ada (untuk database existing)
+try { sqlite.exec(`ALTER TABLE students ADD COLUMN sekolah_asal TEXT NOT NULL DEFAULT ''`); } catch {}
 
 // Inisialisasi tabel gallery otomatis jika belum ada
 sqlite.exec(`

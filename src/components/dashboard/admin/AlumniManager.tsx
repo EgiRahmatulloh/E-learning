@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
-import { Upload, Plus, Trash2, Save, HelpCircle, Download, LayoutGrid, List, Search, X, Loader2, ChevronLeft, ChevronRight, Filter, RotateCcw, Edit3 } from "lucide-react";
+import { Upload, Plus, Trash2, Save, HelpCircle, Download, LayoutGrid, List, Search, X, Loader2, ChevronLeft, ChevronRight, Edit3 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
 import BerkasUpload, { type BerkasItem } from "@/components/ui/BerkasUpload";
@@ -22,6 +22,14 @@ interface AlumniItem {
   agama: string;
   email: string;
   alamat: string;
+  rt: string;
+  rw: string;
+  desa: string;
+  kecamatan: string;
+  kabupaten: string;
+  provinsi: string;
+  melanjutkanKe: string;
+  pekerjaan: string;
   cerita: string;
   foto: string;
   berkas?: Record<string, string>;
@@ -44,23 +52,18 @@ export default function AlumniManager() {
   // View state (Cards or Table)
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
-  // Search & Filter States
+  // Search States
   const [searchName, setSearchName] = useState("");
   const [searchNik, setSearchNik] = useState("");
   const [searchTahun, setSearchTahun] = useState("");
   const [searchProgram, setSearchProgram] = useState("");
-
-  const [filterName, setFilterName] = useState("");
-  const [filterNik, setFilterNik] = useState("");
-  const [filterTahun, setFilterTahun] = useState("");
-  const [filterProgram, setFilterProgram] = useState("");
 
   // Selected alumnus / Form state
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [originalData, setOriginalData] = useState<{ nama: string; nik: string; program: string; tahunLulus: string; nisn: string; nis: string; tempatTglLahir: string; noHp: string; namaAyah: string; namaIbu: string; jenisKelamin: string; agama: string; email: string; alamat: string; cerita: string; foto: string; berkas: Record<string, string> }>({ nama: "", nik: "", program: "", tahunLulus: "", nisn: "", nis: "", tempatTglLahir: "", noHp: "", namaAyah: "", namaIbu: "", jenisKelamin: "", agama: "", email: "", alamat: "", cerita: "", foto: "", berkas: {} });
+  const [originalData, setOriginalData] = useState<{ nama: string; nik: string; program: string; tahunLulus: string; nisn: string; nis: string; tempatTglLahir: string; noHp: string; namaAyah: string; namaIbu: string; jenisKelamin: string; agama: string; email: string; alamat: string; rt: string; rw: string; desa: string; kecamatan: string; kabupaten: string; provinsi: string; melanjutkanKe: string; pekerjaan: string; cerita: string; foto: string; berkas: Record<string, string> }>({ nama: "", nik: "", program: "", tahunLulus: "", nisn: "", nis: "", tempatTglLahir: "", noHp: "", namaAyah: "", namaIbu: "", jenisKelamin: "", agama: "", email: "", alamat: "", rt: "", rw: "", desa: "", kecamatan: "", kabupaten: "", provinsi: "", melanjutkanKe: "", pekerjaan: "", cerita: "", foto: "", berkas: {} });
 
   // Form inputs
   const [nama, setNama] = useState("");
@@ -77,12 +80,21 @@ export default function AlumniManager() {
   const [agama, setAgama] = useState("Islam");
   const [email, setEmail] = useState("");
   const [alamat, setAlamat] = useState("");
+  const [rt, setRt] = useState("");
+  const [rw, setRw] = useState("");
+  const [desa, setDesa] = useState("");
+  const [kecamatan, setKecamatan] = useState("");
+  const [kabupaten, setKabupaten] = useState("");
+  const [provinsi, setProvinsi] = useState("");
   const [cerita, setCerita] = useState("");
+  const [melanjutkanKe, setMelanjutkanKe] = useState("");
+  const [pekerjaan, setPekerjaan] = useState("");
   const [foto, setFoto] = useState("");
   const [berkas, setBerkas] = useState<Record<string, string>>({});
 
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
@@ -90,6 +102,13 @@ export default function AlumniManager() {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
+
+  // Reset to first page whenever the (live) search narrows the list,
+  // otherwise a stale currentPage can leave the user on an empty page
+  // with the pager hidden (totalPages becomes 1).
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchName, searchNik, searchTahun, searchProgram]);
 
   useEffect(() => {
     fetchAlumni();
@@ -113,30 +132,10 @@ export default function AlumniManager() {
       .finally(() => setLoading(false));
   };
 
-  const handleFilter = () => {
-    setFilterName(searchName);
-    setFilterNik(searchNik);
-    setFilterTahun(searchTahun);
-    setFilterProgram(searchProgram);
-    setCurrentPage(1);
-  };
-
-  const handleReset = () => {
-    setSearchName("");
-    setSearchNik("");
-    setSearchTahun("");
-    setSearchProgram("");
-    setFilterName("");
-    setFilterNik("");
-    setFilterTahun("");
-    setFilterProgram("");
-    setCurrentPage(1);
-  };
-
   const selectAlumni = (item: AlumniItem) => {
     setIsAdding(false);
     setSelectedId(item.id);
-    setOriginalData({ nama: item.nama, nik: item.nik, program: item.program, tahunLulus: item.tahunLulus, nisn: item.nisn, nis: item.nis, tempatTglLahir: item.tempatTglLahir, noHp: item.noHp, namaAyah: item.namaAyah, namaIbu: item.namaIbu, jenisKelamin: item.jenisKelamin, agama: item.agama, email: item.email, alamat: item.alamat, cerita: item.cerita, foto: item.foto, berkas: item.berkas || {} });
+    setOriginalData({ nama: item.nama, nik: item.nik, program: item.program, tahunLulus: item.tahunLulus, nisn: item.nisn, nis: item.nis, tempatTglLahir: item.tempatTglLahir, noHp: item.noHp, namaAyah: item.namaAyah, namaIbu: item.namaIbu, jenisKelamin: item.jenisKelamin, agama: item.agama, email: item.email, alamat: item.alamat, rt: item.rt || "", rw: item.rw || "", desa: item.desa || "", kecamatan: item.kecamatan || "", kabupaten: item.kabupaten || "", provinsi: item.provinsi || "", melanjutkanKe: item.melanjutkanKe || "", pekerjaan: item.pekerjaan || "", cerita: item.cerita, foto: item.foto, berkas: item.berkas || {} });
     setNama(item.nama);
     setNik(item.nik);
     setProgram(item.program);
@@ -151,7 +150,15 @@ export default function AlumniManager() {
     setAgama(item.agama);
     setEmail(item.email);
     setAlamat(item.alamat);
+    setRt(item.rt || "");
+    setRw(item.rw || "");
+    setDesa(item.desa || "");
+    setKecamatan(item.kecamatan || "");
+    setKabupaten(item.kabupaten || "");
+    setProvinsi(item.provinsi || "");
     setCerita(item.cerita);
+    setMelanjutkanKe(item.melanjutkanKe || "");
+    setPekerjaan(item.pekerjaan || "");
     setFoto(item.foto);
     setBerkas(item.berkas || {});
     setIsEditing(false);
@@ -161,7 +168,7 @@ export default function AlumniManager() {
   const startAddAlumni = () => {
     setIsAdding(true);
     setSelectedId(null);
-    setOriginalData({ nama: "", nik: "", program: "", tahunLulus: "", nisn: "", nis: "", tempatTglLahir: "", noHp: "", namaAyah: "", namaIbu: "", jenisKelamin: "", agama: "", email: "", alamat: "", cerita: "", foto: "", berkas: {} });
+    setOriginalData({ nama: "", nik: "", program: "", tahunLulus: "", nisn: "", nis: "", tempatTglLahir: "", noHp: "", namaAyah: "", namaIbu: "", jenisKelamin: "", agama: "", email: "", alamat: "", rt: "", rw: "", desa: "", kecamatan: "", kabupaten: "", provinsi: "", melanjutkanKe: "", pekerjaan: "", cerita: "", foto: "", berkas: {} });
     setNama("");
     setNik("");
     setProgram("PAKET C");
@@ -176,7 +183,15 @@ export default function AlumniManager() {
     setAgama("Islam");
     setEmail("");
     setAlamat("");
+    setRt("");
+    setRw("");
+    setDesa("");
+    setKecamatan("");
+    setKabupaten("");
+    setProvinsi("");
     setCerita("");
+    setMelanjutkanKe("");
+    setPekerjaan("");
     setFoto("");
     setBerkas({});
     setIsEditing(true);
@@ -255,7 +270,7 @@ export default function AlumniManager() {
 
     const payload = {
       nama, nik, program, tahunLulus, nisn, nis, tempatTglLahir,
-      noHp, namaAyah, namaIbu, jenisKelamin, agama, email, alamat, cerita, foto, berkas
+      noHp, namaAyah, namaIbu, jenisKelamin, agama, email, alamat, rt, rw, desa, kecamatan, kabupaten, provinsi, melanjutkanKe, pekerjaan, cerita, foto, berkas
     };
 
     try {
@@ -332,24 +347,34 @@ export default function AlumniManager() {
       toast.error("Tidak ada data untuk diekspor!");
       return;
     }
-    const headers = ["Nama", "NIK", "Program", "Tahun Lulus", "NISN", "NIS", "Tempat Tgl Lahir", "No HP", "Nama Ayah", "Nama Ibu", "Jenis Kelamin", "Agama", "Email", "Alamat", "Cerita Sukses"];
-    const rows = alumniList.map((item) => [
-      item.nama || "",
-      item.nik || "",
-      item.program || "",
-      item.tahunLulus || "",
-      item.nisn || "",
-      item.nis || "",
-      item.tempatTglLahir || "",
-      item.noHp || "",
-      item.namaAyah || "",
-      item.namaIbu || "",
-      item.jenisKelamin || "",
-      item.agama || "",
-      item.email || "",
-      item.alamat || "",
-      item.cerita || ""
-    ]);
+    const headers = ["No", "Nama", "NIK", "JK", "Tempat Lahir", "Tanggal Lahir", "Alamat", "RT", "RW", "Desa", "Kecamatan", "Kabupaten", "Provinsi", "HP", "E-Mail", "PROGRAM YANG DIAMBIL", "TAHUN LULUS", "MELANJUTKAN KE", "PEKERJAAN", "CERITA"];
+    const rows = alumniList.map((item, index) => {
+      const tempatTgl = (item.tempatTglLahir || "").split(",").map(p => p.trim());
+      const tempat = tempatTgl[0] || "";
+      const tglLahir = tempatTgl.length > 1 ? tempatTgl.slice(1).join(", ") : "";
+      return [
+        index + 1,
+        item.nama || "",
+        item.nik || "",
+        item.jenisKelamin || "",
+        tempat,
+        tglLahir,
+        item.alamat || "",
+        item.rt || "",
+        item.rw || "",
+        item.desa || "",
+        item.kecamatan || "",
+        item.kabupaten || "",
+        item.provinsi || "",
+        item.noHp || "",
+        item.email || "",
+        item.program || "",
+        item.tahunLulus || "",
+        item.melanjutkanKe || "",
+        item.pekerjaan || "",
+        item.cerita || ""
+      ];
+    });
     downloadExcel(headers, rows, `data-alumni-${Date.now()}.xlsx`);
     toast.success("Berhasil mengekspor Excel");
   };
@@ -366,21 +391,25 @@ export default function AlumniManager() {
         const token = localStorage.getItem("token");
 
         const mapped = mapCsvRows(rows, [
-          { key: "nama", aliases: ["nama", "name"], defaultIndex: 0 },
-          { key: "nik", aliases: ["nik", "identitas"], defaultIndex: 1 },
-          { key: "program", aliases: ["program", "paket", "kelas"], defaultIndex: 2 },
-          { key: "tahunLulus", aliases: ["tahun lulus", "tahunlulus", "tahun", "graduated", "graduation"], defaultIndex: 3 },
-          { key: "nisn", aliases: ["nisn"], defaultIndex: 4 },
-          { key: "nis", aliases: ["nis"], defaultIndex: 5 },
-          { key: "tempatTglLahir", aliases: ["tempat/tgl lahir", "tempat lahir", "tanggal lahir", "tempat tgllahir", "birth"], defaultIndex: 6 },
-          { key: "noHp", aliases: ["no. hp", "no hp", "hp", "telepon", "phone"], defaultIndex: 7 },
-          { key: "namaAyah", aliases: ["nama ayah", "ayah", "father"], defaultIndex: 8 },
-          { key: "namaIbu", aliases: ["nama ibu", "ibu", "mother"], defaultIndex: 9 },
-          { key: "jenisKelamin", aliases: ["jenis kelamin", "gender", "jk"], defaultIndex: 10 },
-          { key: "agama", aliases: ["agama", "religion"], defaultIndex: 11 },
-          { key: "email", aliases: ["email", "e-mail"], defaultIndex: 12 },
-          { key: "alamat", aliases: ["alamat", "address"], defaultIndex: 13 },
-          { key: "cerita", aliases: ["cerita", "story", "testimoni", "keterangan"], defaultIndex: 14 },
+          { key: "nama", aliases: ["nama", "name"], defaultIndex: 1 },
+          { key: "nik", aliases: ["nik", "identitas"], defaultIndex: 2 },
+          { key: "jenisKelamin", aliases: ["jenis kelamin", "gender", "jk"], defaultIndex: 3 },
+          { key: "tempatLahir", aliases: ["tempat lahir"], defaultIndex: 4 },
+          { key: "tanggalLahir", aliases: ["tanggal lahir"], defaultIndex: 5 },
+          { key: "alamat", aliases: ["alamat", "address"], defaultIndex: 6 },
+          { key: "rt", aliases: ["rt"], defaultIndex: 7 },
+          { key: "rw", aliases: ["rw"], defaultIndex: 8 },
+          { key: "desa", aliases: ["desa"], defaultIndex: 9 },
+          { key: "kecamatan", aliases: ["kecamatan"], defaultIndex: 10 },
+          { key: "kabupaten", aliases: ["kabupaten", "kota"], defaultIndex: 11 },
+          { key: "provinsi", aliases: ["provinsi"], defaultIndex: 12 },
+          { key: "noHp", aliases: ["no. hp", "no hp", "hp", "telepon", "phone"], defaultIndex: 13 },
+          { key: "email", aliases: ["email", "e-mail"], defaultIndex: 14 },
+          { key: "program", aliases: ["program", "paket", "kelas", "program yang diambil"], defaultIndex: 15 },
+          { key: "tahunLulus", aliases: ["tahun lulus", "tahunlulus", "tahun", "graduated", "graduation"], defaultIndex: 16 },
+          { key: "melanjutkanKe", aliases: ["melanjutkan ke"], defaultIndex: 17 },
+          { key: "pekerjaan", aliases: ["pekerjaan"], defaultIndex: 18 },
+          { key: "cerita", aliases: ["cerita", "story", "testimoni", "keterangan"], defaultIndex: 19 },
         ]);
 
         const imports = mapped
@@ -390,16 +419,24 @@ export default function AlumniManager() {
             nik: item.nik || "",
             program: item.program || "PAKET C",
             tahunLulus: item.tahunLulus || "",
-            nisn: item.nisn || "",
-            nis: item.nis || "",
-            tempatTglLahir: item.tempatTglLahir || "",
+            nisn: "",
+            nis: "",
+            tempatTglLahir: [item.tempatLahir, item.tanggalLahir].filter(Boolean).join(", "),
             noHp: item.noHp || "",
-            namaAyah: item.namaAyah || "",
-            namaIbu: item.namaIbu || "",
+            namaAyah: "",
+            namaIbu: "",
             jenisKelamin: item.jenisKelamin || "Laki-laki",
-            agama: item.agama || "Islam",
+            agama: "",
             email: item.email || "",
             alamat: item.alamat || "",
+            rt: item.rt || "",
+            rw: item.rw || "",
+            desa: item.desa || "",
+            kecamatan: item.kecamatan || "",
+            kabupaten: item.kabupaten || "",
+            provinsi: item.provinsi || "",
+            melanjutkanKe: item.melanjutkanKe || "",
+            pekerjaan: item.pekerjaan || "",
             cerita: item.cerita || "",
             foto: "",
             berkas: {}
@@ -421,6 +458,7 @@ export default function AlumniManager() {
         const data = await res.json();
         if (data.success) {
           toast.success(data.message || `Berhasil mengimpor ${imports.length} data alumni!`);
+          setShowUploadDialog(false);
         } else {
           toast.error("Gagal mengimpor data alumni: " + (data.message || "Error tidak diketahui"));
         }
@@ -434,10 +472,10 @@ export default function AlumniManager() {
 
   // Filtered List
   const filteredAlumni = alumniList.filter((item) => {
-    const matchName = item.nama.toLowerCase().includes(filterName.toLowerCase());
-    const matchNik = item.nik.includes(filterNik);
-    const matchTahun = item.tahunLulus.includes(filterTahun);
-    const matchProgram = filterProgram ? item.program === filterProgram : true;
+    const matchName = item.nama.toLowerCase().includes(searchName.toLowerCase());
+    const matchNik = item.nik.includes(searchNik);
+    const matchTahun = item.tahunLulus.includes(searchTahun);
+    const matchProgram = searchProgram ? item.program === searchProgram : true;
     return matchName && matchNik && matchTahun && matchProgram;
   });
 
@@ -465,8 +503,8 @@ export default function AlumniManager() {
 
       {/* FILTER PANEL */}
       <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm space-y-4">
-        {/* Row 1: Search inputs + Filter/Reset */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 items-center">
+        {/* Row 1: Search inputs */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 items-center">
           <div className="relative">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
               <Search className="h-4 w-4" />
@@ -513,15 +551,9 @@ export default function AlumniManager() {
             <option value="PAKET B">PAKET B (Setara SMP)</option>
             <option value="PAKET C">PAKET C (Setara SMA)</option>
           </select>
-          <Button
-            onClick={handleFilter}
-            className="h-10 rounded-xl bg-[#00badb] hover:bg-[#009cb9] text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase shadow-sm"
-          >
-            <Filter className="h-4 w-4" /> FILTER
-          </Button>
         </div>
 
-        {/* Row 2: Action buttons + Reset */}
+        {/* Row 2: Action buttons */}
         <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
           <input
             type="file"
@@ -531,7 +563,7 @@ export default function AlumniManager() {
             onChange={handleImportExcel}
           />
           <Button
-            onClick={() => importInputRef.current?.click()}
+            onClick={() => setShowUploadDialog(true)}
             className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 h-9 rounded-xl cursor-pointer uppercase tracking-wider shadow-sm flex items-center gap-1.5 transition-all select-none active:scale-95"
           >
             <Upload className="h-3.5 w-3.5" /> UPLOAD EXCEL
@@ -547,12 +579,6 @@ export default function AlumniManager() {
             className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 h-9 rounded-xl cursor-pointer shadow-sm uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
           >
             <Plus className="h-3.5 w-3.5" /> TAMBAH DATA
-          </Button>
-          <Button
-            onClick={handleReset}
-            className="h-9 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-[10px] px-4 cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase shadow-sm"
-          >
-            <RotateCcw className="h-3.5 w-3.5" /> RESET
           </Button>
         </div>
       </div>
@@ -889,20 +915,78 @@ export default function AlumniManager() {
                       />
                     </div>
 
-                    {/* Row 8: ALAMAT (full width) */}
+                    {/* Row 8: ALAMAT JALAN (full width) */}
                     <div className="sm:col-span-2 flex flex-col gap-0.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">ALAMAT LENGKAP</label>
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">ALAMAT JALAN</label>
                       <textarea
                         rows={2}
                         disabled={!isEditing}
-                        placeholder="Tulis alamat rumah lengkap alumni..."
+                        placeholder="Tulis alamat rumah alumni (nama jalan/dusun)..."
                         value={alamat}
                         onChange={(e) => setAlamat(e.target.value)}
                         className="p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
                       />
                     </div>
 
-                    {/* Row 9: CERITA SUKSES ALUMNI (full width) */}
+                    {/* Row 8b: RT, RW, Desa, Kecamatan, Kabupaten, Provinsi */}
+                    <div className="sm:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-x-2 gap-y-1.5">
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">RT</label>
+                        <input type="text" maxLength={3} disabled={!isEditing} placeholder="001" value={rt} onChange={(e) => setRt(e.target.value)}
+                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">RW</label>
+                        <input type="text" maxLength={3} disabled={!isEditing} placeholder="002" value={rw} onChange={(e) => setRw(e.target.value)}
+                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">DESA/KELURAHAN</label>
+                        <input type="text" disabled={!isEditing} placeholder="Nama desa/kelurahan" value={desa} onChange={(e) => setDesa(e.target.value)}
+                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">KECAMATAN</label>
+                        <input type="text" disabled={!isEditing} placeholder="Nama kecamatan" value={kecamatan} onChange={(e) => setKecamatan(e.target.value)}
+                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">KABUPATEN/KOTA</label>
+                        <input type="text" disabled={!isEditing} placeholder="Nama kabupaten/kota" value={kabupaten} onChange={(e) => setKabupaten(e.target.value)}
+                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">PROVINSI</label>
+                        <input type="text" disabled={!isEditing} placeholder="Nama provinsi" value={provinsi} onChange={(e) => setProvinsi(e.target.value)}
+                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      </div>
+                    </div>
+
+                    {/* Row 9: MELANJUTKAN KE & PEKERJAAN */}
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">MELANJUTKAN KE</label>
+                      <input
+                        type="text"
+                        disabled={!isEditing}
+                        placeholder="Contoh: Perguruan Tinggi, Kursus, dll"
+                        value={melanjutkanKe}
+                        onChange={(e) => setMelanjutkanKe(e.target.value)}
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">PEKERJAAN</label>
+                      <input
+                        type="text"
+                        disabled={!isEditing}
+                        placeholder="Contoh: Guru, Wiraswasta, dll"
+                        value={pekerjaan}
+                        onChange={(e) => setPekerjaan(e.target.value)}
+                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                      />
+                    </div>
+
+                    {/* Row 10: CERITA SUKSES ALUMNI (full width) */}
                     <div className="sm:col-span-2 flex flex-col gap-0.5">
                       <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">CERITA SUKSES ALUMNI</label>
                       <textarea
@@ -1038,7 +1122,15 @@ export default function AlumniManager() {
                           setAgama(originalData.agama);
                           setEmail(originalData.email);
                           setAlamat(originalData.alamat);
+                          setRt(originalData.rt || "");
+                          setRw(originalData.rw || "");
+                          setDesa(originalData.desa || "");
+                          setKecamatan(originalData.kecamatan || "");
+                          setKabupaten(originalData.kabupaten || "");
+                          setProvinsi(originalData.provinsi || "");
                           setCerita(originalData.cerita);
+                          setMelanjutkanKe(originalData.melanjutkanKe || "");
+                          setPekerjaan(originalData.pekerjaan || "");
                           setFoto(originalData.foto);
                           setBerkas(originalData.berkas);
                           setIsEditing(false);
@@ -1084,6 +1176,41 @@ export default function AlumniManager() {
                   )}
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* UPLOAD EXCEL DIALOG */}
+      {showUploadDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setShowUploadDialog(false)} />
+          <div className="relative bg-white rounded-2xl overflow-hidden shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 border-2 border-purple-200 z-10">
+            <div className="p-6 space-y-4">
+              <h3 className="text-lg font-black text-slate-800 uppercase tracking-wide">Upload Data Alumni</h3>
+              <p className="text-sm text-slate-500">
+                Silakan download format Excel terlebih dahulu, isi data sesuai format, lalu pilih file untuk diupload.
+              </p>
+              <div className="flex flex-col gap-3">
+                <a
+                  href="/templates/format-upload-alumni.xlsx"
+                  download
+                  className="flex items-center justify-center gap-2 w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl uppercase tracking-wider shadow-sm transition-all"
+                >
+                  <Download className="h-4 w-4" /> DOWNLOAD FORMAT
+                </a>
+                <Button
+                  onClick={() => importInputRef.current?.click()}
+                  className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs h-11 rounded-xl uppercase tracking-wider shadow-sm flex items-center justify-center gap-2 transition-all"
+                >
+                  <Upload className="h-4 w-4" /> PILIH FILE EXCEL
+                </Button>
+                <Button
+                  onClick={() => setShowUploadDialog(false)}
+                  className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold text-xs h-11 rounded-xl uppercase tracking-wider flex items-center justify-center transition-all"
+                >
+                  BATAL
+                </Button>
+              </div>
             </div>
           </div>
         </div>

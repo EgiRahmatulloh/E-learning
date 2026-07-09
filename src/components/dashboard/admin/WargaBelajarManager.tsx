@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
-import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, GraduationCap, ArrowUpCircle, RefreshCw, List, LayoutGrid, Filter, RotateCcw, Loader2, Edit3 } from "lucide-react";
+import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, GraduationCap, ArrowUpCircle, RefreshCw, List, LayoutGrid, Filter, Loader2, Edit3 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
 import BerkasUpload, { type BerkasItem } from "@/components/ui/BerkasUpload";
@@ -23,6 +23,13 @@ interface Student {
   email: string;
   namaIbu: string;
   alamat: string;
+  rt?: string;
+  rw?: string;
+  desa?: string;
+  kecamatan?: string;
+  kabupaten?: string;
+  provinsi?: string;
+  sekolahAsal?: string;
   password?: string;
   foto: string;
   berkas?: Record<string, string>;
@@ -66,13 +73,7 @@ export default function WargaBelajarManager() {
   // Search & Filters
   const [searchName, setSearchName] = useState("");
   const [searchNik, setSearchNik] = useState("");
-  const [searchKelas, setSearchKelas] = useState("");
   const [searchProgram, setSearchProgram] = useState("");
-
-  const [filterName, setFilterName] = useState("");
-  const [filterNik, setFilterNik] = useState("");
-  const [filterKelas, setFilterKelas] = useState("");
-  const [filterProgram, setFilterProgram] = useState("");
 
   // Form dialog states
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -83,6 +84,9 @@ export default function WargaBelajarManager() {
 
   // Continuation program dialog states
   const [continueOpen, setContinueOpen] = useState(false);
+
+  // Upload dialog state
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
 
   // Rombel filter
   const [rombels, setRombels] = useState<Rombel[]>([]);
@@ -98,7 +102,7 @@ export default function WargaBelajarManager() {
     nama: "",
     nik: "",
     program: "PAKET C",
-    kelas: "KELAS X (SEPULUH)",
+    kelas: "",
     nisn: "",
     nis: "",
     tempatTglLahir: "",
@@ -110,6 +114,13 @@ export default function WargaBelajarManager() {
     email: "",
     namaIbu: "",
     alamat: "",
+    rt: "",
+    rw: "",
+    desa: "",
+    kecamatan: "",
+    kabupaten: "",
+    provinsi: "",
+    sekolahAsal: "",
     password: "",
     foto: "",
     berkas: {},
@@ -142,26 +153,6 @@ export default function WargaBelajarManager() {
       })
       .catch((err) => console.error("Failed to load students:", err))
       .finally(() => setLoading(false));
-  };
-
-  const handleSearch = () => {
-    setFilterName(searchName);
-    setFilterNik(searchNik);
-    setFilterKelas(searchKelas);
-    setFilterProgram(searchProgram);
-  };
-
-  const handleReset = () => {
-    setSearchName("");
-    setSearchNik("");
-    setSearchKelas("");
-    setSearchProgram("");
-    setFilterName("");
-    setFilterNik("");
-    setFilterKelas("");
-    setFilterProgram("");
-    setSelectedRombelId(null);
-    setSelectedStudentIds([]);
   };
 
   // Cek apakah siswa sudah di akhir program (untuk sembunyikan "Melanjutkan Program")
@@ -199,26 +190,38 @@ export default function WargaBelajarManager() {
       toast.error("Tidak ada data untuk diekspor!");
       return;
     }
-    const headers = ["NAMA", "NIK", "PROGRAM", "KELAS", "NISN", "NIS", "TEMPAT TGL LAHIR", "TITIK LAYANAN", "JENIS KELAMIN", "NO HP", "AGAMA", "NAMA AYAH", "EMAIL", "NAMA IBU", "ALAMAT", "FOTO", "STATUS"];
-    const rows = exportData.map(s => [
-      s.nama || "",
-      s.nik || "",
-      s.program || "",
-      s.kelas || "",
-      s.nisn || "",
-      s.nis || "",
-      s.tempatTglLahir || "",
-      s.titikLayanan || "",
-      s.jenisKelamin || "",
-      s.noHp || "",
-      s.agama || "",
-      s.namaAyah || "",
-      s.email || "",
-      s.namaIbu || "",
-      s.alamat || "",
-      s.foto || "",
-      s.status || ""
-    ]);
+    const headers = ["No","Nama","NIPD","JK","NISN","Tempat Lahir","Tanggal Lahir","NIK","Agama","Alamat","RT","RW","Desa","Kecamatan","Kabupaten","Provinsi","HP","E-Mail","Ayah","Ibu","Program","Rombel","Titik Layanan","Sekolah Asal"];
+    const rows = exportData.map((s, i) => {
+      const tempatTgl = (s.tempatTglLahir || "").split(",").map(p => p.trim());
+      const tempat = tempatTgl[0] || "";
+      const tglLahir = tempatTgl.length > 1 ? tempatTgl.slice(1).join(", ") : "";
+      return [
+        i + 1,
+        s.nama || "",
+        s.nis || "",
+        s.jenisKelamin || "",
+        s.nisn || "",
+        tempat,
+        tglLahir,
+        s.nik || "",
+        s.agama || "",
+        s.alamat || "",
+        s.rt || "",
+        s.rw || "",
+        s.desa || "",
+        s.kecamatan || "",
+        s.kabupaten || "",
+        s.provinsi || "",
+        s.noHp || "",
+        s.email || "",
+        s.namaAyah || "",
+        s.namaIbu || "",
+        s.program || "",
+        s.kelas || "",
+        s.titikLayanan || "",
+        s.sekolahAsal || ""
+      ];
+    });
     downloadExcel(headers, rows, "warga_belajar.xlsx");
     toast.success("Berhasil mengekspor Excel");
   };
@@ -232,47 +235,67 @@ export default function WargaBelajarManager() {
       const rows = await parseExcel(file);
 
       const mapped = mapCsvRows(rows, [
-        { key: "nama", aliases: ["nama", "name"], defaultIndex: 0 },
-        { key: "nik", aliases: ["nik", "identitas"], defaultIndex: 1 },
-        { key: "program", aliases: ["program", "paket"], defaultIndex: 2 },
-        { key: "kelas", aliases: ["kelas", "tingkatan", "grade"], defaultIndex: 3 },
+        { key: "nama", aliases: ["nama", "name"], defaultIndex: 1 },
+        { key: "nis", aliases: ["nis", "nipd"], defaultIndex: 2 },
+        { key: "jenisKelamin", aliases: ["jenis kelamin", "gender", "jk"], defaultIndex: 3 },
         { key: "nisn", aliases: ["nisn"], defaultIndex: 4 },
-        { key: "nis", aliases: ["nis"], defaultIndex: 5 },
-        { key: "tempatTglLahir", aliases: ["tempat/tgl lahir", "tempat lahir", "tanggal lahir", "tempat tgllahir", "birth"], defaultIndex: 6 },
-        { key: "titikLayanan", aliases: ["titik layanan", "titiklayanan", "tupok", "lokasi"], defaultIndex: 7 },
-        { key: "jenisKelamin", aliases: ["jenis kelamin", "gender", "jk"], defaultIndex: 8 },
-        { key: "noHp", aliases: ["no. hp", "no hp", "hp", "telepon", "phone"], defaultIndex: 9 },
-        { key: "agama", aliases: ["agama", "religion"], defaultIndex: 10 },
-        { key: "namaAyah", aliases: ["nama ayah", "ayah", "father"], defaultIndex: 11 },
-        { key: "email", aliases: ["email", "e-mail"], defaultIndex: 12 },
-        { key: "namaIbu", aliases: ["nama ibu", "ibu", "mother"], defaultIndex: 13 },
-        { key: "alamat", aliases: ["alamat", "address"], defaultIndex: 14 },
-        { key: "foto", aliases: ["foto", "photo", "image", "gambar"], defaultIndex: 15 },
-        { key: "status", aliases: ["status", "keaktifan"], defaultIndex: 16 },
+        { key: "tempatLahir", aliases: ["tempat lahir", "tempat"], defaultIndex: 5 },
+        { key: "tanggalLahir", aliases: ["tanggal lahir", "tgl lahir", "tanggal"], defaultIndex: 6 },
+        { key: "nik", aliases: ["nik", "identitas"], defaultIndex: 7 },
+        { key: "agama", aliases: ["agama", "religion"], defaultIndex: 8 },
+        { key: "alamat", aliases: ["alamat", "address"], defaultIndex: 9 },
+        { key: "rt", aliases: ["rt"], defaultIndex: 10 },
+        { key: "rw", aliases: ["rw"], defaultIndex: 11 },
+        { key: "desa", aliases: ["desa", "kelurahan"], defaultIndex: 12 },
+        { key: "kecamatan", aliases: ["kecamatan"], defaultIndex: 13 },
+        { key: "kabupaten", aliases: ["kabupaten", "kota"], defaultIndex: 14 },
+        { key: "provinsi", aliases: ["provinsi"], defaultIndex: 15 },
+        { key: "noHp", aliases: ["no. hp", "no hp", "hp", "telepon", "phone"], defaultIndex: 16 },
+        { key: "email", aliases: ["email", "e-mail"], defaultIndex: 17 },
+        { key: "namaAyah", aliases: ["nama ayah", "ayah", " ayah", "father"], defaultIndex: 18 },
+        { key: "namaIbu", aliases: ["nama ibu", "ibu", "mother"], defaultIndex: 19 },
+        { key: "program", aliases: ["program", "paket"], defaultIndex: 20 },
+        { key: "kelas", aliases: ["rombel", "kelas", "tingkatan", "grade"], defaultIndex: 21 },
+        { key: "titikLayanan", aliases: ["titik layanan", "titiklayanan", "tupok", "lokasi"], defaultIndex: 22 },
+        { key: "sekolahAsal", aliases: ["sekolah asal", "sekolahasal", "asal sekolah"], defaultIndex: 23 },
+        { key: "foto", aliases: ["foto", "photo", "image", "gambar"], defaultIndex: -1 },
+        { key: "status", aliases: ["status", "keaktifan"], defaultIndex: -1 },
       ]);
 
       const importedData = mapped
         .filter((item) => item.nama)
-        .map((item) => ({
-          nama: item.nama,
-          nik: item.nik || "",
-          program: item.program || "",
-          kelas: item.kelas || "",
-          nisn: item.nisn || "",
-          nis: item.nis || "",
-          tempatTglLahir: item.tempatTglLahir || "",
-          titikLayanan: item.titikLayanan || "",
-          jenisKelamin: item.jenisKelamin || "",
-          noHp: item.noHp || "",
-          agama: item.agama || "",
-          namaAyah: item.namaAyah || "",
-          email: item.email || "",
-          namaIbu: item.namaIbu || "",
-          alamat: item.alamat || "",
-          foto: item.foto || "",
-          berkas: {},
-          status: item.status || "AKTIF",
-        }));
+        .map((item) => {
+          const tempat = item.tempatLahir || "";
+          const tglLahir = item.tanggalLahir || "";
+          const tempatTglLahir = [tempat, tglLahir].filter(Boolean).join(", ");
+          return {
+            nama: item.nama,
+            nik: item.nik || "",
+            program: item.program || "",
+            kelas: item.kelas || "",
+            nisn: item.nisn || "",
+            nis: item.nis || "",
+            tempatTglLahir,
+            titikLayanan: item.titikLayanan || "",
+            jenisKelamin: item.jenisKelamin || "",
+            noHp: item.noHp || "",
+            agama: item.agama || "",
+            namaAyah: item.namaAyah || "",
+            email: item.email || "",
+            namaIbu: item.namaIbu || "",
+            alamat: item.alamat || "",
+            rt: item.rt || "",
+            rw: item.rw || "",
+            desa: item.desa || "",
+            kecamatan: item.kecamatan || "",
+            kabupaten: item.kabupaten || "",
+            provinsi: item.provinsi || "",
+            sekolahAsal: item.sekolahAsal || "",
+            foto: item.foto || "",
+            berkas: {},
+            status: item.status || "AKTIF",
+          };
+        });
 
       if (importedData.length === 0) {
         toast.error("Format data kosong atau tidak valid!");
@@ -292,6 +315,7 @@ export default function WargaBelajarManager() {
       if (resData.success) {
         toast.success(resData.message || "Berhasil mengimpor data!");
         fetchStudents();
+        setShowUploadDialog(false);
       } else {
         toast.error(resData.message || "Gagal mengimpor data");
       }
@@ -309,7 +333,7 @@ export default function WargaBelajarManager() {
       nama: "",
       nik: "",
       program: "PAKET C",
-      kelas: "KELAS X (SEPULUH)",
+      kelas: "",
       nisn: "",
       nis: "",
       tempatTglLahir: "",
@@ -321,6 +345,13 @@ export default function WargaBelajarManager() {
       email: "",
       namaIbu: "",
       alamat: "",
+      rt: "",
+      rw: "",
+      desa: "",
+      kecamatan: "",
+      kabupaten: "",
+      provinsi: "",
+      sekolahAsal: "",
       password: "",
       foto: "",
       status: "AKTIF",
@@ -566,17 +597,15 @@ export default function WargaBelajarManager() {
   // Filtered students based on search criteria
   const filteredStudents = students.filter((student) => {
     const matchesName =
-      !filterName || student.nama.toLowerCase().includes(filterName.toLowerCase());
+      !searchName || student.nama.toLowerCase().includes(searchName.toLowerCase());
     const matchesNik =
-      !filterNik || student.nik.includes(filterNik);
-    const matchesKelas =
-      !filterKelas || student.kelas.toLowerCase().includes(filterKelas.toLowerCase());
+      !searchNik || student.nik.includes(searchNik);
     const matchesProgram =
-      !filterProgram || student.program.toLowerCase().includes(filterProgram.toLowerCase());
+      !searchProgram || student.program.toLowerCase().includes(searchProgram.toLowerCase());
     const matchesRombel =
       !selectedRombelId || (student.rombels && student.rombels.some((r) => r.id === selectedRombelId));
     const matchesStatus = student.status !== "LULUS";
-    return matchesName && matchesNik && matchesKelas && matchesProgram && matchesRombel && matchesStatus;
+    return matchesName && matchesNik && matchesProgram && matchesRombel && matchesStatus;
   });
 
   // Multi-select helpers
@@ -755,17 +784,6 @@ export default function WargaBelajarManager() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
-              placeholder="CARI BERDASARKAN KELAS"
-              value={searchKelas}
-              onChange={(e) => setSearchKelas(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 text-xs font-bold border border-slate-200 rounded-xl bg-white text-slate-850 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            />
-          </div>
-
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
               placeholder="CARI BERDASARKAN PROGRAM"
               value={searchProgram}
               onChange={(e) => setSearchProgram(e.target.value)}
@@ -817,7 +835,7 @@ export default function WargaBelajarManager() {
               onChange={handleImportExcel}
             />
             <Button
-              onClick={() => importInputRef.current?.click()}
+              onClick={() => setShowUploadDialog(true)}
               className="rounded-xl bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 h-10 cursor-pointer transition-all shadow-md flex items-center gap-1.5 active:scale-95"
             >
               <Upload className="h-4 w-4" /> UPLOAD EXCEL
@@ -833,18 +851,6 @@ export default function WargaBelajarManager() {
               className="rounded-xl bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 h-10 cursor-pointer transition-all shadow-md shadow-purple-200 flex items-center gap-2"
             >
               <Plus className="h-4 w-4" /> TAMBAH DATA
-            </Button>
-            <Button
-              onClick={handleSearch}
-              className="w-32 h-10 rounded-xl bg-[#00badb] hover:bg-[#009cb9] text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
-            >
-              <Filter className="h-4 w-4" /> FILTER
-            </Button>
-            <Button
-              onClick={handleReset}
-              className="w-32 h-10 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
-            >
-              <RotateCcw className="h-4 w-4" /> RESET
             </Button>
           </div>
         </div>
@@ -1161,8 +1167,7 @@ export default function WargaBelajarManager() {
                         value={formData.program || "PAKET C"}
                         onChange={(e) => {
                           const prog = e.target.value;
-                          const kelasList = KELAS_BY_PROGRAM[prog];
-                          setFormData(prev => ({ ...prev, program: prog, kelas: kelasList[0] }));
+                          setFormData(prev => ({ ...prev, program: prog, kelas: "" }));
                         }}
                         className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
@@ -1173,16 +1178,29 @@ export default function WargaBelajarManager() {
                       </select>
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KELAS</label>
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">ROMBEL</label>
                       <select
                         value={formData.kelas || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, kelas: e.target.value }))}
                         className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
                       >
-                        {(KELAS_BY_PROGRAM[formData.program || "PAKET C"] || []).map((k) => (
-                          <option key={k} value={k}>{k}</option>
-                        ))}
+                        <option value="" disabled>Pilih Rombel</option>
+                        {rombels
+                          .filter((r) => {
+                            const nama = r.nama.toUpperCase();
+                            const level = nama.length > 1 && /^[A-Z]$/.test(nama.slice(-1)) ? nama.slice(0, -1) : nama;
+                            const prog = (formData.program || "").toUpperCase();
+                            if (prog === "PAKET A") return ["I", "II", "III", "IV", "V", "VI"].includes(level);
+                            if (prog === "PAKET B") return ["VII", "VIII", "IX"].includes(level);
+                            if (prog === "PAKET C") return ["X", "XI", "XII"].includes(level);
+                            return false;
+                          })
+                          .sort((a, b) => a.nama.localeCompare(b.nama))
+                          .map((r) => (
+                            <option key={r.id} value={r.nama}>{r.nama}</option>
+                          ))
+                        }
                       </select>
                     </div>
 
@@ -1259,17 +1277,51 @@ export default function WargaBelajarManager() {
                       />
                     </div>
 
-                    {/* Row 6: ALAMAT (full width) */}
+                    {/* Row 6: ALAMAT JALAN (full width) */}
                     <div className="flex flex-col gap-0.5 sm:col-span-2">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">ALAMAT</label>
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">ALAMAT JALAN</label>
                       <textarea
-                        placeholder="Alamat tempat tinggal lengkap warga belajar"
+                        placeholder="Alamat tempat tinggal warga belajar (nama jalan/dusun)"
                         value={formData.alamat || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, alamat: e.target.value }))}
                         className="w-full p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
                         rows={2}
                         disabled={!isEditing}
                       />
+                    </div>
+
+                    {/* Row 6b: RT, RW, Desa, Kecamatan, Kabupaten, Provinsi */}
+                    <div className="sm:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-x-2 gap-y-1.5">
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">RT</label>
+                        <input type="text" maxLength={3} disabled={!isEditing} placeholder="001" value={formData.rt || ""} onChange={(e) => setFormData(prev => ({ ...prev, rt: e.target.value }))}
+                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">RW</label>
+                        <input type="text" maxLength={3} disabled={!isEditing} placeholder="002" value={formData.rw || ""} onChange={(e) => setFormData(prev => ({ ...prev, rw: e.target.value }))}
+                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">DESA/KELURAHAN</label>
+                        <input type="text" disabled={!isEditing} placeholder="Nama desa/kelurahan" value={formData.desa || ""} onChange={(e) => setFormData(prev => ({ ...prev, desa: e.target.value }))}
+                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KECAMATAN</label>
+                        <input type="text" disabled={!isEditing} placeholder="Nama kecamatan" value={formData.kecamatan || ""} onChange={(e) => setFormData(prev => ({ ...prev, kecamatan: e.target.value }))}
+                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KABUPATEN/KOTA</label>
+                        <input type="text" disabled={!isEditing} placeholder="Nama kabupaten/kota" value={formData.kabupaten || ""} onChange={(e) => setFormData(prev => ({ ...prev, kabupaten: e.target.value }))}
+                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PROVINSI</label>
+                        <input type="text" disabled={!isEditing} placeholder="Nama provinsi" value={formData.provinsi || ""} onChange={(e) => setFormData(prev => ({ ...prev, provinsi: e.target.value }))}
+                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      </div>
                     </div>
 
                     {/* Row 7: TITIK LAYANAN | NO. HP */}
@@ -1682,6 +1734,64 @@ export default function WargaBelajarManager() {
                   </Button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* UPLOAD EXCEL DIALOG */}
+      {showUploadDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setShowUploadDialog(false)} />
+          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
+            <div className="bg-[#00badb] p-6 relative text-white text-left">
+              <button
+                onClick={() => setShowUploadDialog(false)}
+                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="mb-4">
+                <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                  Upload Excel
+                </span>
+              </div>
+
+              <div className="space-y-4 text-slate-800">
+                <p className="text-xs font-semibold text-white/80 leading-normal">
+                  Upload data warga belajar dari file Excel. Silakan download format terlebih dahulu.
+                </p>
+
+                <div className="space-y-3">
+                  <a
+                    href="/templates/format-upload-wb.xlsx"
+                    download
+                    className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs uppercase tracking-widest transition-all shadow-md cursor-pointer"
+                  >
+                    <Download className="h-4 w-4" /> DOWNLOAD FORMAT
+                  </a>
+
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setShowUploadDialog(false);
+                      importInputRef.current?.click();
+                    }}
+                    className="w-full h-11 rounded-xl bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs uppercase tracking-widest transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <Upload className="h-4 w-4" /> PILIH FILE EXCEL
+                  </Button>
+
+                  <Button
+                    type="button"
+                    onClick={() => setShowUploadDialog(false)}
+                    className="w-full h-11 rounded-xl bg-slate-500 hover:bg-slate-600 text-white font-extrabold text-xs uppercase tracking-widest transition-all cursor-pointer"
+                  >
+                    BATAL
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
