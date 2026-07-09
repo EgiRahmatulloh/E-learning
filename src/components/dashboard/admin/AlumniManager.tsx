@@ -1184,32 +1184,51 @@ export default function AlumniManager() {
       {showUploadDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setShowUploadDialog(false)} />
-          <div className="relative bg-white rounded-2xl overflow-hidden shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 border-2 border-purple-200 z-10">
-            <div className="p-6 space-y-4">
-              <h3 className="text-lg font-black text-slate-800 uppercase tracking-wide">Upload Data Alumni</h3>
-              <p className="text-sm text-slate-500">
-                Silakan download format Excel terlebih dahulu, isi data sesuai format, lalu pilih file untuk diupload.
-              </p>
-              <div className="flex flex-col gap-3">
-                <a
-                  href="/templates/format-upload-alumni.xlsx"
-                  download
-                  className="flex items-center justify-center gap-2 w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl uppercase tracking-wider shadow-sm transition-all"
-                >
-                  <Download className="h-4 w-4" /> DOWNLOAD FORMAT
-                </a>
-                <Button
-                  onClick={() => importInputRef.current?.click()}
-                  className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs h-11 rounded-xl uppercase tracking-wider shadow-sm flex items-center justify-center gap-2 transition-all"
-                >
-                  <Upload className="h-4 w-4" /> PILIH FILE EXCEL
-                </Button>
-                <Button
-                  onClick={() => setShowUploadDialog(false)}
-                  className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold text-xs h-11 rounded-xl uppercase tracking-wider flex items-center justify-center transition-all"
-                >
-                  BATAL
-                </Button>
+          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
+            <div className="bg-[#00badb] p-6 relative text-white text-left">
+              <button
+                onClick={() => setShowUploadDialog(false)}
+                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="mb-4">
+                <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                  Upload Excel
+                </span>
+              </div>
+
+              <div className="space-y-4 text-slate-800">
+                <p className="text-xs font-semibold text-white/80 leading-normal">
+                  Upload data alumni dari file Excel. Silakan download format terlebih dahulu.
+                </p>
+
+                <div className="space-y-3">
+                  <a
+                    href="/templates/format-upload-alumni.xlsx"
+                    download
+                    className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs uppercase tracking-widest transition-all shadow-md cursor-pointer"
+                  >
+                    <Download className="h-4 w-4" /> DOWNLOAD FORMAT
+                  </a>
+
+                  <Button
+                    type="button"
+                    onClick={() => importInputRef.current?.click()}
+                    className="w-full h-11 rounded-xl bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs uppercase tracking-widest transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <Upload className="h-4 w-4" /> PILIH FILE EXCEL
+                  </Button>
+
+                  <Button
+                    type="button"
+                    onClick={() => setShowUploadDialog(false)}
+                    className="w-full h-11 rounded-xl bg-slate-500 hover:bg-slate-600 text-white font-extrabold text-xs uppercase tracking-widest transition-all cursor-pointer"
+                  >
+                    BATAL
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

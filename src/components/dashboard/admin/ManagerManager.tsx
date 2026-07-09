@@ -14,6 +14,7 @@ import {
   ShieldAlert,
   Loader2,
   Edit3,
+X,
 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
@@ -1328,45 +1329,57 @@ export default function ManagerManager() {
 
       {/* UPLOAD EXCEL DIALOG */}
       {showUploadDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-300">
-          <div className="absolute inset-0 cursor-default" onClick={() => setShowUploadDialog(false)} />
-          <div className="bg-white w-full max-w-md flex flex-col p-6 rounded-3xl border-4 border-purple-400 shadow-2xl relative animate-in zoom-in-95 duration-200 select-text">
-            <button
-              onClick={() => setShowUploadDialog(false)}
-              className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition-colors cursor-pointer text-sm font-black"
-            >
-              ✕
-            </button>
-
-            <h3 className="text-lg font-black text-slate-800 uppercase tracking-wider mb-1">UPLOAD DATA PENGELOLA</h3>
-            <p className="text-xs text-slate-500 font-semibold mb-6">Unduh format terlebih dahulu, isi data, lalu unggah file Excel.</p>
-
-            <div className="flex flex-col gap-3">
-              <a
-                href="/templates/format-upload-pengelola.xlsx"
-                download
-                className="h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all uppercase tracking-wider"
-              >
-                <Download className="h-4 w-4" /> DOWNLOAD FORMAT
-              </a>
-
-              <Button
-                onClick={() => {
-                  setShowUploadDialog(false);
-                  setTimeout(() => csvInputRef.current?.click(), 100);
-                }}
-                className="h-12 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all uppercase tracking-wider"
-              >
-                <Upload className="h-4 w-4" /> PILIH FILE EXCEL
-              </Button>
-
-              <Button
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setShowUploadDialog(false)} />
+          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
+            <div className="bg-[#00badb] p-6 relative text-white text-left">
+              <button
                 onClick={() => setShowUploadDialog(false)}
-                variant="outline"
-                className="h-12 text-xs font-extrabold rounded-xl uppercase tracking-wider"
+                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
               >
-                BATAL
-              </Button>
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="mb-4">
+                <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                  Upload Excel
+                </span>
+              </div>
+
+              <div className="space-y-4 text-slate-800">
+                <p className="text-xs font-semibold text-white/80 leading-normal">
+                  Upload data pengelola dari file Excel. Silakan download format terlebih dahulu.
+                </p>
+
+                <div className="space-y-3">
+                  <a
+                    href="/templates/format-upload-pengelola.xlsx"
+                    download
+                    className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs uppercase tracking-widest transition-all shadow-md cursor-pointer"
+                  >
+                    <Download className="h-4 w-4" /> DOWNLOAD FORMAT
+                  </a>
+
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setShowUploadDialog(false);
+                      setTimeout(() => csvInputRef.current?.click(), 100);
+                    }}
+                    className="w-full h-11 rounded-xl bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs uppercase tracking-widest transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <Upload className="h-4 w-4" /> PILIH FILE EXCEL
+                  </Button>
+
+                  <Button
+                    type="button"
+                    onClick={() => setShowUploadDialog(false)}
+                    className="w-full h-11 rounded-xl bg-slate-500 hover:bg-slate-600 text-white font-extrabold text-xs uppercase tracking-widest transition-all cursor-pointer"
+                  >
+                    BATAL
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

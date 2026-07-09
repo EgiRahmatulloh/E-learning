@@ -515,7 +515,7 @@ export default function KelolaElearning({ initialKelasId }: { initialKelasId?: s
                   <div>
                     <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
                       <span className="text-3xl">📚</span>
-                      {selectedKelas.nama}
+                      {selectedKelas.nama} — Tahun Ajaran {getTahunAjaran()}
                     </h3>
                     <p className="text-sm text-slate-500 mt-1">
                       Program: {selectedKelas.program} · {selectedKelas.rombels.length} rombel
