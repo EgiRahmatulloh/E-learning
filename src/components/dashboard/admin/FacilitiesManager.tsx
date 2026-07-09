@@ -306,7 +306,7 @@ export default function FacilitiesManager() {
                 className="w-full sm:w-64 h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner"
               />
             </div>
-            <label className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-emerald-900/30 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95 shrink-0">
+            <label className="h-10 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95 shrink-0">
               <Upload className="h-4 w-4" /> UPLOAD EXCEL
               <input
                 type="file"
@@ -317,9 +317,9 @@ export default function FacilitiesManager() {
             </label>
             <Button
               onClick={handleExportExcel}
-              className="bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-teal-900/30 flex items-center gap-1.5 transition-all active:scale-95 shrink-0"
+              className="h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95 shrink-0"
             >
-              <Download className="h-4 w-4" /> EKSPOR EXCEL
+              <Download className="h-4 w-4" /> DOWNLOAD EXCEL
             </Button>
             <Button
               onClick={() => {
