@@ -11,7 +11,6 @@ import {
   List,
   LayoutGrid,
   Loader2,
-  RefreshCw,
   UserPlus,
   ChevronLeft,
   Users,
@@ -69,7 +68,6 @@ export default function RombelManager() {
   const [saving, setSaving] = useState(false);
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("");
 
   // Detail view
   const [selectedRombel, setSelectedRombel] = useState<Rombel | null>(null);
@@ -386,7 +384,7 @@ export default function RombelManager() {
   // Filter
   // ==========================================
   const filteredRombels = rombels.filter(
-    (r) => !filter || r.nama.toLowerCase().includes(filter.toLowerCase())
+    (r) => !search || r.nama.toLowerCase().includes(search.toLowerCase())
   );
 
   // Filtered available students for modal
@@ -677,7 +675,6 @@ export default function RombelManager() {
                     placeholder="CARI NAMA ROMBEL"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && setFilter(search)}
                     className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner uppercase"
                   />
                 </div>
@@ -700,21 +697,6 @@ export default function RombelManager() {
                     className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
                   >
                     <Plus className="h-4 w-4" /> TAMBAH DATA
-                  </Button>
-                  <Button
-                    onClick={() => setFilter(search)}
-                    className="flex-1 h-10 rounded-xl bg-[#00badb] hover:bg-[#009cb9] text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
-                  >
-                    <Search className="h-4 w-4" /> CARI
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setSearch("");
-                      setFilter("");
-                    }}
-                    className="flex-1 h-10 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
-                  >
-                    <RefreshCw className="h-4 w-4" /> RESET
                   </Button>
                 </div>
               </div>
