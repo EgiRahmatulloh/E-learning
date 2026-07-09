@@ -502,84 +502,84 @@ export default function AlumniManager() {
       </div>
 
       {/* FILTER PANEL */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm space-y-4">
-        {/* Row 1: Search inputs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 items-center">
-          <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-              <Search className="h-4 w-4" />
-            </span>
-            <input
-              type="text"
-              placeholder="CARI NAMA ALUMNI"
-              value={searchName}
-              onChange={(e) => setSearchName(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner uppercase"
-            />
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:col-span-2">
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <Search className="h-4 w-4" />
+              </span>
+              <input
+                type="text"
+                placeholder="CARI NAMA ALUMNI"
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+                className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner uppercase"
+              />
+            </div>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <Search className="h-4 w-4" />
+              </span>
+              <input
+                type="text"
+                placeholder="CARI NIK"
+                value={searchNik}
+                onChange={(e) => setSearchNik(e.target.value)}
+                className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner"
+              />
+            </div>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <Search className="h-4 w-4" />
+              </span>
+              <input
+                type="text"
+                placeholder="CARI TAHUN LULUS"
+                value={searchTahun}
+                onChange={(e) => setSearchTahun(e.target.value)}
+                className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner uppercase"
+              />
+            </div>
+            <select
+              className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-cyan-500 font-bold bg-white text-slate-700 shadow-inner transition-colors"
+              value={searchProgram}
+              onChange={(e) => setSearchProgram(e.target.value)}
+            >
+              <option value="">Semua Program</option>
+              <option value="PAKET A">PAKET A (Setara SD)</option>
+              <option value="PAKET B">PAKET B (Setara SMP)</option>
+              <option value="PAKET C">PAKET C (Setara SMA)</option>
+            </select>
           </div>
-          <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-              <Search className="h-4 w-4" />
-            </span>
-            <input
-              type="text"
-              placeholder="CARI NIK"
-              value={searchNik}
-              onChange={(e) => setSearchNik(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner"
-            />
-          </div>
-          <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-              <Search className="h-4 w-4" />
-            </span>
-            <input
-              type="text"
-              placeholder="CARI TAHUN LULUS"
-              value={searchTahun}
-              onChange={(e) => setSearchTahun(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner uppercase"
-            />
-          </div>
-          <select
-            className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-cyan-500 font-bold bg-white text-slate-700 shadow-inner"
-            value={searchProgram}
-            onChange={(e) => setSearchProgram(e.target.value)}
-          >
-            <option value="">Semua Program</option>
-            <option value="PAKET A">PAKET A (Setara SD)</option>
-            <option value="PAKET B">PAKET B (Setara SMP)</option>
-            <option value="PAKET C">PAKET C (Setara SMA)</option>
-          </select>
-        </div>
 
-        {/* Row 2: Action buttons */}
-        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
-          <input
-            type="file"
-            ref={importInputRef}
-            className="hidden"
-            accept=".xlsx, .xls"
-            onChange={handleImportExcel}
-          />
-          <Button
-            onClick={() => setShowUploadDialog(true)}
-            className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 h-9 rounded-xl cursor-pointer uppercase tracking-wider shadow-sm flex items-center gap-1.5 transition-all select-none active:scale-95"
-          >
-            <Upload className="h-3.5 w-3.5" /> UPLOAD EXCEL
-          </Button>
-          <Button
-            onClick={handleExportExcel}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] px-4 h-9 rounded-xl cursor-pointer uppercase tracking-wider shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
-          >
-            <Download className="h-3.5 w-3.5" /> DOWNLOAD EXCEL
-          </Button>
-          <Button
-            onClick={startAddAlumni}
-            className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 h-9 rounded-xl cursor-pointer shadow-sm uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
-          >
-            <Plus className="h-3.5 w-3.5" /> TAMBAH DATA
-          </Button>
+          <div className="grid grid-cols-3 gap-2 md:col-span-3">
+            <input
+              type="file"
+              ref={importInputRef}
+              className="hidden"
+              accept=".xlsx, .xls"
+              onChange={handleImportExcel}
+            />
+            <Button
+              onClick={() => setShowUploadDialog(true)}
+              className="h-10 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95"
+            >
+              <Upload className="h-4 w-4" /> UPLOAD EXCEL
+            </Button>
+            <Button
+              onClick={handleExportExcel}
+              className="h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95"
+            >
+              <Download className="h-4 w-4" /> DOWNLOAD EXCEL
+            </Button>
+            <Button
+              onClick={startAddAlumni}
+              className="h-10 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all active:scale-95"
+            >
+              <Plus className="h-4 w-4" /> TAMBAH DATA
+            </Button>
+          </div>
         </div>
       </div>
 

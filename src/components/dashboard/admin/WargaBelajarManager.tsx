@@ -757,76 +757,75 @@ export default function WargaBelajarManager() {
       </div>
 
       <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 items-center">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="CARI BERDASARKAN NAMA"
-              value={searchName}
-              onChange={(e) => setSearchName(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 text-xs font-bold border border-slate-200 rounded-xl bg-white text-slate-850 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-400 uppercase"
-            />
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:col-span-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="CARI BERDASARKAN NAMA"
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+                className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner uppercase"
+              />
+            </div>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="CARI BERDASARKAN NIK"
+                value={searchNik}
+                onChange={(e) => setSearchNik(e.target.value)}
+                className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner"
+              />
+            </div>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="CARI BERDASARKAN PROGRAM"
+                value={searchProgram}
+                onChange={(e) => setSearchProgram(e.target.value)}
+                className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner"
+              />
+            </div>
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+              <select
+                value={selectedRombelId || ""}
+                onChange={(e) => setSelectedRombelId(e.target.value ? Number(e.target.value) : null)}
+                className="w-full h-10 pl-9 pr-4 text-xs font-bold border border-slate-200 rounded-xl bg-white text-slate-700 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner uppercase appearance-none cursor-pointer"
+              >
+                <option value="">SEMUA ROMBEL</option>
+                {rombels.slice().sort((a, b) => {
+                  const roman: Record<string, number> = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10, XI: 11, XII: 12 };
+                  const romanKeys = Object.keys(roman).sort((a, b) => b.length - a.length);
+                  const getGrade = (n: string) => {
+                    const upper = n.toUpperCase();
+                    for (const r of romanKeys) {
+                      if (upper.startsWith(r)) return roman[r];
+                    }
+                    return 0;
+                  };
+                  const getSection = (n: string) => {
+                    const upper = n.toUpperCase();
+                    for (const r of romanKeys) {
+                      if (upper.startsWith(r)) return upper.slice(r.length);
+                    }
+                    return upper;
+                  };
+                  const ga = getGrade(a.nama), gb = getGrade(b.nama);
+                  if (ga !== gb) return ga - gb;
+                  const sa = getSection(a.nama), sb = getSection(b.nama);
+                  return sa.localeCompare(sb);
+                }).map((r) => (
+                  <option key={r.id} value={r.id}>{r.nama} ({r.jumlahSiswa} siswa)</option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="CARI BERDASARKAN NIK"
-              value={searchNik}
-              onChange={(e) => setSearchNik(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 text-xs font-bold border border-slate-200 rounded-xl bg-white text-slate-850 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            />
-          </div>
-
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="CARI BERDASARKAN PROGRAM"
-              value={searchProgram}
-              onChange={(e) => setSearchProgram(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 text-xs font-bold border border-slate-200 rounded-xl bg-white text-slate-850 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            />
-          </div>
-
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-            <select
-              value={selectedRombelId || ""}
-              onChange={(e) => setSelectedRombelId(e.target.value ? Number(e.target.value) : null)}
-              className="w-full h-10 pl-9 pr-4 text-xs font-bold border border-slate-200 rounded-xl bg-white text-slate-850 focus:outline-none focus:ring-2 focus:ring-purple-400 uppercase appearance-none cursor-pointer"
-            >
-              <option value="">SEMUA ROMBEL</option>
-              {rombels.slice().sort((a, b) => {
-                const roman: Record<string, number> = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10, XI: 11, XII: 12 };
-                const romanKeys = Object.keys(roman).sort((a, b) => b.length - a.length);
-                const getGrade = (n: string) => {
-                  const upper = n.toUpperCase();
-                  for (const r of romanKeys) {
-                    if (upper.startsWith(r)) return roman[r];
-                  }
-                  return 0;
-                };
-                const getSection = (n: string) => {
-                  const upper = n.toUpperCase();
-                  for (const r of romanKeys) {
-                    if (upper.startsWith(r)) return upper.slice(r.length);
-                  }
-                  return upper;
-                };
-                const ga = getGrade(a.nama), gb = getGrade(b.nama);
-                if (ga !== gb) return ga - gb;
-                const sa = getSection(a.nama), sb = getSection(b.nama);
-                return sa.localeCompare(sb);
-              }).map((r) => (
-                <option key={r.id} value={r.id}>{r.nama} ({r.jumlahSiswa} siswa)</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex gap-2 md:col-span-5 justify-end items-center flex-wrap">
+          <div className="grid grid-cols-3 gap-2 md:col-span-3">
             <input
               type="file"
               ref={importInputRef}
@@ -836,19 +835,19 @@ export default function WargaBelajarManager() {
             />
             <Button
               onClick={() => setShowUploadDialog(true)}
-              className="rounded-xl bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-[10px] px-4 h-10 cursor-pointer transition-all shadow-md flex items-center gap-1.5 active:scale-95"
+              className="h-10 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95"
             >
               <Upload className="h-4 w-4" /> UPLOAD EXCEL
             </Button>
             <Button
               onClick={handleExportExcel}
-              className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] px-4 h-10 cursor-pointer transition-all shadow-md flex items-center gap-1.5 active:scale-95"
+              className="h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95"
             >
               <Download className="h-4 w-4" /> DOWNLOAD EXCEL
             </Button>
             <Button
               onClick={openAddForm}
-              className="rounded-xl bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 h-10 cursor-pointer transition-all shadow-md shadow-purple-200 flex items-center gap-2"
+              className="h-10 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all active:scale-95"
             >
               <Plus className="h-4 w-4" /> TAMBAH DATA
             </Button>
