@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ShieldAlert, Upload, Plus, Trash2, Edit3, Save, FileText, Download, X, Filter, RotateCcw, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShieldAlert, Upload, Plus, Trash2, Edit3, Save, FileText, Download, X, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
 
@@ -28,7 +28,6 @@ export default function DownloadsManager() {
   const [loading, setLoading] = useState(true);
 
   // Search & Filter States
-  const [selectedCategory, setSelectedCategory] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
 
   // Form Dialog States
@@ -72,17 +71,6 @@ export default function DownloadsManager() {
       })
       .catch((err) => console.error("Failed to load downloads:", err))
       .finally(() => setLoading(false));
-  };
-
-  const handleFilter = () => {
-    setFilterCategory(selectedCategory);
-    setCurrentPage(1);
-  };
-
-  const handleReset = () => {
-    setSelectedCategory("");
-    setFilterCategory("");
-    setCurrentPage(1);
   };
 
   const openAddForm = () => {
@@ -238,6 +226,11 @@ export default function DownloadsManager() {
     }
   };
 
+  const handleCategoryChange = (value: string) => {
+    setFilterCategory(value);
+    setCurrentPage(1);
+  };
+
   // Filter list
   const filteredDownloads = downloads.filter((item) => {
     return !filterCategory || item.kategori === filterCategory;
@@ -264,51 +257,33 @@ export default function DownloadsManager() {
         </div>
       </div>
 
-      {/* FILTER & SEARCH PANEL */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-cyan-500 font-bold bg-white text-slate-700 shadow-inner"
-          >
-            <option value="">CARI BERDASARKAN KATEGORI (DROP DOWN)</option>
-            {STATIC_CATEGORIES.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-
-          <div className="flex gap-2 flex-wrap pr-1">
-            <Button
-              onClick={handleFilter}
-              className="flex-1 h-10 rounded-xl bg-[#00badb] hover:bg-[#009cb9] text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
+      {/* TABLE CONTAINER */}
+      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+        {/* Table Search Bar + Action Buttons */}
+        <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-50/50">
+          <span className="text-xs font-black text-slate-500 uppercase tracking-widest">
+            Daftar Dokumen ({filteredDownloads.length})
+          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              value={filterCategory}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+              className="w-full sm:w-64 h-10 px-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-cyan-500 font-bold bg-white text-slate-700 shadow-inner"
             >
-              <Filter className="h-4 w-4" /> FILTER
-            </Button>
-            <Button
-              onClick={handleReset}
-              className="flex-1 h-10 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs cursor-pointer tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all uppercase"
-            >
-              <RotateCcw className="h-4 w-4" /> RESET
-            </Button>
+              <option value="">CARI BERDASARKAN KATEGORI</option>
+              {STATIC_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
             <Button
               onClick={openAddForm}
-              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 h-10 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shrink-0"
+              className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-purple-200 uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shrink-0"
             >
               <Plus className="h-4 w-4" /> TAMBAH DATA
             </Button>
           </div>
-        </div>
-      </div>
-
-      {/* TABLE CONTAINER */}
-      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-          <span className="text-xs font-black text-slate-500 uppercase tracking-widest">
-            Daftar Dokumen ({filteredDownloads.length})
-          </span>
         </div>
 
         {loading ? (
