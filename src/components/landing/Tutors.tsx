@@ -9,7 +9,7 @@ import {
   DialogFooter,
   DialogClose
 } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, ShieldAlert, Award, Mail, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShieldAlert, Award, Search } from "lucide-react";
 
 interface Tutor {
   id: number;
@@ -280,14 +280,6 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                             <span className="text-slate-800 font-bold leading-normal block">{tutor.alamat || "-"}</span>
                           </div>
 
-                          <div className="space-y-1 sm:col-span-2">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block flex items-center gap-1">
-                              <Mail className="h-3 w-3" /> Email
-                            </span>
-                            <a href={`mailto:${tutor.email}`} className="text-[#ff6105] hover:underline font-bold text-[11px] block">
-                              {tutor.email || "-"}
-                            </a>
-                          </div>
                         </div>
 
                         {/* SK Details */}
@@ -526,14 +518,6 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                             <div className="space-y-1 sm:col-span-2">
                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Alamat Lengkap</span>
                               <span className="text-slate-800 font-bold leading-normal block">{tutor.alamat || "-"}</span>
-                            </div>
-                            <div className="space-y-1 sm:col-span-2">
-                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block flex items-center gap-1">
-                                <Mail className="h-3 w-3" /> Email
-                              </span>
-                              <a href={`mailto:${tutor.email}`} className="text-[#ff6105] hover:underline font-bold text-[11px] block">
-                                {tutor.email || "-"}
-                              </a>
                             </div>
                           </div>
 

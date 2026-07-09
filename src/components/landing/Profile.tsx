@@ -614,14 +614,6 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                                     <span className="text-slate-800 font-bold leading-normal block">{m.alamat || "-"}</span>
                                   </div>
 
-                                  <div className="space-y-1 sm:col-span-2">
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block flex items-center gap-1">
-                                      <Mail className="h-3 w-3" /> Email
-                                    </span>
-                                    <a href={`mailto:${m.email}`} className="text-[#ff6105] hover:underline font-bold text-[11px] block">
-                                      {m.email || "-"}
-                                    </a>
-                                  </div>
                                 </div>
 
                                 {/* SK Details */}

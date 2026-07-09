@@ -292,13 +292,6 @@ export default function WargaBelajar(_props: WargaBelajarProps) {
                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Alamat Lengkap</span>
                             <span className="text-slate-800 font-bold leading-normal block uppercase">{student.alamat || "-"}</span>
                           </div>
-
-                          {student.email && (
-                            <div className="space-y-1 sm:col-span-2">
-                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Email</span>
-                              <span className="text-[#ff6105] font-bold text-[11px] block">{student.email}</span>
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>
