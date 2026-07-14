@@ -282,7 +282,7 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
     }
   };
 
-  const handleSaveTeks = async () => {
+  const handleSaveField = async (field: string, value: string, successMsg: string) => {
     if (!sessionId) return;
     try {
       setSaving(true);
@@ -292,51 +292,11 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem("token")}`
         },
-        body: JSON.stringify({ description: teksPembuka })
+        body: JSON.stringify({ [field]: value })
       });
-      toast.success(`Materi yang diajarkan Sesi ${sessionNumber} tersimpan!`);
+      toast.success(`${successMsg} Sesi ${sessionNumber} tersimpan!`);
     } catch (err) {
-      toast.error("Gagal menyimpan materi yang diajarkan");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSaveTujuan = async () => {
-    if (!sessionId) return;
-    try {
-      setSaving(true);
-      await fetch(`/api/elearning/session/${sessionId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
-        },
-        body: JSON.stringify({ tujuanPembelajaran })
-      });
-      toast.success(`Tujuan Pembelajaran Sesi ${sessionNumber} tersimpan!`);
-    } catch (err) {
-      toast.error("Gagal menyimpan tujuan pembelajaran");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSaveUraian = async () => {
-    if (!sessionId) return;
-    try {
-      setSaving(true);
-      await fetch(`/api/elearning/session/${sessionId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
-        },
-        body: JSON.stringify({ uraianKegiatan })
-      });
-      toast.success(`Uraian Kegiatan Pembelajaran Sesi ${sessionNumber} tersimpan!`);
-    } catch (err) {
-      toast.error("Gagal menyimpan uraian kegiatan pembelajaran");
+      toast.error(`Gagal menyimpan ${successMsg.toLowerCase()}`);
     } finally {
       setSaving(false);
     }
@@ -464,7 +424,7 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
           <h4 className="font-black flex items-center gap-2 text-[#280f91] text-lg">
             Materi yang diajarkan Sesi {sessionNumber}
           </h4>
-          <Button size="sm" onClick={handleSaveTeks} disabled={saving} className="bg-[#280f91] hover:bg-indigo-700 text-white font-bold">
+          <Button size="sm" onClick={() => handleSaveField('description', teksPembuka, 'Materi yang diajarkan')} disabled={saving} className="bg-[#280f91] hover:bg-indigo-700 text-white font-bold">
             <Save className="w-4 h-4 mr-1.5" /> Simpan Materi
           </Button>
         </div>
@@ -477,7 +437,7 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
           <h4 className="font-black flex items-center gap-2 text-[#280f91] text-lg">
             Tujuan Pembelajaran Sesi {sessionNumber}
           </h4>
-          <Button size="sm" onClick={handleSaveTujuan} disabled={saving} className="bg-[#280f91] hover:bg-indigo-700 text-white font-bold">
+          <Button size="sm" onClick={() => handleSaveField('tujuanPembelajaran', tujuanPembelajaran, 'Tujuan Pembelajaran')} disabled={saving} className="bg-[#280f91] hover:bg-indigo-700 text-white font-bold">
             <Save className="w-4 h-4 mr-1.5" /> Simpan Tujuan
           </Button>
         </div>
@@ -490,7 +450,7 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
           <h4 className="font-black flex items-center gap-2 text-[#280f91] text-lg">
             Uraian Kegiatan Pembelajaran Sesi {sessionNumber}
           </h4>
-          <Button size="sm" onClick={handleSaveUraian} disabled={saving} className="bg-[#280f91] hover:bg-indigo-700 text-white font-bold">
+          <Button size="sm" onClick={() => handleSaveField('uraianKegiatan', uraianKegiatan, 'Uraian Kegiatan Pembelajaran')} disabled={saving} className="bg-[#280f91] hover:bg-indigo-700 text-white font-bold">
             <Save className="w-4 h-4 mr-1.5" /> Simpan Uraian
           </Button>
         </div>

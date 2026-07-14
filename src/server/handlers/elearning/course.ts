@@ -166,32 +166,18 @@ export const courseHandlers = new Elysia()
       if (authError) return authError;
 
       try {
-        const cleanHtml = body.description ? sanitizeHtml(body.description, {
+        const sanitizeOptions = {
           allowedTags: sanitizeHtml.defaults.allowedTags.concat(['font', 'u', 'span']),
           allowedAttributes: {
             ...sanitizeHtml.defaults.allowedAttributes,
             'font': ['size', 'color', 'face'],
             '*': ['style', 'class']
           }
-        }) : undefined;
+        };
 
-        const cleanTujuan = body.tujuanPembelajaran ? sanitizeHtml(body.tujuanPembelajaran, {
-          allowedTags: sanitizeHtml.defaults.allowedTags.concat(['font', 'u', 'span']),
-          allowedAttributes: {
-            ...sanitizeHtml.defaults.allowedAttributes,
-            'font': ['size', 'color', 'face'],
-            '*': ['style', 'class']
-          }
-        }) : undefined;
-
-        const cleanUraian = body.uraianKegiatan ? sanitizeHtml(body.uraianKegiatan, {
-          allowedTags: sanitizeHtml.defaults.allowedTags.concat(['font', 'u', 'span']),
-          allowedAttributes: {
-            ...sanitizeHtml.defaults.allowedAttributes,
-            'font': ['size', 'color', 'face'],
-            '*': ['style', 'class']
-          }
-        }) : undefined;
+        const cleanHtml = body.description ? sanitizeHtml(body.description, sanitizeOptions) : undefined;
+        const cleanTujuan = body.tujuanPembelajaran ? sanitizeHtml(body.tujuanPembelajaran, sanitizeOptions) : undefined;
+        const cleanUraian = body.uraianKegiatan ? sanitizeHtml(body.uraianKegiatan, sanitizeOptions) : undefined;
 
         const updateData: any = {};
         if (cleanHtml !== undefined) updateData.description = cleanHtml;

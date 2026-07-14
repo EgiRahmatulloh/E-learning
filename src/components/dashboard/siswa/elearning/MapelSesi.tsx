@@ -745,7 +745,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
             <Button onClick={() => handleDownload(tugasUrl)} variant="outline" className="flex-1 bg-white hover:bg-orange-50 border-orange-200 text-orange-700 font-bold h-12">
-              Download Soal Tugas
+              Unduh Soal Tugas
             </Button>
             <input
               type="file"
