@@ -128,7 +128,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Tulis sesuatu..
         ref={editorRef}
         contentEditable
         onInput={handleInput}
-        className="p-4 min-h-[120px] max-h-[300px] overflow-y-auto text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#280f91] focus:ring-inset prose prose-sm max-w-none"
+        className="p-4 min-h-[40px] max-h-[300px] overflow-y-auto text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#280f91] focus:ring-inset prose prose-sm max-w-none"
         style={{
           whiteSpace: "pre-wrap",
           wordBreak: "break-word"

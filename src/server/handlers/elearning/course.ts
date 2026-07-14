@@ -126,6 +126,8 @@ export const courseHandlers = new Elysia()
               sessionNumber,
               title: `Sesi ${sessionNumber}`,
               description: "",
+              tujuanPembelajaran: "",
+              uraianKegiatan: "",
               isEvaluation: false,
             })
             .returning();
@@ -173,8 +175,28 @@ export const courseHandlers = new Elysia()
           }
         }) : undefined;
 
+        const cleanTujuan = body.tujuanPembelajaran ? sanitizeHtml(body.tujuanPembelajaran, {
+          allowedTags: sanitizeHtml.defaults.allowedTags.concat(['font', 'u', 'span']),
+          allowedAttributes: {
+            ...sanitizeHtml.defaults.allowedAttributes,
+            'font': ['size', 'color', 'face'],
+            '*': ['style', 'class']
+          }
+        }) : undefined;
+
+        const cleanUraian = body.uraianKegiatan ? sanitizeHtml(body.uraianKegiatan, {
+          allowedTags: sanitizeHtml.defaults.allowedTags.concat(['font', 'u', 'span']),
+          allowedAttributes: {
+            ...sanitizeHtml.defaults.allowedAttributes,
+            'font': ['size', 'color', 'face'],
+            '*': ['style', 'class']
+          }
+        }) : undefined;
+
         const updateData: any = {};
         if (cleanHtml !== undefined) updateData.description = cleanHtml;
+        if (cleanTujuan !== undefined) updateData.tujuanPembelajaran = cleanTujuan;
+        if (cleanUraian !== undefined) updateData.uraianKegiatan = cleanUraian;
         if (body.startDate !== undefined) updateData.startDate = body.startDate;
         if (body.endDate !== undefined) updateData.endDate = body.endDate;
 
@@ -194,6 +216,8 @@ export const courseHandlers = new Elysia()
     {
       body: t.Object({
         description: t.Optional(t.String()),
+        tujuanPembelajaran: t.Optional(t.String()),
+        uraianKegiatan: t.Optional(t.String()),
         startDate: t.Optional(t.String()),
         endDate: t.Optional(t.String()),
       }),

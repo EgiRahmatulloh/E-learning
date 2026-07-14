@@ -67,6 +67,8 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
   const [loading, setLoading] = useState(true);
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [teksPembuka, setTeksPembuka] = useState("");
+  const [tujuanPembelajaran, setTujuanPembelajaran] = useState("");
+  const [uraianKegiatan, setUraianKegiatan] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [pptFile, setPptFile] = useState<{ title: string, url: string } | null>(null);
   const [tugasFile, setTugasFile] = useState<{ title: string, url: string } | null>(null);
@@ -104,6 +106,8 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
           const sId = data.data.session.id;
           setSessionId(sId);
           setTeksPembuka(data.data.session.description || "");
+          setTujuanPembelajaran(data.data.session.tujuanPembelajaran || "");
+          setUraianKegiatan(data.data.session.uraianKegiatan || "");
           const materials = data.data.materials || [];
           const ppt = materials.find((m: any) => m.type === "PPT");
           if (ppt) setPptFile({ title: ppt.title, url: ppt.fileUrl });
@@ -290,9 +294,49 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
         },
         body: JSON.stringify({ description: teksPembuka })
       });
-      toast.success(`Teks Pembuka Sesi ${sessionNumber} tersimpan!`);
+      toast.success(`Materi yang diajarkan Sesi ${sessionNumber} tersimpan!`);
     } catch (err) {
-      toast.error("Gagal menyimpan teks pembuka");
+      toast.error("Gagal menyimpan materi yang diajarkan");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveTujuan = async () => {
+    if (!sessionId) return;
+    try {
+      setSaving(true);
+      await fetch(`/api/elearning/session/${sessionId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ tujuanPembelajaran })
+      });
+      toast.success(`Tujuan Pembelajaran Sesi ${sessionNumber} tersimpan!`);
+    } catch (err) {
+      toast.error("Gagal menyimpan tujuan pembelajaran");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveUraian = async () => {
+    if (!sessionId) return;
+    try {
+      setSaving(true);
+      await fetch(`/api/elearning/session/${sessionId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ uraianKegiatan })
+      });
+      toast.success(`Uraian Kegiatan Pembelajaran Sesi ${sessionNumber} tersimpan!`);
+    } catch (err) {
+      toast.error("Gagal menyimpan uraian kegiatan pembelajaran");
     } finally {
       setSaving(false);
     }
@@ -414,17 +458,43 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
   return (
     <div className="space-y-6">
 
-      {/* SECTION: Teks Pembuka */}
+      {/* SECTION: Teks Pembuka / Materi */}
       <Card className="p-6 border-slate-200/60 bg-white shadow-sm rounded-2xl">
         <div className="flex justify-between items-center mb-4">
           <h4 className="font-black flex items-center gap-2 text-[#280f91] text-lg">
-            Teks Pembuka Sesi {sessionNumber}
+            Materi yang diajarkan Sesi {sessionNumber}
           </h4>
           <Button size="sm" onClick={handleSaveTeks} disabled={saving} className="bg-[#280f91] hover:bg-indigo-700 text-white font-bold">
-            <Save className="w-4 h-4 mr-1.5" /> Simpan Teks
+            <Save className="w-4 h-4 mr-1.5" /> Simpan Materi
           </Button>
         </div>
-        <RichTextEditor value={teksPembuka} onChange={setTeksPembuka} placeholder="Tuliskan materi pengantar sesi ini..." />
+        <RichTextEditor value={teksPembuka} onChange={setTeksPembuka} placeholder="Tuliskan materi yang diajarkan sesi ini..." />
+      </Card>
+
+      {/* SECTION: Tujuan Pembelajaran */}
+      <Card className="p-6 border-slate-200/60 bg-white shadow-sm rounded-2xl">
+        <div className="flex justify-between items-center mb-4">
+          <h4 className="font-black flex items-center gap-2 text-[#280f91] text-lg">
+            Tujuan Pembelajaran Sesi {sessionNumber}
+          </h4>
+          <Button size="sm" onClick={handleSaveTujuan} disabled={saving} className="bg-[#280f91] hover:bg-indigo-700 text-white font-bold">
+            <Save className="w-4 h-4 mr-1.5" /> Simpan Tujuan
+          </Button>
+        </div>
+        <RichTextEditor value={tujuanPembelajaran} onChange={setTujuanPembelajaran} placeholder="Tuliskan tujuan pembelajaran sesi ini..." />
+      </Card>
+
+      {/* SECTION: Uraian Kegiatan Pembelajaran */}
+      <Card className="p-6 border-slate-200/60 bg-white shadow-sm rounded-2xl">
+        <div className="flex justify-between items-center mb-4">
+          <h4 className="font-black flex items-center gap-2 text-[#280f91] text-lg">
+            Uraian Kegiatan Pembelajaran Sesi {sessionNumber}
+          </h4>
+          <Button size="sm" onClick={handleSaveUraian} disabled={saving} className="bg-[#280f91] hover:bg-indigo-700 text-white font-bold">
+            <Save className="w-4 h-4 mr-1.5" /> Simpan Uraian
+          </Button>
+        </div>
+        <RichTextEditor value={uraianKegiatan} onChange={setUraianKegiatan} placeholder="Tuliskan uraian kegiatan pembelajaran sesi ini..." />
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

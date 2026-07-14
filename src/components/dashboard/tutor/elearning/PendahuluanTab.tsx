@@ -277,7 +277,7 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
               Teks Pembuka Pendahuluan
             </h3>
             <p className="text-sm text-slate-500 font-medium mt-1">
-              Pesan sapaan, penjelasan singkat mengenai RAT, dan instruksi perkenalan untuk warga belajar.
+              Pesan sapaan, penjelasan singkat mengenai CP, dan instruksi perkenalan untuk warga belajar.
             </p>
           </div>
           <Button
@@ -300,10 +300,10 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
         <Card className="p-6 border-slate-200/60 bg-white shadow-sm rounded-2xl">
           <h3 className="text-lg font-black text-[#280f91] mb-2 flex items-center gap-2">
             <UploadCloud className="w-5 h-5 text-[#ff6105]" />
-            Unggah RAT
+            Unggah CP
           </h3>
           <p className="text-sm text-slate-500 mb-6 font-medium">
-            Rancangan Aktivitas Tutorial (RAT).
+            Capaian Pembelajaran (CP).
           </p>
 
           <div
@@ -393,131 +393,131 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
                 const avatarColorClass = isTutorSelf ? "bg-[#280f91] text-white" : "bg-cyan-100 text-cyan-700";
 
                 return (
-                <div key={post.id} className="bg-slate-50 border border-slate-100 rounded-xl p-4">
-                  <div className="flex gap-3">
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${avatarColorClass}`}>
-                      {avatarLetter}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-bold text-slate-800 text-sm">{displayName}</h4>
-                          <span className="text-xs text-slate-400">{new Date(post.createdAt).toLocaleString('id-ID')}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          {post.authorId === user?.id && post.authorRole === user?.role && (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 text-xs text-slate-400 hover:text-blue-600 px-2"
-                                onClick={() => {
-                                  setEditingMessageId(post.id);
-                                  setEditInputValue(post.content);
-                                }}
-                                title="Edit pesan"
-                              >
-                                <Pencil className="w-3 h-3" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 text-xs text-slate-400 hover:text-red-600 px-2"
-                                onClick={() => handleDeleteMessage(post.id)}
-                                title="Hapus pesan"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
-                            </>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 text-xs text-cyan-600 hover:bg-cyan-50"
-                            onClick={() => setActiveReplyId(activeReplyId === post.id ? null : post.id)}
-                          >
-                            Balas
-                          </Button>
-                        </div>
+                  <div key={post.id} className="bg-slate-50 border border-slate-100 rounded-xl p-4">
+                    <div className="flex gap-3">
+                      <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${avatarColorClass}`}>
+                        {avatarLetter}
                       </div>
-                      
-                      {editingMessageId === post.id ? (
-                        <div className="mt-2 space-y-2">
-                          <RichTextEditor value={editInputValue} onChange={setEditInputValue} placeholder="Edit pesan..." />
-                          <div className="flex gap-2 justify-end">
-                            <Button onClick={() => setEditingMessageId(null)} size="sm" variant="outline" className="h-8">Batal</Button>
-                            <Button onClick={() => handleEditSubmit(post.id)} size="sm" className="bg-[#280f91] hover:bg-[#3a1bca] text-white h-8">Simpan</Button>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-bold text-slate-800 text-sm">{displayName}</h4>
+                            <span className="text-xs text-slate-400">{new Date(post.createdAt).toLocaleString('id-ID')}</span>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="mt-2 text-sm text-slate-600 prose" dangerouslySetInnerHTML={{ __html: post.content }} />
-                      )}
-
-                      {/* Replies */}
-                      {forumPosts.filter(r => r.parentId === post.id).map(reply => {
-                        const replyIsTutorSelf = reply.authorId === user?.id && reply.authorRole === "tutor";
-                        const replyDisplayName = replyIsTutorSelf ? "Tutor (Anda)" : (reply.authorRole === "siswa" ? `Siswa (${reply.authorName || 'Unknown'})` : reply.authorName);
-                        const replyAvatarLetter = replyIsTutorSelf ? "T" : (reply.authorName || "?").charAt(0).toUpperCase();
-                        const replyAvatarColorClass = reply.authorRole === 'tutor' ? 'bg-[#280f91] text-white' : 'bg-slate-200 text-slate-600';
-
-                        return (
-                        <div key={reply.id} className="mt-3 pl-4 border-l-2 border-slate-200 flex gap-2 group">
-                          <div className={`h-6 w-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${replyAvatarColorClass}`}>
-                            {replyAvatarLetter}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex justify-between items-start">
-                              <h5 className="font-bold text-slate-700 text-xs flex items-center gap-2">
-                                {replyDisplayName}
-                                {reply.authorRole === 'tutor' && !replyIsTutorSelf && <span className="bg-[#ff6105] text-white px-1.5 py-0.5 rounded text-[9px]">TUTOR</span>}
-                              </h5>
-                              {reply.authorId === user?.id && reply.authorRole === user?.role && (
-                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button onClick={() => { setEditingMessageId(reply.id); setEditInputValue(reply.content); }} className="text-slate-400 hover:text-blue-600"><Pencil className="w-3 h-3" /></button>
-                                  <button onClick={() => handleDeleteMessage(reply.id)} className="text-slate-400 hover:text-red-600"><Trash2 className="w-3 h-3" /></button>
-                                </div>
-                              )}
-                            </div>
-                            
-                            {editingMessageId === reply.id ? (
-                              <div className="mt-2 space-y-2">
-                                <RichTextEditor value={editInputValue} onChange={setEditInputValue} placeholder="Edit balasan..." />
-                                <div className="flex gap-2 justify-end">
-                                  <Button onClick={() => setEditingMessageId(null)} size="sm" variant="outline" className="h-7 text-xs">Batal</Button>
-                                  <Button onClick={() => handleEditSubmit(reply.id)} size="sm" className="bg-[#280f91] hover:bg-[#3a1bca] text-white h-7 text-xs">Simpan</Button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="text-xs text-slate-600 prose mt-1" dangerouslySetInnerHTML={{ __html: reply.content }} />
+                          <div className="flex gap-2">
+                            {post.authorId === user?.id && post.authorRole === user?.role && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-xs text-slate-400 hover:text-blue-600 px-2"
+                                  onClick={() => {
+                                    setEditingMessageId(post.id);
+                                    setEditInputValue(post.content);
+                                  }}
+                                  title="Edit pesan"
+                                >
+                                  <Pencil className="w-3 h-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-xs text-slate-400 hover:text-red-600 px-2"
+                                  onClick={() => handleDeleteMessage(post.id)}
+                                  title="Hapus pesan"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </>
                             )}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-xs text-cyan-600 hover:bg-cyan-50"
+                              onClick={() => setActiveReplyId(activeReplyId === post.id ? null : post.id)}
+                            >
+                              Balas
+                            </Button>
                           </div>
-                          </div>
-                        );
-                      })}
-
-                      {/* Reply Input */}
-                      {activeReplyId === post.id && (
-                        <div className="mt-4 flex gap-2">
-                          <input
-                            type="text"
-                            placeholder="Ketik balasan Anda..."
-                            value={replyText}
-                            onChange={(e) => setReplyText(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && submitReply(post.id)}
-                            className="flex-1 h-9 rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:border-[#280f91]"
-                          />
-                          <Button
-                            size="sm"
-                            onClick={() => submitReply(post.id)}
-                            className="h-9 bg-[#280f91] hover:bg-[#ff6105] text-white"
-                          >
-                            Kirim
-                          </Button>
                         </div>
-                      )}
+
+                        {editingMessageId === post.id ? (
+                          <div className="mt-2 space-y-2">
+                            <RichTextEditor value={editInputValue} onChange={setEditInputValue} placeholder="Edit pesan..." />
+                            <div className="flex gap-2 justify-end">
+                              <Button onClick={() => setEditingMessageId(null)} size="sm" variant="outline" className="h-8">Batal</Button>
+                              <Button onClick={() => handleEditSubmit(post.id)} size="sm" className="bg-[#280f91] hover:bg-[#3a1bca] text-white h-8">Simpan</Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="mt-2 text-sm text-slate-600 prose" dangerouslySetInnerHTML={{ __html: post.content }} />
+                        )}
+
+                        {/* Replies */}
+                        {forumPosts.filter(r => r.parentId === post.id).map(reply => {
+                          const replyIsTutorSelf = reply.authorId === user?.id && reply.authorRole === "tutor";
+                          const replyDisplayName = replyIsTutorSelf ? "Tutor (Anda)" : (reply.authorRole === "siswa" ? `Siswa (${reply.authorName || 'Unknown'})` : reply.authorName);
+                          const replyAvatarLetter = replyIsTutorSelf ? "T" : (reply.authorName || "?").charAt(0).toUpperCase();
+                          const replyAvatarColorClass = reply.authorRole === 'tutor' ? 'bg-[#280f91] text-white' : 'bg-slate-200 text-slate-600';
+
+                          return (
+                            <div key={reply.id} className="mt-3 pl-4 border-l-2 border-slate-200 flex gap-2 group">
+                              <div className={`h-6 w-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${replyAvatarColorClass}`}>
+                                {replyAvatarLetter}
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex justify-between items-start">
+                                  <h5 className="font-bold text-slate-700 text-xs flex items-center gap-2">
+                                    {replyDisplayName}
+                                    {reply.authorRole === 'tutor' && !replyIsTutorSelf && <span className="bg-[#ff6105] text-white px-1.5 py-0.5 rounded text-[9px]">TUTOR</span>}
+                                  </h5>
+                                  {reply.authorId === user?.id && reply.authorRole === user?.role && (
+                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <button onClick={() => { setEditingMessageId(reply.id); setEditInputValue(reply.content); }} className="text-slate-400 hover:text-blue-600"><Pencil className="w-3 h-3" /></button>
+                                      <button onClick={() => handleDeleteMessage(reply.id)} className="text-slate-400 hover:text-red-600"><Trash2 className="w-3 h-3" /></button>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {editingMessageId === reply.id ? (
+                                  <div className="mt-2 space-y-2">
+                                    <RichTextEditor value={editInputValue} onChange={setEditInputValue} placeholder="Edit balasan..." />
+                                    <div className="flex gap-2 justify-end">
+                                      <Button onClick={() => setEditingMessageId(null)} size="sm" variant="outline" className="h-7 text-xs">Batal</Button>
+                                      <Button onClick={() => handleEditSubmit(reply.id)} size="sm" className="bg-[#280f91] hover:bg-[#3a1bca] text-white h-7 text-xs">Simpan</Button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-xs text-slate-600 prose mt-1" dangerouslySetInnerHTML={{ __html: reply.content }} />
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        {/* Reply Input */}
+                        {activeReplyId === post.id && (
+                          <div className="mt-4 flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="Ketik balasan Anda..."
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && submitReply(post.id)}
+                              className="flex-1 h-9 rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:border-[#280f91]"
+                            />
+                            <Button
+                              size="sm"
+                              onClick={() => submitReply(post.id)}
+                              className="h-9 bg-[#280f91] hover:bg-[#ff6105] text-white"
+                            >
+                              Kirim
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
                 );
               })}
             </div>

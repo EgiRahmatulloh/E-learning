@@ -25,9 +25,12 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
   const [loading, setLoading] = useState(true);
 
   const [teksPembuka, setTeksPembuka] = useState("");
+  const [tujuanPembelajaran, setTujuanPembelajaran] = useState("");
+  const [uraianKegiatan, setUraianKegiatan] = useState("");
   const [pptUrl, setPptUrl] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [tugasUrl, setTugasUrl] = useState<string | null>(null);
+  const [batasKirim, setBatasKirim] = useState<string | null>(null);
   const [showAngket, setShowAngket] = useState(false);
   const [angketQuestions, setAngketQuestions] = useState<any[]>([]);
   const [angketCompleted, setAngketCompleted] = useState(false);
@@ -143,6 +146,15 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
         } else {
           setTeksPembuka("");
         }
+        setTujuanPembelajaran(session.tujuanPembelajaran || "");
+        setUraianKegiatan(session.uraianKegiatan || "");
+
+        if (session.endDate) {
+          setBatasKirim(session.endDate);
+        } else {
+          setBatasKirim(null);
+        }
+
         const materials = Array.isArray(sessionData.data.materials) ? sessionData.data.materials : [];
         const ppt = materials.find((m: any) => m.type === "PPT");
         if (ppt) setPptUrl(ppt.fileUrl);
@@ -455,15 +467,39 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
           </div>
         </div>
 
-        {/* Teks Pembuka / Pengantar Sesi */}
+        {/* Teks Pembuka / Materi yang diajarkan Sesi */}
         <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 prose prose-sm max-w-none prose-slate relative">
           <div className="flex items-center justify-between not-prose mb-3">
-            <h3 className="font-bold text-[#280f91]">Pengantar Sesi {sessionNumber}</h3>
+            <h3 className="font-bold text-[#280f91]">Materi yang diajarkan Sesi {sessionNumber}</h3>
           </div>
           {teksPembuka ? (
             <div dangerouslySetInnerHTML={{ __html: teksPembuka }} />
           ) : (
-            <p className="text-slate-500 italic">Tutor belum menambahkan teks pengantar untuk sesi ini.</p>
+            <p className="text-slate-500 italic">Tutor belum menambahkan materi yang diajarkan untuk sesi ini.</p>
+          )}
+        </div>
+
+        {/* Tujuan Pembelajaran Sesi */}
+        <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 prose prose-sm max-w-none prose-slate relative">
+          <div className="flex items-center justify-between not-prose mb-3">
+            <h3 className="font-bold text-[#280f91]">Tujuan Pembelajaran Sesi {sessionNumber}</h3>
+          </div>
+          {tujuanPembelajaran ? (
+            <div dangerouslySetInnerHTML={{ __html: tujuanPembelajaran }} />
+          ) : (
+            <p className="text-slate-500 italic">Tutor belum menambahkan tujuan pembelajaran untuk sesi ini.</p>
+          )}
+        </div>
+
+        {/* Uraian Kegiatan Pembelajaran Sesi */}
+        <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 prose prose-sm max-w-none prose-slate relative">
+          <div className="flex items-center justify-between not-prose mb-3">
+            <h3 className="font-bold text-[#280f91]">Uraian Kegiatan Pembelajaran Sesi {sessionNumber}</h3>
+          </div>
+          {uraianKegiatan ? (
+            <div dangerouslySetInnerHTML={{ __html: uraianKegiatan }} />
+          ) : (
+            <p className="text-slate-500 italic">Tutor belum menambahkan uraian kegiatan pembelajaran untuk sesi ini.</p>
           )}
         </div>
 
@@ -701,12 +737,15 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
             <div className="flex-1">
               <h2 className="text-lg font-black text-orange-900">Tugas Sesi {sessionNumber}</h2>
               <p className="text-xs text-orange-700">Unduh soal dan kumpulkan jawaban tugas di sini.</p>
+              <p className="text-xs font-bold mt-1 text-rose-600">
+                Batas Kirim Jawaban: {batasKirim ? new Date(batasKirim).toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' }) : "Belum ditentukan"}
+              </p>
             </div>
             <SectionCompleteButton completions={completions} handleMarkComplete={handleMarkComplete} sectionKey={`sesi_${sessionNumber}_tugas`} className="m-0" />
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
             <Button onClick={() => handleDownload(tugasUrl)} variant="outline" className="flex-1 bg-white hover:bg-orange-50 border-orange-200 text-orange-700 font-bold h-12">
-              Unduh Soal Tugas
+              Download Soal Tugas
             </Button>
             <input
               type="file"
@@ -716,7 +755,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
               onChange={handleUploadJawaban}
             />
             <Button onClick={() => tugasUploadRef.current?.click()} className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold h-12">
-              Unggah Jawaban
+              Kirim Jawaban
             </Button>
           </div>
         </div>

@@ -420,6 +420,8 @@ export const elearningSessions = sqliteTable('elearning_sessions', {
   sessionNumber: integer('session_number').notNull(), // 1 - 8
   title: text('title').notNull().default(''),
   description: text('description').notNull().default(''),
+  tujuanPembelajaran: text('tujuan_pembelajaran').notNull().default(''),
+  uraianKegiatan: text('uraian_kegiatan').notNull().default(''),
   startDate: text('start_date'),
   endDate: text('end_date'),
   isEvaluation: integer('is_evaluation', { mode: 'boolean' }).notNull().default(false),
