@@ -736,4 +736,108 @@ export const laporanHandlers = new Elysia()
       }
     }
   )
+
+
+﻿  // GET Laporan Agenda Tutor Per Mapel (xlsx template)
+  .get(
+    "/laporan/tutor-agenda",
+    async (context: any) => {
+      const { headers, jwt, query, set } = context;
+      const authError = await verifyAdminOrTutor(headers, jwt, set);
+      if (authError) return authError;
+
+      try {
+        const setupId = query.setupId ? parseInt(query.setupId, 10) : null;
+        if (!setupId) { set.status = 400; return { success: false, message: "setupId diperlukan" }; }
+
+        const setup = await db.select().from(elearningSetups).where(eq(elearningSetups.id, setupId)).get();
+        if (!setup) { set.status = 404; return { success: false, message: "Setup tidak ditemukan" }; }
+
+        const tutor = await db.select().from(tutors).where(eq(tutors.id, setup.tutorId)).get();
+        const program = deriveProgram(setup.kelas);
+        const course = await db.select().from(elearningCourses)
+          .where(and(eq(elearningCourses.namaMapel, setup.mapel), eq(elearningCourses.program, program))).get();
+
+        // Daftar warga belajar di kelas (untuk hitung kehadiran per sesi)
+        const rombelList = await db.select().from(rombels).where(eq(rombels.nama, setup.kelas)).all();
+        const rombelIds = rombelList.map(r => r.id);
+        const studentsList = rombelIds.length > 0 ? await db
+          .select({ id: students.id, nama: students.nama })
+          .from(students).innerJoin(rombelStudents, eq(students.id, rombelStudents.studentId))
+          .where(inArray(rombelStudents.rombelId, rombelIds)).all() : [];
+        const totalStudents = studentsList.length;
+
+        // Sesi pada course, urut berdasarkan nomor sesi
+        const sessionsList = course ? await db.select().from(elearningSessions)
+          .where(eq(elearningSessions.courseId, course.id)).all() : [];
+        sessionsList.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
+        const sessionIds = sessionsList.map(s => s.id);
+
+        // Materi per sesi
+        const materialsList = sessionIds.length > 0 ? await db.select().from(elearningMaterials)
+          .where(inArray(elearningMaterials.sessionId, sessionIds)).all() : [];
+
+        // Kehadiran per sesi
+        const attendances = sessionIds.length > 0 ? await db.select().from(elearningAttendances)
+          .where(inArray(elearningAttendances.sessionId, sessionIds)).all() : [];
+
+        const agendaData = sessionsList.map((s, idx) => {
+          const sessMaterials = materialsList.filter(m => m.sessionId === s.id);
+          const materi = sessMaterials.length > 0
+            ? sessMaterials.map(m => m.title).filter(Boolean).join(", ")
+            : (s.title || "-");
+          const attendedIds = new Set(attendances.filter(a => a.sessionId === s.id).map(a => a.studentId));
+          const hadir = attendedIds.size;
+          const tidakHadir = Math.max(0, totalStudents - hadir);
+          const absentNames = studentsList.filter(st => !attendedIds.has(st.id)).map(st => st.nama);
+          const keterangan = tidakHadir > 0 ? absentNames.join(", ") : "-";
+          const hariTanggal = s.startDate
+            ? new Date(s.startDate).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+            : "-";
+          return {
+            no: idx + 1,
+            hariTanggal,
+            sesi: s.sessionNumber || (idx + 1),
+            materi: materi || "-",
+            tujuan: s.tujuanPembelajaran || "-",
+            uraian: s.uraianKegiatan || "-",
+            hadir,
+            tidakHadir,
+            keterangan,
+          };
+        });
+
+        const now = new Date();
+        const currentYear = now.getFullYear();
+
+        const buffer = fillTemplate("DAFTAR AGENDA TUTOR.xlsx", {
+          program: program.toUpperCase(),
+          semester: (setup.semester || "Ganjil").toUpperCase(),
+          tahunAjaran: currentYear + "/" + (currentYear + 1),
+          mapel: setup.mapel.toUpperCase(),
+          kelas: setup.kelas.toUpperCase(),
+          namaTutor: (tutor?.nama || "-").toUpperCase(),
+          nipTutor: "-",
+          tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }).toUpperCase(),
+          agenda: agendaData.map(a => ({
+            ...a,
+            materi: String(a.materi).toUpperCase(),
+            tujuan: String(a.tujuan).toUpperCase(),
+            uraian: String(a.uraian).toUpperCase(),
+            hariTanggal: String(a.hariTanggal).toUpperCase(),
+            keterangan: String(a.keterangan).toUpperCase(),
+          })),
+        });
+
+        set.headers = {
+          "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "Content-Disposition": "attachment; filename=\"agenda_tutor_" + sanitizeFilename(setup.mapel) + "_" + currentYear + ".xlsx\"",
+        };
+        return buffer;
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: error.message };
+      }
+    }
+  )
 ;

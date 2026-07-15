@@ -74,6 +74,25 @@ export default function LaporanNilaiTab({ activeTab, user }: Props) {
     fetchData();
   }, [setupId, user]);
 
+  const handleExportAgenda = async () => {
+    if (!setupId) return;
+    try {
+      const token = localStorage.getItem("token");
+      const url = `/api/elearning/laporan/tutor-agenda?setupId=${setupId}`;
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) throw new Error("Gagal mengunduh agenda tutor");
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = window.URL.createObjectURL(blob);
+      a.download = `agenda_tutor_${setupId}.xlsx`;
+      a.click();
+      setTimeout(() => window.URL.revokeObjectURL(a.href), 100);
+      toast.success("Berhasil mengunduh agenda tutor (.XLSX)");
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
   const handleExportNilai = async () => {
     if (!setupId) return;
     try {
@@ -206,7 +225,11 @@ export default function LaporanNilaiTab({ activeTab, user }: Props) {
                 >
                   Daftar Nilai
                 </button>
+                <Button onClick={handleExportAgenda} className="flex-1 md:flex-none bg-[#280f91] hover:bg-[#1f0b73] text-white font-bold text-sm h-auto px-4 py-2.5 rounded-lg transition-colors shadow-sm cursor-pointer">
+                  <FileSpreadsheet className="w-4 h-4 mr-2" /> Agenda Tutor
+                </Button>
               </div>
+
 
               <div className="relative w-full md:w-64">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
