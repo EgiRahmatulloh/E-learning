@@ -73,7 +73,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
 
     (async () => {
       try {
-        const res = await fetch(`/api/elearning/setups?kelas=${encodeURIComponent(user.kelas)}`, {
+        const res = await fetch(`/api/elearning/setups?kelas=${encodeURIComponent(user.kelas || "")}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
           signal,
         });

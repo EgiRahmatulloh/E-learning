@@ -79,7 +79,7 @@ export default function KehadiranTab() {
   };
 
   // Calendar rendering logic — use Jakarta timezone for date construction
-  const { year, month: jakartaMonth, day: jakartaDay } = getJakartaYearMonthDay(currentDate);
+  const { year, month: jakartaMonth } = getJakartaYearMonthDay(currentDate);
   const month = jakartaMonth - 1;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 1).getDay(); // 0 is Sunday
