@@ -373,12 +373,12 @@ export const studentsHandlers = new Elysia()
 
       // Pre-fetch data rombel untuk dipakai di dalam transaksi
       const allRombelsList = await db.select().from(rombels).all();
-      const currentRel = await db
+      const currentRels = await db
         .select({ rombelId: rombelStudents.rombelId })
         .from(rombelStudents)
         .where(eq(rombelStudents.studentId, id))
-        .get();
-      const currentRombelObj = currentRel ? allRombelsList.find(r => r.id === currentRel.rombelId) : null;
+        .all();
+      const currentRombelObj = currentRels.length > 0 ? allRombelsList.find(r => r.id === currentRels[0].rombelId) : null;
       const currentRombelName = currentRombelObj?.nama.toUpperCase() || "";
       const sectionLetter = extractSectionLetter(currentRombelName);
       const targetRombelName = `${nextRoman}${sectionLetter}`;
@@ -403,9 +403,10 @@ export const studentsHandlers = new Elysia()
             .get();
         }
 
-        if (currentRel) {
+        if (currentRels.length > 0) {
+          const currentRombelIds = currentRels.map(r => r.rombelId);
           tx.delete(rombelStudents)
-            .where(and(eq(rombelStudents.studentId, id), eq(rombelStudents.rombelId, currentRel.rombelId)))
+            .where(and(eq(rombelStudents.studentId, id), inArray(rombelStudents.rombelId, currentRombelIds)))
             .run();
         }
         try {
@@ -416,14 +417,16 @@ export const studentsHandlers = new Elysia()
       });
 
       // Hapus rombel lama jika kosong (di luar transaksi, best-effort)
-      if (currentRel) {
-        const count = await db
-          .select({ cnt: sql<number>`count(*)` })
-          .from(rombelStudents)
-          .where(eq(rombelStudents.rombelId, currentRel.rombelId))
-          .get();
-        if (count && Number(count.cnt) === 0) {
-          await db.delete(rombels).where(eq(rombels.id, currentRel.rombelId)).run();
+      if (currentRels.length > 0) {
+        for (const rel of currentRels) {
+          const count = await db
+            .select({ cnt: sql<number>`count(*)` })
+            .from(rombelStudents)
+            .where(eq(rombelStudents.rombelId, rel.rombelId))
+            .get();
+          if (count && Number(count.cnt) === 0) {
+            await db.delete(rombels).where(eq(rombels.id, rel.rombelId)).run();
+          }
         }
       }
 
@@ -800,8 +803,11 @@ export const studentsHandlers = new Elysia()
           .from(rombelStudents)
           .where(inArray(rombelStudents.studentId, targetStudentIds))
           .all();
-        const currentRombelMap = new Map<number, number>();
-        currentRelations.forEach(r => currentRombelMap.set(r.studentId, r.rombelId));
+        const currentRombelMap = new Map<number, number[]>();
+        currentRelations.forEach(r => {
+          if (!currentRombelMap.has(r.studentId)) currentRombelMap.set(r.studentId, []);
+          currentRombelMap.get(r.studentId)!.push(r.rombelId);
+        });
 
         // Track old rombels that may become empty after moving students
         const emptiedRombelIds = new Set<number>();
@@ -832,7 +838,8 @@ export const studentsHandlers = new Elysia()
               .run();
 
             // Move student to new rombel: preserve section letter (e.g. XB → XIB)
-            const currentRombelObj = allRombels.find(r => currentRombelMap.get(s.id) === r.id);
+            const currentRombelIds = currentRombelMap.get(s.id) || [];
+            const currentRombelObj = currentRombelIds.length > 0 ? allRombels.find(r => r.id === currentRombelIds[0]) : null;
             const currentRombelName = currentRombelObj?.nama.toUpperCase() || "";
             const sectionLetter = extractSectionLetter(currentRombelName);
             const targetRombelName = `${nextRoman}${sectionLetter}`;
@@ -849,13 +856,12 @@ export const studentsHandlers = new Elysia()
               targetRombel = newRombel;
             }
 
-            const currentRombelId = currentRombelMap.get(s.id);
-            // Remove from current rombel
-            if (currentRombelId) {
+            // Remove from all current rombels
+            if (currentRombelIds.length > 0) {
               tx.delete(rombelStudents)
-                .where(and(eq(rombelStudents.studentId, s.id), eq(rombelStudents.rombelId, currentRombelId)))
+                .where(and(eq(rombelStudents.studentId, s.id), inArray(rombelStudents.rombelId, currentRombelIds)))
                 .run();
-              emptiedRombelIds.add(currentRombelId);
+              currentRombelIds.forEach(rid => emptiedRombelIds.add(rid));
             }
             // Add to target rombel (ignore duplicate)
             try {

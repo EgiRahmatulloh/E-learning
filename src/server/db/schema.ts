@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer, unique } from 'drizzle-orm/sqlite-core';
+import type { AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
 
 export const sliders = sqliteTable('sliders', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -130,7 +131,9 @@ export const managers = sqliteTable('managers', {
   updatedAt: text('updated_at')
     .$defaultFn(() => new Date().toISOString())
     .$onUpdate(() => new Date().toISOString()),
-});
+}, (t) => ({
+  unq: unique().on(t.email),
+}));
 
 export type Manager = typeof managers.$inferSelect;
 export type NewManager = typeof managers.$inferInsert;
@@ -252,7 +255,9 @@ export const tutors = sqliteTable('tutors', {
   updatedAt: text('updated_at')
     .$defaultFn(() => new Date().toISOString())
     .$onUpdate(() => new Date().toISOString()),
-});
+}, (t) => ({
+  unq: unique().on(t.email),
+}));
 
 export type TutorType = typeof tutors.$inferSelect;
 export type NewTutor = typeof tutors.$inferInsert;
@@ -288,7 +293,9 @@ export const students = sqliteTable('students', {
   updatedAt: text('updated_at')
     .$defaultFn(() => new Date().toISOString())
     .$onUpdate(() => new Date().toISOString()),
-});
+}, (t) => ({
+  unq: unique().on(t.email),
+}));
 
 export type StudentType = typeof students.$inferSelect;
 export type NewStudent = typeof students.$inferInsert;
@@ -450,7 +457,7 @@ export const elearningMaterials = sqliteTable('elearning_materials', {
 
 export const elearningAssignments = sqliteTable('elearning_assignments', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  sessionId: integer('session_id').notNull(),
+  sessionId: integer('session_id').notNull().references(() => elearningSessions.id, { onDelete: 'cascade' }),
   title: text('title').notNull().default(''),
   description: text('description').notNull().default(''),
   dueDate: text('due_date'),
@@ -481,6 +488,7 @@ export const elearningQuizSubmissions = sqliteTable('elearning_quiz_submissions'
   id: integer('id').primaryKey({ autoIncrement: true }),
   sessionId: integer('session_id').notNull().references(() => elearningSessions.id, { onDelete: 'cascade' }),
   studentId: integer('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
+  answers: text('answers'), // JSON array of student's answers
   grade: integer('grade').notNull(), // 0 - 100
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
 }, (t) => ({
@@ -517,7 +525,9 @@ export const rombels = sqliteTable('rombels', {
   updatedAt: text('updated_at')
     .$defaultFn(() => new Date().toISOString())
     .$onUpdate(() => new Date().toISOString()),
-});
+}, (t) => ({
+  unq: unique().on(t.nama),
+}));
 
 export type Rombel = typeof rombels.$inferSelect;
 export type NewRombel = typeof rombels.$inferInsert;
@@ -538,7 +548,7 @@ export const elearningSetups = sqliteTable('elearning_setups', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   kelas: text('kelas').notNull(),
   mapel: text('mapel').notNull(),
-  tutorId: integer('tutor_id').notNull(),
+  tutorId: integer('tutor_id').notNull().references(() => tutors.id, { onDelete: 'cascade' }),
   skk: integer('skk').notNull().default(1),
   jumlahSesi: integer('jumlah_sesi').notNull().default(8),
   semester: text('semester').notNull().default('Ganjil'), // Ganjil / Genap
@@ -556,7 +566,7 @@ export const elearningForumPosts = sqliteTable('elearning_forum_posts', {
   authorId: integer('author_id').notNull(),
   authorRole: text('author_role').notNull(), // 'tutor' | 'siswa'
   content: text('content').notNull(),
-  parentId: integer('parent_id'), // for replies
+  parentId: integer('parent_id').references((): AnySQLiteColumn => elearningForumPosts.id, { onDelete: 'cascade' }), // for replies
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
 });
 

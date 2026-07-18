@@ -58,6 +58,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
   useEffect(() => {
     fetchCompletions();
     async function fetchData() {
+      setLoading(true);
       try {
         const courseRes = await fetch("/api/elearning/course", {
           method: "POST",

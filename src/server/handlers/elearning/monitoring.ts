@@ -57,7 +57,7 @@ export const monitoringHandlers = new Elysia()
           const tutorSetups = allSetups.filter(s => s.tutorId === tutor.id);
 
           const tutorCourseIds = allCourses.filter(c =>
-            tutorSetups.some(s => s.mapel === c.namaMapel && s.kelas === c.kelas)
+            tutorSetups.some(s => s.mapel === c.namaMapel && deriveProgram(s.kelas) === c.program)
           ).map(c => c.id);
 
           const tutorSessionIds = allSessions.filter(s => tutorCourseIds.includes(s.courseId)).map(s => s.id);
@@ -114,7 +114,9 @@ export const monitoringHandlers = new Elysia()
           grade: elearningSubmissions.grade,
         }).from(elearningSubmissions).all();
 
-        const enhancedStudents = studentsList.map(s => {
+        const uniqueStudentsList = studentsList.filter((s, idx, arr) => arr.findIndex(x => x.id === s.id) === idx);
+
+        const enhancedStudents = uniqueStudentsList.map(s => {
           const studentPosts = allPosts.filter(p => p.authorId === s.id && p.authorRole === "siswa");
           const kehadiranCount = allAttendances.filter(a => a.studentId === s.id).length;
           const studentGrades = allGradedSubs
@@ -199,8 +201,9 @@ export const monitoringHandlers = new Elysia()
 
         if (courseId) {
           const sessions = await db.select().from(elearningSessions).where(eq(elearningSessions.courseId, courseId)).all();
-          allSessionIds = sessions.map(s => s.id);
-          sessions.forEach(s => {
+          const realSessions = sessions.filter(s => s.sessionNumber >= 1);
+          allSessionIds = realSessions.map(s => s.id);
+          realSessions.forEach(s => {
             sessionsMap[s.id] = s.sessionNumber;
           });
 
@@ -238,7 +241,7 @@ export const monitoringHandlers = new Elysia()
           const detailKehadiran: any[] = [];
           const detailDiskusi: any[] = [];
           const detailTugas: any[] = [];
-          const sessionsCount = defaultSessions;
+          const sessionsCount = allSessionIds.length > 0 ? allSessionIds.length : defaultSessions;
 
           if (courseId && allSessionIds.length > 0) {
             const attendedSessions = new Set(

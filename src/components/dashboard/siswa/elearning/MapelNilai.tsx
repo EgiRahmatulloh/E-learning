@@ -16,7 +16,11 @@ export function MapelNilai({ subjectName, setupId, user }: MapelNilaiProps) {
 
   useEffect(() => {
     async function fetchGrades() {
-      if (!setupId || !user?.id) return;
+      setLoading(true);
+      if (!setupId || !user?.id) {
+        setLoading(false);
+        return;
+      }
       try {
         const res = await fetch(`/api/elearning/grades?setupId=${setupId}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }

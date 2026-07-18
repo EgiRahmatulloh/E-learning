@@ -22,7 +22,15 @@ await seedDatabase();
 
 const html = !IS_PROD ? await import("../index.html") : null;
 
+import { cors } from "@elysiajs/cors";
+
 const app = new Elysia()
+  .use(cors())
+  .onRequest(({ set }) => {
+    set.headers["X-Frame-Options"] = "DENY";
+    set.headers["X-Content-Type-Options"] = "nosniff";
+    set.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload";
+  })
   // Mount REST API Handlers & Services
   .use(authHandlers)
   .use(managersHandlers)

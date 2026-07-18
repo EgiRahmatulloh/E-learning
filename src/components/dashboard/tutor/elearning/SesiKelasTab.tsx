@@ -996,7 +996,7 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
                               checked={q.correctAnswer === optIdx}
                               onChange={() => {
                                 const newQ = [...questions];
-                                newQ[qIdx].correctAnswer = optIdx;
+                                newQ[qIdx] = { ...newQ[qIdx], correctAnswer: optIdx };
                                 setQuestions(newQ);
                               }}
                               className="w-5 h-5 text-purple-600 border-slate-300 focus:ring-purple-500 cursor-pointer"

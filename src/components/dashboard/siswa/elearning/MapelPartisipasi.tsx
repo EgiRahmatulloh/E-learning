@@ -16,6 +16,7 @@ export function MapelPartisipasi({ subjectName, tutorName, setupId }: MapelParti
 
   useEffect(() => {
     async function fetchStudents() {
+      setLoading(true);
       if (!setupId) {
         setLoading(false);
         return;

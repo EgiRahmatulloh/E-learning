@@ -79,7 +79,7 @@ export const laporanHandlers = new Elysia()
           const allActivities = [...tutorPosts, ...tutorAtt];
 
           const { dayData, rekap } = buildAttendanceGrid(
-            allActivities, item => item.createdAt || item.date, currentMonth, currentYear, daysInMonth
+            allActivities, item => item.date || item.createdAt, currentMonth, currentYear, daysInMonth
           );
           return { no: idx + 1, namaTutor: tutor.nama, mapel, kelas, ...dayData, rekap };
         });
@@ -473,7 +473,8 @@ export const laporanHandlers = new Elysia()
 
         if (courseId) {
           const sessions = await db.select().from(elearningSessions).where(eq(elearningSessions.courseId, courseId)).all();
-          allSessionIds = sessions.map(s => s.id);
+          const realSessions = sessions.filter(s => s.sessionNumber >= 1);
+          allSessionIds = realSessions.map(s => s.id);
           if (allSessionIds.length > 0) {
             allAttendances = await db.select().from(elearningAttendances)
               .where(inArray(elearningAttendances.sessionId, allSessionIds)).all();
