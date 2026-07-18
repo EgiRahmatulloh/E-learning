@@ -488,6 +488,7 @@ export const elearningQuizSubmissions = sqliteTable('elearning_quiz_submissions'
   id: integer('id').primaryKey({ autoIncrement: true }),
   sessionId: integer('session_id').notNull().references(() => elearningSessions.id, { onDelete: 'cascade' }),
   studentId: integer('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
+  answers: text('answers'), // JSON array of student's answers
   grade: integer('grade').notNull(), // 0 - 100
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
 }, (t) => ({
@@ -547,7 +548,7 @@ export const elearningSetups = sqliteTable('elearning_setups', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   kelas: text('kelas').notNull(),
   mapel: text('mapel').notNull(),
-  tutorId: integer('tutor_id').notNull().references(() => tutors.id, { onDelete: 'set null' }),
+  tutorId: integer('tutor_id').notNull().references(() => tutors.id, { onDelete: 'cascade' }),
   skk: integer('skk').notNull().default(1),
   jumlahSesi: integer('jumlah_sesi').notNull().default(8),
   semester: text('semester').notNull().default('Ganjil'), // Ganjil / Genap

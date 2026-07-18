@@ -612,6 +612,7 @@ export const contentHandlers = new Elysia()
       try {
         const existingRecords = await db.select({ nama: facilities.nama }).from(facilities).all();
         const existingNames = new Set(existingRecords.map(e => e.nama.trim().toLowerCase()));
+        const seenNamesInList = new Set<string>();
 
         const validItems = list.filter(
           (item) =>
@@ -619,7 +620,13 @@ export const contentHandlers = new Elysia()
             typeof item === "object" &&
             typeof item.nama === "string" &&
             item.nama.trim().length > 0 &&
-            !existingNames.has(item.nama.trim().toLowerCase())
+            !existingNames.has(item.nama.trim().toLowerCase()) &&
+            (() => {
+              const normalized = item.nama.trim().toLowerCase();
+              if (seenNamesInList.has(normalized)) return false;
+              seenNamesInList.add(normalized);
+              return true;
+            })()
         );
         if (validItems.length === 0) {
           set.status = 400;
@@ -1245,6 +1252,7 @@ export const contentHandlers = new Elysia()
       try {
         const existingRecords = await db.select({ nama: agendas.nama }).from(agendas).all();
         const existingNames = new Set(existingRecords.map(e => e.nama.trim().toLowerCase()));
+        const seenNamesInList = new Set<string>();
 
         const validItems = list.filter(
           (item) =>
@@ -1253,6 +1261,12 @@ export const contentHandlers = new Elysia()
             typeof item.nama === "string" &&
             item.nama.trim().length > 0 &&
             !existingNames.has(item.nama.trim().toLowerCase()) &&
+            (() => {
+              const normalized = item.nama.trim().toLowerCase();
+              if (seenNamesInList.has(normalized)) return false;
+              seenNamesInList.add(normalized);
+              return true;
+            })() &&
             typeof item.pelaksanaan === "string" &&
             item.pelaksanaan.trim().length > 0 &&
             typeof item.waktu === "string" &&
@@ -1774,6 +1788,7 @@ export const contentHandlers = new Elysia()
       try {
         const existingRecords = await db.select({ nama: alumni.nama }).from(alumni).all();
         const existingNames = new Set(existingRecords.map(e => e.nama.trim().toLowerCase()));
+        const seenNamesInList = new Set<string>();
 
         const validItems = list.filter(
           (item) =>
@@ -1781,7 +1796,13 @@ export const contentHandlers = new Elysia()
             typeof item === "object" &&
             typeof item.nama === "string" &&
             item.nama.trim().length > 0 &&
-            !existingNames.has(item.nama.trim().toLowerCase())
+            !existingNames.has(item.nama.trim().toLowerCase()) &&
+            (() => {
+              const normalized = item.nama.trim().toLowerCase();
+              if (seenNamesInList.has(normalized)) return false;
+              seenNamesInList.add(normalized);
+              return true;
+            })()
         );
         if (validItems.length === 0) {
           set.status = 400;

@@ -27,6 +27,11 @@ export const deriveProgram = (kelas: string): string => {
   return "Paket C";
 };
 
+const jakartaFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: "Asia/Jakarta",
+  year: "numeric", month: "2-digit", day: "2-digit"
+});
+
 // Helper: toJakartaDate untuk timezone-safe WIB date parsing
 export function toJakartaDate(raw: string): { year: number; month: number; day: number } {
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
@@ -34,16 +39,14 @@ export function toJakartaDate(raw: string): { year: number; month: number; day: 
     return { year, month: month - 1, day };
   }
   const dt = new Date(raw);
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Jakarta",
-    year: "numeric", month: "2-digit", day: "2-digit"
-  }).formatToParts(dt);
+  const parts = jakartaFormatter.formatToParts(dt);
   return {
     year: Number(parts.find(p => p.type === "year")!.value),
     month: Number(parts.find(p => p.type === "month")!.value) - 1,
     day: Number(parts.find(p => p.type === "day")!.value),
   };
 }
+
 
 // Helper: build monthly attendance grid (d1..d31)
 export const buildAttendanceGrid = (

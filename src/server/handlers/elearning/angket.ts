@@ -203,20 +203,12 @@ export const angketHandlers = new Elysia()
 
       await db.transaction(async (tx) => {
         for (const res of responses) {
-          try {
-            await tx.insert(elearningSessionAngkets).values({
-              sessionId: Number(sessionId),
-              studentId,
-              evaluationId: Number(res.evaluationId),
-              score: Number(res.score),
-            });
-          } catch (e: any) {
-            // Only ignore unique constraint violations (already submitted)
-            // Re-throw other errors so they propagate to the outer catch and rollback tx
-            if (!e?.message?.includes("UNIQUE constraint failed")) {
-              throw e;
-            }
-          }
+          await tx.insert(elearningSessionAngkets).values({
+            sessionId: Number(sessionId),
+            studentId,
+            evaluationId: Number(res.evaluationId),
+            score: Number(res.score),
+          }).onConflictDoNothing();
         }
       });
 
