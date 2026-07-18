@@ -78,7 +78,8 @@ export const monitoringHandlers = new Elysia()
         return { success: true, data: enrichedTutors };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Monitoring error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     }
   )
@@ -137,7 +138,8 @@ export const monitoringHandlers = new Elysia()
         return { success: true, data: enhancedStudents };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Monitoring error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     }
   )
@@ -334,7 +336,8 @@ export const monitoringHandlers = new Elysia()
         return { success: true, data: results };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Monitoring error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     }
   )
@@ -383,7 +386,8 @@ export const monitoringHandlers = new Elysia()
         return { success: true, data: { mapelAktif, tugasMasuk, ip } };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Monitoring error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     }
   )
@@ -421,7 +425,8 @@ export const monitoringHandlers = new Elysia()
         return { success: true, data: { mapelAktif, tugasMasuk, ip } };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Monitoring error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     }
   )

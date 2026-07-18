@@ -74,7 +74,8 @@ export const setupHandlers = new Elysia()
         return { success: true, data: setups };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Setup error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     },
     {
@@ -111,7 +112,8 @@ export const setupHandlers = new Elysia()
         return { success: true, data: inserted[0] };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Setup error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     },
     {
@@ -157,7 +159,8 @@ export const setupHandlers = new Elysia()
         return { success: true, data: updated[0] };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Setup error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     },
     {
@@ -185,7 +188,8 @@ export const setupHandlers = new Elysia()
         return { success: true, message: "Berhasil menghapus setup" };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Setup error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     }
   )
@@ -210,7 +214,8 @@ export const setupHandlers = new Elysia()
         return { success: true, message: "Status sesi berhasil diubah" };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Setup error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     },
     {
@@ -263,7 +268,8 @@ export const setupHandlers = new Elysia()
         return { success: true, data: setups };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Setup error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     }
   )
@@ -298,7 +304,8 @@ export const setupHandlers = new Elysia()
         return { success: true, data: studentsInRombel };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Setup error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     }
   )

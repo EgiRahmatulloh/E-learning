@@ -80,7 +80,8 @@ export const courseHandlers = new Elysia()
         return { success: true, data: course };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Course error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     },
     {
@@ -159,7 +160,8 @@ export const courseHandlers = new Elysia()
         return { success: true, data: { session, materials } };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Course error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     },
     {
@@ -211,7 +213,8 @@ export const courseHandlers = new Elysia()
         return { success: true, message: "Berhasil menyimpan pengaturan sesi" };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Course error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     },
     {
@@ -269,7 +272,8 @@ export const courseHandlers = new Elysia()
         return { success: true, message: "Berhasil menyimpan material" };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Course error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     },
     {
@@ -297,7 +301,8 @@ export const courseHandlers = new Elysia()
         return { success: true, data: evaluations };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Course error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     }
   )
@@ -328,7 +333,7 @@ export const courseHandlers = new Elysia()
             } else if (i >= existing.length) {
               // Insert new
               await tx.insert(elearningEvaluations).values({
-                sessionId: 7,
+                sessionId: 0, // Global evaluation, not tied to a specific session
                 question: newQuestions[i].text,
                 scaleMax: 5,
               });
@@ -341,7 +346,8 @@ export const courseHandlers = new Elysia()
         return { success: true, message: "Berhasil menyimpan angket evaluasi" };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Course error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     },
     {
@@ -406,7 +412,8 @@ export const courseHandlers = new Elysia()
         return { success: true, data: { evaluations, responses, aggregated } };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Course error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     }
   )

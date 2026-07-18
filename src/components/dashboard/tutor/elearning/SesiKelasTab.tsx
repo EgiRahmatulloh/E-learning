@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, UploadCloud, Save, Upload, Users, MessageSquare, PenTool, FileText, PlayCircle, DownloadCloud, Trash2, Pencil } from "lucide-react";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { toast } from "sonner";
+import { safeHtml } from "@/lib/sanitize";
 // Removed getSubjectsSiswa import
 
 interface Props {
@@ -694,7 +695,7 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
               <tbody className="divide-y divide-slate-50">
                 {submissions.length === 0 ? (
                   <tr className="hover:bg-slate-50/50 transition-colors">
-                    <td colSpan={4} className="py-8 px-4 text-center font-bold text-slate-500 italic">
+                    <td colSpan={5} className="py-8 px-4 text-center font-bold text-slate-500 italic">
                       Belum ada siswa yang mengirim tugas.
                     </td>
                   </tr>
@@ -855,7 +856,7 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
                               </div>
                             </div>
                           ) : (
-                            <div className="mt-2 text-sm text-slate-600 prose" dangerouslySetInnerHTML={{ __html: post.content }} />
+                            <div className="mt-2 text-sm text-slate-600 prose" dangerouslySetInnerHTML={{ __html: safeHtml(post.content) }} />
                           )}
 
                           {/* Replies */}
@@ -893,7 +894,7 @@ function SesiContent({ courseId, sessionNumber, user }: { courseId: number, sess
                                       </div>
                                     </div>
                                   ) : (
-                                    <div className="text-xs text-slate-600 prose mt-1" dangerouslySetInnerHTML={{ __html: reply.content }} />
+                                    <div className="text-xs text-slate-600 prose mt-1" dangerouslySetInnerHTML={{ __html: safeHtml(reply.content) }} />
                                   )}
                                 </div>
                               </div>

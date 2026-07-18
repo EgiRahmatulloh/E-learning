@@ -98,7 +98,8 @@ export const angketHandlers = new Elysia()
       return { success: true, data };
     } catch (error: any) {
       set.status = 500;
-      return { success: false, message: error.message };
+      console.error("Angket error:", error);
+      return { success: false, message: "Terjadi kesalahan server" };
     }
   })
 
@@ -156,7 +157,8 @@ export const angketHandlers = new Elysia()
       return { success: true, completed: !!record };
     } catch (error: any) {
       set.status = 500;
-      return { success: false, message: error.message };
+      console.error("Angket error:", error);
+      return { success: false, message: "Terjadi kesalahan server" };
     }
   })
   .post("/session-angket", async (context: any) => {
@@ -215,7 +217,8 @@ export const angketHandlers = new Elysia()
       return { success: true, message: "Angket berhasil disubmit" };
     } catch (error: any) {
       set.status = 500;
-      return { success: false, message: error.message };
+      console.error("Angket error:", error);
+      return { success: false, message: "Terjadi kesalahan server" };
     }
   }, {
     body: t.Object({

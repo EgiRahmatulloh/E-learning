@@ -80,7 +80,8 @@ export const forumHandlers = new Elysia()
         return { success: true, data: enrichedPosts };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Forum error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     }
   )
@@ -124,7 +125,8 @@ export const forumHandlers = new Elysia()
         return { success: true, data: inserted[0] };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Forum error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     },
     {
@@ -181,7 +183,8 @@ export const forumHandlers = new Elysia()
         return { success: true, data: updated[0] };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Forum error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     },
     {
@@ -238,7 +241,8 @@ export const forumHandlers = new Elysia()
         return { success: true, message: "Pesan berhasil dihapus" };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Forum error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     }
   )

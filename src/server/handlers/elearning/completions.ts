@@ -56,7 +56,8 @@ export const completionsHandlers = new Elysia()
         return { success: true, data: completions };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Completions error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     }
   )
@@ -97,7 +98,8 @@ export const completionsHandlers = new Elysia()
         return { success: true, message: "Berhasil menyimpan progress" };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Completions error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     },
     {
@@ -145,7 +147,8 @@ export const completionsHandlers = new Elysia()
         return { success: true, progress, completedSections, totalSections };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Completions error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     }
   )
