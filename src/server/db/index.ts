@@ -398,7 +398,8 @@ CREATE TABLE IF NOT EXISTS elearning_courses (
   kelas TEXT NOT NULL DEFAULT '',
   deskripsi TEXT NOT NULL DEFAULT '',
   created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+  updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  UNIQUE(nama_mapel, program)
 );
 `);
 
@@ -414,6 +415,7 @@ CREATE TABLE IF NOT EXISTS elearning_sessions (
   is_evaluation INTEGER NOT NULL DEFAULT 0,
   created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  UNIQUE(course_id, session_number),
   FOREIGN KEY (course_id) REFERENCES elearning_courses(id) ON DELETE CASCADE
 );
 `);
@@ -477,6 +479,16 @@ try {
   // Kolom mungkin sudah ada, abaikan error
 }
 
+try {
+  sqlite.exec("ALTER TABLE elearning_sessions ADD COLUMN tujuan_pembelajaran TEXT NOT NULL DEFAULT '';");
+} catch (e) {
+}
+
+try {
+  sqlite.exec("ALTER TABLE elearning_sessions ADD COLUMN uraian_kegiatan TEXT NOT NULL DEFAULT '';");
+} catch (e) {
+}
+
 // Migration: rename nuptk → nip di tabel managers dan tutors
 try {
   sqlite.exec("ALTER TABLE managers RENAME COLUMN nuptk TO nip;");
@@ -511,6 +523,7 @@ CREATE TABLE IF NOT EXISTS elearning_attendances (
   student_id INTEGER NOT NULL,
   attended_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  UNIQUE(session_id, student_id),
   FOREIGN KEY (session_id) REFERENCES elearning_sessions(id) ON DELETE CASCADE,
   FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 );
@@ -527,6 +540,7 @@ CREATE TABLE IF NOT EXISTS elearning_submissions (
   feedback TEXT,
   graded_by INTEGER,
   graded_at TEXT,
+  UNIQUE(assignment_id, student_id),
   FOREIGN KEY (assignment_id) REFERENCES elearning_assignments(id) ON DELETE CASCADE,
   FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 );
@@ -565,6 +579,7 @@ CREATE TABLE IF NOT EXISTS elearning_quiz_submissions (
   student_id INTEGER NOT NULL,
   grade INTEGER NOT NULL,
   created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  UNIQUE(session_id, student_id),
   FOREIGN KEY (session_id) REFERENCES elearning_sessions(id) ON DELETE CASCADE,
   FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 );
@@ -588,7 +603,8 @@ CREATE TABLE IF NOT EXISTS elearning_assignments (
   description TEXT NOT NULL DEFAULT '',
   due_date TEXT,
   file_url TEXT NOT NULL DEFAULT '',
-  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+  created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  UNIQUE(session_id)
 );
 `);
 
@@ -630,5 +646,13 @@ CREATE TABLE IF NOT EXISTS elearning_session_angkets (
   FOREIGN KEY (evaluation_id) REFERENCES elearning_evaluations(id) ON DELETE CASCADE
 );
 `);
+
+// Tambahkan UNIQUE index secara eksplisit untuk mendukung existing database yang tidak dibuat dari awal
+try { sqlite.exec("CREATE UNIQUE INDEX IF NOT EXISTS unq_elearning_attendances ON elearning_attendances(session_id, student_id);"); } catch (e) {}
+try { sqlite.exec("CREATE UNIQUE INDEX IF NOT EXISTS unq_elearning_submissions ON elearning_submissions(assignment_id, student_id);"); } catch (e) {}
+try { sqlite.exec("CREATE UNIQUE INDEX IF NOT EXISTS unq_elearning_quiz_submissions ON elearning_quiz_submissions(session_id, student_id);"); } catch (e) {}
+try { sqlite.exec("CREATE UNIQUE INDEX IF NOT EXISTS unq_elearning_assignments ON elearning_assignments(session_id);"); } catch (e) {}
+try { sqlite.exec("CREATE UNIQUE INDEX IF NOT EXISTS unq_elearning_courses ON elearning_courses(nama_mapel, program);"); } catch (e) {}
+try { sqlite.exec("CREATE UNIQUE INDEX IF NOT EXISTS unq_elearning_sessions ON elearning_sessions(course_id, session_number);"); } catch (e) {}
 
 export const db = drizzle(sqlite, { schema });

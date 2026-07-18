@@ -106,7 +106,17 @@ export const attendanceHandlers = new Elysia()
         const inserted = await db
           .insert(elearningAttendances)
           .values({ sessionId, studentId })
+          .onConflictDoNothing()
           .returning();
+
+        if (inserted.length === 0) {
+          const conflict = await db
+            .select()
+            .from(elearningAttendances)
+            .where(and(eq(elearningAttendances.sessionId, sessionId), eq(elearningAttendances.studentId, studentId)))
+            .get();
+          return { success: true, data: conflict };
+        }
 
         return { success: true, data: inserted[0] };
       } catch (error: any) {

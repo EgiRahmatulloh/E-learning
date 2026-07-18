@@ -4,7 +4,7 @@ import { jwt } from "@elysia/jwt";
 import { db } from "../config/db";
 import { tutors } from "../models";
 import { eq } from "drizzle-orm";
-import { verifyAdmin } from "../middleware/auth";
+import { verifyAdmin, verifyUser } from "../middleware/auth";
 import { finalJwtSecret } from "../config/jwt";
 
 export const tutorsHandlers = new Elysia()
@@ -23,6 +23,9 @@ export const tutorsHandlers = new Elysia()
   )
   // Ambil semua tutor
   .get("/api/tutors", async ({ headers, jwt, set }) => {
+    const authError = await verifyUser(headers, jwt, set);
+    if (authError) return authError;
+
     try {
       const list = await db.select().from(tutors).all();
 
@@ -41,6 +44,23 @@ export const tutorsHandlers = new Elysia()
         (rest as any).password = "";
         if (!isAdmin) {
           delete (rest as any).nik;
+          delete (rest as any).nip;
+          delete (rest as any).tempatTglLahir;
+          delete (rest as any).agama;
+          delete (rest as any).pendidikan;
+          delete (rest as any).email;
+          delete (rest as any).alamat;
+          delete (rest as any).rt;
+          delete (rest as any).rw;
+          delete (rest as any).desa;
+          delete (rest as any).kecamatan;
+          delete (rest as any).kabupaten;
+          delete (rest as any).provinsi;
+          delete (rest as any).tanggalMulaiTugas;
+          delete (rest as any).nomorSkPengangkatan;
+          delete (rest as any).lembagaPengangkat;
+          delete (rest as any).nomorSkPenugasan;
+          delete (rest as any).lembagaPenugas;
         }
         return rest;
       });
@@ -57,6 +77,7 @@ export const tutorsHandlers = new Elysia()
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
 
+      const bodyData = body as any;
       const {
         nama,
         tutorMapel,
@@ -82,7 +103,7 @@ export const tutorsHandlers = new Elysia()
         lembagaPengangkat,
         nomorSkPenugasan,
         lembagaPenugas,
-      } = body;
+      } = bodyData;
 
       try {
         const hashedPassword = await Bun.password.hash(password || "password123");
@@ -167,6 +188,7 @@ export const tutorsHandlers = new Elysia()
         return { success: false, message: "ID parameter tidak valid" };
       }
 
+      const bodyData = body as any;
       const {
         nama,
         tutorMapel,
@@ -192,7 +214,7 @@ export const tutorsHandlers = new Elysia()
         lembagaPengangkat,
         nomorSkPenugasan,
         lembagaPenugas,
-      } = body;
+      } = bodyData;
 
       try {
         const existing = await db.select().from(tutors).where(eq(tutors.id, id)).get();

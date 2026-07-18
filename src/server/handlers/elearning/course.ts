@@ -130,8 +130,23 @@ export const courseHandlers = new Elysia()
               uraianKegiatan: "",
               isEvaluation: false,
             })
+            .onConflictDoNothing()
             .returning();
-          session = inserted[0];
+            
+          if (inserted.length === 0) {
+            session = await db
+              .select()
+              .from(elearningSessions)
+              .where(
+                and(
+                  eq(elearningSessions.courseId, courseId),
+                  eq(elearningSessions.sessionNumber, sessionNumber)
+                )
+              )
+              .get();
+          } else {
+            session = inserted[0];
+          }
         }
 
         // Ambil Material terkait
@@ -298,16 +313,31 @@ export const courseHandlers = new Elysia()
       if (authError) return authError;
 
       try {
-        // Hapus semua lalu insert ulang
-        await db.delete(elearningEvaluations);
-        if (body.questions && body.questions.length > 0) {
-          const insertData = body.questions.map((q: any) => ({
-            sessionId: 7, // Default sesi 7 untuk evaluasi tutor
-            question: q.text,
-            scaleMax: 5,
-          }));
-          await db.insert(elearningEvaluations).values(insertData);
-        }
+        await db.transaction(async (tx) => {
+          const existing = await tx.select().from(elearningEvaluations).orderBy(asc(elearningEvaluations.id)).all();
+          const newQuestions = body.questions || [];
+
+          for (let i = 0; i < Math.max(existing.length, newQuestions.length); i++) {
+            if (i < existing.length && i < newQuestions.length) {
+              // Update existing
+              if (existing[i].question !== newQuestions[i].text) {
+                await tx.update(elearningEvaluations)
+                  .set({ question: newQuestions[i].text })
+                  .where(eq(elearningEvaluations.id, existing[i].id));
+              }
+            } else if (i >= existing.length) {
+              // Insert new
+              await tx.insert(elearningEvaluations).values({
+                sessionId: 7,
+                question: newQuestions[i].text,
+                scaleMax: 5,
+              });
+            } else {
+              // Delete removed
+              await tx.delete(elearningEvaluations).where(eq(elearningEvaluations.id, existing[i].id));
+            }
+          }
+        });
         return { success: true, message: "Berhasil menyimpan angket evaluasi" };
       } catch (error: any) {
         set.status = 500;

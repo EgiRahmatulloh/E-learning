@@ -38,4 +38,4 @@ COPY --from=builder /app/src ./src
 EXPOSE 3000
 
 # Jalankan inisialisasi/push skema database lalu mulai server
-CMD ["sh", "-c", "bun run db:push && bun run start"]
+CMD ["sh", "-c", "bun run db:migrate && bun run start"]

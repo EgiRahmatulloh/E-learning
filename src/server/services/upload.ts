@@ -117,7 +117,7 @@ export const uploadServices = new Elysia()
       if (authError && query.token) {
         try {
           const payload = await jwt.verify(query.token);
-          if (!payload) authError = null;
+          if (payload) authError = null;
         } catch {
           // token invalid, tetap error
         }

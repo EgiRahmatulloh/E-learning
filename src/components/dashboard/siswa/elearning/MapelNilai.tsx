@@ -23,7 +23,7 @@ export function MapelNilai({ subjectName, setupId, user }: MapelNilaiProps) {
         });
         const data = await res.json();
         if (data.success) {
-          const myGrade = data.data.find((g: any) => g.id === user.id);
+          const myGrade = data.data.find((g: any) => Number(g.id) === Number(user.id)) || null;
           setGradeData(myGrade);
         }
       } catch (err) {
