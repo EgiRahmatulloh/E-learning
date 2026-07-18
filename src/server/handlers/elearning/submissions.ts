@@ -152,12 +152,16 @@ export const submissionsHandlers = new Elysia()
 
       try {
         const authHeader = headers["authorization"];
-        const token = authHeader!.split(" ")[1];
+        const token = authHeader?.startsWith("Bearer ") ? authHeader.split(" ")[1] : null;
+        if (!token) {
+          set.status = 401;
+          return { success: false, message: "Token tidak valid atau tidak ditemukan" };
+        }
         const payload = await jwt.verify(token);
 
         const subId = parseInt(submissionId);
         const { grade, feedback } = body as { grade: number; feedback?: string };
-        if (typeof grade !== "number" || grade < 0 || grade > 100) {
+        if (typeof grade !== "number" || Number.isNaN(grade) || grade < 0 || grade > 100) {
           set.status = 400;
           return { success: false, message: "Nilai harus antara 0 dan 100" };
         }

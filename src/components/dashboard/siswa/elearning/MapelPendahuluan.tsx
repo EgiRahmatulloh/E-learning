@@ -340,7 +340,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
                       <button
                         onClick={() => {
                           setEditingMessageId(msg.id);
-                          setEditInputValue(msg.text.replace(/<[^>]+>/g, ''));
+                          setEditInputValue(new DOMParser().parseFromString(msg.text, "text/html").body.textContent || '');
                         }}
                         className="text-slate-400 hover:text-cyan-600 transition-colors"
                         title="Edit pesan"

@@ -126,9 +126,9 @@ export const uploadServices = new Elysia()
 
       const filePath = path.join(SECURE_UPLOAD_DIR, params.filename);
 
-      // Validasi: cegah path traversal
       const resolved = path.resolve(filePath);
-      if (!resolved.startsWith(SECURE_UPLOAD_DIR + path.sep) && resolved !== SECURE_UPLOAD_DIR) {
+      const relative = path.relative(SECURE_UPLOAD_DIR, resolved);
+      if (relative.startsWith("..") || path.isAbsolute(relative)) {
         set.status = 403;
         return { success: false, message: "Akses ditolak" };
       }

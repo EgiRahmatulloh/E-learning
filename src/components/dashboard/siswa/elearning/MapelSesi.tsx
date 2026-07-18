@@ -593,7 +593,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
                             <button
                               onClick={() => {
                                 setEditingMessageId(msg.id);
-                                setEditInputValue(msg.content.replace(/<[^>]+>/g, ''));
+                                setEditInputValue(new DOMParser().parseFromString(msg.content, "text/html").body.textContent || '');
                               }}
                               className="text-slate-400 hover:text-blue-600 transition-colors"
                               title="Edit pesan"
@@ -650,7 +650,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
                               </h5>
                               {replyIsSelf && (
                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button onClick={() => { setEditingMessageId(reply.id); setEditInputValue(reply.content.replace(/<[^>]+>/g, '')); }} className="text-slate-400 hover:text-blue-600"><Pencil className="w-3 h-3" /></button>
+                                  <button onClick={() => { setEditingMessageId(reply.id); setEditInputValue(new DOMParser().parseFromString(reply.content, "text/html").body.textContent || ''); }} className="text-slate-400 hover:text-blue-600"><Pencil className="w-3 h-3" /></button>
                                   <button onClick={() => handleDeleteMessage(reply.id)} className="text-slate-400 hover:text-red-600"><Trash2 className="w-3 h-3" /></button>
                                 </div>
                               )}
