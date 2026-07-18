@@ -4,7 +4,7 @@ import { jwt } from "@elysia/jwt";
 import { db } from "../config/db";
 import { students, alumni, rombels, rombelStudents } from "../models";
 import { eq, and, inArray, sql } from "drizzle-orm";
-import { verifyAdmin } from "../middleware/auth";
+import { verifyAdmin, verifyUser } from "../middleware/auth";
 import { finalJwtSecret } from "../config/jwt";
 
 // Ekstrak huruf section dari nama rombel (mis. "XB" → "B", "XIB" → "B", "10A" → "A").
@@ -30,6 +30,9 @@ export const studentsHandlers = new Elysia()
   )
   // Ambil semua warga belajar
   .get("/api/students", async ({ headers, jwt, set }) => {
+    const authError = await verifyUser(headers, jwt, set);
+    if (authError) return authError;
+
     try {
       const list = await db.select().from(students).all();
 
@@ -66,6 +69,20 @@ export const studentsHandlers = new Elysia()
         if (!isAdmin) {
           delete (rest as any).nik;
           delete (rest as any).noHp;
+          delete (rest as any).nisn;
+          delete (rest as any).tempatTglLahir;
+          delete (rest as any).agama;
+          delete (rest as any).namaAyah;
+          delete (rest as any).namaIbu;
+          delete (rest as any).alamat;
+          delete (rest as any).rt;
+          delete (rest as any).rw;
+          delete (rest as any).desa;
+          delete (rest as any).kecamatan;
+          delete (rest as any).kabupaten;
+          delete (rest as any).provinsi;
+          delete (rest as any).sekolahAsal;
+          delete (rest as any).email;
         }
         (rest as any).rombels = rombelMap.get(item.id) || [];
         return rest;
@@ -82,7 +99,6 @@ export const studentsHandlers = new Elysia()
     async ({ body, headers, jwt, set }) => {
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
-
       const {
         nama,
         nik,

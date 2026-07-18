@@ -186,19 +186,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
         if (tugas) setTugasUrl(tugas.fileUrl);
         else setTugasUrl(null);
 
-        if (sessionNumber === 7) {
-          const evalRes = await fetch("/api/elearning/evaluations");
-          const evalData = await evalRes.json();
-          if (evalData.success && evalData.data.length > 0) {
-            setAngketQuestions(evalData.data.map((q: any) => q.question));
-          } else {
-            setAngketQuestions([
-              "Tutor menguasai materi pembelajaran dengan baik.",
-              "Tutor merespon pertanyaan dengan cepat dan jelas.",
-              "Materi yang diberikan mudah dipahami."
-            ]);
-          }
-        }
+
 
         if (user?.id) {
           const attRes = await fetch(`/api/elearning/attendance?sessionId=${session.id}&studentId=${user.id}`, {

@@ -162,6 +162,18 @@ export const monitoringHandlers = new Elysia()
           .where(and(eq(elearningCourses.namaMapel, actualSubject), eq(elearningCourses.program, actualProgram)))
           .get();
 
+        const authHeader = headers["authorization"];
+        let payload: any = null;
+        if (authHeader) {
+          const token = authHeader.split(" ")[1];
+          payload = await jwt.verify(token);
+        }
+
+        let condition: any = eq(rombels.nama, setup.kelas);
+        if (payload?.role === "siswa") {
+          condition = and(condition, eq(students.id, payload.id as number));
+        }
+
         const studentsList = await db
           .select({
             id: students.id,
@@ -172,7 +184,7 @@ export const monitoringHandlers = new Elysia()
           .from(students)
           .innerJoin(rombelStudents, eq(students.id, rombelStudents.studentId))
           .innerJoin(rombels, eq(rombelStudents.rombelId, rombels.id))
-          .where(eq(rombels.nama, setup.kelas))
+          .where(condition)
           .all();
 
         const courseId = course ? course.id : null;

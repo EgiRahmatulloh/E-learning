@@ -395,7 +395,9 @@ export const elearningCourses = sqliteTable('elearning_courses', {
   updatedAt: text('updated_at')
     .$defaultFn(() => new Date().toISOString())
     .$onUpdate(() => new Date().toISOString()),
-});
+}, (t) => ({
+  unq: unique().on(t.namaMapel, t.program),
+}));
 
 export type ElearningCourse = typeof elearningCourses.$inferSelect;
 export type NewElearningCourse = typeof elearningCourses.$inferInsert;
@@ -430,7 +432,9 @@ export const elearningSessions = sqliteTable('elearning_sessions', {
   updatedAt: text('updated_at')
     .$defaultFn(() => new Date().toISOString())
     .$onUpdate(() => new Date().toISOString()),
-});
+}, (t) => ({
+  unq: unique().on(t.courseId, t.sessionNumber),
+}));
 
 export type ElearningSession = typeof elearningSessions.$inferSelect;
 export type NewElearningSession = typeof elearningSessions.$inferInsert;
@@ -452,7 +456,9 @@ export const elearningAssignments = sqliteTable('elearning_assignments', {
   dueDate: text('due_date'),
   fileUrl: text('file_url').notNull().default(''),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
-});
+}, (t) => ({
+  unq: unique().on(t.sessionId),
+}));
 
 export const elearningEvaluations = sqliteTable('elearning_evaluations', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -477,7 +483,9 @@ export const elearningQuizSubmissions = sqliteTable('elearning_quiz_submissions'
   studentId: integer('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
   grade: integer('grade').notNull(), // 0 - 100
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
-});
+}, (t) => ({
+  unq: unique().on(t.sessionId, t.studentId),
+}));
 
 export const elearningDiscussions = sqliteTable('elearning_discussions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -558,7 +566,9 @@ export const elearningAttendances = sqliteTable('elearning_attendances', {
   studentId: integer('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
   attendedAt: text('attended_at').$defaultFn(() => new Date().toISOString()),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
-});
+}, (t) => ({
+  unq: unique().on(t.sessionId, t.studentId),
+}));
 
 export const elearningSubmissions = sqliteTable('elearning_submissions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -570,7 +580,9 @@ export const elearningSubmissions = sqliteTable('elearning_submissions', {
   feedback: text('feedback'),
   gradedBy: integer('graded_by'),
   gradedAt: text('graded_at'),
-});
+}, (t) => ({
+  unq: unique().on(t.assignmentId, t.studentId),
+}));
 
 export const elearningEvaluationResponses = sqliteTable('elearning_evaluation_responses', {
   id: integer('id').primaryKey({ autoIncrement: true }),

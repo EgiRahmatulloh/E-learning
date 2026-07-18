@@ -71,25 +71,39 @@ export const quizHandlers = new Elysia()
         const sId = parseInt(sessionId);
         const { questions } = body as { questions: any[] };
 
-        // Delete existing questions and their corresponding submissions
-        await db.delete(elearningQuestions).where(eq(elearningQuestions.sessionId, sId));
-        await db.delete(elearningQuizSubmissions).where(eq(elearningQuizSubmissions.sessionId, sId));
+        await db.transaction(async (tx) => {
+          // Delete existing questions and their corresponding submissions
+          await tx.delete(elearningQuestions).where(eq(elearningQuestions.sessionId, sId));
+          await tx.delete(elearningQuizSubmissions).where(eq(elearningQuizSubmissions.sessionId, sId));
 
-        // Insert new ones
-        if (questions && questions.length > 0) {
-          const inserts = questions.map((q: any) => ({
-            sessionId: sId,
-            question: q.question,
-            options: JSON.stringify(q.options),
-            correctAnswer: q.correctAnswer
-          }));
-          await db.insert(elearningQuestions).values(inserts);
-        }
+          // Insert new ones
+          if (questions && questions.length > 0) {
+            const inserts = questions.map((q: any) => ({
+              sessionId: sId,
+              question: q.question,
+              options: JSON.stringify(q.options),
+              correctAnswer: q.correctAnswer
+            }));
+            await tx.insert(elearningQuestions).values(inserts);
+          }
+        });
+
         return { success: true, message: "Soal latihan berhasil disimpan" };
       } catch (error: any) {
         set.status = 500;
         return { success: false, message: error.message };
       }
+    },
+    {
+      body: t.Object({
+        questions: t.Array(
+          t.Object({
+            question: t.String(),
+            options: t.Array(t.String()),
+            correctAnswer: t.Number(),
+          })
+        ),
+      }),
     }
   )
   .post(

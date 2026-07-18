@@ -97,8 +97,15 @@ export const submissionsHandlers = new Elysia()
             title: `Tugas Sesi ${sId}`,
             description: "",
             fileUrl: ""
-          }).returning();
-          assignment = insertResult[0];
+          })
+          .onConflictDoNothing()
+          .returning();
+          
+          if (insertResult.length === 0) {
+            assignment = await db.select().from(elearningAssignments).where(eq(elearningAssignments.sessionId, sId)).get();
+          } else {
+            assignment = insertResult[0];
+          }
         }
 
         const existing = await db.select().from(elearningSubmissions)

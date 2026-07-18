@@ -47,6 +47,7 @@ export const authHandlers = new Elysia()
               role: manager.role,
               name: manager.nama,
               email: manager.email,
+              exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
             });
             return {
               success: true,
@@ -73,6 +74,7 @@ export const authHandlers = new Elysia()
               role: "tutor",
               name: tutor.nama,
               email: tutor.email,
+              exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
             });
             return {
               success: true,
@@ -103,6 +105,7 @@ export const authHandlers = new Elysia()
               role: "siswa",
               name: student.nama,
               email: student.email,
+              exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
             });
             return {
               success: true,
