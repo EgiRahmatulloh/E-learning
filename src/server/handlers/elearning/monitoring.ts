@@ -193,6 +193,7 @@ export const monitoringHandlers = new Elysia()
         const defaultSessions = setup.jumlahSesi && setup.jumlahSesi > 0 ? setup.jumlahSesi : 8;
 
         let allSessionIds: number[] = [];
+        let session0Ids: Set<number> = new Set();
         const sessionsMap: Record<number, number> = {};
         let allAttendances: any[] = [];
         let allForumPosts: any[] = [];
@@ -203,6 +204,7 @@ export const monitoringHandlers = new Elysia()
           const sessions = await db.select().from(elearningSessions).where(eq(elearningSessions.courseId, courseId)).all();
           const realSessions = sessions.filter(s => s.sessionNumber >= 1);
           allSessionIds = realSessions.map(s => s.id);
+          session0Ids = new Set(sessions.filter(s => s.sessionNumber === 0).map(s => s.id));
           realSessions.forEach(s => {
             sessionsMap[s.id] = s.sessionNumber;
           });
@@ -244,22 +246,27 @@ export const monitoringHandlers = new Elysia()
           const sessionsCount = allSessionIds.length > 0 ? allSessionIds.length : defaultSessions;
 
           if (courseId && allSessionIds.length > 0) {
+            // Exclude session 0 (Pendahuluan) from numerator — session 0 is not counted in sessionsCount
             const attendedSessions = new Set(
-              allAttendances.filter(a => a.studentId === student.id).map(a => a.sessionId)
+              allAttendances.filter(a => a.studentId === student.id && !session0Ids.has(a.sessionId)).map(a => a.sessionId)
             );
             kehadiran = Math.min(100, Math.round((attendedSessions.size / sessionsCount) * 100));
 
             const participatedSessions = new Set(
-              allForumPosts.filter(p => p.authorId === student.id).map(p => p.sessionId)
+              allForumPosts.filter(p => p.authorId === student.id && !session0Ids.has(p.sessionId)).map(p => p.sessionId)
             );
             partisipasi = Math.min(100, Math.round((participatedSessions.size / sessionsCount) * 100));
 
             const studentSubmissions = allSubmissions.filter(s => s.studentId === student.id);
+            const totalAssignments = allAssignments.length;
             const studentGrades = studentSubmissions
               .filter(s => s.grade != null)
               .map(s => s.grade as number);
-            if (studentGrades.length > 0) {
-              tugas = Math.min(100, Math.round(studentGrades.reduce((a, b) => a + b, 0) / studentGrades.length));
+            if (totalAssignments > 0) {
+              const avgGrade = studentGrades.length > 0
+                ? studentGrades.reduce((a, b) => a + b, 0) / studentGrades.length
+                : 0;
+              tugas = Math.min(100, Math.round((avgGrade * studentGrades.length) / totalAssignments));
             }
 
             // Build per-session details (1 to sessionsCount)

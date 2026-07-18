@@ -71,9 +71,16 @@ export default function KehadiranTab() {
     setCurrentDate(newDate);
   };
 
-  // Calendar rendering logic
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
+  // Calendar rendering logic — use Jakarta timezone for date construction
+  const jakartaParts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit"
+  }).formatToParts(currentDate);
+  const jakartaYear = Number(jakartaParts.find(p => p.type === "year")!.value);
+  const jakartaMonth = Number(jakartaParts.find(p => p.type === "month")!.value) - 1;
+  const jakartaDay = Number(jakartaParts.find(p => p.type === "day")!.value);
+
+  const year = jakartaYear;
+  const month = jakartaMonth;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 1).getDay(); // 0 is Sunday
   

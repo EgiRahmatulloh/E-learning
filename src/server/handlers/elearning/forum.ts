@@ -217,8 +217,22 @@ export const forumHandlers = new Elysia()
           return { success: false, message: "Tidak memiliki akses untuk menghapus pesan ini" };
         }
 
-        // Delete children (replies) if any, then the post itself
-        await db.delete(elearningForumPosts).where(eq(elearningForumPosts.parentId, postId));
+        // Recursively delete all descendants, then the post itself
+        const descendantIds: number[] = [];
+        let parentIds = [postId];
+        while (parentIds.length > 0) {
+          const children = await db.select({ id: elearningForumPosts.id })
+            .from(elearningForumPosts)
+            .where(inArray(elearningForumPosts.parentId, parentIds))
+            .all();
+          if (children.length === 0) break;
+          const childIds = children.map(c => c.id);
+          descendantIds.push(...childIds);
+          parentIds = childIds;
+        }
+        if (descendantIds.length > 0) {
+          await db.delete(elearningForumPosts).where(inArray(elearningForumPosts.id, descendantIds));
+        }
         await db.delete(elearningForumPosts).where(eq(elearningForumPosts.id, postId));
 
         return { success: true, message: "Pesan berhasil dihapus" };

@@ -15,6 +15,7 @@ export function MapelPartisipasi({ subjectName, tutorName, setupId }: MapelParti
   const itemsPerPage = 10;
 
   useEffect(() => {
+    setCurrentPage(1);
     async function fetchStudents() {
       setLoading(true);
       if (!setupId) {

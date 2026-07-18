@@ -190,9 +190,9 @@ export const courseHandlers = new Elysia()
           }
         };
 
-        const cleanHtml = body.description ? sanitizeHtml(body.description, sanitizeOptions) : undefined;
-        const cleanTujuan = body.tujuanPembelajaran ? sanitizeHtml(body.tujuanPembelajaran, sanitizeOptions) : undefined;
-        const cleanUraian = body.uraianKegiatan ? sanitizeHtml(body.uraianKegiatan, sanitizeOptions) : undefined;
+        const cleanHtml = body.description !== undefined ? sanitizeHtml(body.description, sanitizeOptions) : undefined;
+        const cleanTujuan = body.tujuanPembelajaran !== undefined ? sanitizeHtml(body.tujuanPembelajaran, sanitizeOptions) : undefined;
+        const cleanUraian = body.uraianKegiatan !== undefined ? sanitizeHtml(body.uraianKegiatan, sanitizeOptions) : undefined;
 
         const updateData: any = {};
         if (cleanHtml !== undefined) updateData.description = cleanHtml;

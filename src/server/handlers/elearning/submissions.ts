@@ -92,9 +92,16 @@ export const submissionsHandlers = new Elysia()
         // Ensure there is an assignment for this session
         let assignment = await db.select().from(elearningAssignments).where(eq(elearningAssignments.sessionId, sId)).get();
         if (!assignment) {
+          // Lookup sessionNumber for a human-readable title
+          const session = await db.select({ sessionNumber: elearningSessions.sessionNumber })
+            .from(elearningSessions)
+            .where(eq(elearningSessions.id, sId))
+            .get();
+          const sessionLabel = session ? session.sessionNumber : sId;
+
           const insertResult = await db.insert(elearningAssignments).values({
             sessionId: sId,
-            title: `Tugas Sesi ${sId}`,
+            title: `Tugas Sesi ${sessionLabel}`,
             description: "",
             fileUrl: ""
           })
@@ -115,7 +122,7 @@ export const submissionsHandlers = new Elysia()
           )).get();
 
         if (existing) {
-          await db.update(elearningSubmissions).set({ fileUrl, submittedAt: new Date().toISOString() })
+          await db.update(elearningSubmissions).set({ fileUrl, submittedAt: new Date().toISOString(), grade: null, feedback: null, gradedAt: null })
             .where(eq(elearningSubmissions.id, existing.id));
         } else {
           await db.insert(elearningSubmissions).values({

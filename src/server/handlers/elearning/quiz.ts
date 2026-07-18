@@ -50,7 +50,18 @@ export const quizHandlers = new Elysia()
 
         let submission = null;
         if (studentId) {
-          submission = await db.select().from(elearningQuizSubmissions).where(and(eq(elearningQuizSubmissions.sessionId, sId), eq(elearningQuizSubmissions.studentId, studentId))).get();
+          const rawSubmission = await db.select().from(elearningQuizSubmissions).where(and(eq(elearningQuizSubmissions.sessionId, sId), eq(elearningQuizSubmissions.studentId, studentId))).get();
+          if (rawSubmission) {
+            // Compute correctCount from stored answers + current questions
+            let correctCount = 0;
+            const savedAnswers = typeof rawSubmission.answers === 'string' ? JSON.parse(rawSubmission.answers) : rawSubmission.answers;
+            if (Array.isArray(savedAnswers) && savedAnswers.length === questions.length) {
+              for (let i = 0; i < questions.length; i++) {
+                if (savedAnswers[i] === questions[i].correctAnswer) correctCount++;
+              }
+            }
+            submission = { ...rawSubmission, correctCount, totalQuestions: questions.length };
+          }
         }
 
         return { success: true, data: { questions, submission } };
@@ -146,7 +157,7 @@ export const quizHandlers = new Elysia()
           await db.insert(elearningQuizSubmissions).values({ sessionId: sId, studentId, grade, answers: JSON.stringify(answers) });
         }
 
-        return { success: true, message: "Jawaban berhasil disubmit", grade };
+        return { success: true, message: "Jawaban berhasil disubmit", grade, correctCount: correct, totalQuestions: questions.length };
       } catch (error: any) {
         set.status = 500;
         return { success: false, message: error.message };
