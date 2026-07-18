@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { FileText, Download, Users, FileSignature, Pencil, Trash2, X, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { safeHtml } from "@/lib/sanitize";
 
 interface MapelPendahuluanProps {
   subjectName: string;
@@ -237,7 +238,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
           {teksPembuka ? (
             <div
               className="text-slate-600 leading-relaxed text-sm relative prose max-w-none"
-              dangerouslySetInnerHTML={{ __html: teksPembuka }}
+              dangerouslySetInnerHTML={{ __html: safeHtml(teksPembuka) }}
             />
           ) : (
             <p className="text-slate-400 italic text-sm">Tutor belum menambahkan teks pengantar.</p>
@@ -370,7 +371,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
                     <Button onClick={() => setEditingMessageId(null)} size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-500 hover:text-slate-700"><X className="w-4 h-4" /></Button>
                   </div>
                 ) : (
-                  <div className="text-sm text-slate-700 prose max-w-none" dangerouslySetInnerHTML={{ __html: msg.text }} />
+                  <div className="text-sm text-slate-700 prose max-w-none" dangerouslySetInnerHTML={{ __html: safeHtml(msg.text) }} />
                 )}
               </div>
             </div>

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { UploadCloud, Users, CheckCircle, FileText, Save, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { safeHtml } from "@/lib/sanitize";
 // Removed getSubjectsSiswa
 
 interface Props {
@@ -456,7 +457,7 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
                             </div>
                           </div>
                         ) : (
-                          <div className="mt-2 text-sm text-slate-600 prose" dangerouslySetInnerHTML={{ __html: post.content }} />
+                          <div className="mt-2 text-sm text-slate-600 prose" dangerouslySetInnerHTML={{ __html: safeHtml(post.content) }} />
                         )}
 
                         {/* Replies */}
@@ -494,7 +495,7 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
                                     </div>
                                   </div>
                                 ) : (
-                                  <div className="text-xs text-slate-600 prose mt-1" dangerouslySetInnerHTML={{ __html: reply.content }} />
+                                  <div className="text-xs text-slate-600 prose mt-1" dangerouslySetInnerHTML={{ __html: safeHtml(reply.content) }} />
                                 )}
                               </div>
                             </div>

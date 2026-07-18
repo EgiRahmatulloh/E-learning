@@ -64,7 +64,8 @@ export const submissionsHandlers = new Elysia()
         return { success: true, data: submissions };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Submissions error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     }
   )
@@ -135,7 +136,8 @@ export const submissionsHandlers = new Elysia()
         return { success: true, message: "Berhasil mengumpulkan tugas" };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Submissions error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     }
   )
@@ -149,13 +151,27 @@ export const submissionsHandlers = new Elysia()
       if (authError) return authError;
 
       try {
+        const authHeader = headers["authorization"];
+        const token = authHeader!.split(" ")[1];
+        const payload = await jwt.verify(token);
+
         const subId = parseInt(submissionId);
         const { grade, feedback } = body as { grade: number; feedback?: string };
-        await db.update(elearningSubmissions).set({ grade, feedback, gradedAt: new Date().toISOString() }).where(eq(elearningSubmissions.id, subId));
+        if (typeof grade !== "number" || grade < 0 || grade > 100) {
+          set.status = 400;
+          return { success: false, message: "Nilai harus antara 0 dan 100" };
+        }
+        await db.update(elearningSubmissions).set({
+          grade,
+          feedback,
+          gradedAt: new Date().toISOString(),
+          gradedBy: payload?.id ?? null,
+        }).where(eq(elearningSubmissions.id, subId));
         return { success: true, message: "Berhasil memberikan nilai" };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Submissions error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     },
     {

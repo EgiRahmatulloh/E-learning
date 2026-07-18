@@ -67,7 +67,8 @@ export const quizHandlers = new Elysia()
         return { success: true, data: { questions, submission } };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Quiz error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     }
   )
@@ -102,7 +103,8 @@ export const quizHandlers = new Elysia()
         return { success: true, message: "Soal latihan berhasil disimpan" };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Quiz error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     },
     {
@@ -160,7 +162,8 @@ export const quizHandlers = new Elysia()
         return { success: true, message: "Jawaban berhasil disubmit", grade, correctCount: correct, totalQuestions: questions.length };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Quiz error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     },
     {

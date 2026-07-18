@@ -40,6 +40,10 @@ export const attendanceHandlers = new Elysia()
 
       try {
         const { sessionId, studentId } = query;
+        if (!sessionId) {
+          set.status = 400;
+          return { success: false, message: "sessionId diperlukan" };
+        }
         if (studentId) {
           const record = await db
             .select()
@@ -68,7 +72,8 @@ export const attendanceHandlers = new Elysia()
         }
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Attendance error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     }
   )
@@ -121,7 +126,8 @@ export const attendanceHandlers = new Elysia()
         return { success: true, data: inserted[0] };
       } catch (error: any) {
         set.status = 500;
-        return { success: false, message: error.message };
+        console.error("Attendance error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
       }
     },
     {

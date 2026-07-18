@@ -131,8 +131,8 @@ export default function LaporanNilaiTab({ activeTab, user }: Props) {
     }
   };
 
-  const filteredStudents = students.filter(s => s.nama.toLowerCase().includes(searchTerm.toLowerCase()));
-  const filteredAttendances = attendances.filter(s => s.namaSiswa.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredStudents = students.filter(s => (s.nama || "").toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredAttendances = attendances.filter(s => (s.namaSiswa || "").toLowerCase().includes(searchTerm.toLowerCase()));
 
   const totalPages = Math.ceil((subTab === 'nilai' ? filteredStudents.length : filteredAttendances.length) / itemsPerPage) || 1;
   const currentStudents = filteredStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);

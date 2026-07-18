@@ -409,20 +409,6 @@ export const elearningCourses = sqliteTable('elearning_courses', {
 export type ElearningCourse = typeof elearningCourses.$inferSelect;
 export type NewElearningCourse = typeof elearningCourses.$inferInsert;
 
-export const elearningCourseTutors = sqliteTable('elearning_course_tutors', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  courseId: integer('course_id').notNull().references(() => elearningCourses.id, { onDelete: 'cascade' }),
-  tutorId: integer('tutor_id').notNull().references(() => tutors.id, { onDelete: 'cascade' }),
-  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
-});
-
-export const elearningCourseStudents = sqliteTable('elearning_course_students', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  courseId: integer('course_id').notNull().references(() => elearningCourses.id, { onDelete: 'cascade' }),
-  studentId: integer('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
-  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
-});
-
 export const elearningSessions = sqliteTable('elearning_sessions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   courseId: integer('course_id').notNull().references(() => elearningCourses.id, { onDelete: 'cascade' }),
@@ -494,24 +480,6 @@ export const elearningQuizSubmissions = sqliteTable('elearning_quiz_submissions'
 }, (t) => ({
   unq: unique().on(t.sessionId, t.studentId),
 }));
-
-export const elearningDiscussions = sqliteTable('elearning_discussions', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  sessionId: integer('session_id').notNull(),
-  question: text('question').notNull().default(''),
-  creatorId: integer('creator_id').notNull(),
-  creatorRole: text('creator_role').notNull().default('tutor'),
-  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
-});
-
-export const elearningLogs = sqliteTable('elearning_logs', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  action: text('action').notNull(), // e.g., 'LOGIN', 'SUBMIT_ASSIGNMENT', 'GRADE_ASSIGNMENT'
-  userId: integer('user_id'),
-  userRole: text('user_role'),
-  details: text('details').notNull().default(''),
-  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
-});
 
 // ==========================================
 // ROMBEL (Rombongan Belajar / Kelas)

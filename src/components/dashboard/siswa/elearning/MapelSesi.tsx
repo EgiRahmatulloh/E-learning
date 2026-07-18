@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { FileText, PlayCircle, PenTool, CheckCircle2, Download, MessageCircle, X, Pencil, Trash2, Upload, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { safeHtml } from "@/lib/sanitize";
 
 interface MapelSesiProps {
   subjectName: string;
@@ -471,7 +472,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
             <h3 className="font-bold text-[#280f91]">Materi yang diajarkan Sesi {sessionNumber}</h3>
           </div>
           {teksPembuka ? (
-            <div dangerouslySetInnerHTML={{ __html: teksPembuka }} />
+            <div dangerouslySetInnerHTML={{ __html: safeHtml(teksPembuka) }} />
           ) : (
             <p className="text-slate-500 italic">Tutor belum menambahkan materi yang diajarkan untuk sesi ini.</p>
           )}
@@ -483,7 +484,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
             <h3 className="font-bold text-[#280f91]">Tujuan Pembelajaran Sesi {sessionNumber}</h3>
           </div>
           {tujuanPembelajaran ? (
-            <div dangerouslySetInnerHTML={{ __html: tujuanPembelajaran }} />
+            <div dangerouslySetInnerHTML={{ __html: safeHtml(tujuanPembelajaran) }} />
           ) : (
             <p className="text-slate-500 italic">Tutor belum menambahkan tujuan pembelajaran untuk sesi ini.</p>
           )}
@@ -495,7 +496,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
             <h3 className="font-bold text-[#280f91]">Uraian Kegiatan Pembelajaran Sesi {sessionNumber}</h3>
           </div>
           {uraianKegiatan ? (
-            <div dangerouslySetInnerHTML={{ __html: uraianKegiatan }} />
+            <div dangerouslySetInnerHTML={{ __html: safeHtml(uraianKegiatan) }} />
           ) : (
             <p className="text-slate-500 italic">Tutor belum menambahkan uraian kegiatan pembelajaran untuk sesi ini.</p>
           )}
@@ -625,7 +626,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
                         <Button onClick={() => setEditingMessageId(null)} size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-500 hover:text-slate-700"><X className="w-4 h-4" /></Button>
                       </div>
                     ) : (
-                      <div className="text-sm text-slate-700 prose max-w-none mt-1" dangerouslySetInnerHTML={{ __html: msg.content }} />
+                      <div className="text-sm text-slate-700 prose max-w-none mt-1" dangerouslySetInnerHTML={{ __html: safeHtml(msg.content) }} />
                     )}
 
                     {/* Replies */}
@@ -649,7 +650,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
                               </h5>
                               {replyIsSelf && (
                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button onClick={() => { setEditingMessageId(reply.id); setEditInputValue(reply.content); }} className="text-slate-400 hover:text-blue-600"><Pencil className="w-3 h-3" /></button>
+                                  <button onClick={() => { setEditingMessageId(reply.id); setEditInputValue(reply.content.replace(/<[^>]+>/g, '')); }} className="text-slate-400 hover:text-blue-600"><Pencil className="w-3 h-3" /></button>
                                   <button onClick={() => handleDeleteMessage(reply.id)} className="text-slate-400 hover:text-red-600"><Trash2 className="w-3 h-3" /></button>
                                 </div>
                               )}
@@ -669,7 +670,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
                                 </div>
                               </div>
                             ) : (
-                              <div className="text-xs text-slate-600 prose mt-1" dangerouslySetInnerHTML={{ __html: reply.content }} />
+                              <div className="text-xs text-slate-600 prose mt-1" dangerouslySetInnerHTML={{ __html: safeHtml(reply.content) }} />
                             )}
                           </div>
                         </div>

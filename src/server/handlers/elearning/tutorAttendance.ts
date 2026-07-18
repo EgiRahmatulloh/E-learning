@@ -56,7 +56,8 @@ export const tutorAttendanceHandlers = new Elysia()
       return { success: true, attended: !!record };
     } catch (error: any) {
       set.status = 500;
-      return { success: false, message: error.message };
+      console.error("TutorAttendance error:", error);
+      return { success: false, message: "Terjadi kesalahan server" };
     }
   })
   .post("/tutor-attendance", async (context: any) => {
@@ -88,7 +89,8 @@ export const tutorAttendanceHandlers = new Elysia()
       }
     } catch (error: any) {
       set.status = 500;
-      return { success: false, message: error.message };
+      console.error("TutorAttendance error:", error);
+      return { success: false, message: "Terjadi kesalahan server" };
     }
   })
   .get("/tutor-attendance/history", async (context: any) => {
@@ -121,7 +123,8 @@ export const tutorAttendanceHandlers = new Elysia()
       return { success: true, data: records };
     } catch (error: any) {
       set.status = 500;
-      return { success: false, message: error.message };
+      console.error("TutorAttendance error:", error);
+      return { success: false, message: "Terjadi kesalahan server" };
     }
   })
 
