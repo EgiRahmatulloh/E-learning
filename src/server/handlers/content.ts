@@ -55,7 +55,7 @@ export const contentHandlers = new Elysia()
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
 
-      const { title, image, status } = body;
+      const { title, image, status } = body as any;
       const adminPayload = await getAdminPayload(headers, jwt);
       try {
         const inserted = await db
@@ -95,7 +95,7 @@ export const contentHandlers = new Elysia()
         return { success: false, message: "ID parameter tidak valid" };
       }
 
-      const { title, image, status } = body;
+      const { title, image, status } = body as any;
       try {
         const updated = await db
           .update(sliders)
@@ -167,7 +167,7 @@ export const contentHandlers = new Elysia()
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
 
-      const { text, date, status } = body;
+      const { text, date, status } = body as any;
       const adminPayload = await getAdminPayload(headers, jwt);
       try {
         const inserted = await db
@@ -207,7 +207,7 @@ export const contentHandlers = new Elysia()
         return { success: false, message: "ID parameter tidak valid" };
       }
 
-      const { text, date, status } = body;
+      const { text, date, status } = body as any;
       try {
         const updated = await db
           .update(announcements)
@@ -281,7 +281,7 @@ export const contentHandlers = new Elysia()
           const updated = await db
             .update(institutionProfile)
             .set({
-              ...body,
+              ...(body as any),
               updatedAt: new Date().toISOString(),
             })
             .where(eq(institutionProfile.id, existing.id))
@@ -289,7 +289,7 @@ export const contentHandlers = new Elysia()
             .get();
           return { success: true, data: updated };
         } else {
-          const inserted = await db.insert(institutionProfile).values(body).returning().get();
+          const inserted = await db.insert(institutionProfile).values(body as any).returning().get();
           return { success: true, data: inserted };
         }
       } catch {
@@ -336,7 +336,7 @@ export const contentHandlers = new Elysia()
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
 
-      const { visi, misi } = body;
+      const { visi, misi } = body as any;
       try {
         const existing = await db.select().from(visionMission).get();
         if (existing) {
@@ -384,7 +384,7 @@ export const contentHandlers = new Elysia()
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
 
-      const { program, penjab, keterangan, foto } = body;
+      const { program, penjab, keterangan, foto } = body as any;
       try {
         const inserted = await db
           .insert(educationPrograms)
@@ -423,7 +423,7 @@ export const contentHandlers = new Elysia()
         return { success: false, message: "ID parameter tidak valid" };
       }
 
-      const { program, penjab, keterangan, foto } = body;
+      const { program, penjab, keterangan, foto } = body as any;
       try {
         const updated = await db
           .update(educationPrograms)
@@ -502,7 +502,7 @@ export const contentHandlers = new Elysia()
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
 
-      const { nama, keterangan, foto } = body;
+      const { nama, keterangan, foto } = body as any;
       try {
         const inserted = await db
           .insert(facilities)
@@ -539,7 +539,7 @@ export const contentHandlers = new Elysia()
         return { success: false, message: "ID parameter tidak valid" };
       }
 
-      const { nama, keterangan, foto } = body;
+      const { nama, keterangan, foto } = body as any;
       try {
         const existing = await db.select().from(facilities).where(eq(facilities.id, id)).get();
         if (!existing) {
@@ -610,12 +610,16 @@ export const contentHandlers = new Elysia()
       }
 
       try {
+        const existingRecords = await db.select({ nama: facilities.nama }).from(facilities).all();
+        const existingNames = new Set(existingRecords.map(e => e.nama.trim().toLowerCase()));
+
         const validItems = list.filter(
           (item) =>
             item &&
             typeof item === "object" &&
             typeof item.nama === "string" &&
-            item.nama.trim().length > 0
+            item.nama.trim().length > 0 &&
+            !existingNames.has(item.nama.trim().toLowerCase())
         );
         if (validItems.length === 0) {
           set.status = 400;
@@ -672,7 +676,7 @@ export const contentHandlers = new Elysia()
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
 
-      const { nama, tahun, tingkat, penyelenggara, peserta, keterangan, foto } = body;
+      const { nama, tahun, tingkat, penyelenggara, peserta, keterangan, foto } = body as any;
       try {
         const inserted = await db
           .insert(achievements)
@@ -717,7 +721,7 @@ export const contentHandlers = new Elysia()
         return { success: false, message: "ID parameter tidak valid" };
       }
 
-      const { nama, tahun, tingkat, penyelenggara, peserta, keterangan, foto } = body;
+      const { nama, tahun, tingkat, penyelenggara, peserta, keterangan, foto } = body as any;
       try {
         const existing = await db
           .select()
@@ -879,7 +883,7 @@ export const contentHandlers = new Elysia()
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
 
-      const { nama, alamat, penjab, waktuPembelajaran, jumlahWb, keterangan, foto } = body;
+      const { nama, alamat, penjab, waktuPembelajaran, jumlahWb, keterangan, foto } = body as any;
       try {
         const inserted = await db
           .insert(servicePoints)
@@ -924,7 +928,7 @@ export const contentHandlers = new Elysia()
         return { success: false, message: "ID parameter tidak valid" };
       }
 
-      const { nama, alamat, penjab, waktuPembelajaran, jumlahWb, keterangan, foto } = body;
+      const { nama, alamat, penjab, waktuPembelajaran, jumlahWb, keterangan, foto } = body as any;
       try {
         const existing = await db
           .select()
@@ -1097,7 +1101,7 @@ export const contentHandlers = new Elysia()
         penanggungjawab,
         keterangan,
         foto,
-      } = body;
+      } = body as any;
       try {
         const inserted = await db
           .insert(agendas)
@@ -1156,7 +1160,7 @@ export const contentHandlers = new Elysia()
         penanggungjawab,
         keterangan,
         foto,
-      } = body;
+      } = body as any;
       try {
         const existing = await db.select().from(agendas).where(eq(agendas.id, id)).get();
         if (!existing) {
@@ -1239,12 +1243,16 @@ export const contentHandlers = new Elysia()
       }
 
       try {
+        const existingRecords = await db.select({ nama: agendas.nama }).from(agendas).all();
+        const existingNames = new Set(existingRecords.map(e => e.nama.trim().toLowerCase()));
+
         const validItems = list.filter(
           (item) =>
             item &&
             typeof item === "object" &&
             typeof item.nama === "string" &&
             item.nama.trim().length > 0 &&
+            !existingNames.has(item.nama.trim().toLowerCase()) &&
             typeof item.pelaksanaan === "string" &&
             item.pelaksanaan.trim().length > 0 &&
             typeof item.waktu === "string" &&
@@ -1331,7 +1339,7 @@ export const contentHandlers = new Elysia()
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
 
-      const { namaFile, kategori, fileUrl, status, tanggalUpload } = body;
+      const { namaFile, kategori, fileUrl, status, tanggalUpload } = body as any;
       try {
         const inserted = await db
           .insert(downloads)
@@ -1380,7 +1388,7 @@ export const contentHandlers = new Elysia()
         return { success: false, message: "ID parameter tidak valid" };
       }
 
-      const { namaFile, kategori, fileUrl, status, tanggalUpload } = body;
+      const { namaFile, kategori, fileUrl, status, tanggalUpload } = body as any;
       try {
         const updated = await db
           .update(downloads)
@@ -1497,7 +1505,7 @@ export const contentHandlers = new Elysia()
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
 
-      const { namaProduk, deskripsi, noHp, penjual, satuan, harga, status, gambar } = body;
+      const { namaProduk, deskripsi, noHp, penjual, satuan, harga, status, gambar } = body as any;
       if (harga < 0) {
         set.status = 400;
         return { success: false, message: "Harga tidak boleh bernilai negatif" };
@@ -1550,7 +1558,7 @@ export const contentHandlers = new Elysia()
         return { success: false, message: "ID parameter tidak valid" };
       }
 
-      const { namaProduk, deskripsi, noHp, penjual, satuan, harga, status, gambar } = body;
+      const { namaProduk, deskripsi, noHp, penjual, satuan, harga, status, gambar } = body as any;
       if (harga < 0) {
         set.status = 400;
         return { success: false, message: "Harga tidak boleh bernilai negatif" };
@@ -1682,7 +1690,7 @@ export const contentHandlers = new Elysia()
         pekerjaan,
         cerita,
         foto,
-      } = body;
+      } = body as any;
 
       try {
         const inserted = await db
@@ -1764,12 +1772,16 @@ export const contentHandlers = new Elysia()
       }
 
       try {
+        const existingRecords = await db.select({ nama: alumni.nama }).from(alumni).all();
+        const existingNames = new Set(existingRecords.map(e => e.nama.trim().toLowerCase()));
+
         const validItems = list.filter(
           (item) =>
             item &&
             typeof item === "object" &&
             typeof item.nama === "string" &&
-            item.nama.trim().length > 0
+            item.nama.trim().length > 0 &&
+            !existingNames.has(item.nama.trim().toLowerCase())
         );
         if (validItems.length === 0) {
           set.status = 400;
@@ -1861,7 +1873,7 @@ export const contentHandlers = new Elysia()
         pekerjaan,
         cerita,
         foto,
-      } = body;
+      } = body as any;
 
       try {
         const updated = await db
@@ -1988,7 +2000,7 @@ export const contentHandlers = new Elysia()
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
 
-      const { namaFile, kategori, tanggalPosting, foto, status } = body;
+      const { namaFile, kategori, tanggalPosting, foto, status } = body as any;
 
       try {
         const inserted = await db
@@ -2030,7 +2042,7 @@ export const contentHandlers = new Elysia()
         return { success: false, message: "ID tidak valid" };
       }
 
-      const { namaFile, kategori, tanggalPosting, foto, status } = body;
+      const { namaFile, kategori, tanggalPosting, foto, status } = body as any;
 
       try {
         const updated = await db

@@ -77,15 +77,16 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
     } catch (err) { }
   };
 
-  const loadQuestions = async () => {
-    if (!sessionId || !user?.id) return;
+  const loadQuestions = async (sid?: number) => {
+    const activeSessionId = sid || sessionId;
+    if (!activeSessionId || !user?.id) return;
     setIsLatihanLoading(true);
     setQuizGrade(null);
     setQuestions([]);
     setAnswers([]);
 
     try {
-      const res = await fetch(`/api/elearning/quiz/${sessionId}?studentId=${user.id}`, {
+      const res = await fetch(`/api/elearning/quiz/${activeSessionId}?studentId=${user.id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
       const data = await res.json();
@@ -94,10 +95,11 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
           ...q,
           options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options
         })));
+        
         if (data.data.submission) {
           setQuizGrade(data.data.submission.grade);
-          const savedAns = localStorage.getItem(`quiz_answers_${sessionId}_${user.id}`);
-          if (savedAns) {
+          const savedAns = data.data.submission.answers;
+          if (typeof savedAns === 'string') {
             setAnswers(JSON.parse(savedAns));
           } else {
             setAnswers(new Array(data.data.questions.length).fill(-1));
@@ -114,6 +116,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
   useEffect(() => {
     fetchCompletions();
     async function fetchData() {
+      setLoading(true);
       setIsHadir(false);
       setQuizGrade(null);
       setAnswers([]);
@@ -140,6 +143,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
         const session = sessionData.data.session;
         setSessionId(session.id);
         setCourseId(courseData.data.id);
+        loadQuestions(session.id);
 
         if (session.description) {
           setTeksPembuka(session.description);
@@ -712,7 +716,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
             <Button onClick={() => { setShowLatihan(true); loadQuestions(); }} variant="outline" className="flex-1 sm:flex-none rounded-xl border-purple-200 text-purple-700 font-bold hover:bg-purple-50">
-              Mulai Latihan
+              {quizGrade !== null ? "Lihat Hasil Latihan" : "Mulai Latihan"}
             </Button>
             <SectionCompleteButton completions={completions} handleMarkComplete={handleMarkComplete} sectionKey={`sesi_${sessionNumber}_latihan`} className="m-0 shrink-0" />
           </div>

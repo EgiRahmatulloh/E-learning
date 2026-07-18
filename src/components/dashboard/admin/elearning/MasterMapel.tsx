@@ -26,7 +26,7 @@ export const MASTER_MAPEL = {
     "Pemberdayaan",
     "Keterampilan"
   ],
-  "Paket C (Kelas X-XI)": [
+  "Paket C (Kelas X)": [
     "Pendidikan Agama Islam dan Budi Pekerti",
     "Pendidikan Pancasila",
     "Bahasa Indonesia",
@@ -39,7 +39,7 @@ export const MASTER_MAPEL = {
     "Pemberdayaan",
     "Keterampilan"
   ],
-  "Paket C (Kelas XII)": [
+  "Paket C (Kelas XI-XII)": [
     "Pendidikan Agama Islam dan Budi Pekerti",
     "Pendidikan Pancasila",
     "Bahasa Indonesia",

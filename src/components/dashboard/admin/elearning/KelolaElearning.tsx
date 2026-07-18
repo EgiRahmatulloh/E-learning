@@ -54,9 +54,9 @@ const ALL_LEVELS = [
   { id: "VII", namaIndonesia: "Tujuh", program: "Paket B (Kelas VII-IX)" },
   { id: "VIII", namaIndonesia: "Delapan", program: "Paket B (Kelas VII-IX)" },
   { id: "IX", namaIndonesia: "Sembilan", program: "Paket B (Kelas VII-IX)" },
-  { id: "X", namaIndonesia: "Sepuluh", program: "Paket C (Kelas X-XII)" },
-  { id: "XI", namaIndonesia: "Sebelas", program: "Paket C (Kelas X-XII)" },
-  { id: "XII", namaIndonesia: "Dua Belas", program: "Paket C (Kelas X-XII)" },
+  { id: "X", namaIndonesia: "Sepuluh", program: "Paket C (Kelas X)" },
+  { id: "XI", namaIndonesia: "Sebelas", program: "Paket C (Kelas XI-XII)" },
+  { id: "XII", namaIndonesia: "Dua Belas", program: "Paket C (Kelas XI-XII)" },
 ];
 
 // Tahun ajaran berdasarkan bulan saat ini

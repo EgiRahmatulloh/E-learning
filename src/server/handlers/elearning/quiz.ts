@@ -46,7 +46,7 @@ export const quizHandlers = new Elysia()
         const payload = await jwt.verify(token);
         const studentId = payload?.role === "siswa" ? payload.id as number : null;
 
-        const questions = await db.select().from(elearningQuestions).where(eq(elearningQuestions.sessionId, sId)).all();
+        const questions = await db.select().from(elearningQuestions).where(eq(elearningQuestions.sessionId, sId)).orderBy(asc(elearningQuestions.id)).all();
 
         let submission = null;
         if (studentId) {
@@ -125,7 +125,7 @@ export const quizHandlers = new Elysia()
         const sId = parseInt(sessionId);
         const { answers } = body as { answers: number[] };
 
-        const questions = await db.select().from(elearningQuestions).where(eq(elearningQuestions.sessionId, sId)).all();
+        const questions = await db.select().from(elearningQuestions).where(eq(elearningQuestions.sessionId, sId)).orderBy(asc(elearningQuestions.id)).all();
 
         if (questions.length === 0) {
           return { success: false, message: "Soal kuis tidak ditemukan" };
@@ -141,9 +141,9 @@ export const quizHandlers = new Elysia()
         const existing = await db.select().from(elearningQuizSubmissions).where(and(eq(elearningQuizSubmissions.sessionId, sId), eq(elearningQuizSubmissions.studentId, studentId))).get();
 
         if (existing) {
-          await db.update(elearningQuizSubmissions).set({ grade }).where(eq(elearningQuizSubmissions.id, existing.id));
+          await db.update(elearningQuizSubmissions).set({ grade, answers: JSON.stringify(answers) }).where(eq(elearningQuizSubmissions.id, existing.id));
         } else {
-          await db.insert(elearningQuizSubmissions).values({ sessionId: sId, studentId, grade });
+          await db.insert(elearningQuizSubmissions).values({ sessionId: sId, studentId, grade, answers: JSON.stringify(answers) });
         }
 
         return { success: true, message: "Jawaban berhasil disubmit", grade };
@@ -151,6 +151,11 @@ export const quizHandlers = new Elysia()
         set.status = 500;
         return { success: false, message: error.message };
       }
+    },
+    {
+      body: t.Object({
+        answers: t.Array(t.Number())
+      })
     }
   )
 

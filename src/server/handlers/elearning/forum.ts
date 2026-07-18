@@ -56,8 +56,11 @@ export const forumHandlers = new Elysia()
           .all();
 
         // Ambil data nama dari tutors dan students untuk enrich authorName
-        const allTutors = await db.select().from(tutors).all();
-        const allStudents = await db.select().from(students).all();
+        const tutorIds = [...new Set(posts.filter(p => p.authorRole === "tutor").map(p => p.authorId))];
+        const studentIds = [...new Set(posts.filter(p => p.authorRole === "siswa").map(p => p.authorId))];
+
+        const allTutors = tutorIds.length > 0 ? await db.select().from(tutors).where(inArray(tutors.id, tutorIds)).all() : [];
+        const allStudents = studentIds.length > 0 ? await db.select().from(students).where(inArray(students.id, studentIds)).all() : [];
 
         const enrichedPosts = posts.map(post => {
           let authorName = "Unknown";
