@@ -67,33 +67,43 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
   const [progresses, setProgresses] = useState<Record<number, number>>({});
 
   useEffect(() => {
-    if (user?.kelas) {
-      fetch(`/api/elearning/setups?kelas=${encodeURIComponent(user.kelas)}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      })
-        .then(res => res.json())
-        .then(async data => {
-          if (data.success && data.data) {
-            setSiswaSetups(data.data);
+    if (!user?.kelas) return;
+    const controller = new AbortController();
+    const { signal } = controller;
 
-            // Fetch progress for each setup
-            const progressData: Record<number, number> = {};
-            await Promise.all(data.data.map(async (setup: any) => {
-              try {
-                const res = await fetch(`/api/elearning/completions/progress/${setup.id}`, {
-                  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-                });
-                const progData = await res.json();
-                if (progData.success) {
-                  progressData[setup.id] = progData.progress;
-                }
-              } catch (e) { }
-            }));
-            setProgresses(progressData);
-          }
-        })
-        .catch(err => console.error("Error fetching setups:", err));
-    }
+    (async () => {
+      try {
+        const res = await fetch(`/api/elearning/setups?kelas=${encodeURIComponent(user.kelas || "")}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          signal,
+        });
+        const data = await res.json();
+        if (signal.aborted) return;
+        if (data.success && data.data) {
+          setSiswaSetups(data.data);
+
+          // Fetch progress for each setup
+          const progressData: Record<number, number> = {};
+          await Promise.all(data.data.map(async (setup: any) => {
+            try {
+              const res = await fetch(`/api/elearning/completions/progress/${setup.id}`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                signal,
+              });
+              const progData = await res.json();
+              if (progData.success) {
+                progressData[setup.id] = progData.progress;
+              }
+            } catch (e) { }
+          }));
+          if (!signal.aborted) setProgresses(progressData);
+        }
+      } catch (err: any) {
+        if (err.name !== "AbortError") console.error("Error fetching setups:", err);
+      }
+    })();
+
+    return () => controller.abort();
   }, [user?.kelas]);
 
   // Cek apakah tab yang aktif adalah halaman detail sesi/nilai/pendahuluan

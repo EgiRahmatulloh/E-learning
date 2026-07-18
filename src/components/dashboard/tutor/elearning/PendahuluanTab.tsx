@@ -29,6 +29,7 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
   const setupId = parts[1] === "setup" ? parseInt(parts[2], 10) : null;
   const [forumPosts, setForumPosts] = useState<any[]>([]);
   const [replyText, setReplyText] = useState("");
+  const [topicText, setTopicText] = useState("");
   const [activeReplyId, setActiveReplyId] = useState<number | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [editInputValue, setEditInputValue] = useState("");
@@ -107,8 +108,9 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
     }
   };
 
-  const submitReply = async (parentId?: number) => {
-    if (!replyText.trim()) return toast.error("Komentar tidak boleh kosong");
+  const submitReply = async (parentId?: number, text?: string) => {
+    const replyContent = text !== undefined ? text : replyText;
+    if (!replyContent.trim()) return toast.error("Komentar tidak boleh kosong");
     try {
       const res = await fetch("/api/elearning/forum", {
         method: "POST",
@@ -119,14 +121,18 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
         body: JSON.stringify({
           sessionId: sessionId,
           courseId: courseId,
-          content: replyText,
+          content: replyContent,
           parentId: parentId || null
         })
       });
       const data = await res.json();
       if (data.success) {
         toast.success("Komentar berhasil dikirim!");
-        setReplyText("");
+        if (parentId) {
+          setReplyText("");
+        } else {
+          setTopicText("");
+        }
         setActiveReplyId(null);
         if (sessionId) fetchForumPosts(sessionId);
       } else {
@@ -530,16 +536,13 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
               <input
                 type="text"
                 placeholder="Tulis pancingan diskusi di sini..."
-                value={activeReplyId === null ? replyText : ""}
-                onChange={(e) => {
-                  setActiveReplyId(null);
-                  setReplyText(e.target.value);
-                }}
-                onKeyDown={(e) => e.key === 'Enter' && submitReply()}
+                value={topicText}
+                onChange={(e) => setTopicText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && submitReply(undefined, topicText)}
                 className="flex-1 h-10 rounded-xl border border-slate-200 px-4 text-sm focus:outline-none focus:border-[#280f91]"
               />
               <Button
-                onClick={() => submitReply()}
+                onClick={() => submitReply(undefined, topicText)}
                 className="h-10 bg-[#280f91] hover:bg-[#3a1bca] text-white px-6 font-bold"
               >
                 Kirim

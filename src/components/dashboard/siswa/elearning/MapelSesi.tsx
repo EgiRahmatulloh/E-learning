@@ -42,6 +42,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
   const [questions, setQuestions] = useState<any[]>([]);
   const [answers, setAnswers] = useState<number[]>([]);
   const [quizGrade, setQuizGrade] = useState<number | null>(null);
+  const [correctCount, setCorrectCount] = useState<number | null>(null);
   const [isLatihanLoading, setIsLatihanLoading] = useState(false);
   const [completions, setCompletions] = useState<Set<string>>(new Set());
 
@@ -98,10 +99,13 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
         
         if (data.data.submission) {
           setQuizGrade(data.data.submission.grade);
+          setCorrectCount(data.data.submission.correctCount ?? null);
           const savedAns = data.data.submission.answers;
-          if (typeof savedAns === 'string') {
-            setAnswers(JSON.parse(savedAns));
+          const parsed = typeof savedAns === 'string' ? JSON.parse(savedAns) : savedAns;
+          if (Array.isArray(parsed) && parsed.length === data.data.questions.length) {
+            setAnswers(parsed);
           } else {
+            // Cache mismatch (questions changed since submit) — discard saved answers
             setAnswers(new Array(data.data.questions.length).fill(-1));
           }
         } else {
@@ -119,9 +123,11 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
       setLoading(true);
       setIsHadir(false);
       setQuizGrade(null);
+      setCorrectCount(null);
       setAnswers([]);
       setQuestions([]);
       setShowLatihan(false);
+      setAngketAnswers({});
 
       try {
         const courseRes = await fetch("/api/elearning/course", {
@@ -813,6 +819,9 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
               <div className="pt-4 border-t border-slate-100">
                 <Button
                   onClick={async () => {
+                    if (angketQuestions.length === 0) {
+                      return toast.error("Belum ada pertanyaan angket yang tersedia.");
+                    }
                     if (Object.keys(angketAnswers).length < angketQuestions.length) {
                       return toast.error("Harap jawab semua pertanyaan angket.");
                     }
@@ -894,7 +903,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
                     <CheckCircle2 className="w-16 h-16 text-purple-500 mb-2" />
                     <p className="font-black text-slate-800 text-2xl">Latihan Selesai</p>
                     <p className="text-slate-600 text-sm">
-                      Hasil latihan mandiri Anda: <span className="font-bold text-emerald-600">Benar {Math.round((quizGrade * questions.length) / 100)}</span> | <span className="font-bold text-red-600">Salah {questions.length - Math.round((quizGrade * questions.length) / 100)}</span>
+                      Hasil latihan mandiri Anda: <span className="font-bold text-emerald-600">Benar {correctCount ?? Math.round((quizGrade * questions.length) / 100)}</span> | <span className="font-bold text-red-600">Salah {questions.length - (correctCount ?? Math.round((quizGrade * questions.length) / 100))}</span>
                     </p>
                   </div>
 
@@ -990,6 +999,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
                             toast.success(data.message, { id: toastId });
                             localStorage.setItem(`quiz_answers_${sessionId}_${user.id}`, JSON.stringify(answers));
                             setQuizGrade(data.grade);
+                            setCorrectCount(data.correctCount ?? null);
                             handleMarkComplete(`sesi_${sessionNumber}_latihan`);
                           } else {
                             toast.error(data.message, { id: toastId });
