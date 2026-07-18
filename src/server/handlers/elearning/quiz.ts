@@ -52,10 +52,10 @@ export const quizHandlers = new Elysia()
         if (studentId) {
           const rawSubmission = await db.select().from(elearningQuizSubmissions).where(and(eq(elearningQuizSubmissions.sessionId, sId), eq(elearningQuizSubmissions.studentId, studentId))).get();
           if (rawSubmission) {
-            // Compute correctCount from stored answers + current questions
-            let correctCount = 0;
+            let correctCount: number | null = null;
             const savedAnswers = typeof rawSubmission.answers === 'string' ? JSON.parse(rawSubmission.answers) : rawSubmission.answers;
             if (Array.isArray(savedAnswers) && savedAnswers.length === questions.length) {
+              correctCount = 0;
               for (let i = 0; i < questions.length; i++) {
                 if (savedAnswers[i] === questions[i].correctAnswer) correctCount++;
               }

@@ -263,10 +263,8 @@ export const monitoringHandlers = new Elysia()
               .filter(s => s.grade != null)
               .map(s => s.grade as number);
             if (totalAssignments > 0) {
-              const avgGrade = studentGrades.length > 0
-                ? studentGrades.reduce((a, b) => a + b, 0) / studentGrades.length
-                : 0;
-              tugas = Math.min(100, Math.round((avgGrade * studentGrades.length) / totalAssignments));
+              const sumGrade = studentGrades.reduce((a, b) => a + b, 0);
+              tugas = Math.min(100, Math.round(sumGrade / totalAssignments));
             }
 
             // Build per-session details (1 to sessionsCount)

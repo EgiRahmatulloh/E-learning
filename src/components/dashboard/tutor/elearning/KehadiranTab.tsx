@@ -3,7 +3,15 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CalendarCheck, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-
+const getJakartaYearMonthDay = (date: Date) => {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit"
+  }).formatToParts(date);
+  const year = Number(parts.find(p => p.type === "year")!.value);
+  const month = Number(parts.find(p => p.type === "month")!.value);
+  const day = Number(parts.find(p => p.type === "day")!.value);
+  return { year, month, day };
+};
 
 export default function KehadiranTab() {
   const [attendedToday, setAttendedToday] = useState(false);
@@ -26,8 +34,7 @@ export default function KehadiranTab() {
 
   const fetchHistory = async () => {
     try {
-      const month = currentDate.getMonth() + 1;
-      const year = currentDate.getFullYear();
+      const { year, month } = getJakartaYearMonthDay(currentDate);
       const res = await fetch(`/api/elearning/tutor-attendance/history?month=${month}&year=${year}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
@@ -72,15 +79,8 @@ export default function KehadiranTab() {
   };
 
   // Calendar rendering logic — use Jakarta timezone for date construction
-  const jakartaParts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit"
-  }).formatToParts(currentDate);
-  const jakartaYear = Number(jakartaParts.find(p => p.type === "year")!.value);
-  const jakartaMonth = Number(jakartaParts.find(p => p.type === "month")!.value) - 1;
-  const jakartaDay = Number(jakartaParts.find(p => p.type === "day")!.value);
-
-  const year = jakartaYear;
-  const month = jakartaMonth;
+  const { year, month: jakartaMonth, day: jakartaDay } = getJakartaYearMonthDay(currentDate);
+  const month = jakartaMonth - 1;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 1).getDay(); // 0 is Sunday
   

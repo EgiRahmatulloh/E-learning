@@ -78,6 +78,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
           signal,
         });
         const data = await res.json();
+        if (signal.aborted) return;
         if (data.success && data.data) {
           setSiswaSetups(data.data);
 
