@@ -210,7 +210,7 @@ export const tutorsHandlers = new Elysia()
           .update(tutors)
           .set({
             nama,
-            tutorMapel: tutorMapel || "",
+            tutorMapel: tutorMapel ?? existing.tutorMapel,
             program: program ?? existing.program,
             nip: nip ?? existing.nip,
             tempatTglLahir: tempatTglLahir ?? existing.tempatTglLahir,
@@ -322,8 +322,36 @@ export const tutorsHandlers = new Elysia()
           return { success: false, message: "Tidak ada data valid untuk diimpor" };
         }
 
+        // Dedup: skip baris yang NIK/email-nya sudah ada di DB atau duplikat di file
+        const existingTutors = await db
+          .select({ nik: tutors.nik, email: tutors.email })
+          .from(tutors)
+          .all();
+        const existingNik = new Set(existingTutors.map((t) => t.nik).filter(Boolean));
+        const existingEmail = new Set(existingTutors.map((t) => t.email).filter(Boolean));
+        const seenNik = new Set<string>();
+        const seenEmail = new Set<string>();
+        let skippedDuplicate = 0;
+        const dedupedItems = validItems.filter((item) => {
+          const nik = typeof item.nik === "string" ? item.nik.trim() : "";
+          const email = typeof item.email === "string" ? item.email.trim() : "";
+          if ((nik && (existingNik.has(nik) || seenNik.has(nik))) ||
+              (email && (existingEmail.has(email) || seenEmail.has(email)))) {
+            skippedDuplicate++;
+            return false;
+          }
+          if (nik) seenNik.add(nik);
+          if (email) seenEmail.add(email);
+          return true;
+        });
+
+        if (dedupedItems.length === 0) {
+          set.status = 400;
+          return { success: false, message: `Semua data duplikat (${skippedDuplicate} baris dilewati berdasarkan NIK/email)` };
+        }
+
         const defaultPassword = await Bun.password.hash("password123");
-        const insertValues = validItems.map((item) => ({
+        const insertValues = dedupedItems.map((item) => ({
           nama: item.nama,
           tutorMapel: typeof item.tutorMapel === "string" ? item.tutorMapel : "",
           program: typeof item.program === "string" ? item.program : "",
@@ -361,7 +389,14 @@ export const tutorsHandlers = new Elysia()
             tx.insert(tutors).values(chunk).run();
           }
         });
-        return { success: true, message: `Berhasil mengimpor ${insertValues.length} data tutor` };
+        return {
+          success: true,
+          message: skippedDuplicate > 0
+            ? `Berhasil mengimpor ${insertValues.length} data tutor (${skippedDuplicate} duplikat dilewati)`
+            : `Berhasil mengimpor ${insertValues.length} data tutor`,
+          imported: insertValues.length,
+          skipped: skippedDuplicate,
+        };
       } catch (err) {
         console.error("Gagal mengimpor data tutor:", err);
         set.status = 500;

@@ -26,11 +26,20 @@ export const authHandlers = new Elysia()
     "/api/auth/login",
     async ({ body, jwt, set }) => {
       const { username, password } = body as any;
+      // Hash kosong/korup di DB tidak boleh menggagalkan seluruh alur login (M8)
+      const safeVerify = async (pw: string, hash: string | null | undefined) => {
+        if (!hash) return false;
+        try {
+          return await Bun.password.verify(pw, hash);
+        } catch {
+          return false;
+        }
+      };
       try {
         // 1. Cari di tabel managers (role: admin)
         const manager = await db.select().from(managers).where(eq(managers.email, username)).get();
         if (manager) {
-          const isValid = await Bun.password.verify(password, manager.password);
+          const isValid = await safeVerify(password, manager.password);
           if (isValid) {
             const token = await jwt.sign({
               id: manager.id,
@@ -56,7 +65,7 @@ export const authHandlers = new Elysia()
         // 2. Cari di tabel tutors (role: tutor)
         const tutor = await db.select().from(tutors).where(eq(tutors.email, username)).get();
         if (tutor) {
-          const isValid = await Bun.password.verify(password, tutor.password);
+          const isValid = await safeVerify(password, tutor.password);
           if (isValid) {
             const token = await jwt.sign({
               id: tutor.id,
@@ -82,7 +91,7 @@ export const authHandlers = new Elysia()
         // 3. Cari di tabel students (role: siswa)
         const student = await db.select().from(students).where(eq(students.email, username)).get();
         if (student) {
-          const isValid = await Bun.password.verify(password, student.password);
+          const isValid = await safeVerify(password, student.password);
           if (isValid) {
             if (student.status !== "AKTIF") {
               set.status = 403;

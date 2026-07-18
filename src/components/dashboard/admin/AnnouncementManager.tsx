@@ -40,7 +40,9 @@ export default function AnnouncementManager() {
 
   const fetchAnnouncements = async () => {
     try {
-      const res = await fetch("/api/announcements");
+      const res = await fetch("/api/announcements", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
       if (!res.ok) throw new Error("Gagal mengambil data dari server");
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {

@@ -328,18 +328,17 @@ export const rombelHandlers = new Elysia()
           return { success: true, message: "Semua siswa sudah ada di rombel ini", added: 0 };
         }
 
-        // Insert semua sekaligus
-        await db
-          .insert(rombelStudents)
-          .values(newIds.map((sid) => ({ rombelId, studentId: sid })))
-          .run();
+        // Insert relasi + update kelas siswa dalam satu transaksi
+        db.transaction((tx) => {
+          tx.insert(rombelStudents)
+            .values(newIds.map((sid) => ({ rombelId, studentId: sid })))
+            .run();
 
-        // Update kelas siswa sesuai nama rombel
-        await db
-          .update(students)
-          .set({ kelas: existing.nama, updatedAt: new Date().toISOString() })
-          .where(inArray(students.id, newIds))
-          .run();
+          tx.update(students)
+            .set({ kelas: existing.nama, updatedAt: new Date().toISOString() })
+            .where(inArray(students.id, newIds))
+            .run();
+        });
 
         return {
           success: true,
@@ -396,21 +395,21 @@ export const rombelHandlers = new Elysia()
     if (authError) return authError;
 
     try {
-      // Ambil semua siswa AKTIF yang punya field kelas
+      // Ambil semua siswa AKTIF yang punya field kelas (jangan tarik alumni LULUS kembali ke rombel)
       const allStudents = await db
         .select({ id: students.id, kelas: students.kelas })
         .from(students)
-        .where(sql`${students.kelas} != ''`)
+        .where(and(sql`${students.kelas} != ''`, eq(students.status, "AKTIF")))
         .all();
 
       if (allStudents.length === 0) {
         return { success: true, message: "Tidak ada data siswa dengan kelas", created: 0, assigned: 0 };
       }
 
-      // Group by kelas
+      // Group by kelas (normalisasi casing agar "10a" dan "10A" tidak jadi dua rombel)
       const kelasGroups = new Map<string, number[]>();
       for (const s of allStudents) {
-        const kelas = s.kelas.trim();
+        const kelas = s.kelas.trim().toUpperCase();
         if (!kelas) continue;
         if (!kelasGroups.has(kelas)) {
           kelasGroups.set(kelas, []);
@@ -418,9 +417,9 @@ export const rombelHandlers = new Elysia()
         kelasGroups.get(kelas)!.push(s.id);
       }
 
-      // Ambil rombel yang sudah ada
+      // Ambil rombel yang sudah ada (bandingkan case-insensitive)
       const existingRombels = await db.select().from(rombels).all();
-      const existingNames = new Set(existingRombels.map((r) => r.nama));
+      const existingNames = new Set(existingRombels.map((r) => r.nama.trim().toUpperCase()));
 
       let created = 0;
       let assigned = 0;
@@ -432,9 +431,9 @@ export const rombelHandlers = new Elysia()
         created = newRombelNames.length;
       }
 
-      // Ambil semua rombel untuk mendapatkan ID terbaru
+      // Ambil semua rombel untuk mendapatkan ID terbaru (key dinormalisasi uppercase)
       const allRombels = await db.select().from(rombels).all();
-      const rombelMap = new Map<string, number>(allRombels.map((r) => [r.nama, r.id]));
+      const rombelMap = new Map<string, number>(allRombels.map((r) => [r.nama.trim().toUpperCase(), r.id]));
 
       // Ambil semua relasi yang sudah ada untuk menghindari duplikat
       const allExistingRelasi = await db.select().from(rombelStudents).all();

@@ -52,7 +52,9 @@ export function HeaderManager() {
 
   const fetchSliders = async () => {
     try {
-      const res = await fetch("/api/sliders");
+      const res = await fetch("/api/sliders", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
         const mapped = data.data.map((item: any) => ({

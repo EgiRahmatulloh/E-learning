@@ -64,7 +64,10 @@ export const managersHandlers = new Elysia()
 
       try {
         const { password, ...otherFields } = body;
-        const hashedPassword = password ? await Bun.password.hash(password) : "";
+        // Wajib password: hash kosong membuat login manager error (M8)
+        const hashedPassword = await Bun.password.hash(
+          password && password.trim() !== "" ? password : "password123"
+        );
         const inserted = await db
           .insert(managers)
           .values({
@@ -227,8 +230,36 @@ export const managersHandlers = new Elysia()
           return { success: false, message: "Tidak ada data valid untuk diimpor" };
         }
 
+        // Dedup: skip baris yang NIK/email-nya sudah ada di DB atau duplikat di file
+        const existingManagers = await db
+          .select({ nik: managers.nik, email: managers.email })
+          .from(managers)
+          .all();
+        const existingNik = new Set(existingManagers.map((m) => m.nik).filter(Boolean));
+        const existingEmail = new Set(existingManagers.map((m) => m.email).filter(Boolean));
+        const seenNik = new Set<string>();
+        const seenEmail = new Set<string>();
+        let skippedDuplicate = 0;
+        const dedupedItems = validItems.filter((item) => {
+          const nik = typeof item.nik === "string" ? item.nik.trim() : "";
+          const email = typeof item.email === "string" ? item.email.trim() : "";
+          if ((nik && (existingNik.has(nik) || seenNik.has(nik))) ||
+              (email && (existingEmail.has(email) || seenEmail.has(email)))) {
+            skippedDuplicate++;
+            return false;
+          }
+          if (nik) seenNik.add(nik);
+          if (email) seenEmail.add(email);
+          return true;
+        });
+
+        if (dedupedItems.length === 0) {
+          set.status = 400;
+          return { success: false, message: `Semua data duplikat (${skippedDuplicate} baris dilewati berdasarkan NIK/email)` };
+        }
+
         const defaultPassword = await Bun.password.hash("password123");
-        const insertValues = validItems.map((item) => ({
+        const insertValues = dedupedItems.map((item) => ({
           nama: item.nama,
           nik: typeof item.nik === "string" ? item.nik : "",
           jabatan: typeof item.jabatan === "string" ? item.jabatan : "",
@@ -267,7 +298,11 @@ export const managersHandlers = new Elysia()
         });
         return {
           success: true,
-          message: `Berhasil mengimpor ${insertValues.length} data pengelola`,
+          message: skippedDuplicate > 0
+            ? `Berhasil mengimpor ${insertValues.length} data pengelola (${skippedDuplicate} duplikat dilewati)`
+            : `Berhasil mengimpor ${insertValues.length} data pengelola`,
+          imported: insertValues.length,
+          skipped: skippedDuplicate,
         };
       } catch (err) {
         console.error("Gagal mengimpor data pengelola:", err);

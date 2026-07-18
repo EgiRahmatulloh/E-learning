@@ -36,10 +36,14 @@ export const contentHandlers = new Elysia()
     })
   )
   // --- API SLIDER ROUTES ---
-  .get("/api/sliders", async ({ set }) => {
+  .get("/api/sliders", async ({ headers, jwt, set }) => {
     try {
       const list = await db.select().from(sliders).all();
-      return { success: true, data: list };
+      // Publik hanya melihat slider aktif; admin melihat semua (untuk halaman manajemen)
+      const payload = await getAdminPayload(headers, jwt);
+      const isAdmin = payload && (payload.role === "admin" || payload.role === "super_admin");
+      const data = isAdmin ? list : list.filter((item: any) => item.status !== "NON AKTIF");
+      return { success: true, data };
     } catch {
       set.status = 500;
       return { success: false, message: "Gagal mengambil data slider" };
@@ -144,10 +148,14 @@ export const contentHandlers = new Elysia()
   })
 
   // --- API ANNOUNCEMENT ROUTES ---
-  .get("/api/announcements", async ({ set }) => {
+  .get("/api/announcements", async ({ headers, jwt, set }) => {
     try {
       const list = await db.select().from(announcements).all();
-      return { success: true, data: list };
+      // Publik hanya melihat pengumuman aktif; admin melihat semua (untuk halaman manajemen)
+      const payload = await getAdminPayload(headers, jwt);
+      const isAdmin = payload && (payload.role === "admin" || payload.role === "super_admin");
+      const data = isAdmin ? list : list.filter((item: any) => item.status !== "TIDAK AKTIF");
+      return { success: true, data };
     } catch {
       set.status = 500;
       return { success: false, message: "Gagal mengambil data pengumuman" };

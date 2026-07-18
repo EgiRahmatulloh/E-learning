@@ -3,7 +3,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { db } from "../config/db";
 import { news, newsCategories } from "../models";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { verifyAdmin, getAdminPayload } from "../middleware/auth";
 import { finalJwtSecret } from "../config/jwt";
 
@@ -135,21 +135,21 @@ export const newsHandlers = new Elysia()
     }
 
     try {
-      const existing = await db.select().from(news).where(eq(news.id, id)).get();
-      if (!existing) {
-        set.status = 404;
-        return { success: false, message: "Berita tidak ditemukan" };
-      }
-
+      // Increment atomik agar hit bersamaan tidak hilang
       const updated = await db
         .update(news)
         .set({
-          hits: (existing.hits || 0) + 1,
+          hits: sql`COALESCE(${news.hits}, 0) + 1`,
           updatedAt: new Date().toISOString(),
         })
         .where(eq(news.id, id))
         .returning()
         .get();
+
+      if (!updated) {
+        set.status = 404;
+        return { success: false, message: "Berita tidak ditemukan" };
+      }
 
       return { success: true, data: updated };
     } catch {
