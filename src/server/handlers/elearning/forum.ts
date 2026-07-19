@@ -106,7 +106,7 @@ export const forumHandlers = new Elysia()
           allowedAttributes: {
             ...sanitizeHtml.defaults.allowedAttributes,
             'font': ['size', 'color', 'face'],
-            '*': ['style', 'class']
+            '*': ['class']
           }
         });
 
@@ -173,7 +173,7 @@ export const forumHandlers = new Elysia()
           allowedAttributes: {
             ...sanitizeHtml.defaults.allowedAttributes,
             'font': ['size', 'color', 'face'],
-            '*': ['style', 'class']
+            '*': ['class']
           }
         });
 

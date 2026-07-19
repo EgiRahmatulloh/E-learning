@@ -64,10 +64,15 @@ export const quizHandlers = new Elysia()
           }
         }
 
-        // Strip correctAnswer for students to prevent answer key leakage
-        const safeQuestions = payload?.role === "siswa"
-          ? questions.map(({ correctAnswer, ...rest }: any) => rest)
-          : questions;
+        // Strip correctAnswer unless the user is explicitly authorized (fail-secure design)
+        const isAuthorizedToSeeAnswers =
+          payload?.role === "admin" ||
+          payload?.role === "super_admin" ||
+          payload?.role === "tutor";
+
+        const safeQuestions = isAuthorizedToSeeAnswers
+          ? questions
+          : questions.map(({ correctAnswer, ...rest }: any) => rest);
 
         return { success: true, data: { questions: safeQuestions, submission } };
       } catch (error: any) {
