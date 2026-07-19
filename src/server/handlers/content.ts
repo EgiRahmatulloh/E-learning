@@ -45,7 +45,7 @@ export const contentHandlers = new Elysia()
       const data = isAdmin ? list : list.filter((item: any) => item.status !== "NON AKTIF");
       return { success: true, data };
     } catch (err) {
-      console.error("Content error:", err);
+      console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal mengambil data slider" };
     }
@@ -71,7 +71,7 @@ export const contentHandlers = new Elysia()
           .get();
 
         return { success: true, data: inserted };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal menambahkan data slider" };
       }
@@ -116,7 +116,7 @@ export const contentHandlers = new Elysia()
         }
 
         return { success: true, data: updated };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal memperbarui data slider" };
       }
@@ -142,7 +142,7 @@ export const contentHandlers = new Elysia()
     try {
       await db.delete(sliders).where(eq(sliders.id, id)).run();
       return { success: true, message: "Slider berhasil dihapus" };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal menghapus slider" };
     }
@@ -157,7 +157,7 @@ export const contentHandlers = new Elysia()
       const isAdmin = payload && (payload.role === "admin" || payload.role === "super_admin");
       const data = isAdmin ? list : list.filter((item: any) => item.status !== "TIDAK AKTIF");
       return { success: true, data };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal mengambil data pengumuman" };
     }
@@ -183,7 +183,7 @@ export const contentHandlers = new Elysia()
           .get();
 
         return { success: true, data: inserted };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal menambahkan data pengumuman" };
       }
@@ -228,7 +228,7 @@ export const contentHandlers = new Elysia()
         }
 
         return { success: true, data: updated };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal memperbarui data pengumuman" };
       }
@@ -254,7 +254,7 @@ export const contentHandlers = new Elysia()
     try {
       await db.delete(announcements).where(eq(announcements.id, id)).run();
       return { success: true, message: "Pengumuman berhasil dihapus" };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal menghapus pengumuman" };
     }
@@ -265,7 +265,7 @@ export const contentHandlers = new Elysia()
     try {
       const profile = await db.select().from(institutionProfile).get();
       return { success: true, data: profile || null };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal mengambil data identitas lembaga" };
     }
@@ -293,7 +293,7 @@ export const contentHandlers = new Elysia()
           const inserted = await db.insert(institutionProfile).values(body as any).returning().get();
           return { success: true, data: inserted };
         }
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal menyimpan data identitas lembaga" };
       }
@@ -326,7 +326,7 @@ export const contentHandlers = new Elysia()
     try {
       const vm = await db.select().from(visionMission).get();
       return { success: true, data: vm || null };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal mengambil data visi dan misi" };
     }
@@ -356,7 +356,7 @@ export const contentHandlers = new Elysia()
           const inserted = await db.insert(visionMission).values({ visi, misi }).returning().get();
           return { success: true, data: inserted };
         }
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal menyimpan data visi dan misi" };
       }
@@ -374,7 +374,7 @@ export const contentHandlers = new Elysia()
     try {
       const list = await db.select().from(educationPrograms).all();
       return { success: true, data: list };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal mengambil data program pendidikan" };
     }
@@ -398,7 +398,7 @@ export const contentHandlers = new Elysia()
           .returning()
           .get();
         return { success: true, data: inserted };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal menambahkan program pendidikan" };
       }
@@ -445,7 +445,7 @@ export const contentHandlers = new Elysia()
         }
 
         return { success: true, data: updated };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal memperbarui program pendidikan" };
       }
@@ -481,7 +481,7 @@ export const contentHandlers = new Elysia()
       }
       await db.delete(educationPrograms).where(eq(educationPrograms.id, id)).run();
       return { success: true, message: "Program pendidikan berhasil dihapus" };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal menghapus program pendidikan" };
     }
@@ -492,7 +492,7 @@ export const contentHandlers = new Elysia()
     try {
       const list = await db.select().from(facilities).all();
       return { success: true, data: list };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal mengambil data sarana dan fasilitas" };
     }
@@ -515,7 +515,7 @@ export const contentHandlers = new Elysia()
           .returning()
           .get();
         return { success: true, data: inserted };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal menambahkan data sarana dan fasilitas" };
       }
@@ -561,7 +561,7 @@ export const contentHandlers = new Elysia()
           .get();
 
         return { success: true, data: updated };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal memperbarui data sarana dan fasilitas" };
       }
@@ -593,7 +593,7 @@ export const contentHandlers = new Elysia()
 
       await db.delete(facilities).where(eq(facilities.id, id)).run();
       return { success: true, message: "Sarana dan fasilitas berhasil dihapus" };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal menghapus data sarana dan fasilitas" };
     }
@@ -673,7 +673,7 @@ export const contentHandlers = new Elysia()
     try {
       const list = await db.select().from(achievements).all();
       return { success: true, data: list };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal mengambil data prestasi" };
     }
@@ -700,7 +700,7 @@ export const contentHandlers = new Elysia()
           .returning()
           .get();
         return { success: true, data: inserted };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal menambahkan data prestasi" };
       }
@@ -758,7 +758,7 @@ export const contentHandlers = new Elysia()
           .get();
 
         return { success: true, data: updated };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal memperbarui data prestasi" };
       }
@@ -798,7 +798,7 @@ export const contentHandlers = new Elysia()
 
       await db.delete(achievements).where(eq(achievements.id, id)).run();
       return { success: true, message: "Data prestasi berhasil dihapus" };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal menghapus data prestasi" };
     }
@@ -880,7 +880,7 @@ export const contentHandlers = new Elysia()
     try {
       const list = await db.select().from(servicePoints).all();
       return { success: true, data: list };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal mengambil data titik layanan" };
     }
@@ -907,7 +907,7 @@ export const contentHandlers = new Elysia()
           .returning()
           .get();
         return { success: true, data: inserted };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal menambahkan data titik layanan" };
       }
@@ -965,7 +965,7 @@ export const contentHandlers = new Elysia()
           .get();
 
         return { success: true, data: updated };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal memperbarui data titik layanan" };
       }
@@ -1005,7 +1005,7 @@ export const contentHandlers = new Elysia()
 
       await db.delete(servicePoints).where(eq(servicePoints.id, id)).run();
       return { success: true, message: "Data titik layanan berhasil dihapus" };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal menghapus data titik layanan" };
     }
@@ -1088,7 +1088,7 @@ export const contentHandlers = new Elysia()
     try {
       const list = await db.select().from(agendas).all();
       return { success: true, data: list };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal mengambil data agenda" };
     }
@@ -1127,7 +1127,7 @@ export const contentHandlers = new Elysia()
           .returning()
           .get();
         return { success: true, data: inserted };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal menambahkan data agenda" };
       }
@@ -1195,7 +1195,7 @@ export const contentHandlers = new Elysia()
           .get();
 
         return { success: true, data: updated };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal memperbarui data agenda" };
       }
@@ -1233,7 +1233,7 @@ export const contentHandlers = new Elysia()
 
       await db.delete(agendas).where(eq(agendas.id, id)).run();
       return { success: true, message: "Data agenda berhasil dihapus" };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal menghapus data agenda" };
     }
@@ -1331,7 +1331,7 @@ export const contentHandlers = new Elysia()
         .where(eq(downloads.status, "PUBLISH"))
         .all();
       return { success: true, data: list };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal mengambil data download" };
     }
@@ -1343,7 +1343,7 @@ export const contentHandlers = new Elysia()
     try {
       const list = await db.select().from(downloads).all();
       return { success: true, data: list };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal mengambil data download" };
     }
@@ -1376,7 +1376,7 @@ export const contentHandlers = new Elysia()
           .get();
 
         return { success: true, data: inserted };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal menambahkan data download" };
       }
@@ -1425,7 +1425,7 @@ export const contentHandlers = new Elysia()
         }
 
         return { success: true, data: updated };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal memperbarui data download" };
       }
@@ -1464,7 +1464,7 @@ export const contentHandlers = new Elysia()
       }
 
       return { success: true, data: updated };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal memperbarui jumlah unduhan" };
     }
@@ -1482,7 +1482,7 @@ export const contentHandlers = new Elysia()
     try {
       await db.delete(downloads).where(eq(downloads.id, id)).run();
       return { success: true, message: "Data download berhasil dihapus" };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal menghapus data download" };
     }
@@ -1497,7 +1497,7 @@ export const contentHandlers = new Elysia()
         .where(eq(products.status, "AKTIF"))
         .all();
       return { success: true, data: list };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal mengambil data produk warga belajar" };
     }
@@ -1509,7 +1509,7 @@ export const contentHandlers = new Elysia()
     try {
       const list = await db.select().from(products).all();
       return { success: true, data: list };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal mengambil data produk warga belajar" };
     }
@@ -1543,7 +1543,7 @@ export const contentHandlers = new Elysia()
           .get();
 
         return { success: true, data: inserted };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal menambahkan data produk baru" };
       }
@@ -1603,7 +1603,7 @@ export const contentHandlers = new Elysia()
         }
 
         return { success: true, data: updated };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal memperbarui data produk" };
       }
@@ -1634,7 +1634,7 @@ export const contentHandlers = new Elysia()
     try {
       await db.delete(products).where(eq(products.id, id)).run();
       return { success: true, message: "Data produk berhasil dihapus" };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal menghapus data produk" };
     }
@@ -1657,7 +1657,7 @@ export const contentHandlers = new Elysia()
         .from(alumni)
         .all();
       return { success: true, data: list };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal mengambil data alumni" };
     }
@@ -1669,7 +1669,7 @@ export const contentHandlers = new Elysia()
     try {
       const list = await db.select().from(alumni).all();
       return { success: true, data: list };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal mengambil data alumni" };
     }
@@ -1740,7 +1740,7 @@ export const contentHandlers = new Elysia()
           .get();
 
         return { success: true, data: inserted };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal menambahkan data alumni" };
       }
@@ -1937,7 +1937,7 @@ export const contentHandlers = new Elysia()
         }
 
         return { success: true, data: updated };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal memperbarui data alumni" };
       }
@@ -1984,7 +1984,7 @@ export const contentHandlers = new Elysia()
     try {
       await db.delete(alumni).where(eq(alumni.id, id)).run();
       return { success: true, message: "Data alumni berhasil dihapus" };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal menghapus data alumni" };
     }
@@ -1999,7 +1999,7 @@ export const contentHandlers = new Elysia()
         .where(eq(gallery.status, "PUBLISH"))
         .all();
       return { success: true, data: list };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal mengambil data galeri" };
     }
@@ -2011,7 +2011,7 @@ export const contentHandlers = new Elysia()
     try {
       const list = await db.select().from(gallery).all();
       return { success: true, data: list };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal mengambil data galeri" };
     }
@@ -2037,7 +2037,7 @@ export const contentHandlers = new Elysia()
           .returning()
           .get();
         return { success: true, data: inserted };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal menambahkan data galeri" };
       }
@@ -2086,7 +2086,7 @@ export const contentHandlers = new Elysia()
           return { success: false, message: "Data galeri tidak ditemukan" };
         }
         return { success: true, data: updated };
-      } catch (err) { console.error("Content error:", err);
+      } catch (err) { console.error("CMS error:", err);
         set.status = 500;
         return { success: false, message: "Gagal memperbarui data galeri" };
       }
@@ -2114,7 +2114,7 @@ export const contentHandlers = new Elysia()
     try {
       await db.delete(gallery).where(eq(gallery.id, id)).run();
       return { success: true, message: "Data galeri berhasil dihapus" };
-    } catch (err) { console.error("Content error:", err);
+    } catch (err) { console.error("CMS error:", err);
       set.status = 500;
       return { success: false, message: "Gagal menghapus data galeri" };
     }

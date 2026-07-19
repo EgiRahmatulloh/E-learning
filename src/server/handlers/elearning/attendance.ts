@@ -25,7 +25,6 @@ import {
   elearningSessionAngkets
 } from "../../models";
 import { verifyAdmin, verifyAdminOrTutor } from "../../middleware/auth";
-import sanitizeHtml from "sanitize-html";
 import { verifyUser, sanitizeFilename, deriveProgram, buildAttendanceGrid, calculateGrade } from "./helpers";
 import { fillTemplate } from "../../utils/templateXlsx";
 

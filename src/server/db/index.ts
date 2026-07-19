@@ -563,6 +563,7 @@ CREATE TABLE IF NOT EXISTS elearning_quiz_submissions (
   session_id INTEGER NOT NULL,
   student_id INTEGER NOT NULL,
   grade INTEGER NOT NULL,
+  answers TEXT,
   created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   UNIQUE(session_id, student_id),
   FOREIGN KEY (session_id) REFERENCES elearning_sessions(id) ON DELETE CASCADE,

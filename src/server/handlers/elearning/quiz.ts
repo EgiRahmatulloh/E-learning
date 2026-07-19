@@ -25,7 +25,7 @@ import {
   elearningSessionAngkets
 } from "../../models";
 import { verifyAdmin, verifyAdminOrTutor } from "../../middleware/auth";
-import sanitizeHtml from "sanitize-html";
+
 import { verifyUser, sanitizeFilename, deriveProgram, buildAttendanceGrid, calculateGrade } from "./helpers";
 import { fillTemplate } from "../../utils/templateXlsx";
 
@@ -64,7 +64,12 @@ export const quizHandlers = new Elysia()
           }
         }
 
-        return { success: true, data: { questions, submission } };
+        // Strip correctAnswer for students to prevent answer key leakage
+        const safeQuestions = payload?.role === "siswa"
+          ? questions.map(({ correctAnswer, ...rest }: any) => rest)
+          : questions;
+
+        return { success: true, data: { questions: safeQuestions, submission } };
       } catch (error: any) {
         set.status = 500;
         console.error("Quiz error:", error);

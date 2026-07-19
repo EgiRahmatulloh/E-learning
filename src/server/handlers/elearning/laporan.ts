@@ -25,8 +25,8 @@ import {
   elearningSessionAngkets
 } from "../../models";
 import { verifyAdmin, verifyAdminOrTutor } from "../../middleware/auth";
-import sanitizeHtml from "sanitize-html";
-import { verifyUser, sanitizeFilename, deriveProgram, buildAttendanceGrid, calculateGrade } from "./helpers";
+
+import { verifyUser, sanitizeFilename, deriveProgram, buildAttendanceGrid, calculateGrade, getTahunAjaran } from "./helpers";
 import { fillTemplate } from "../../utils/templateXlsx";
 
   // ==========================================
@@ -138,7 +138,7 @@ export const laporanHandlers = new Elysia()
 
         const buffer = fillTemplate("DAFTAR HADIR TUTOR.xlsx", {
           program: program.toUpperCase(), semester: semester.toUpperCase(),
-          tahunAjaran: currentMonth >= 6 ? `${currentYear}/${currentYear + 1}` : `${currentYear - 1}/${currentYear}`,
+          tahunAjaran: getTahunAjaran(now),
           kelas: kelasLabel,
           bulan: now.toLocaleDateString("id-ID", { month: "long" }).toUpperCase(),
           waliKelas: waliKelasLabel.toUpperCase(), namaWaliKelas: namaWaliKelas.toUpperCase(),
@@ -224,7 +224,7 @@ export const laporanHandlers = new Elysia()
 
         const buffer = fillTemplate("DAFTAR HADIR WARGA BELAJAR PER MAPEL.xlsx", {
           program: program.toUpperCase(), semester: (setup.semester || "Ganjil").toUpperCase(),
-          tahunAjaran: currentMonth >= 6 ? `${currentYear}/${currentYear + 1}` : `${currentYear - 1}/${currentYear}`,
+          tahunAjaran: getTahunAjaran(now),
           mapel: setup.mapel.toUpperCase(), kelas: setup.kelas.toUpperCase(),
           namaTutor: (tutor?.nama || "-").toUpperCase(),
           bulan: now.toLocaleDateString("id-ID", { month: "long", year: "numeric" }).toUpperCase(),
@@ -354,7 +354,7 @@ export const laporanHandlers = new Elysia()
 
         const buffer = fillTemplate("DAFTAR HADIR WARGA BELAJAR REKAP.xlsx", {
           program, semester: (filteredSetups[0].semester || "Ganjil").toUpperCase(),
-          tahunAjaran: currentMonth >= 6 ? `${currentYear}/${currentYear + 1}` : `${currentYear - 1}/${currentYear}`,
+          tahunAjaran: getTahunAjaran(now),
           kelas: kelasLabel, waliKelas: kelasLabel.toUpperCase(), namaWaliKelas: waliKelas.toUpperCase(),
           bulan: now.toLocaleDateString("id-ID", { month: "long" }).toUpperCase(),
           tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }).toUpperCase(),
@@ -518,7 +518,7 @@ export const laporanHandlers = new Elysia()
 
         const buffer = fillTemplate("NILAI WARGA BELAJAR PER MAPEL.xlsx", {
           program: program.toUpperCase(), semester: (setup.semester || "Ganjil").toUpperCase(),
-          tahunAjaran: currentMonth >= 6 ? `${currentYear}/${currentYear + 1}` : `${currentYear - 1}/${currentYear}`,
+          tahunAjaran: getTahunAjaran(now),
           mapel: setup.mapel.toUpperCase(), kelas: setup.kelas.toUpperCase(),
           namaTutor: (tutor?.nama || "-").toUpperCase(),
           tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }).toUpperCase(),
@@ -720,7 +720,7 @@ export const laporanHandlers = new Elysia()
 
         const buffer = fillTemplate("NILAI WARGA BELAJAR REKAP.xlsx", {
           program, semester,
-          tahunAjaran: currentMonth >= 6 ? `${currentYear}/${currentYear + 1}` : `${currentYear - 1}/${currentYear}`,
+          tahunAjaran: getTahunAjaran(now),
           kelas: kelasName, kelas2: kelasName,
           waliKelas: waliKelasNama.toUpperCase(), namaWaliKelas: waliKelasNama.toUpperCase(),
           tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }).toUpperCase(),
@@ -819,7 +819,7 @@ export const laporanHandlers = new Elysia()
         const buffer = fillTemplate("DAFTAR AGENDA TUTOR.xlsx", {
           program: program.toUpperCase(),
           semester: (setup.semester || "Ganjil").toUpperCase(),
-          tahunAjaran: currentMonth >= 6 ? `${currentYear}/${currentYear + 1}` : `${currentYear - 1}/${currentYear}`,
+          tahunAjaran: getTahunAjaran(now),
           mapel: setup.mapel.toUpperCase(),
           kelas: setup.kelas.toUpperCase(),
           namaTutor: (tutor?.nama || "-").toUpperCase(),

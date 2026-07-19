@@ -93,3 +93,11 @@ export const calculateGrade = (kehadiran: number, partisipasi: number, tugas: nu
   return { final: Math.round(final * 10) / 10, predikat };
 };
 
+// Helper: derive academic year string (e.g. "2025/2026") from a date
+// Indonesian academic year starts in July (month >= 6)
+export const getTahunAjaran = (now: Date): string => {
+  const year = now.getFullYear();
+  const month = now.getMonth(); // 0-based
+  return month >= 6 ? `${year}/${year + 1}` : `${year - 1}/${year}`;
+};
+

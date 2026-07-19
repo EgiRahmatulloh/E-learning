@@ -96,6 +96,7 @@ export const statsServices = new Elysia()
       };
     } catch (error: any) {
       set.status = 500;
-      return { success: false, message: "Gagal mengambil data statistik dashboard: " + error.message };
+      console.error("Stats error:", error);
+      return { success: false, message: "Gagal mengambil data statistik dashboard" };
     }
   });
