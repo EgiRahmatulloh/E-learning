@@ -25,7 +25,7 @@ import {
   elearningSessionAngkets
 } from "../../models";
 import { verifyAdmin, verifyAdminOrTutor } from "../../middleware/auth";
-import sanitizeHtml from "sanitize-html";
+
 import { verifyUser, sanitizeFilename, deriveProgram, buildAttendanceGrid, calculateGrade } from "./helpers";
 import { fillTemplate } from "../../utils/templateXlsx";
 
@@ -64,7 +64,17 @@ export const quizHandlers = new Elysia()
           }
         }
 
-        return { success: true, data: { questions, submission } };
+        // Strip correctAnswer unless the user is explicitly authorized (fail-secure design)
+        const isAuthorizedToSeeAnswers =
+          payload?.role === "admin" ||
+          payload?.role === "super_admin" ||
+          payload?.role === "tutor";
+
+        const safeQuestions = isAuthorizedToSeeAnswers
+          ? questions
+          : questions.map(({ correctAnswer, ...rest }: any) => rest);
+
+        return { success: true, data: { questions: safeQuestions, submission } };
       } catch (error: any) {
         set.status = 500;
         console.error("Quiz error:", error);

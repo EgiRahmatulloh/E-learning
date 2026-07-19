@@ -24,8 +24,8 @@ import {
   tutorAttendances,
   elearningSessionAngkets
 } from "../../models";
-import { verifyAdmin, verifyAdminOrTutor } from "../../middleware/auth";
-import sanitizeHtml from "sanitize-html";
+import { verifyAdmin, verifyAdminOrTutor, getAdminPayload } from "../../middleware/auth";
+
 import { verifyUser, sanitizeFilename, deriveProgram, buildAttendanceGrid, calculateGrade } from "./helpers";
 import { fillTemplate } from "../../utils/templateXlsx";
 
@@ -40,6 +40,10 @@ export const submissionsHandlers = new Elysia()
 
       try {
         const sId = parseInt(sessionId);
+        if (Number.isNaN(sId)) {
+          set.status = 400;
+          return { success: false, message: "sessionId tidak valid" };
+        }
         // Find if there is an assignment for this session
         const assignment = await db.select().from(elearningAssignments).where(eq(elearningAssignments.sessionId, sId)).get();
 
@@ -88,6 +92,10 @@ export const submissionsHandlers = new Elysia()
         }
         const studentId = payload.id;
         const sId = parseInt(sessionId);
+        if (Number.isNaN(sId)) {
+          set.status = 400;
+          return { success: false, message: "sessionId tidak valid" };
+        }
         const { fileUrl } = body as { fileUrl: string };
 
         // Ensure there is an assignment for this session
@@ -151,26 +159,32 @@ export const submissionsHandlers = new Elysia()
       if (authError) return authError;
 
       try {
-        const authHeader = headers["authorization"];
-        const token = authHeader?.startsWith("Bearer ") ? authHeader.split(" ")[1] : null;
-        if (!token) {
+        const payload = await getAdminPayload(headers, jwt);
+        if (!payload) {
           set.status = 401;
-          return { success: false, message: "Token tidak valid atau tidak ditemukan" };
+          return { success: false, message: "Token tidak valid" };
         }
-        const payload = await jwt.verify(token);
 
         const subId = parseInt(submissionId);
+        if (Number.isNaN(subId)) {
+          set.status = 400;
+          return { success: false, message: "submissionId tidak valid" };
+        }
         const { grade, feedback } = body as { grade: number; feedback?: string };
         if (typeof grade !== "number" || Number.isNaN(grade) || grade < 0 || grade > 100) {
           set.status = 400;
           return { success: false, message: "Nilai harus antara 0 dan 100" };
         }
-        await db.update(elearningSubmissions).set({
+        const result = await db.update(elearningSubmissions).set({
           grade,
           feedback,
           gradedAt: new Date().toISOString(),
-          gradedBy: payload?.id ?? null,
-        }).where(eq(elearningSubmissions.id, subId));
+          gradedBy: payload.id ?? null,
+        }).where(eq(elearningSubmissions.id, subId)).returning();
+        if (result.length === 0) {
+          set.status = 404;
+          return { success: false, message: "Submission tidak ditemukan" };
+        }
         return { success: true, message: "Berhasil memberikan nilai" };
       } catch (error: any) {
         set.status = 500;

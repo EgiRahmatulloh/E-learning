@@ -128,7 +128,7 @@ export const uploadServices = new Elysia()
 
       const resolved = path.resolve(filePath);
       const relative = path.relative(SECURE_UPLOAD_DIR, resolved);
-      if (relative.startsWith("..") || path.isAbsolute(relative)) {
+      if (relative.startsWith("..")) {
         set.status = 403;
         return { success: false, message: "Akses ditolak" };
       }

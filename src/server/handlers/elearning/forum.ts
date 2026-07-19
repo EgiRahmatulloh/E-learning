@@ -106,7 +106,7 @@ export const forumHandlers = new Elysia()
           allowedAttributes: {
             ...sanitizeHtml.defaults.allowedAttributes,
             'font': ['size', 'color', 'face'],
-            '*': ['style', 'class']
+            '*': ['class']
           }
         });
 
@@ -161,8 +161,11 @@ export const forumHandlers = new Elysia()
         }
 
         if (existingPost.authorId !== payload.id || existingPost.authorRole !== payload.role) {
-          set.status = 403;
-          return { success: false, message: "Tidak memiliki akses untuk mengubah pesan ini" };
+          // Allow admins to moderate any post
+          if (payload.role !== "admin" && payload.role !== "super_admin") {
+            set.status = 403;
+            return { success: false, message: "Tidak memiliki akses untuk mengubah pesan ini" };
+          }
         }
 
         const cleanHtml = sanitizeHtml(body.content, {
@@ -170,7 +173,7 @@ export const forumHandlers = new Elysia()
           allowedAttributes: {
             ...sanitizeHtml.defaults.allowedAttributes,
             'font': ['size', 'color', 'face'],
-            '*': ['style', 'class']
+            '*': ['class']
           }
         });
 
@@ -216,27 +219,32 @@ export const forumHandlers = new Elysia()
         }
 
         if (existingPost.authorId !== payload.id || existingPost.authorRole !== payload.role) {
-          set.status = 403;
-          return { success: false, message: "Tidak memiliki akses untuk menghapus pesan ini" };
+          // Allow admins to moderate any post
+          if (payload.role !== "admin" && payload.role !== "super_admin") {
+            set.status = 403;
+            return { success: false, message: "Tidak memiliki akses untuk menghapus pesan ini" };
+          }
         }
 
-        // Recursively delete all descendants, then the post itself
-        const descendantIds: number[] = [];
-        let parentIds = [postId];
-        while (parentIds.length > 0) {
-          const children = await db.select({ id: elearningForumPosts.id })
-            .from(elearningForumPosts)
-            .where(inArray(elearningForumPosts.parentId, parentIds))
-            .all();
-          if (children.length === 0) break;
-          const childIds = children.map(c => c.id);
-          descendantIds.push(...childIds);
-          parentIds = childIds;
-        }
-        if (descendantIds.length > 0) {
-          await db.delete(elearningForumPosts).where(inArray(elearningForumPosts.id, descendantIds));
-        }
-        await db.delete(elearningForumPosts).where(eq(elearningForumPosts.id, postId));
+        // Recursively delete all descendants, then the post itself (in a transaction)
+        await db.transaction(async (tx) => {
+          const descendantIds: number[] = [];
+          let parentIds = [postId];
+          while (parentIds.length > 0) {
+            const children = await tx.select({ id: elearningForumPosts.id })
+              .from(elearningForumPosts)
+              .where(inArray(elearningForumPosts.parentId, parentIds))
+              .all();
+            if (children.length === 0) break;
+            const childIds = children.map(c => c.id);
+            descendantIds.push(...childIds);
+            parentIds = childIds;
+          }
+          if (descendantIds.length > 0) {
+            await tx.delete(elearningForumPosts).where(inArray(elearningForumPosts.id, descendantIds));
+          }
+          await tx.delete(elearningForumPosts).where(eq(elearningForumPosts.id, postId));
+        });
 
         return { success: true, message: "Pesan berhasil dihapus" };
       } catch (error: any) {
