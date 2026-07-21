@@ -31,6 +31,9 @@ export default function BerkasUpload({
     setUploadingKey(key);
     const body = new FormData();
     body.append("file", file);
+    // Berkas dokumen (KK/KTP/Ijazah dll) bersifat sensitif — tandai privat agar
+    // server selalu meminta auth saat diakses, walau file-nya berupa gambar.
+    body.append("private", "true");
 
     try {
       const token = localStorage.getItem("token");

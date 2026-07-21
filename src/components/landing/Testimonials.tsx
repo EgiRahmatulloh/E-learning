@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShieldAlert } from "lucide-react";
 
 interface AlumniItem {
   id: number;
@@ -149,8 +149,14 @@ export default function Testimonials(_props: TestimonialsProps) {
             </div>
           </div>
         ) : (
-          <div className="col-span-full py-16 text-center text-slate-400 font-bold text-sm bg-white rounded-3xl border border-dashed border-slate-200 max-w-md mx-auto">
-            Tidak ada data testimoni saat ini.
+          <div className="max-w-md mx-auto bg-white rounded-3xl p-8 text-center space-y-4 shadow-xl border border-slate-200">
+            <div className="h-16 w-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto">
+              <ShieldAlert className="h-8 w-8 text-orange-500" />
+            </div>
+            <h3 className="text-lg font-black text-slate-800 uppercase tracking-wider">Belum Ada Testimoni</h3>
+            <p className="text-slate-500 font-bold text-xs leading-relaxed">
+              Cerita alumni saat ini belum dipublikasikan oleh administrator.
+            </p>
           </div>
         )}
       </div>

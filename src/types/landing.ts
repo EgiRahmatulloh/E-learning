@@ -17,16 +17,6 @@ export interface NewsItem {
   imageGlow: string;
 }
 
-export interface ProductItem {
-  id: number;
-  name: string;
-  price: string;
-  description: string;
-  image: string;
-  imageGlow: string;
-  waLink: string;
-}
-
 export interface AgendaItem {
   id: number;
   title: string;

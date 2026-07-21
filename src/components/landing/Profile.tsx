@@ -233,7 +233,7 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#280f91] to-purple-600 text-white shadow-md">
                   <Users className="h-6 w-6" />
                 </div>
-                <span className="text-3xl font-black text-[#280f91]">{homeStats.students || "350"}</span>
+                <span className="text-3xl font-black text-[#280f91]">{homeStats.students}</span>
                 <span className="text-xs font-black text-slate-400 tracking-wider uppercase">Warga Belajar</span>
               </div>
 
@@ -241,7 +241,7 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#ff6105] to-orange-400 text-white shadow-md">
                   <Award className="h-6 w-6" />
                 </div>
-                <span className="text-3xl font-black text-[#280f91]">{homeStats.alumni || "500"}</span>
+                <span className="text-3xl font-black text-[#280f91]">{homeStats.alumni}</span>
                 <span className="text-xs font-black text-slate-400 tracking-wider uppercase">Lulusan Alumni</span>
               </div>
 
@@ -249,7 +249,7 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-teal-400 text-white shadow-md">
                   <BookOpen className="h-6 w-6" />
                 </div>
-                <span className="text-3xl font-black text-[#280f91]">{homeStats.tutors || "18"}</span>
+                <span className="text-3xl font-black text-[#280f91]">{homeStats.tutors}</span>
                 <span className="text-xs font-black text-slate-400 tracking-wider uppercase">Tutor Kompeten</span>
               </div>
 
@@ -257,7 +257,7 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-400 text-white shadow-md">
                   <Layers className="h-6 w-6" />
                 </div>
-                <span className="text-3xl font-black text-[#280f91]">{homeStats.rombel || "12"}</span>
+                <span className="text-3xl font-black text-[#280f91]">{homeStats.rombel}</span>
                 <span className="text-xs font-black text-slate-400 tracking-wider uppercase">Rombel Kelas</span>
               </div>
 
@@ -265,7 +265,7 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-700 text-white shadow-md">
                   <UserCheck className="h-6 w-6" />
                 </div>
-                <span className="text-3xl font-black text-[#280f91]">{homeStats.managers || "5"}</span>
+                <span className="text-3xl font-black text-[#280f91]">{homeStats.managers}</span>
                 <span className="text-xs font-black text-slate-400 tracking-wider uppercase">Pengelola</span>
               </div>
 
@@ -273,7 +273,7 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 text-white shadow-md">
                   <MapPin className="h-6 w-6" />
                 </div>
-                <span className="text-3xl font-black text-[#280f91]">{homeStats.servicePoints || "4"}</span>
+                <span className="text-3xl font-black text-[#280f91]">{homeStats.servicePoints}</span>
                 <span className="text-xs font-black text-slate-400 tracking-wider uppercase">Titik Layanan</span>
               </div>
             </div>

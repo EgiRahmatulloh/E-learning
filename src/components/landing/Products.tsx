@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,56 +10,64 @@ import {
   DialogFooter,
   DialogClose
 } from "@/components/ui/dialog";
-import { MessageCircle, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
-import type { ProductItem } from "../../types/landing";
+import { MessageCircle, Sparkles, ChevronLeft, ChevronRight, ShieldAlert } from "lucide-react";
 
-const productItems: ProductItem[] = [
-  {
-    id: 1,
-    name: "Kerajinan Bambu Estetik",
-    price: "Rp 45.000",
-    description: "Tempat pensil dan pajangan estetik ramah lingkungan buatan tangan warga belajar PKBM.",
-    image: "/images/02b90792f1b8702e02039ed4a61d8420.jpg",
-    imageGlow: "from-orange-500/20 to-amber-500/20",
-    waLink: "https://wa.me/6282128594025?text=Halo%20Admin%20PKBM,%20saya%20tertarik%20membeli%20Kerajinan%20Bambu%20Estetik%20karya%20warga%20belajar."
-  },
-  {
-    id: 2,
-    name: "Kue Pengantin Premium",
-    price: "Rp 250.000",
-    description: "Kue hias pengantin premium yang diproduksi secara higienis oleh kelompok belajar wirausaha boga.",
-    image: "/images/f94ee3cd91bec22a90625ccf63879eb4.jpg",
-    imageGlow: "from-yellow-500/20 to-orange-500/20",
-    waLink: "https://wa.me/6282128594025?text=Halo%20Admin%20PKBM,%20saya%20tertarik%20membeli%20Kue%20Pengantin%20Premium%20karya%20warga%20belajar."
-  },
-  {
-    id: 3,
-    name: "Tas & Keset Rajut Elegan",
-    price: "Rp 85.000",
-    description: "Tas dan keset rajutan tangan yang kuat, modis, dan dibuat dengan detail tinggi menggunakan benang rajut berkualitas.",
-    image: "/images/b5212ec568f692a2bb92f8a422335d81.jpg",
-    imageGlow: "from-purple-500/20 to-pink-500/20",
-    waLink: "https://wa.me/6282128594025?text=Halo%20Admin%20PKBM,%20saya%20tertarik%20membeli%20Tas%20dan%20Keset%20Rajut%20Elegan%20karya%20warga%20belajar."
-  },
-  {
-    id: 4,
-    name: "Aksesoris Manik Kreatif",
-    price: "Rp 25.000",
-    description: "Gelang dan kalung manik-manik cantik hasil kerajinan tangan warga belajar untuk aksesoris harian.",
-    image: "/images/2160f0de812acb1585c6ed4218198819.png",
-    imageGlow: "from-blue-500/20 to-cyan-500/20",
-    waLink: "https://wa.me/6282128594025?text=Halo%20Admin%20PKBM,%20saya%20tertarik%20membeli%20Aksesoris%20Manik%20Kreatif%20karya%20warga%20belajar."
+interface ProductItem {
+  id: number;
+  namaProduk: string;
+  harga: number;
+  penjual: string;
+  satuan: string;
+  status: string;
+  deskripsi: string;
+  noHp: string;
+  gambar: string;
+}
+
+const formatHarga = (harga: number) =>
+  `Rp ${harga.toLocaleString("id-ID")}`;
+
+const formatWaNumber = (num: string) => {
+  if (!num) return "";
+  let clean = num.replace(/\D/g, "");
+  if (clean.length < 9) return "";
+  if (clean.startsWith("0")) {
+    clean = "62" + clean.slice(1);
   }
-];
+  return clean;
+};
+
+const getWaLink = (item: ProductItem) => {
+  const cleanNoHp = formatWaNumber(item.noHp);
+  if (!cleanNoHp) return "#";
+  const text = encodeURIComponent(
+    `Halo ${item.penjual || "Penjual"}, saya tertarik membeli ${item.namaProduk || "produk"} karya Anda.`
+  );
+  return `https://wa.me/${cleanNoHp}?text=${text}`;
+};
 
 export default function Products() {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [products, setProducts] = useState<ProductItem[]>([]);
+
+  useEffect(() => {
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.data)) {
+          setProducts(data.data.filter((p: ProductItem) => p.status === "AKTIF"));
+        }
+      })
+      .catch((err) => console.error("Gagal memuat produk:", err));
+  }, []);
+
   const handleScroll = (direction: "left" | "right") => {
     if (!scrollRef.current) return;
     const card = scrollRef.current.querySelector("[data-card]") as HTMLElement | null;
     const cardWidth = card ? card.offsetWidth + 24 : 280;
     scrollRef.current.scrollBy({ left: direction === "left" ? -cardWidth : cardWidth, behavior: "smooth" });
   };
+
   return (
     <section id="produk" className="pt-8 pb-16 bg-white relative overflow-hidden">
       <div aria-hidden className="absolute top-0 left-1/2 -translate-x-1/2 h-px w-2/3 bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
@@ -80,9 +88,20 @@ export default function Products() {
         </div>
 
         {/* Products Carousel */}
+        {products.length === 0 ? (
+          <div className="max-w-md mx-auto bg-white rounded-3xl p-8 text-center space-y-4 shadow-xl border border-slate-200">
+            <div className="h-16 w-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto">
+              <ShieldAlert className="h-8 w-8 text-orange-500" />
+            </div>
+            <h3 className="text-lg font-black text-slate-800 uppercase tracking-wider">Belum Ada Produk</h3>
+            <p className="text-slate-500 font-bold text-xs leading-relaxed">
+              Produk hasil karya warga belajar saat ini belum dipublikasikan oleh administrator.
+            </p>
+          </div>
+        ) : (
         <div className="space-y-8 max-w-7xl mx-auto">
           <div className="relative">
-            {productItems.length > 1 && (
+            {products.length > 1 && (
               <>
                 <button
                   onClick={() => handleScroll("left")}
@@ -104,10 +123,10 @@ export default function Products() {
             <div
               ref={scrollRef}
               className={`flex gap-6 overflow-x-auto scrollbar-none snap-x snap-mandatory pt-4 pb-4 ${
-                productItems.length === 1 ? "justify-center" : ""
+                products.length === 1 ? "justify-center" : ""
               }`}
             >
-              {productItems.map((product) => (
+              {products.map((product) => (
                 <Dialog key={product.id}>
                   <DialogTrigger asChild>
                     <div
@@ -116,31 +135,31 @@ export default function Products() {
                     >
                       <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-slate-50 border border-slate-100 shadow-inner">
                         <img
-                          src={product.image}
-                          alt={product.name}
+                          src={product.gambar}
+                          alt={product.namaProduk}
                           loading="lazy"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent"></div>
 
                         <span className="absolute bottom-3 right-3 inline-block rounded-lg bg-[#ff6105] px-2.5 py-1 text-[11px] font-black text-white shadow-md">
-                          {product.price}
+                          {formatHarga(product.harga)}
                         </span>
                       </div>
 
                       <div className="space-y-3 text-left px-1 flex-1 flex flex-col justify-between">
                         <div className="space-y-2">
                           <h3 className="text-sm font-black text-[#280f91] group-hover:text-[#ff6105] transition-colors leading-tight line-clamp-2 uppercase">
-                            {product.name}
+                            {product.namaProduk}
                           </h3>
                           <p className="text-slate-600 text-[10px] font-semibold leading-relaxed line-clamp-2">
-                            {product.description}
+                            {product.deskripsi}
                           </p>
                         </div>
 
                         <div className="pt-3 border-t border-slate-50 flex items-center justify-between mt-2" onClick={(e) => e.stopPropagation()}>
                           <a
-                            href={product.waLink}
+                            href={getWaLink(product)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-[8px] font-black text-emerald-600 hover:text-[#ff6105] uppercase tracking-wider transition-colors flex items-center gap-1"
@@ -153,20 +172,20 @@ export default function Products() {
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl">
                     <DialogHeader>
-                      <DialogTitle className="text-2xl font-black text-[#280f91]">{product.name}</DialogTitle>
-                      <DialogDescription className="text-sm font-bold text-[#ff6105]">{product.price}</DialogDescription>
+                      <DialogTitle className="text-2xl font-black text-[#280f91]">{product.namaProduk}</DialogTitle>
+                      <DialogDescription className="text-sm font-bold text-[#ff6105]">{formatHarga(product.harga)}</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="h-56 w-full rounded-2xl relative overflow-hidden border border-slate-200">
                         <img
-                          src={product.image}
-                          alt={product.name}
+                          src={product.gambar}
+                          alt={product.namaProduk}
                           loading="lazy"
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <p className="text-slate-600 text-sm font-semibold leading-relaxed">
-                        {product.description}
+                        {product.deskripsi}
                       </p>
                       <div className="bg-orange-50 rounded-xl p-3 border border-orange-100 flex items-start gap-2.5">
                         <Sparkles className="h-5 w-5 text-[#ff6105] shrink-0 mt-0.5" />
@@ -179,7 +198,7 @@ export default function Products() {
                       <DialogClose asChild>
                         <Button variant="outline" className="rounded-xl font-bold cursor-pointer">Tutup</Button>
                       </DialogClose>
-                      <a href={product.waLink} target="_blank" rel="noopener noreferrer">
+                      <a href={getWaLink(product)} target="_blank" rel="noopener noreferrer">
                         <Button className="rounded-xl bg-emerald-600 hover:bg-[#ff6105] text-white font-bold h-11 px-5 flex items-center gap-2 cursor-pointer">
                           <MessageCircle className="h-5 w-5" />
                           Beli via WhatsApp
@@ -204,6 +223,7 @@ export default function Products() {
             </Button>
           </div>
         </div>
+        )}
       </div>
     </section>
   );

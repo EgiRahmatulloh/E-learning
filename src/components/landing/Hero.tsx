@@ -55,7 +55,8 @@ export default function Hero({ onServiceClick }: HeroProps) {
       try {
         const res = await fetch("/api/sliders");
         const data = await res.json();
-        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+        // Respons sukses (termasuk list kosong) bersifat final — jangan jatuh ke cache localStorage
+        if (data.success && Array.isArray(data.data)) {
           const validated = data.data.filter(isValidSlide);
           const activeSlides = validated.filter((slide: SlideData) => slide.status !== "NON AKTIF");
           setSlides(activeSlides);

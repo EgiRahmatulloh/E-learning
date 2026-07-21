@@ -144,8 +144,9 @@ export default function WargaBelajarManager() {
 
   const fetchStudents = () => {
     setLoading(true);
+    const token = localStorage.getItem("token");
     fetch("/api/students", {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then((res) => res.json())
       .then((data) => {

@@ -345,10 +345,10 @@ CREATE TABLE IF NOT EXISTS alumni (
 try { sqlite.exec(`ALTER TABLE alumni ADD COLUMN melanjutkan_ke TEXT NOT NULL DEFAULT ''`); } catch {}
 try { sqlite.exec(`ALTER TABLE alumni ADD COLUMN pekerjaan TEXT NOT NULL DEFAULT ''`); } catch {}
 
-// Migration: tambah kolom alamat sub-fields untuk semua tabel
-const _addrTables = ['managers', 'tutors', 'students', 'alumni'];
+// Migration: tambah kolom alamat sub-fields untuk semua tabel person
+const _personTables = ['managers', 'tutors', 'students', 'alumni'];
 const _addrCols = ['rt', 'rw', 'desa', 'kecamatan', 'kabupaten', 'provinsi'];
-for (const _t of _addrTables) {
+for (const _t of _personTables) {
   for (const _c of _addrCols) {
     try { sqlite.exec(`ALTER TABLE ${_t} ADD COLUMN ${_c} TEXT NOT NULL DEFAULT ''`); } catch {}
   }
@@ -358,8 +358,7 @@ for (const _t of _addrTables) {
 try { sqlite.exec(`ALTER TABLE students ADD COLUMN sekolah_asal TEXT NOT NULL DEFAULT ''`); } catch {}
 
 // Migration: tambah kolom berkas (JSON dokumen) untuk tabel yang punya upload berkas
-const _berkasTables = ['managers', 'tutors', 'students', 'alumni'];
-for (const _t of _berkasTables) {
+for (const _t of _personTables) {
   try { sqlite.exec(`ALTER TABLE ${_t} ADD COLUMN berkas TEXT NOT NULL DEFAULT '{}'`); } catch {}
 }
 

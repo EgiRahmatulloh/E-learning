@@ -7,6 +7,16 @@ import path from "path";
 
 const SECURE_UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
+// Ekstensi gambar — dipakai bersama oleh validasi upload DAN aturan akses publik
+// di /api/files/ agar keduanya tidak bisa lepas sinkron. SVG sengaja TIDAK di sini:
+// SVG bisa memuat <script> sehingga jadi vektor stored-XSS bila disajikan inline.
+const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "gif"];
+
+// Prefix untuk berkas privat (mis. scan KK/KTP/Ijazah). File ber-prefix ini SELALU
+// butuh auth di /api/files/, walau ekstensinya gambar — mencegah kebocoran dokumen
+// identitas lewat aturan "gambar boleh publik".
+const PRIVATE_PREFIX = "priv-";
+
 // Content-Type eksplisit per ekstensi. Diperlukan karena new Response(Bun.file())
 // tidak selalu mewariskan header type, sementara X-Content-Type-Options: nosniff
 // melarang browser menebak — akibatnya PDF tampil sebagai byte mentah di iframe.
@@ -16,7 +26,6 @@ const MIME_BY_EXT: Record<string, string> = {
   png: "image/png",
   webp: "image/webp",
   gif: "image/gif",
-  svg: "image/svg+xml",
   pdf: "application/pdf",
   doc: "application/msword",
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -50,11 +59,14 @@ export const uploadServices = new Elysia()
       const authError = await verifyUser(headers, jwt, set);
       if (authError) return authError;
 
-      const bodyData = body as { file?: any; public?: string };
+      const bodyData = body as { file?: any; public?: string; private?: string };
       const { file } = bodyData;
       // Flag "public": file yang dimaksudkan diakses pengunjung tanpa login
       // (mis. Pusat Unduhan) disimpan ke public/uploads yang di-serve statis tanpa auth.
       const isPublic = bodyData.public === "true" || bodyData.public === "1";
+      // Flag "private": dokumen sensitif (scan KK/KTP/Ijazah). Diberi prefix agar
+      // /api/files/ selalu meminta auth walau ekstensinya gambar.
+      const isPrivate = bodyData.private === "true" || bodyData.private === "1";
       if (!file || !(file instanceof File)) {
         set.status = 400;
         return { success: false, message: "Berkas tidak valid" };
@@ -62,12 +74,7 @@ export const uploadServices = new Elysia()
 
       // Validasi Ekstensi Berkas (Gambar & Dokumen yang Aman)
       const allowedExtensions = [
-        "jpg",
-        "jpeg",
-        "png",
-        "webp",
-        "gif",
-        "svg",
+        ...IMAGE_EXTENSIONS,
         "pdf",
         "doc",
         "docx",
@@ -85,7 +92,8 @@ export const uploadServices = new Elysia()
         return { success: false, message: "Ekstensi berkas tidak diperbolehkan" };
       }
 
-      // Validasi Mime-Type (Gambar & Dokumen)
+      // Validasi Mime-Type. Gambar dibatasi ke raster (image/*) TANPA SVG —
+      // image/svg+xml bisa memuat <script> dan jadi vektor stored-XSS.
       const allowedMimeTypes = [
         "application/pdf",
         "application/msword",
@@ -99,13 +107,14 @@ export const uploadServices = new Elysia()
         "application/x-rar-compressed",
         "text/plain",
       ];
-      if (!file.type.startsWith("image/") && !allowedMimeTypes.includes(file.type)) {
+      const isRasterImage = file.type.startsWith("image/") && file.type !== "image/svg+xml";
+      if (!isRasterImage && !allowedMimeTypes.includes(file.type)) {
         set.status = 400;
         return { success: false, message: "Hanya berkas gambar atau dokumen yang diperbolehkan" };
       }
 
       // Validasi Ukuran Berkas (Maksimal 100MB untuk dokumen/arsip, 5MB untuk gambar)
-      const isImage = file.type.startsWith("image/");
+      const isImage = isRasterImage;
       const maxLimit = isImage ? 5 * 1024 * 1024 : 100 * 1024 * 1024;
       if (file.size > maxLimit) {
         set.status = 400;
@@ -115,7 +124,8 @@ export const uploadServices = new Elysia()
         };
       }
 
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+      const prefix = isPrivate ? PRIVATE_PREFIX : "";
+      const fileName = `${prefix}${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
 
       if (isPublic) {
         // Simpan ke public/uploads → dilayani statis di /uploads tanpa auth
@@ -142,6 +152,7 @@ export const uploadServices = new Elysia()
       body: t.Object({
         file: t.File(),
         public: t.Optional(t.String()),
+        private: t.Optional(t.String()),
       }),
     }
   )
@@ -151,11 +162,13 @@ export const uploadServices = new Elysia()
     async ({ params, headers, query, jwt, set }) => {
       // Gambar boleh diakses publik (dipakai <img src> di landing page & kartu dashboard
       // yang tidak bisa mengirim header Authorization). Dokumen tetap butuh auth.
-      const imageExtensions = ["jpg", "jpeg", "png", "webp", "gif", "svg"];
+      // KECUALI file ber-prefix privat (scan KK/KTP/Ijazah) — selalu butuh auth walau
+      // ekstensinya gambar, agar dokumen identitas tidak bocor ke publik.
       const ext = params.filename.split(".").pop()?.toLowerCase();
-      const isImage = ext ? imageExtensions.includes(ext) : false;
+      const isPrivate = params.filename.startsWith(PRIVATE_PREFIX);
+      const isPublicImage = !isPrivate && ext ? IMAGE_EXTENSIONS.includes(ext) : false;
 
-      if (!isImage) {
+      if (!isPublicImage) {
         // Auth via header atau query param (untuk preview/download di iframe & <a>
         // yang tidak bisa mengirim header Authorization). Jangan pakai verifyUser
         // di sini: ia men-set set.status=401 duluan dan status itu tetap menempel

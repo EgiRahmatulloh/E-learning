@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShieldAlert } from "lucide-react";
 
 interface GalleryApiItem {
   id: number;
@@ -65,7 +65,15 @@ export default function Gallery(_props: GalleryProps) {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff6105]" />
           </div>
         ) : items.length === 0 ? (
-          <p className="text-center text-slate-400 text-sm font-bold py-12">Belum ada galeri.</p>
+          <div className="max-w-md mx-auto bg-white rounded-3xl p-8 text-center space-y-4 shadow-xl border border-slate-200">
+            <div className="h-16 w-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto">
+              <ShieldAlert className="h-8 w-8 text-orange-500" />
+            </div>
+            <h3 className="text-lg font-black text-slate-800 uppercase tracking-wider">Belum Ada Galeri</h3>
+            <p className="text-slate-500 font-bold text-xs leading-relaxed">
+              Dokumentasi kegiatan saat ini belum dipublikasikan oleh administrator.
+            </p>
+          </div>
         ) : (
           <div className="space-y-8 max-w-7xl mx-auto">
             <div className="relative">

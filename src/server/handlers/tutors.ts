@@ -22,8 +22,9 @@ export const tutorsHandlers = new Elysia()
     })
   )
   // Ambil data tutor untuk publik (landing page) — tanpa auth.
-  // Whitelist field profil tenaga pendidik. Field pribadi (nik, email, alamat
-  // rt/rw/desa/dst, password) tidak dikirim ke publik.
+  // Whitelist field profil tenaga pendidik. Field pribadi (nik, email, sub-alamat
+  // rt/rw/desa/dst, password) tidak dikirim ke publik. Catatan: `alamat` (baris jalan)
+  // sengaja disertakan untuk ditampilkan di profil publik.
   .get("/api/public-tutors", async ({ set }) => {
     try {
       const list = await db

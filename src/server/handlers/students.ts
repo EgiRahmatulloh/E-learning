@@ -33,7 +33,7 @@ export const studentsHandlers = new Elysia()
   // email, nik, noHp TIDAK pernah dikirim ke publik.
   .get("/api/public-students", async ({ set }) => {
     try {
-      const list = await db
+      const data = await db
         .select({
           id: students.id,
           nama: students.nama,
@@ -50,26 +50,6 @@ export const studentsHandlers = new Elysia()
         .from(students)
         .all();
 
-      const allRombelMembers = await db
-        .select({
-          studentId: rombelStudents.studentId,
-          rombelId: rombels.id,
-          rombelNama: rombels.nama,
-        })
-        .from(rombelStudents)
-        .innerJoin(rombels, eq(rombelStudents.rombelId, rombels.id))
-        .all();
-
-      const rombelMap = new Map<number, { id: number; nama: string }[]>();
-      for (const row of allRombelMembers) {
-        if (!rombelMap.has(row.studentId)) rombelMap.set(row.studentId, []);
-        rombelMap.get(row.studentId)!.push({ id: row.rombelId, nama: row.rombelNama });
-      }
-
-      const data = list.map((item) => ({
-        ...item,
-        rombels: rombelMap.get(item.id) || [],
-      }));
       return { success: true, data };
     } catch {
       set.status = 500;

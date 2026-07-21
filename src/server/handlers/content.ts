@@ -1904,6 +1904,14 @@ export const contentHandlers = new Elysia()
       } = body as any;
 
       try {
+        // berkas bersifat opsional di body; baca dulu yang tersimpan agar tidak
+        // terhapus saat PUT tidak menyertakan field berkas (konsisten dgn students/tutors).
+        const existing = await db.select().from(alumni).where(eq(alumni.id, id)).get();
+        if (!existing) {
+          set.status = 404;
+          return { success: false, message: "Data alumni tidak ditemukan" };
+        }
+
         const updated = await db
           .update(alumni)
           .set({
@@ -1931,7 +1939,7 @@ export const contentHandlers = new Elysia()
             pekerjaan,
             cerita,
             foto,
-            berkas: berkas || {},
+            berkas: berkas ?? existing.berkas,
             updatedAt: new Date().toISOString(),
           })
           .where(eq(alumni.id, id))
