@@ -17,6 +17,12 @@ const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "gif"];
 // identitas lewat aturan "gambar boleh publik".
 const PRIVATE_PREFIX = "priv-";
 
+// Prefix untuk berkas publik non-gambar (mis. dokumen Pusat Unduhan). File ini
+// dilayani /api/files/ TANPA auth — apa pun ekstensinya — supaya pengunjung bisa
+// mengunduh tanpa login. Disajikan lewat endpoint dinamis (bukan staticPlugin)
+// agar file yang diupload saat runtime langsung bisa diakses di produksi.
+const PUBLIC_PREFIX = "pub-";
+
 // Content-Type eksplisit per ekstensi. Diperlukan karena new Response(Bun.file())
 // tidak selalu mewariskan header type, sementara X-Content-Type-Options: nosniff
 // melarang browser menebak — akibatnya PDF tampil sebagai byte mentah di iframe.
@@ -124,20 +130,14 @@ export const uploadServices = new Elysia()
         };
       }
 
-      const prefix = isPrivate ? PRIVATE_PREFIX : "";
+      // Tentukan prefix: privat (wajib auth) atau publik non-gambar (tanpa auth).
+      // isPrivate diprioritaskan bila keduanya ter-set.
+      const prefix = isPrivate ? PRIVATE_PREFIX : isPublic ? PUBLIC_PREFIX : "";
       const fileName = `${prefix}${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
 
-      if (isPublic) {
-        // Simpan ke public/uploads → dilayani statis di /uploads tanpa auth
-        const publicDir = path.join(process.cwd(), "public", "uploads");
-        if (!fs.existsSync(publicDir)) {
-          fs.mkdirSync(publicDir, { recursive: true });
-        }
-        await Bun.write(path.join(publicDir, fileName), file);
-        return { success: true, url: `/uploads/${fileName}` };
-      }
-
-      // Simpan di folder aman (bukan public/)
+      // Semua file disimpan di folder aman & disajikan lewat endpoint dinamis /api/files/.
+      // Ini penting di produksi (mis. Render): staticPlugin hanya meng-index folder saat
+      // startup, jadi file yang diupload saat runtime tidak terbaca via /uploads/ → 404.
       if (!fs.existsSync(SECURE_UPLOAD_DIR)) {
         fs.mkdirSync(SECURE_UPLOAD_DIR, { recursive: true });
       }
@@ -164,11 +164,14 @@ export const uploadServices = new Elysia()
       // yang tidak bisa mengirim header Authorization). Dokumen tetap butuh auth.
       // KECUALI file ber-prefix privat (scan KK/KTP/Ijazah) — selalu butuh auth walau
       // ekstensinya gambar, agar dokumen identitas tidak bocor ke publik.
+      // Dan file ber-prefix publik (Pusat Unduhan) — selalu boleh tanpa auth.
       const ext = params.filename.split(".").pop()?.toLowerCase();
       const isPrivate = params.filename.startsWith(PRIVATE_PREFIX);
+      const isPublicFile = params.filename.startsWith(PUBLIC_PREFIX);
       const isPublicImage = !isPrivate && ext ? IMAGE_EXTENSIONS.includes(ext) : false;
+      const isPublicAccess = isPublicFile || isPublicImage;
 
-      if (!isPublicImage) {
+      if (!isPublicAccess) {
         // Auth via header atau query param (untuk preview/download di iframe & <a>
         // yang tidak bisa mengirim header Authorization). Jangan pakai verifyUser
         // di sini: ia men-set set.status=401 duluan dan status itu tetap menempel
