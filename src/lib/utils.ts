@@ -12,7 +12,10 @@ export async function parseExcel(file: File): Promise<string[][]> {
     reader.onload = (e) => {
       try {
         const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: "array" });
+        // cellText+cellNF: minta xlsx menyiapkan teks terformat (.w) & format (.z) tiap sel.
+        // Dipakai agar sel bertipe TANGGAL bisa dibaca sebagai teks yang benar
+        // (mis. "05-02-2008") alih-alih serial number mentah ("39483").
+        const workbook = XLSX.read(data, { type: "array", cellText: true, cellNF: true });
         // Pilih sheet pertama yang memiliki data (lewati sheet kosong di depan).
         let worksheet: XLSX.WorkSheet | undefined;
         for (const name of workbook.SheetNames) {
@@ -25,6 +28,17 @@ export async function parseExcel(file: File): Promise<string[][]> {
         if (!worksheet) {
           resolve([]);
           return;
+        }
+        // Ubah HANYA sel tanggal menjadi teks terformat. Sel angka biasa (mis. NIK 16
+        // digit) sengaja TIDAK disentuh agar tidak berubah jadi notasi ilmiah.
+        for (const addr of Object.keys(worksheet)) {
+          if (addr[0] === "!") continue;
+          const cell = worksheet[addr] as XLSX.CellObject;
+          if (cell.t === "n" && isDateFormat(cell.z) && typeof cell.w === "string") {
+            cell.v = cell.w;
+            cell.t = "s";
+            delete cell.z;
+          }
         }
         const sheetData = XLSX.utils.sheet_to_json<unknown[]>(worksheet, {
           header: 1,
@@ -42,6 +56,19 @@ export async function parseExcel(file: File): Promise<string[][]> {
     reader.onerror = (err) => reject(err);
     reader.readAsArrayBuffer(file);
   });
+}
+
+// Deteksi apakah format sel (SSF) merupakan format tanggal/waktu — mis. "dd-mm-yyyy",
+// "yyyy-mm-dd", "d/m/yy". Menghindari salah-deteksi format angka (yang memakai # atau 0).
+// cell.z bisa berupa string format atau index numerik built-in; hanya string yang diperiksa.
+function isDateFormat(z: string | number | undefined): boolean {
+  if (typeof z !== "string") return false;
+  const hasDateToken = /[ymd]/i.test(z);
+  const hasSeparator = /[/.\- ]/.test(z);
+  // Format angka murni (mis. "#,##0.00") tak boleh dianggap tanggal.
+  const numericLeftover = z.replace(/[ymdhs]/gi, "");
+  const looksNumeric = /[#0]/.test(numericLeftover);
+  return hasDateToken && hasSeparator && !looksNumeric;
 }
 
 export function downloadExcel(
