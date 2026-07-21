@@ -108,7 +108,9 @@ export default function TutorManager() {
 
   const fetchTutors = () => {
     setLoading(true);
-    fetch("/api/tutors")
+    fetch("/api/tutors", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    })
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.data) {

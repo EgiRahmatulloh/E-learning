@@ -1649,6 +1649,8 @@ export const contentHandlers = new Elysia()
           nama: alumni.nama,
           program: alumni.program,
           tahunLulus: alumni.tahunLulus,
+          pekerjaan: alumni.pekerjaan,
+          melanjutkanKe: alumni.melanjutkanKe,
           cerita: alumni.cerita,
           foto: alumni.foto,
           createdAt: alumni.createdAt,

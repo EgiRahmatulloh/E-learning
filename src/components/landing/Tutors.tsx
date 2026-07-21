@@ -49,7 +49,7 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
   }, [searchTerm, selectedProgramFilter]);
 
   useEffect(() => {
-    fetch("/api/tutors")
+    fetch("/api/public-tutors")
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.data) {

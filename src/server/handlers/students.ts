@@ -28,6 +28,54 @@ export const studentsHandlers = new Elysia()
       }),
     })
   )
+  // Ambil data warga belajar untuk publik (landing page) — tanpa auth.
+  // Whitelist eksplisit: hanya field non-sensitif. NISN, NIS, nama ortu,
+  // email, nik, noHp TIDAK pernah dikirim ke publik.
+  .get("/api/public-students", async ({ set }) => {
+    try {
+      const list = await db
+        .select({
+          id: students.id,
+          nama: students.nama,
+          program: students.program,
+          kelas: students.kelas,
+          tempatTglLahir: students.tempatTglLahir,
+          jenisKelamin: students.jenisKelamin,
+          agama: students.agama,
+          titikLayanan: students.titikLayanan,
+          alamat: students.alamat,
+          status: students.status,
+          foto: students.foto,
+        })
+        .from(students)
+        .all();
+
+      const allRombelMembers = await db
+        .select({
+          studentId: rombelStudents.studentId,
+          rombelId: rombels.id,
+          rombelNama: rombels.nama,
+        })
+        .from(rombelStudents)
+        .innerJoin(rombels, eq(rombelStudents.rombelId, rombels.id))
+        .all();
+
+      const rombelMap = new Map<number, { id: number; nama: string }[]>();
+      for (const row of allRombelMembers) {
+        if (!rombelMap.has(row.studentId)) rombelMap.set(row.studentId, []);
+        rombelMap.get(row.studentId)!.push({ id: row.rombelId, nama: row.rombelNama });
+      }
+
+      const data = list.map((item) => ({
+        ...item,
+        rombels: rombelMap.get(item.id) || [],
+      }));
+      return { success: true, data };
+    } catch {
+      set.status = 500;
+      return { success: false, message: "Gagal mengambil data warga belajar" };
+    }
+  })
   // Ambil semua warga belajar
   .get("/api/students", async ({ headers, jwt, set }) => {
     const authError = await verifyUser(headers, jwt, set);

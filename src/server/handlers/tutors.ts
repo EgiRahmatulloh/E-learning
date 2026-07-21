@@ -21,6 +21,38 @@ export const tutorsHandlers = new Elysia()
       }),
     })
   )
+  // Ambil data tutor untuk publik (landing page) — tanpa auth.
+  // Whitelist field profil tenaga pendidik. Field pribadi (nik, email, alamat
+  // rt/rw/desa/dst, password) tidak dikirim ke publik.
+  .get("/api/public-tutors", async ({ set }) => {
+    try {
+      const list = await db
+        .select({
+          id: tutors.id,
+          nama: tutors.nama,
+          tutorMapel: tutors.tutorMapel,
+          program: tutors.program,
+          nip: tutors.nip,
+          tempatTglLahir: tutors.tempatTglLahir,
+          jenisKelamin: tutors.jenisKelamin,
+          agama: tutors.agama,
+          pendidikan: tutors.pendidikan,
+          alamat: tutors.alamat,
+          tanggalMulaiTugas: tutors.tanggalMulaiTugas,
+          nomorSkPengangkatan: tutors.nomorSkPengangkatan,
+          lembagaPengangkat: tutors.lembagaPengangkat,
+          nomorSkPenugasan: tutors.nomorSkPenugasan,
+          lembagaPenugas: tutors.lembagaPenugas,
+          foto: tutors.foto,
+        })
+        .from(tutors)
+        .all();
+      return { success: true, data: list };
+    } catch {
+      set.status = 500;
+      return { success: false, message: "Gagal mengambil data tutor" };
+    }
+  })
   // Ambil semua tutor
   .get("/api/tutors", async ({ headers, jwt, set }) => {
     const authError = await verifyUser(headers, jwt, set);

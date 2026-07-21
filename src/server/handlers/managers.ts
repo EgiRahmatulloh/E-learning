@@ -43,11 +43,43 @@ export const managersHandlers = new Elysia()
   .get("/api/public-managers", async ({ set }) => {
     try {
       const list = await db.select().from(managers).all();
+      // Whitelist eksplisit: hanya field yang memang ditampilkan di landing page.
+      // Field sensitif (nik, email, password, role) tidak pernah dikirim ke publik.
       const safeList = list.map((item) => {
-        const rest = { ...item };
-        delete (rest as any).password;
-        delete (rest as any).nik;
-        return rest;
+        const alamatLengkap = [
+          item.alamat,
+          item.rt && item.rw
+            ? `RT ${item.rt}/RW ${item.rw}`
+            : item.rt
+              ? `RT ${item.rt}`
+              : item.rw
+                ? `RW ${item.rw}`
+                : "",
+          item.desa ? `Desa ${item.desa}` : "",
+          item.kecamatan ? `Kec. ${item.kecamatan}` : "",
+          item.kabupaten,
+          item.provinsi,
+        ]
+          .filter(Boolean)
+          .join(", ");
+
+        return {
+          id: item.id,
+          nama: item.nama,
+          jabatan: item.jabatan,
+          nip: item.nip,
+          tempatTglLahir: item.tempatTglLahir,
+          jenisKelamin: item.jenisKelamin,
+          agama: item.agama,
+          pendidikan: item.pendidikan,
+          tanggalMulaiTugas: item.tanggalMulaiTugas,
+          nomorSkPengangkatan: item.nomorSkPengangkatan,
+          lembagaPengangkat: item.lembagaPengangkat,
+          nomorSkPenugasan: item.nomorSkPenugasan,
+          lembagaPenugas: item.lembagaPenugas,
+          alamat: alamatLengkap,
+          foto: item.foto,
+        };
       });
       return { success: true, data: safeList };
     } catch {

@@ -13,11 +13,12 @@ import { Search, Award, MapPin, Briefcase, GraduationCap } from "lucide-react";
 interface Alumni {
   id: number;
   nama: string;
-  lulusTahun: string;
+  program: string;
+  tahunLulus: string;
   pekerjaan: string;
-  testimoni: string;
+  cerita: string;
   foto: string;
-  pendidikanLanjut: string;
+  melanjutkanKe: string;
 }
 
 interface AlumniPageProps {
@@ -32,7 +33,7 @@ export default function AlumniPage(_props: AlumniPageProps) {
   const [selectedYear, setSelectedYear] = useState("Semua");
 
   // Get unique years for filter
-  const uniqueYears = useMemo(() => Array.from(new Set(alumniList.map(a => a.lulusTahun).filter(Boolean))).sort().reverse(), [alumniList]);
+  const uniqueYears = useMemo(() => Array.from(new Set(alumniList.map(a => a.tahunLulus).filter(Boolean))).sort().reverse(), [alumniList]);
   const yearOptions = useMemo(() => ["Semua", ...uniqueYears.length > 0 ? uniqueYears : ["2023", "2022", "2021", "2020"]], [uniqueYears]);
 
 
@@ -54,7 +55,7 @@ export default function AlumniPage(_props: AlumniPageProps) {
 
   const filteredAlumni = useMemo(() => alumniList.filter((a) => {
     const matchName = a.nama.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchYear = selectedYear === "Semua" || a.lulusTahun === selectedYear;
+    const matchYear = selectedYear === "Semua" || a.tahunLulus === selectedYear;
     return matchName && matchYear;
   }), [alumniList, searchTerm, selectedYear]);
 
@@ -228,7 +229,7 @@ export default function AlumniPage(_props: AlumniPageProps) {
                     </div>
                     <div className="bg-purple-50 p-3.5 rounded-2xl border border-purple-100 text-center space-y-1">
                       <span className="block text-[9px] font-black text-purple-400 uppercase tracking-wider">Tahun Lulus</span>
-                      <span className="text-xs font-black text-purple-900">{selectedAlumni.lulusTahun || "-"}</span>
+                      <span className="text-xs font-black text-purple-900">{selectedAlumni.tahunLulus || "-"}</span>
                     </div>
                   </div>
 
@@ -253,14 +254,14 @@ export default function AlumniPage(_props: AlumniPageProps) {
                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block flex items-center gap-1">
                             <MapPin className="h-3 w-3" /> Pendidikan Lanjut
                           </span>
-                          <span className="text-slate-800 font-bold uppercase">{selectedAlumni.pendidikanLanjut || "-"}</span>
+                          <span className="text-slate-800 font-bold uppercase">{selectedAlumni.melanjutkanKe || "-"}</span>
                         </div>
                       </div>
 
                       <div className="space-y-1.5 bg-slate-50 p-4 rounded-2xl border border-slate-100 italic">
                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block not-italic mb-1">Pesan / Kesan:</span>
                         <p className="text-slate-600 font-semibold leading-relaxed">
-                          "{selectedAlumni.testimoni || "Pendidikan di PKBM Menuju Makmur memberikan saya kesempatan kedua untuk meraih masa depan yang lebih cerah. Terima kasih kepada seluruh tutor dan staf atas bimbingannya."}"
+                          "{selectedAlumni.cerita || "Pendidikan di PKBM Menuju Makmur memberikan saya kesempatan kedua untuk meraih masa depan yang lebih cerah. Terima kasih kepada seluruh tutor dan staf atas bimbingannya."}"
                         </p>
                       </div>
                     </div>

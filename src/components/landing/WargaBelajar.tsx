@@ -16,15 +16,10 @@ interface Student {
   nama: string;
   program: string;
   kelas: string;
-  nisn: string;
-  nis: string;
   tempatTglLahir: string;
-  titikLayanan: string;
   jenisKelamin: string;
   agama: string;
-  namaAyah: string;
-  email: string;
-  namaIbu: string;
+  titikLayanan: string;
   alamat: string;
   foto: string;
   status: string;
@@ -47,7 +42,7 @@ export default function WargaBelajar(_props: WargaBelajarProps) {
   const itemsPerPage = 10;
 
   useEffect(() => {
-    fetch("/api/students")
+    fetch("/api/public-students")
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.data) {
@@ -249,16 +244,6 @@ export default function WargaBelajar(_props: WargaBelajarProps) {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-semibold text-xs leading-relaxed">
                           <div className="space-y-1">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">NISN</span>
-                            <span className="text-slate-800 font-bold">{student.nisn || "-"}</span>
-                          </div>
-
-                          <div className="space-y-1">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">NIS</span>
-                            <span className="text-slate-800 font-bold">{student.nis || "-"}</span>
-                          </div>
-
-                          <div className="space-y-1">
                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Tempat, Tgl Lahir</span>
                             <span className="text-slate-800 font-bold uppercase">{student.tempatTglLahir || "-"}</span>
                           </div>
@@ -276,16 +261,6 @@ export default function WargaBelajar(_props: WargaBelajarProps) {
                           <div className="space-y-1">
                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Titik Layanan</span>
                             <span className="text-slate-800 font-bold uppercase">{student.titikLayanan || "-"}</span>
-                          </div>
-
-                          <div className="space-y-1">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Nama Ayah</span>
-                            <span className="text-slate-800 font-bold uppercase">{student.namaAyah || "-"}</span>
-                          </div>
-
-                          <div className="space-y-1">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Nama Ibu</span>
-                            <span className="text-slate-800 font-bold uppercase">{student.namaIbu || "-"}</span>
                           </div>
 
                           <div className="space-y-1 sm:col-span-2">
