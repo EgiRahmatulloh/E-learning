@@ -441,6 +441,18 @@ export default function TutorManager() {
       toast.error("Nama wajib diisi!");
       return;
     }
+    if (!formData.nik || formData.nik.length !== 16) {
+      toast.error("NIK wajib diisi dan harus 16 digit!");
+      return;
+    }
+    if (!formData.nip) {
+      toast.error("NIP wajib diisi!");
+      return;
+    }
+    if (!formData.email) {
+      toast.error("Email wajib diisi!");
+      return;
+    }
 
     setSaving(true);
     try {
@@ -808,7 +820,7 @@ export default function TutorManager() {
 
                     {/* Row 1: NAMA | NIK */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA</label>
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA <span className="text-red-300">*</span></label>
                       <input
                         type="text"
                         required
@@ -820,20 +832,23 @@ export default function TutorManager() {
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIK</label>
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIK <span className="text-red-300">*</span></label>
                       <input
                         type="text"
+                        required
+                        inputMode="numeric"
+                        maxLength={16}
                         disabled={!isEditing}
                         placeholder="Masukkan 16 digit NIK tutor"
                         value={formData.nik || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, nik: e.target.value }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, nik: e.target.value.replace(/\D/g, "").slice(0, 16) }))}
                         className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
                     {/* Row 2: PROGRAM/PAKET | KELAS */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PROGRAM / PAKET</label>
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PROGRAM / PAKET <span className="text-red-300">*</span></label>
                       <select
                         required
                         disabled={!isEditing}
@@ -852,7 +867,6 @@ export default function TutorManager() {
                     <div className="flex flex-col gap-0.5">
                       <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KELAS</label>
                       <select
-                        required
                         disabled={!isEditing || !formData.program}
                         value={formData.kelas || ""}
                         onChange={(e) => {
@@ -891,11 +905,12 @@ export default function TutorManager() {
 
                     {/* Row 3: NIP | TEMPAT/TGL.LAHIR */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIP</label>
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIP <span className="text-red-300">*</span></label>
                       <input
                         type="text"
+                        required
                         disabled={!isEditing}
-                        placeholder="Masukkan NIP (jika ada)"
+                        placeholder="Masukkan NIP tutor"
                         value={formData.nip || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, nip: e.target.value }))}
                         className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
@@ -951,9 +966,10 @@ export default function TutorManager() {
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">EMAIL</label>
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">EMAIL <span className="text-red-300">*</span></label>
                       <input
                         type="email"
+                        required
                         disabled={!isEditing}
                         placeholder="Masukkan alamat email tutor"
                         value={formData.email || ""}

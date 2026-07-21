@@ -436,6 +436,22 @@ export default function WargaBelajarManager() {
       toast.error("Nama wajib diisi!");
       return;
     }
+    if (!formData.nik || formData.nik.length !== 16) {
+      toast.error("NIK wajib diisi dan harus 16 digit!");
+      return;
+    }
+    if (!formData.nisn) {
+      toast.error("NISN wajib diisi!");
+      return;
+    }
+    if (!formData.nis) {
+      toast.error("NIS wajib diisi!");
+      return;
+    }
+    if (!formData.email) {
+      toast.error("Email wajib diisi!");
+      return;
+    }
 
     setSaving(true);
     try {
@@ -1139,7 +1155,7 @@ export default function WargaBelajarManager() {
 
                     {/* Row 1: NAMA | NIK */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA</label>
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA <span className="text-red-300">*</span></label>
                       <input
                         type="text"
                         required
@@ -1151,12 +1167,15 @@ export default function WargaBelajarManager() {
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIK</label>
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIK <span className="text-red-300">*</span></label>
                       <input
                         type="text"
+                        required
+                        inputMode="numeric"
+                        maxLength={16}
                         placeholder="Nomor Induk Kependudukan (16 digit)"
                         value={formData.nik || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, nik: e.target.value }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, nik: e.target.value.replace(/\D/g, "").slice(0, 16) }))}
                         className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
                       />
@@ -1164,7 +1183,7 @@ export default function WargaBelajarManager() {
 
                     {/* Row 2: PROGRAM | KELAS */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PROGRAM</label>
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PROGRAM <span className="text-red-300">*</span></label>
                       <select
                         value={formData.program || "PAKET C"}
                         onChange={(e) => {
@@ -1208,23 +1227,27 @@ export default function WargaBelajarManager() {
 
                     {/* Row 3: NISN | NIS */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NISN</label>
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NISN <span className="text-red-300">*</span></label>
                       <input
                         type="text"
+                        required
+                        inputMode="numeric"
                         placeholder="Nomor Induk Siswa Nasional"
                         value={formData.nisn || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, nisn: e.target.value }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, nisn: e.target.value.replace(/\D/g, "") }))}
                         className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIS</label>
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIS <span className="text-red-300">*</span></label>
                       <input
                         type="text"
+                        required
+                        inputMode="numeric"
                         placeholder="Nomor Induk Siswa"
                         value={formData.nis || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, nis: e.target.value }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, nis: e.target.value.replace(/\D/g, "") }))}
                         className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
                       />
@@ -1268,9 +1291,10 @@ export default function WargaBelajarManager() {
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">EMAIL</label>
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">EMAIL <span className="text-red-300">*</span></label>
                       <input
                         type="email"
+                        required
                         placeholder="Alamat email warga belajar"
                         value={formData.email || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}

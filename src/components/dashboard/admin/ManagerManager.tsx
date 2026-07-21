@@ -293,6 +293,18 @@ export default function ManagerManager() {
       toast.error("Nama dan Jabatan wajib diisi!");
       return;
     }
+    if (!selectedManager.nik || selectedManager.nik.length !== 16) {
+      toast.error("NIK wajib diisi dan harus 16 digit!");
+      return;
+    }
+    if (!selectedManager.nip) {
+      toast.error("NIP wajib diisi!");
+      return;
+    }
+    if (!selectedManager.email) {
+      toast.error("Email wajib diisi!");
+      return;
+    }
 
     setSaving(true);
     const token = getSafeItem("token");
@@ -891,7 +903,7 @@ export default function ManagerManager() {
 
                 {/* Row 1: NAMA | NIK */}
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA</label>
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA <span className="text-red-300">*</span></label>
                   <input
                     type="text"
                     disabled={!isEditing}
@@ -902,20 +914,22 @@ export default function ManagerManager() {
                   />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIK</label>
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIK <span className="text-red-300">*</span></label>
                   <input
                     type="text"
+                    inputMode="numeric"
+                    maxLength={16}
                     disabled={!isEditing}
                     placeholder="Masukkan 16 digit Nomor Induk Kependudukan"
                     value={selectedManager.nik}
-                    onChange={(e) => handleFieldChange("nik", e.target.value)}
+                    onChange={(e) => handleFieldChange("nik", e.target.value.replace(/\D/g, "").slice(0, 16))}
                     className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                   />
                 </div>
 
                 {/* Row 2: JABATAN | NIP */}
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">JABATAN</label>
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">JABATAN <span className="text-red-300">*</span></label>
                   <input
                     type="text"
                     disabled={!isEditing}
@@ -926,11 +940,11 @@ export default function ManagerManager() {
                   />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIP</label>
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIP <span className="text-red-300">*</span></label>
                   <input
                     type="text"
                     disabled={!isEditing}
-                    placeholder="Masukkan Nomor Unik Pendidik dan Tenaga Kependidikan (jika ada)"
+                    placeholder="Masukkan Nomor Induk Pegawai"
                     value={selectedManager.nip}
                     onChange={(e) => handleFieldChange("nip", e.target.value)}
                     className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
@@ -992,7 +1006,7 @@ export default function ManagerManager() {
 
                 {/* Row 5: EMAIL | TANGGAL MULAI TUGAS */}
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">EMAIL</label>
+                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">EMAIL <span className="text-red-300">*</span></label>
                   <input
                     type="email"
 
