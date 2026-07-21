@@ -507,7 +507,7 @@ export default function RombelManager() {
                   onClick={() => openEditForm(selectedRombel)}
                   className="bg-[#00badb] hover:bg-[#009cb9] text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl cursor-pointer uppercase tracking-wider shadow-md flex items-center gap-1.5 transition-all active:scale-95"
                 >
-                  <Save className="h-4 w-4" /> EDIT ROMBEL
+                  <Edit3 className="h-4 w-4" /> EDIT
                 </Button>
                 <Button
                   onClick={() => handleDelete(selectedRombel)}
@@ -926,7 +926,7 @@ export default function RombelManager() {
                     ) : (
                       <Save className="h-4 w-4" />
                     )}
-                    BUAT
+                    SIMPAN
                   </Button>
                 </>
               ) : !isEditing ? (

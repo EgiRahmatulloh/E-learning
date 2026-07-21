@@ -3,7 +3,7 @@ import { jwt } from "@elysia/jwt";
 import { finalJwtSecret } from "../config/jwt";
 import { verifyAdmin } from "../middleware/auth";
 import { db } from "../config/db";
-import { tutors, students, products, alumni, managers, servicePoints, elearningSetups, elearningMaterials } from "../models";
+import { tutors, students, products, alumni, managers, servicePoints, rombels, elearningSetups, elearningMaterials } from "../models";
 
 export const statsServices = new Elysia()
   .use(
@@ -27,9 +27,9 @@ export const statsServices = new Elysia()
       const tutorsList = await db.select().from(tutors).all();
       const managersList = await db.select().from(managers).all();
       const servicePointsList = await db.select().from(servicePoints).all();
+      const rombelList = await db.select().from(rombels).all();
 
       const activeStudents = studentsList.filter((s) => s.status === "AKTIF");
-      const classes = new Set(activeStudents.map((s) => s.kelas).filter(Boolean));
 
       return {
         success: true,
@@ -37,7 +37,7 @@ export const statsServices = new Elysia()
           students: activeStudents.length,
           alumni: alumniList.length,
           tutors: tutorsList.length,
-          rombel: classes.size || 0,
+          rombel: rombelList.length,
           managers: managersList.length,
           servicePoints: servicePointsList.length,
         },
@@ -56,9 +56,9 @@ export const statsServices = new Elysia()
       const studentsList = await db.select().from(students).all();
       const productsList = await db.select().from(products).all();
       const alumniList = await db.select().from(alumni).all();
+      const rombelList = await db.select().from(rombels).all();
 
       const activeStudents = studentsList.filter((s) => s.status === "AKTIF");
-      const classes = new Set(activeStudents.map((s) => s.kelas).filter(Boolean));
       const activeProducts = productsList.filter((p) => p.status === "AKTIF");
 
       const paketA = activeStudents.filter(
@@ -83,7 +83,7 @@ export const statsServices = new Elysia()
         data: {
           tutors: tutorsList.length,
           students: activeStudents.length,
-          rombel: classes.size || 0,
+          rombel: rombelList.length,
           products: activeProducts.length,
           paketA,
           paketB,
