@@ -7,6 +7,28 @@ import path from "path";
 
 const SECURE_UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
+// Content-Type eksplisit per ekstensi. Diperlukan karena new Response(Bun.file())
+// tidak selalu mewariskan header type, sementara X-Content-Type-Options: nosniff
+// melarang browser menebak — akibatnya PDF tampil sebagai byte mentah di iframe.
+const MIME_BY_EXT: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  gif: "image/gif",
+  svg: "image/svg+xml",
+  pdf: "application/pdf",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  xls: "application/vnd.ms-excel",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ppt: "application/vnd.ms-powerpoint",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  zip: "application/zip",
+  rar: "application/x-rar-compressed",
+  txt: "text/plain; charset=utf-8",
+};
+
 export const uploadServices = new Elysia()
   .use(
     jwt({
@@ -119,17 +141,35 @@ export const uploadServices = new Elysia()
       const isImage = ext ? imageExtensions.includes(ext) : false;
 
       if (!isImage) {
-        // Auth via header atau query param (untuk preview di img/iframe)
-        let authError = await verifyUser(headers, jwt, set);
-        if (authError && query.token) {
+        // Auth via header atau query param (untuk preview/download di iframe & <a>
+        // yang tidak bisa mengirim header Authorization). Jangan pakai verifyUser
+        // di sini: ia men-set set.status=401 duluan dan status itu tetap menempel
+        // walau token query valid.
+        let authorized = false;
+
+        const authHeader = headers["authorization"];
+        if (authHeader && authHeader.startsWith("Bearer ")) {
           try {
-            const payload = await jwt.verify(query.token);
-            if (payload) authError = null;
+            const payload = await jwt.verify(authHeader.split(" ")[1]);
+            if (payload) authorized = true;
           } catch {
-            // token invalid, tetap error
+            // header token invalid, coba query token
           }
         }
-        if (authError) return authError;
+
+        if (!authorized && query.token) {
+          try {
+            const payload = await jwt.verify(query.token);
+            if (payload) authorized = true;
+          } catch {
+            // token invalid
+          }
+        }
+
+        if (!authorized) {
+          set.status = 401;
+          return { success: false, message: "Akses ditolak, token hilang atau tidak valid" };
+        }
       }
 
       const filePath = path.join(SECURE_UPLOAD_DIR, params.filename);
@@ -147,6 +187,9 @@ export const uploadServices = new Elysia()
       }
 
       const file = Bun.file(filePath);
-      return new Response(file);
+      const contentType = ext && MIME_BY_EXT[ext] ? MIME_BY_EXT[ext] : "application/octet-stream";
+      return new Response(file, {
+        headers: { "Content-Type": contentType },
+      });
     }
   );

@@ -26,8 +26,16 @@ import { cors } from "@elysiajs/cors";
 
 const app = new Elysia()
   .use(cors())
-  .onRequest(({ set }) => {
-    set.headers["X-Frame-Options"] = "DENY";
+  .onRequest(({ set, request }) => {
+    // File unggahan (mis. PDF) perlu tampil di <iframe> aplikasi sendiri untuk preview,
+    // jadi jangan kirim X-Frame-Options: DENY untuk endpoint /api/files/.
+    // SAMEORIGIN sudah cukup: hanya halaman kita yang boleh nge-frame.
+    const pathname = new URL(request.url).pathname;
+    if (!pathname.startsWith("/api/files/")) {
+      set.headers["X-Frame-Options"] = "DENY";
+    } else {
+      set.headers["X-Frame-Options"] = "SAMEORIGIN";
+    }
     set.headers["X-Content-Type-Options"] = "nosniff";
     set.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload";
   })

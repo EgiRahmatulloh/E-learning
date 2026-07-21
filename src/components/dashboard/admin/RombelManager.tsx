@@ -876,7 +876,7 @@ export default function RombelManager() {
                   type="text"
                   value={formData.nama}
                   onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
-                  placeholder="Contoh: 10A, 10B, 11A"
+                  placeholder="Contoh: XA, XB, XIA"
                   disabled={!isEditing}
                   className="w-full h-10 px-3 text-xs font-bold border-2 border-white rounded-xl bg-slate-50 focus:bg-white focus:border-[#00badb] outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 />

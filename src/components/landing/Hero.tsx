@@ -10,21 +10,6 @@ interface SlideData {
   status?: string;
 }
 
-const DEFAULT_SLIDES: SlideData[] = [
-  {
-    image: "/images/0e985c33b3e1f88efc234765edf73af2.jpg",
-    title: "Pendidikan Setara & Fleksibel",
-  },
-  {
-    image: "/images/8c928d7128a4a86625e224dd9d3fa78b.png",
-    title: "Ujian Pendidikan Kesetaraan (UPK)",
-  },
-  {
-    image: "/images/73129d8e548b4795ba15eaafa5d0e39c.jpg",
-    title: "Kreativitas & Produk Karya Warga Belajar",
-  },
-];
-
 interface HeroProps {
   onServiceClick?: (service: "e-spmb" | "e-learning" | "e-ujian") => void;
 }
@@ -59,7 +44,7 @@ function isValidSlide(slide: any): slide is SlideData {
 
 export default function Hero({ onServiceClick }: HeroProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [slides, setSlides] = useState<SlideData[]>(DEFAULT_SLIDES);
+  const [slides, setSlides] = useState<SlideData[]>([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const transitionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const autoSlideTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -73,11 +58,7 @@ export default function Hero({ onServiceClick }: HeroProps) {
         if (data.success && Array.isArray(data.data) && data.data.length > 0) {
           const validated = data.data.filter(isValidSlide);
           const activeSlides = validated.filter((slide: SlideData) => slide.status !== "NON AKTIF");
-          if (activeSlides.length > 0) {
-            setSlides(activeSlides);
-          } else {
-            setSlides(DEFAULT_SLIDES);
-          }
+          setSlides(activeSlides);
           setSafeItem("pkbm_slider_data", JSON.stringify(validated));
           return;
         }
@@ -93,18 +74,14 @@ export default function Hero({ onServiceClick }: HeroProps) {
           if (Array.isArray(parsed) && parsed.length > 0) {
             const validated = parsed.filter(isValidSlide);
             const activeSlides = validated.filter((slide: SlideData) => slide.status !== "NON AKTIF");
-            if (activeSlides.length > 0) {
-              setSlides(activeSlides);
-            } else {
-              setSlides(DEFAULT_SLIDES);
-            }
+            setSlides(activeSlides);
             return;
           }
         }
       } catch {
         // ignore
       }
-      setSlides(DEFAULT_SLIDES);
+      setSlides([]);
     };
 
     fetchLandingSliders();

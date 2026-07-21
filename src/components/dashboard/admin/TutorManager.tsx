@@ -389,6 +389,50 @@ export default function TutorManager() {
     }
   };
 
+  // Sinkronkan wali kelas: tutor jadi wali kelas rombel `kelasNama`.
+  // Lepas dulu tutor ini dari rombel lama (jika pindah/kosong), lalu set yang baru.
+  const syncWaliKelas = async (tutorId: number, kelasNama: string, token: string | null) => {
+    try {
+      const rombelsList = await fetchRombels();
+      const targetName = kelasNama.trim().toUpperCase();
+
+      const currentRombel = rombelsList.find((r: any) => r.waliKelasId === tutorId);
+      const targetRombel = targetName
+        ? rombelsList.find((r: any) => r.nama.trim().toUpperCase() === targetName)
+        : null;
+
+      // Sudah benar, tidak ada perubahan
+      if (currentRombel?.id === targetRombel?.id && (currentRombel || !targetName)) return;
+
+      const authHeaders = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      };
+
+      // Lepas dari rombel lama
+      if (currentRombel && currentRombel.id !== targetRombel?.id) {
+        await fetch(`/api/rombels/${currentRombel.id}`, {
+          method: "PUT",
+          headers: authHeaders,
+          body: JSON.stringify({ waliKelasId: null }),
+        });
+      }
+
+      // Set sebagai wali kelas rombel baru
+      if (targetRombel) {
+        await fetch(`/api/rombels/${targetRombel.id}`, {
+          method: "PUT",
+          headers: authHeaders,
+          body: JSON.stringify({ waliKelasId: tutorId }),
+        });
+      }
+      await fetchRombels();
+    } catch (err) {
+      console.error("Gagal sinkronkan wali kelas:", err);
+      toast.error("Data tutor tersimpan, tapi gagal menetapkan wali kelas");
+    }
+  };
+
   // Save Tutor
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -414,6 +458,12 @@ export default function TutorManager() {
 
       const data = await res.json();
       if (data.success) {
+        // Field "kelas" pada tutor = tutor jadi wali kelas rombel tsb.
+        // Tutor tidak punya kolom kelas sendiri; relasinya disimpan di rombels.waliKelasId.
+        const tutorId = isAdding ? data.data?.id : selectedTutor?.id;
+        if (tutorId) {
+          await syncWaliKelas(tutorId, formData.kelas || "", token);
+        }
         toast.success(isAdding ? "Tutor berhasil ditambahkan" : "Tutor berhasil diperbarui");
         setFormOpen(false);
         fetchTutors();

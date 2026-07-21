@@ -9,12 +9,18 @@ interface FilePreviewModalProps {
 const IMAGE_EXTS = ["jpg", "jpeg", "png", "webp", "gif", "svg"];
 const PDF_EXTS = ["pdf"];
 
+// Buang query string (mis. ?token=jwt — JWT mengandung titik sehingga merusak
+// deteksi ekstensi) sebelum mengambil ekstensi/nama file.
+function getPathOnly(url: string): string {
+  return url.split("?")[0];
+}
+
 function getExt(url: string): string {
-  return url.split(".").pop()?.toLowerCase() || "";
+  return getPathOnly(url).split(".").pop()?.toLowerCase() || "";
 }
 
 function getFileName(url: string): string {
-  return url.split("/").pop() || url;
+  return getPathOnly(url).split("/").pop() || getPathOnly(url);
 }
 
 export default function FilePreviewModal({ url, onClose }: FilePreviewModalProps) {
