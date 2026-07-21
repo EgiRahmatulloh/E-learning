@@ -108,21 +108,29 @@ export const uploadServices = new Elysia()
       }),
     }
   )
-  // Endpoint untuk mengakses berkas aman (butuh auth via header atau query param)
+  // Endpoint untuk mengakses berkas
   .get(
     "/api/files/:filename",
     async ({ params, headers, query, jwt, set }) => {
-      // Auth via header atau query param (untuk preview di img/iframe)
-      let authError = await verifyUser(headers, jwt, set);
-      if (authError && query.token) {
-        try {
-          const payload = await jwt.verify(query.token);
-          if (payload) authError = null;
-        } catch {
-          // token invalid, tetap error
+      // Gambar boleh diakses publik (dipakai <img src> di landing page & kartu dashboard
+      // yang tidak bisa mengirim header Authorization). Dokumen tetap butuh auth.
+      const imageExtensions = ["jpg", "jpeg", "png", "webp", "gif", "svg"];
+      const ext = params.filename.split(".").pop()?.toLowerCase();
+      const isImage = ext ? imageExtensions.includes(ext) : false;
+
+      if (!isImage) {
+        // Auth via header atau query param (untuk preview di img/iframe)
+        let authError = await verifyUser(headers, jwt, set);
+        if (authError && query.token) {
+          try {
+            const payload = await jwt.verify(query.token);
+            if (payload) authError = null;
+          } catch {
+            // token invalid, tetap error
+          }
         }
+        if (authError) return authError;
       }
-      if (authError) return authError;
 
       const filePath = path.join(SECURE_UPLOAD_DIR, params.filename);
 

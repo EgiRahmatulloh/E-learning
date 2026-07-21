@@ -1707,6 +1707,7 @@ export const contentHandlers = new Elysia()
         pekerjaan,
         cerita,
         foto,
+        berkas,
       } = body as any;
 
       try {
@@ -1737,6 +1738,7 @@ export const contentHandlers = new Elysia()
             pekerjaan,
             cerita,
             foto,
+            berkas: berkas || {},
           })
           .returning()
           .get();
@@ -1773,6 +1775,7 @@ export const contentHandlers = new Elysia()
         pekerjaan: t.String(),
         cerita: t.String(),
         foto: t.String(),
+        berkas: t.Optional(t.Record(t.String(), t.String())),
       }),
     }
   )
@@ -1897,6 +1900,7 @@ export const contentHandlers = new Elysia()
         pekerjaan,
         cerita,
         foto,
+        berkas,
       } = body as any;
 
       try {
@@ -1927,6 +1931,7 @@ export const contentHandlers = new Elysia()
             pekerjaan,
             cerita,
             foto,
+            berkas: berkas || {},
             updatedAt: new Date().toISOString(),
           })
           .where(eq(alumni.id, id))
@@ -1970,6 +1975,7 @@ export const contentHandlers = new Elysia()
         pekerjaan: t.String(),
         cerita: t.String(),
         foto: t.String(),
+        berkas: t.Optional(t.Record(t.String(), t.String())),
       }),
     }
   )

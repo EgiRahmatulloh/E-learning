@@ -131,6 +131,7 @@ export const studentsHandlers = new Elysia()
           delete (rest as any).provinsi;
           delete (rest as any).sekolahAsal;
           delete (rest as any).email;
+          delete (rest as any).berkas;
         }
         (rest as any).rombels = rombelMap.get(item.id) || [];
         return rest;
@@ -173,6 +174,7 @@ export const studentsHandlers = new Elysia()
         password,
         foto,
         status,
+        berkas,
       } = body as any;
 
       try {
@@ -205,6 +207,7 @@ export const studentsHandlers = new Elysia()
             password: hashedPassword,
             foto: foto || "",
             status: status || "AKTIF",
+            berkas: berkas || {},
           })
           .returning()
           .get();
@@ -244,6 +247,7 @@ export const studentsHandlers = new Elysia()
         password: t.Optional(t.String()),
         foto: t.Optional(t.String()),
         status: t.Optional(t.String()),
+        berkas: t.Optional(t.Record(t.String(), t.String())),
       }),
     }
   )
@@ -286,6 +290,7 @@ export const studentsHandlers = new Elysia()
         password,
         foto,
         status,
+        berkas,
       } = body as any;
 
       try {
@@ -328,6 +333,7 @@ export const studentsHandlers = new Elysia()
             password: finalPassword,
             foto: foto ?? existing.foto,
             status: status ?? existing.status,
+            berkas: berkas ?? existing.berkas,
             updatedAt: new Date().toISOString(),
           })
           .where(eq(students.id, id))
@@ -369,6 +375,7 @@ export const studentsHandlers = new Elysia()
         password: t.Optional(t.String()),
         foto: t.Optional(t.String()),
         status: t.Optional(t.String()),
+        berkas: t.Optional(t.Record(t.String(), t.String())),
       }),
     }
   )

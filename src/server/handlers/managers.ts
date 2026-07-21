@@ -142,6 +142,7 @@ export const managersHandlers = new Elysia()
         provinsi: t.Optional(t.String()),
         password: t.Optional(t.String()),
         foto: t.String(),
+        berkas: t.Optional(t.Record(t.String(), t.String())),
       }),
     }
   )
@@ -213,6 +214,7 @@ export const managersHandlers = new Elysia()
         provinsi: t.Optional(t.String()),
         password: t.Optional(t.String()),
         foto: t.String(),
+        berkas: t.Optional(t.Record(t.String(), t.String())),
       }),
     }
   )

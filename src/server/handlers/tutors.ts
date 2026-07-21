@@ -93,6 +93,7 @@ export const tutorsHandlers = new Elysia()
           delete (rest as any).lembagaPengangkat;
           delete (rest as any).nomorSkPenugasan;
           delete (rest as any).lembagaPenugas;
+          delete (rest as any).berkas;
         }
         return rest;
       });
@@ -135,6 +136,7 @@ export const tutorsHandlers = new Elysia()
         lembagaPengangkat,
         nomorSkPenugasan,
         lembagaPenugas,
+        berkas,
       } = bodyData;
 
       try {
@@ -166,6 +168,7 @@ export const tutorsHandlers = new Elysia()
             lembagaPengangkat: lembagaPengangkat || "",
             nomorSkPenugasan: nomorSkPenugasan || "",
             lembagaPenugas: lembagaPenugas || "",
+            berkas: berkas || {},
           })
           .returning()
           .get();
@@ -204,6 +207,7 @@ export const tutorsHandlers = new Elysia()
         lembagaPengangkat: t.Optional(t.String()),
         nomorSkPenugasan: t.Optional(t.String()),
         lembagaPenugas: t.Optional(t.String()),
+        berkas: t.Optional(t.Record(t.String(), t.String())),
       }),
     }
   )
@@ -246,6 +250,7 @@ export const tutorsHandlers = new Elysia()
         lembagaPengangkat,
         nomorSkPenugasan,
         lembagaPenugas,
+        berkas,
       } = bodyData;
 
       try {
@@ -287,6 +292,7 @@ export const tutorsHandlers = new Elysia()
             lembagaPengangkat: lembagaPengangkat ?? existing.lembagaPengangkat,
             nomorSkPenugasan: nomorSkPenugasan ?? existing.nomorSkPenugasan,
             lembagaPenugas: lembagaPenugas ?? existing.lembagaPenugas,
+            berkas: berkas ?? existing.berkas,
             updatedAt: new Date().toISOString(),
           })
           .where(eq(tutors.id, id))
@@ -327,6 +333,7 @@ export const tutorsHandlers = new Elysia()
         lembagaPengangkat: t.Optional(t.String()),
         nomorSkPenugasan: t.Optional(t.String()),
         lembagaPenugas: t.Optional(t.String()),
+        berkas: t.Optional(t.Record(t.String(), t.String())),
       }),
     }
   )

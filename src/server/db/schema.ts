@@ -126,6 +126,7 @@ export const managers = sqliteTable('managers', {
   provinsi: text('provinsi').notNull().default(''),
   password: text('password').notNull().default(''),
   foto: text('foto').notNull().default(''),
+  berkas: text('berkas', { mode: 'json' }).$type<Record<string, string>>().notNull().default({}),
   role: text('role').notNull().default('admin'),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
   updatedAt: text('updated_at')
@@ -251,6 +252,7 @@ export const tutors = sqliteTable('tutors', {
   lembagaPengangkat: text('lembaga_pengangkat').notNull().default(''),
   nomorSkPenugasan: text('nomor_sk_penugasan').notNull().default(''),
   lembagaPenugas: text('lembaga_penugas').notNull().default(''),
+  berkas: text('berkas', { mode: 'json' }).$type<Record<string, string>>().notNull().default({}),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
   updatedAt: text('updated_at')
     .$defaultFn(() => new Date().toISOString())
@@ -288,6 +290,7 @@ export const students = sqliteTable('students', {
   sekolahAsal: text('sekolah_asal').notNull().default(''),
   password: text('password').notNull().default(''),
   foto: text('foto').notNull().default(''),
+  berkas: text('berkas', { mode: 'json' }).$type<Record<string, string>>().notNull().default({}),
   status: text('status').notNull().default('AKTIF'), // 'AKTIF', 'LULUS'
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
   updatedAt: text('updated_at')
@@ -362,6 +365,7 @@ export const alumni = sqliteTable('alumni', {
   pekerjaan: text('pekerjaan').notNull().default(''),
   cerita: text('cerita').notNull().default(''),
   foto: text('foto').notNull().default(''),
+  berkas: text('berkas', { mode: 'json' }).$type<Record<string, string>>().notNull().default({}),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
   updatedAt: text('updated_at')
     .$defaultFn(() => new Date().toISOString())

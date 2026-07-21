@@ -357,6 +357,12 @@ for (const _t of _addrTables) {
 // Migration: tambah kolom sekolah_asal pada students jika belum ada (untuk database existing)
 try { sqlite.exec(`ALTER TABLE students ADD COLUMN sekolah_asal TEXT NOT NULL DEFAULT ''`); } catch {}
 
+// Migration: tambah kolom berkas (JSON dokumen) untuk tabel yang punya upload berkas
+const _berkasTables = ['managers', 'tutors', 'students', 'alumni'];
+for (const _t of _berkasTables) {
+  try { sqlite.exec(`ALTER TABLE ${_t} ADD COLUMN berkas TEXT NOT NULL DEFAULT '{}'`); } catch {}
+}
+
 // Inisialisasi tabel gallery otomatis jika belum ada
 sqlite.exec(`
 CREATE TABLE IF NOT EXISTS gallery (
