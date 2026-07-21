@@ -50,8 +50,11 @@ export const uploadServices = new Elysia()
       const authError = await verifyUser(headers, jwt, set);
       if (authError) return authError;
 
-      const bodyData = body as { file?: any };
+      const bodyData = body as { file?: any; public?: string };
       const { file } = bodyData;
+      // Flag "public": file yang dimaksudkan diakses pengunjung tanpa login
+      // (mis. Pusat Unduhan) disimpan ke public/uploads yang di-serve statis tanpa auth.
+      const isPublic = bodyData.public === "true" || bodyData.public === "1";
       if (!file || !(file instanceof File)) {
         set.status = 400;
         return { success: false, message: "Berkas tidak valid" };
@@ -112,12 +115,23 @@ export const uploadServices = new Elysia()
         };
       }
 
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+
+      if (isPublic) {
+        // Simpan ke public/uploads → dilayani statis di /uploads tanpa auth
+        const publicDir = path.join(process.cwd(), "public", "uploads");
+        if (!fs.existsSync(publicDir)) {
+          fs.mkdirSync(publicDir, { recursive: true });
+        }
+        await Bun.write(path.join(publicDir, fileName), file);
+        return { success: true, url: `/uploads/${fileName}` };
+      }
+
       // Simpan di folder aman (bukan public/)
       if (!fs.existsSync(SECURE_UPLOAD_DIR)) {
         fs.mkdirSync(SECURE_UPLOAD_DIR, { recursive: true });
       }
 
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
       const filePath = path.join(SECURE_UPLOAD_DIR, fileName);
 
       await Bun.write(filePath, file);
@@ -127,6 +141,7 @@ export const uploadServices = new Elysia()
     {
       body: t.Object({
         file: t.File(),
+        public: t.Optional(t.String()),
       }),
     }
   )

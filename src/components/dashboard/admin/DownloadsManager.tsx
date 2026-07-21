@@ -101,6 +101,8 @@ export default function DownloadsManager() {
     setUploading(true);
     const body = new FormData();
     body.append("file", file);
+    // File Pusat Unduhan harus bisa diunduh pengunjung publik tanpa login
+    body.append("public", "true");
 
     try {
       const token = localStorage.getItem("token");
