@@ -192,6 +192,25 @@ export const studentsHandlers = new Elysia()
           .returning()
           .get();
 
+        // Auto-sync: jika kelas cocok dengan nama rombel, buat relasi rombel_students
+        if (inserted.kelas) {
+          const matchingRombel = await db
+            .select()
+            .from(rombels)
+            .where(sql`UPPER(${rombels.nama}) = UPPER(${inserted.kelas.trim()})`)
+            .get();
+          if (matchingRombel) {
+            const existingRelasi = await db
+              .select()
+              .from(rombelStudents)
+              .where(and(eq(rombelStudents.rombelId, matchingRombel.id), eq(rombelStudents.studentId, inserted.id)))
+              .get();
+            if (!existingRelasi) {
+              await db.insert(rombelStudents).values({ rombelId: matchingRombel.id, studentId: inserted.id }).run();
+            }
+          }
+        }
+
         const safeData = { ...inserted };
         delete (safeData as any).password;
         return { success: true, data: safeData };
@@ -319,6 +338,19 @@ export const studentsHandlers = new Elysia()
           .where(eq(students.id, id))
           .returning()
           .get();
+
+        // Auto-sync: jika kelas diubah dan cocok dengan nama rombel, update relasi rombel_students
+        if (kelas !== undefined && kelas !== existing.kelas && updated.kelas) {
+          const matchingRombel = await db
+            .select()
+            .from(rombels)
+            .where(sql`UPPER(${rombels.nama}) = UPPER(${updated.kelas.trim()})`)
+            .get();
+          if (matchingRombel) {
+            await db.delete(rombelStudents).where(eq(rombelStudents.studentId, id)).run();
+            await db.insert(rombelStudents).values({ rombelId: matchingRombel.id, studentId: id }).run();
+          }
+        }
 
         const safeData = { ...updated };
         delete (safeData as any).password;

@@ -56,6 +56,7 @@ interface Student {
   jenisKelamin: string;
   foto: string;
   status: string;
+  rombels?: { id: number; nama: string }[];
 }
 
 export default function RombelManager() {
@@ -290,11 +291,17 @@ export default function RombelManager() {
     if (!selectedRombel) return;
     const assignedIds = new Set(detailStudents.map((s) => s.id));
     const rombelLevel = getLevel(selectedRombel.nama);
-    // Filter siswa: belum di-assign DAN level kelas sesuai dengan level rombel
+    // Filter siswa: belum di-assign ke rombel ini DAN level kelas sesuai
+    // Cocokkan baik kelas level murni ("X") maupun nama rombel penuh ("XA")
     const available = allStudents.filter((s) => {
       if (assignedIds.has(s.id)) return false;
-      // s.kelas bisa "X", "XI", "XII" (Roman numeral level)
-      return s.kelas === rombelLevel;
+      // Cocok jika kelas = level rombel (misal "X" untuk rombel "XA")
+      // ATAU kelas = nama rombel persis (misal "XA" untuk rombel "XA")
+      // ATAU siswa belum punya rombel sama sekali dan levelnya cocok
+      const kelasUpper = (s.kelas || "").toUpperCase().trim();
+      const rombelNamaUpper = selectedRombel.nama.toUpperCase().trim();
+      const rombelLevelUpper = rombelLevel.toUpperCase().trim();
+      return kelasUpper === rombelLevelUpper || kelasUpper === rombelNamaUpper || kelasUpper === "";
     });
     setAvailableStudents(available);
     setSelectedStudentIds([]);
@@ -397,16 +404,16 @@ export default function RombelManager() {
   );
 
   // ==========================================
-  // Unassigned Students (kelas tanpa suffix rombel)
+  // Unassigned Students (belum punya relasi di rombel manapun)
   // ==========================================
-  const isLevelOnly = (kelas: string): boolean => {
-    // "X", "XI", "XII", "VII", "VIII", "IX", "III", "IV", "V", "VI" → true
-    // "XA", "XB", "XIIA", "VIIA" → false
-    return /^[IVX]+$/.test(kelas);
-  };
-
   const openUnassigned = () => {
-    const unassigned = allStudents.filter((s) => isLevelOnly(s.kelas));
+    // Siswa "belum kelas" = siswa AKTIF yang belum ada di rombel manapun
+    // Gunakan data rombels dari API (array kosong = belum di-assign)
+    const unassigned = allStudents.filter((s) => {
+      // Cek dari rombels array (dari API)
+      if (s.rombels && s.rombels.length > 0) return false;
+      return true;
+    });
     setUnassignedStudents(unassigned);
     setAssignSelectedIds([]);
     setAssignTargetRombel("");
@@ -418,8 +425,10 @@ export default function RombelManager() {
   const filteredUnassigned = unassignedStudents.filter((s) => {
     // Jika rombel target dipilih, filter hanya siswa dengan level yang cocok
     if (assignTargetRombel) {
-      const targetLevel = getLevel(assignTargetRombel);
-      if (s.kelas !== targetLevel) return false;
+      const targetLevel = getLevel(assignTargetRombel).toUpperCase();
+      const kelasUpper = (s.kelas || "").toUpperCase().trim();
+      // Cocok jika kelas kosong, atau kelas = level target, atau kelas = nama rombel target
+      if (kelasUpper !== "" && kelasUpper !== targetLevel && kelasUpper !== assignTargetRombel.toUpperCase()) return false;
     }
     // Filter search
     if (unassignedSearch) {
@@ -684,9 +693,9 @@ export default function RombelManager() {
                     onClick={openUnassigned}
                     className="bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
                   >
-                    <UserPlus className="h-4 w-4" /> SISWA BELUM KELAS
+                    <UserPlus className="h-4 w-4" /> SISWA BELUM MEMILIKI KELAS
                     {(() => {
-                      const count = allStudents.filter((s) => isLevelOnly(s.kelas)).length;
+                      const count = allStudents.filter((s) => !s.rombels || s.rombels.length === 0).length;
                       return count > 0 ? (
                         <span className="ml-1 bg-white text-amber-600 rounded-full px-1.5 py-0.5 text-[10px] font-black">{count}</span>
                       ) : null;
