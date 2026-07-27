@@ -643,10 +643,11 @@ export default function AlumniManager() {
                             FOTO
                           </div>
                         )}
-                        <span className={`absolute top-3 left-3 text-[9px] font-black uppercase px-2 py-0.5 rounded-full text-white ${item.program === "PAKET A" ? "bg-green-600" : item.program === "PAKET B" ? "bg-blue-600" : "bg-orange-500"
-                          }`}>
-                          {item.program}
-                        </span>
+                        <div className="absolute top-3 left-3 z-10 max-w-[90%]">
+                          <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[8px] px-2 py-0.5 rounded-full uppercase shadow-md tracking-wider truncate">
+                            {item.program}
+                          </span>
+                        </div>
                       </div>
                       <div className="p-4 flex-1 space-y-1 bg-white">
                         <h4 className="font-black text-[#280f91] text-xs group-hover:text-purple-600 transition truncate">{item.nama}</h4>

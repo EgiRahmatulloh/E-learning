@@ -262,6 +262,8 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                   <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Nama Lengkap</label>
                   <input
                     type="text"
+                    name="nama"
+                    autoComplete="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
@@ -273,6 +275,8 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                   <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Alamat Email</label>
                   <input
                     type="email"
+                    name="username"
+                    autoComplete="username"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
@@ -430,6 +434,8 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                   <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Password Baru (Opsional)</label>
                   <input
                     type="password"
+                    name="new-password"
+                    autoComplete="new-password"
                     placeholder="Kosongkan jika tidak diubah"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -441,6 +447,8 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                   <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Konfirmasi Password Baru</label>
                   <input
                     type="password"
+                    name="confirm-password"
+                    autoComplete="new-password"
                     placeholder="Kosongkan jika tidak diubah"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}

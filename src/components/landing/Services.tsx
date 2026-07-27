@@ -166,7 +166,9 @@ export default function Services({ onLoginSuccess, activeDialog, onDialogClose }
                 <label htmlFor="elearning-email" className="text-xs font-black text-slate-700 uppercase tracking-widest block">Email</label>
                 <input
                   id="elearning-email"
+                  name="username"
                   type="email"
+                  autoComplete="username"
                   required
                   placeholder="Masukkan alamat email"
                   value={elearningUsername}
@@ -179,7 +181,9 @@ export default function Services({ onLoginSuccess, activeDialog, onDialogClose }
                 <label htmlFor="elearning-password" className="text-xs font-black text-slate-700 uppercase tracking-widest block">Password</label>
                 <input
                   id="elearning-password"
+                  name="password"
                   type="password"
+                  autoComplete="current-password"
                   required
                   placeholder="••••••••"
                   value={elearningPassword}

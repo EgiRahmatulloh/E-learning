@@ -51,6 +51,34 @@ export default function TutorManager() {
   const [saving, setSaving] = useState(false);
   const [rombels, setRombels] = useState<{ id: number; nama: string; waliKelasId: number | null }[]>([]);
 
+  const deriveProgramFromKelas = (kelasName?: string | null): string => {
+    if (!kelasName) return "";
+    const nama = kelasName.trim().toUpperCase();
+
+    if (nama.includes("PAKET A")) return "Paket A";
+    if (nama.includes("PAKET B")) return "Paket B";
+    if (nama.includes("PAKET C")) return "Paket C";
+
+    const m = nama.match(/^(?:KELAS\s+)?(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I|12|11|10|9|8|7|6|5|4|3|2|1)/i);
+    if (m) {
+      const level = m[1].toUpperCase();
+      if (["I", "II", "III", "IV", "V", "VI", "1", "2", "3", "4", "5", "6"].includes(level)) return "Paket A";
+      if (["VII", "VIII", "IX", "7", "8", "9"].includes(level)) return "Paket B";
+      if (["X", "XI", "XII", "10", "11", "12"].includes(level)) return "Paket C";
+    }
+
+    return "";
+  };
+
+  const normalizeProg = (prog?: string | null): string => {
+    if (!prog) return "";
+    const p = prog.trim().toUpperCase();
+    if (p === "PAKET A") return "Paket A";
+    if (p === "PAKET B") return "Paket B";
+    if (p === "PAKET C") return "Paket C";
+    return prog;
+  };
+
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
   // Search
@@ -150,34 +178,69 @@ export default function TutorManager() {
       toast.error("Tidak ada data untuk diekspor!");
       return;
     }
-    const headers = ["No", "Nama", "NIK", "NIP", "JK", "Tempat Lahir", "Tanggal Lahir", "Agama", "Alamat", "RT", "RW", "Desa", "Kecamatan", "Kabupaten", "Provinsi", "HP", "E-Mail", "Status Kepegawaian", "No. SK Pengangkatan Awal", "No. SK Penugasan Terakhir", "TMT Kerja"];
+    const headers = [
+      "No",
+      "Nama",
+      "NIK",
+      "NIP",
+      "JK",
+      "Tempat Lahir",
+      "Tanggal Lahir",
+      "Agama",
+      "Pendidikan Terakhir",
+      "Alamat",
+      "RT",
+      "RW",
+      "Desa",
+      "Kecamatan",
+      "Kabupaten",
+      "Provinsi",
+      "HP",
+      "E-Mail",
+      "Status Kepegawaian",
+      "No. SK Pengangkatan Awal",
+      "Lembaga Pengangkat",
+      "No. SK Penugasan Terakhir",
+      "Lembaga Penugas",
+      "TMT Kerja",
+      "Program",
+      "Kelas (Wali Kelas)"
+    ];
     const rows = tutors.map((t, idx) => {
       const tempatTgl = (t.tempatTglLahir || "").split(",").map(p => p.trim());
       const tempat = tempatTgl[0] || "";
       const tglLahir = tempatTgl.length > 1 ? tempatTgl.slice(1).join(", ") : "";
+      const waliRombel = rombels.find((r) => r.waliKelasId === t.id);
+      const kelasWali = t.kelas || (waliRombel ? waliRombel.nama : "");
+
       return [
-      idx + 1,
-      t.nama || "",
-      t.nik || "",
-      t.nip || "",
-      t.jenisKelamin || "",
-      tempat,
-      tglLahir,
-      t.agama || "",
-      t.alamat || "",
-      t.rt || "",
-      t.rw || "",
-      t.desa || "",
-      t.kecamatan || "",
-      t.kabupaten || "",
-      t.provinsi || "",
-      "", // HP (no phone field in Tutor)
-      t.email || "",
-      "", // Status Kepegawaian (no field)
-      t.nomorSkPengangkatan || "",
-      t.nomorSkPenugasan || "",
-      t.tanggalMulaiTugas || ""
-    ];
+        idx + 1,
+        t.nama || "",
+        t.nik || "",
+        t.nip || "",
+        t.jenisKelamin || "",
+        tempat,
+        tglLahir,
+        t.agama || "",
+        t.pendidikan || "",
+        t.alamat || "",
+        t.rt || "",
+        t.rw || "",
+        t.desa || "",
+        t.kecamatan || "",
+        t.kabupaten || "",
+        t.provinsi || "",
+        "", // HP
+        t.email || "",
+        "", // Status Kepegawaian
+        t.nomorSkPengangkatan || "",
+        t.lembagaPengangkat || "",
+        t.nomorSkPenugasan || "",
+        t.lembagaPenugas || "",
+        t.tanggalMulaiTugas || "",
+        t.program || "",
+        kelasWali || ""
+      ];
     });
     downloadExcel(headers, rows, "tutor.xlsx");
     toast.success("Berhasil mengekspor Excel");
@@ -199,19 +262,24 @@ export default function TutorManager() {
         { key: "tempatLahir", aliases: ["tempat lahir", "tempat"], defaultIndex: 5 },
         { key: "tanggalLahir", aliases: ["tanggal lahir", "tgl lahir", "tanggal"], defaultIndex: 6 },
         { key: "agama", aliases: ["agama", "religion"], defaultIndex: 7 },
-        { key: "alamat", aliases: ["alamat", "address"], defaultIndex: 8 },
-        { key: "rt", aliases: ["rt"], defaultIndex: 9 },
-        { key: "rw", aliases: ["rw"], defaultIndex: 10 },
-        { key: "desa", aliases: ["desa", "kelurahan"], defaultIndex: 11 },
-        { key: "kecamatan", aliases: ["kecamatan"], defaultIndex: 12 },
-        { key: "kabupaten", aliases: ["kabupaten", "kota"], defaultIndex: 13 },
-        { key: "provinsi", aliases: ["provinsi"], defaultIndex: 14 },
-        { key: "hp", aliases: ["hp", "no hp", "telepon", "phone", "no. hp"], defaultIndex: 15 },
-        { key: "email", aliases: ["email", "e-mail"], defaultIndex: 16 },
-        { key: "statusKepegawaian", aliases: ["status kepegawaian", "status"], defaultIndex: 17 },
-        { key: "nomorSkPengangkatan", aliases: ["no. sk pengangkatan awal", "nomor sk pengangkatan", "sk pengangkatan", "skpengangkatan"], defaultIndex: 18 },
-        { key: "nomorSkPenugasan", aliases: ["no. sk penugasan terakhir", "nomor sk penugasan", "sk penugasan", "skpenugasan"], defaultIndex: 19 },
-        { key: "tanggalMulaiTugas", aliases: ["tmt kerja", "tanggal mulai tugas", "tmt", "start date", "tanggalmulaitugas"], defaultIndex: 20 },
+        { key: "pendidikan", aliases: ["pendidikan", "pendidikan terakhir", "pendidikan_terakhir"], defaultIndex: 8 },
+        { key: "alamat", aliases: ["alamat", "address"], defaultIndex: 9 },
+        { key: "rt", aliases: ["rt"], defaultIndex: 10 },
+        { key: "rw", aliases: ["rw"], defaultIndex: 11 },
+        { key: "desa", aliases: ["desa", "kelurahan"], defaultIndex: 12 },
+        { key: "kecamatan", aliases: ["kecamatan"], defaultIndex: 13 },
+        { key: "kabupaten", aliases: ["kabupaten", "kota"], defaultIndex: 14 },
+        { key: "provinsi", aliases: ["provinsi"], defaultIndex: 15 },
+        { key: "hp", aliases: ["hp", "no hp", "telepon", "phone", "no. hp"], defaultIndex: 16 },
+        { key: "email", aliases: ["email", "e-mail"], defaultIndex: 17 },
+        { key: "statusKepegawaian", aliases: ["status kepegawaian", "status"], defaultIndex: 18 },
+        { key: "nomorSkPengangkatan", aliases: ["no. sk pengangkatan awal", "nomor sk pengangkatan", "sk pengangkatan", "skpengangkatan"], defaultIndex: 19 },
+        { key: "lembagaPengangkat", aliases: ["lembaga pengangkat", "lembagapengangkat"], defaultIndex: 20 },
+        { key: "nomorSkPenugasan", aliases: ["no. sk penugasan terakhir", "nomor sk penugasan", "sk penugasan", "skpenugasan"], defaultIndex: 21 },
+        { key: "lembagaPenugas", aliases: ["lembaga penugas", "lembagapenugas"], defaultIndex: 22 },
+        { key: "tanggalMulaiTugas", aliases: ["tmt kerja", "tanggal mulai tugas", "tmt", "start date", "tanggalmulaitugas"], defaultIndex: 23 },
+        { key: "program", aliases: ["program", "paket"], defaultIndex: 24 },
+        { key: "kelas", aliases: ["kelas", "rombel", "kelas (wali kelas)", "wali kelas"], defaultIndex: 25 },
       ]);
 
       const importedData = mapped
@@ -222,12 +290,12 @@ export default function TutorManager() {
 
           return {
             nama: item.nama,
-            program: "",
+            program: item.program || "",
             nip: item.nip || "",
             tempatTglLahir: tempatTglLahir || "",
             jenisKelamin: item.jenisKelamin || "",
             agama: item.agama || "",
-            pendidikan: "",
+            pendidikan: item.pendidikan || "",
             email: item.email || "",
             nik: item.nik || "",
             alamat: item.alamat || "",
@@ -241,9 +309,10 @@ export default function TutorManager() {
             berkas: {},
             tanggalMulaiTugas: item.tanggalMulaiTugas || "",
             nomorSkPengangkatan: item.nomorSkPengangkatan || "",
-            lembagaPengangkat: "",
+            lembagaPengangkat: item.lembagaPengangkat || "",
             nomorSkPenugasan: item.nomorSkPenugasan || "",
-            lembagaPenugas: "",
+            lembagaPenugas: item.lembagaPenugas || "",
+            kelas: item.kelas || "",
           };
         });
 
@@ -311,23 +380,17 @@ export default function TutorManager() {
 
     // Cari rombel yang waliKelasId-nya adalah tutor ini
     const waliRombel = rombelsList.find((r: any) => r.waliKelasId === tutor.id);
-
-    // Normalisasi program karena API bisa mengembalikan "PAKET C" (uppercase)
-    const programMap: Record<string, string> = {
-      "paket a": "Paket A",
-      "paket b": "Paket B",
-      "paket c": "Paket C",
-    };
-    const normalizedProgram = programMap[tutor.program?.toLowerCase()] || tutor.program;
+    const tutorKelasName = tutor.kelas || (waliRombel ? waliRombel.nama : "");
+    const derivedProg = deriveProgramFromKelas(tutorKelasName);
+    const normalizedProgram = normalizeProg(tutor.program) || derivedProg || "Paket C";
 
     setIsAdding(false);
     setSelectedTutor(tutor);
-    setOriginalFormData({ ...tutor, password: "", program: normalizedProgram });
+    setOriginalFormData({ ...tutor, password: "", program: normalizedProgram, kelas: tutorKelasName });
     setFormData({
       ...tutor,
       program: normalizedProgram,
-      // Jika tutor adalah wali kelas, gunakan nama rombel sebagai kelas
-      kelas: tutor.kelas || (waliRombel ? waliRombel.nama : ""),
+      kelas: tutorKelasName,
       password: "", // Keep empty to indicate unchanged unless typed
     });
     setIsEditing(false);
@@ -852,54 +915,74 @@ export default function TutorManager() {
                       <select
                         required
                         disabled={!isEditing}
-                        value={formData.program || ""}
+                        value={normalizeProg(formData.program) || "Paket C"}
                         onChange={(e) => {
-                          setFormData(prev => ({ ...prev, program: e.target.value, kelas: "", tutorMapel: "" }));
+                          const newProg = e.target.value;
+                          setFormData(prev => {
+                            const currentRombelProg = deriveProgramFromKelas(prev.kelas);
+                            let targetKelas = prev.kelas;
+                            if (currentRombelProg !== newProg) {
+                              const matchingRombel = rombels.find(r => deriveProgramFromKelas(r.nama) === newProg);
+                              targetKelas = matchingRombel ? matchingRombel.nama : "";
+                            }
+                            return {
+                              ...prev,
+                              program: newProg,
+                              kelas: targetKelas,
+                              tutorMapel: ""
+                            };
+                          });
                         }}
                         className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       >
-                        <option value="" disabled>Pilih Program / Paket</option>
                         <option value="Paket A">Paket A</option>
                         <option value="Paket B">Paket B</option>
                         <option value="Paket C">Paket C</option>
                       </select>
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KELAS</label>
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KELAS (WALI KELAS)</label>
                       <select
-                        disabled={!isEditing || !formData.program}
+                        disabled={!isEditing}
                         value={formData.kelas || ""}
                         onChange={(e) => {
-                          setFormData(prev => ({ ...prev, kelas: e.target.value, tutorMapel: "" }));
+                          const selectedRombel = e.target.value;
+                          const derived = deriveProgramFromKelas(selectedRombel);
+                          setFormData(prev => ({
+                            ...prev,
+                            kelas: selectedRombel,
+                            program: derived || prev.program,
+                            tutorMapel: ""
+                          }));
                         }}
                         className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       >
-                        <option value="" disabled>Pilih Kelas</option>
-                        {rombels.length === 0 ? (
-                          <option value="" disabled>Belum ada rombel</option>
-                        ) : (
-                          rombels
-                            .filter((r) => {
-                              const nama = r.nama.toUpperCase();
-                              const level = nama.length > 1 && /^[A-Z]$/.test(nama.slice(-1))
-                                ? nama.slice(0, -1)
-                                : nama;
-                              if (formData.program === "Paket A") {
-                                return ["I", "II", "III", "IV", "V", "VI"].includes(level);
-                              }
-                              if (formData.program === "Paket B") {
-                                return ["VII", "VIII", "IX"].includes(level);
-                              }
-                              if (formData.program === "Paket C") {
-                                return ["X", "XI", "XII"].includes(level);
-                              }
-                              return false;
-                            })
-                            .sort((a, b) => a.nama.localeCompare(b.nama))
-                            .map((r) => (
-                              <option key={r.id} value={r.nama}>{r.nama}</option>
-                            ))
-                        )}
+                        <option value="">Tidak Jadi Wali Kelas (Kosong)</option>
+                        {["Paket A", "Paket B", "Paket C"].map((progGroup) => {
+                          const groupRombels = rombels
+                            .filter((r) => deriveProgramFromKelas(r.nama) === progGroup)
+                            .sort((a, b) => a.nama.localeCompare(b.nama));
+
+                          if (groupRombels.length === 0) return null;
+
+                          return (
+                            <optgroup key={progGroup} label={`--- ${progGroup} ---`}>
+                              {groupRombels.map((r) => (
+                                <option key={r.id} value={r.nama}>
+                                  {r.nama}
+                                </option>
+                              ))}
+                            </optgroup>
+                          );
+                        })}
+                        {/* Custom / Uncategorized Rombels */}
+                        {rombels
+                          .filter((r) => !deriveProgramFromKelas(r.nama))
+                          .map((r) => (
+                            <option key={r.id} value={r.nama}>
+                              {r.nama}
+                            </option>
+                          ))}
                       </select>
                     </div>
 
@@ -978,61 +1061,61 @@ export default function TutorManager() {
                       />
                     </div>
 
-                    {/* Row 6: TGL MULAI TUGAS | NOMOR SK PENGANGKATAN */}
-                    <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TGL MULAI TUGAS</label>
+                    {/* Row 6: TANGGAL MULAI TUGAS */}
+                    <div className="sm:col-span-2 flex flex-col gap-0.5">
+                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TANGGAL MULAI TUGAS</label>
                       <input
                         type="text"
                         disabled={!isEditing}
-                        placeholder="Contoh: 2018-07-15"
+                        placeholder="Masukkan tanggal mulai tugas (contoh: YYYY-MM-DD)"
                         value={formData.tanggalMulaiTugas || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, tanggalMulaiTugas: e.target.value }))}
                         className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
+
+                    {/* Row 7: NOMOR SK PENGANGKATAN | LEMBAGA PENGANGKAT */}
                     <div className="flex flex-col gap-0.5">
                       <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NOMOR SK PENGANGKATAN</label>
                       <input
                         type="text"
                         disabled={!isEditing}
-                        placeholder="Nomor SK Pengangkatan"
+                        placeholder="Masukkan nomor SK pengangkatan"
                         value={formData.nomorSkPengangkatan || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, nomorSkPengangkatan: e.target.value }))}
                         className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
-
-                    {/* Row 7: LEMBAGA PENGANGKAT | NOMOR SK PENUGASAN */}
                     <div className="flex flex-col gap-0.5">
                       <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">LEMBAGA PENGANGKAT</label>
                       <input
                         type="text"
                         disabled={!isEditing}
-                        placeholder="Dinas Pendidikan / Yayasan"
+                        placeholder="Masukkan nama lembaga yang mengeluarkan SK"
                         value={formData.lembagaPengangkat || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, lembagaPengangkat: e.target.value }))}
                         className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
+
+                    {/* Row 8: NOMOR SK PENUGASAN | LEMBAGA PENUGAS */}
                     <div className="flex flex-col gap-0.5">
                       <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NOMOR SK PENUGASAN</label>
                       <input
                         type="text"
                         disabled={!isEditing}
-                        placeholder="Nomor SK Penugasan"
+                        placeholder="Masukkan nomor SK penugasan"
                         value={formData.nomorSkPenugasan || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, nomorSkPenugasan: e.target.value }))}
                         className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
-
-                    {/* Row 8: LEMBAGA PENUGAS (solo) */}
                     <div className="flex flex-col gap-0.5">
                       <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">LEMBAGA PENUGAS</label>
                       <input
                         type="text"
                         disabled={!isEditing}
-                        placeholder="Lembaga Penugas"
+                        placeholder="Masukkan nama lembaga yang menugaskan"
                         value={formData.lembagaPenugas || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, lembagaPenugas: e.target.value }))}
                         className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"

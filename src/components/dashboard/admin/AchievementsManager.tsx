@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
 import { Edit3, Trash2, Search, UploadCloud, Plus, Save, X, Upload, Download, Loader2 } from "lucide-react";
@@ -36,6 +36,10 @@ export function AchievementsManager() {
   const confirm = useConfirm();
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Upload dialog state & ref
+  const importInputRef = useRef<HTMLInputElement>(null);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
 
   // Form states
   const [formVisible, setFormVisible] = useState(false);
@@ -300,6 +304,7 @@ export function AchievementsManager() {
       if (resData.success) {
         toast.success(resData.message || "Berhasil mengimpor data!");
         fetchAchievements();
+        setShowUploadDialog(false);
       } else {
         toast.error(resData.message || "Gagal mengimpor data");
       }
@@ -357,15 +362,19 @@ export function AchievementsManager() {
                 className="w-full sm:w-64 h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner"
               />
             </div>
-            <label className="h-10 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95 shrink-0">
+            <input
+              type="file"
+              ref={importInputRef}
+              accept=".xlsx, .xls"
+              onChange={handleImportExcel}
+              className="hidden"
+            />
+            <Button
+              onClick={() => setShowUploadDialog(true)}
+              className="h-10 bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md shadow-purple-200/40 flex items-center justify-center gap-1.5 transition-all select-none active:scale-95 shrink-0"
+            >
               <Upload className="h-4 w-4" /> UPLOAD EXCEL
-              <input
-                type="file"
-                accept=".xlsx, .xls"
-                onChange={handleImportExcel}
-                className="hidden"
-              />
-            </label>
+            </Button>
             <Button
               onClick={handleExportExcel}
               className="h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-4 rounded-xl cursor-pointer uppercase tracking-wider shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95 shrink-0"
@@ -470,6 +479,64 @@ export function AchievementsManager() {
           </table>
         </div>
       </div>
+
+      {/* UPLOAD EXCEL DIALOG */}
+      {showUploadDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setShowUploadDialog(false)} />
+          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
+            <div className="bg-[#00badb] p-6 relative text-white text-left">
+              <button
+                onClick={() => setShowUploadDialog(false)}
+                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="mb-4">
+                <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                  Upload Excel
+                </span>
+              </div>
+
+              <div className="space-y-4 text-slate-800">
+                <p className="text-xs font-semibold text-white/80 leading-normal">
+                  Upload data prestasi dari file Excel. Silakan download format terlebih dahulu.
+                </p>
+
+                <div className="space-y-3">
+                  <a
+                    href="/templates/format-upload-prestasi.xlsx"
+                    download
+                    className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs uppercase tracking-widest transition-all shadow-md cursor-pointer"
+                  >
+                    <Download className="h-4 w-4" /> DOWNLOAD FORMAT
+                  </a>
+
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setShowUploadDialog(false);
+                      importInputRef.current?.click();
+                    }}
+                    className="w-full h-11 rounded-xl bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-xs uppercase tracking-widest transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <Upload className="h-4 w-4" /> PILIH FILE EXCEL
+                  </Button>
+
+                  <Button
+                    type="button"
+                    onClick={() => setShowUploadDialog(false)}
+                    className="w-full h-11 rounded-xl bg-slate-500 hover:bg-slate-600 text-white font-extrabold text-xs uppercase tracking-widest transition-all cursor-pointer"
+                  >
+                    BATAL
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* POPUP / MODAL FORM DIALOG */}
       {formVisible && (

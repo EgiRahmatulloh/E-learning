@@ -525,30 +525,59 @@ export default function ManagerManager() {
       toast.error("Tidak ada data untuk diekspor!");
       return;
     }
-    const headers = ["No", "Nama", "NIK", "NUPTK", "JK", "Tempat Lahir", "Tanggal Lahir", "Agama", "Alamat", "RT", "RW", "Desa", "Kecamatan", "Kabupaten", "Provinsi", "HP", "E-Mail", "Status Kepegawaian", "No. SK Pengangkatan Awal", "No. SK Penugasan Terakhir", "Jabatan", "TMT Kerja"];
+    const headers = [
+      "No",
+      "Nama",
+      "NIK",
+      "NUPTK / NIP",
+      "JK",
+      "Tempat Lahir",
+      "Tanggal Lahir",
+      "Agama",
+      "Pendidikan Terakhir",
+      "Alamat",
+      "RT",
+      "RW",
+      "Desa",
+      "Kecamatan",
+      "Kabupaten",
+      "Provinsi",
+      "HP",
+      "E-Mail",
+      "Status Kepegawaian",
+      "No. SK Pengangkatan Awal",
+      "Lembaga Pengangkat",
+      "No. SK Penugasan Terakhir",
+      "Lembaga Penugas",
+      "Jabatan",
+      "TMT Kerja"
+    ];
     const rows = managersList.map((m, idx) => {
       const tempatTgl = (m.tempatTglLahir || "").split(",").map(p => p.trim());
       const tempat = tempatTgl[0] || "";
       const tglLahir = tempatTgl.length > 1 ? tempatTgl.slice(1).join(", ") : "";
       return [
-      idx + 1,
-      m.nama || "",
-      m.nik || "",
-      m.nip || "",
-      m.jenisKelamin || "",
-      tempat,
-      tglLahir,
-      m.agama || "",
-      m.alamat || "",
-      m.rt || "", m.rw || "", m.desa || "", m.kecamatan || "", m.kabupaten || "", m.provinsi || "",
-      "", // HP (no phone field in ManagerData)
-      m.email || "",
-      "", // Status Kepegawaian
-      m.nomorSkPengangkatan || "",
-      m.nomorSkPenugasan || "",
-      m.jabatan || "",
-      m.tanggalMulaiTugas || "",
-    ];
+        idx + 1,
+        m.nama || "",
+        m.nik || "",
+        m.nip || "",
+        m.jenisKelamin || "",
+        tempat,
+        tglLahir,
+        m.agama || "",
+        m.pendidikan || "",
+        m.alamat || "",
+        m.rt || "", m.rw || "", m.desa || "", m.kecamatan || "", m.kabupaten || "", m.provinsi || "",
+        "", // HP
+        m.email || "",
+        "", // Status Kepegawaian
+        m.nomorSkPengangkatan || "",
+        m.lembagaPengangkat || "",
+        m.nomorSkPenugasan || "",
+        m.lembagaPenugas || "",
+        m.jabatan || "",
+        m.tanggalMulaiTugas || "",
+      ];
     });
     downloadExcel(headers, rows, "data_pengelola.xlsx");
     toast.success("Berhasil mengunduh Excel!");
@@ -570,20 +599,23 @@ export default function ManagerManager() {
         { key: "tempatTglLahir", aliases: ["tempat lahir", "tempat/tgl lahir", "tempat tgllahir", "birth"], defaultIndex: 5 },
         { key: "tanggalLahir", aliases: ["tanggal lahir", "tgl lahir"], defaultIndex: 6 },
         { key: "agama", aliases: ["agama", "religion"], defaultIndex: 7 },
-        { key: "alamat", aliases: ["alamat", "address"], defaultIndex: 8 },
-        { key: "rt", aliases: ["rt"], defaultIndex: 9 },
-        { key: "rw", aliases: ["rw"], defaultIndex: 10 },
-        { key: "desa", aliases: ["desa", "kelurahan"], defaultIndex: 11 },
-        { key: "kecamatan", aliases: ["kecamatan"], defaultIndex: 12 },
-        { key: "kabupaten", aliases: ["kabupaten", "kota"], defaultIndex: 13 },
-        { key: "provinsi", aliases: ["provinsi"], defaultIndex: 14 },
-        { key: "hp", aliases: ["hp", "no hp", "telepon", "phone"], defaultIndex: 15 },
-        { key: "email", aliases: ["email", "e-mail"], defaultIndex: 16 },
-        { key: "statusKepegawaian", aliases: ["status kepegawaian", "status"], defaultIndex: 17 },
-        { key: "nomorSkPengangkatan", aliases: ["no. sk pengangkatan awal", "nomor sk pengangkatan", "sk pengangkatan", "skpengangkatan"], defaultIndex: 18 },
-        { key: "nomorSkPenugasan", aliases: ["no. sk penugasan terakhir", "nomor sk penugasan", "sk penugasan", "skpenugasan"], defaultIndex: 19 },
-        { key: "jabatan", aliases: ["jabatan", "role", "position"], defaultIndex: 20 },
-        { key: "tanggalMulaiTugas", aliases: ["tmt kerja", "tanggal mulai tugas", "tmt", "start date", "tanggalmulaitugas"], defaultIndex: 21 },
+        { key: "pendidikan", aliases: ["pendidikan", "pendidikan terakhir", "pendidikan_terakhir"], defaultIndex: 8 },
+        { key: "alamat", aliases: ["alamat", "address"], defaultIndex: 9 },
+        { key: "rt", aliases: ["rt"], defaultIndex: 10 },
+        { key: "rw", aliases: ["rw"], defaultIndex: 11 },
+        { key: "desa", aliases: ["desa", "kelurahan"], defaultIndex: 12 },
+        { key: "kecamatan", aliases: ["kecamatan"], defaultIndex: 13 },
+        { key: "kabupaten", aliases: ["kabupaten", "kota"], defaultIndex: 14 },
+        { key: "provinsi", aliases: ["provinsi"], defaultIndex: 15 },
+        { key: "hp", aliases: ["hp", "no hp", "telepon", "phone"], defaultIndex: 16 },
+        { key: "email", aliases: ["email", "e-mail"], defaultIndex: 17 },
+        { key: "statusKepegawaian", aliases: ["status kepegawaian", "status"], defaultIndex: 18 },
+        { key: "nomorSkPengangkatan", aliases: ["no. sk pengangkatan awal", "nomor sk pengangkatan", "sk pengangkatan", "skpengangkatan"], defaultIndex: 19 },
+        { key: "lembagaPengangkat", aliases: ["lembaga pengangkat", "lembagapengangkat"], defaultIndex: 20 },
+        { key: "nomorSkPenugasan", aliases: ["no. sk penugasan terakhir", "nomor sk penugasan", "sk penugasan", "skpenugasan"], defaultIndex: 21 },
+        { key: "lembagaPenugas", aliases: ["lembaga penugas", "lembagapenugas"], defaultIndex: 22 },
+        { key: "jabatan", aliases: ["jabatan", "role", "position"], defaultIndex: 23 },
+        { key: "tanggalMulaiTugas", aliases: ["tmt kerja", "tanggal mulai tugas", "tmt", "start date", "tanggalmulaitugas"], defaultIndex: 24 },
         { key: "foto", aliases: ["foto", "photo", "image", "gambar"], defaultIndex: -1 },
       ]);
 
@@ -603,13 +635,13 @@ export default function ManagerManager() {
             tempatTglLahir,
             jenisKelamin: item.jenisKelamin || "",
             agama: item.agama || "",
-            pendidikan: "",
+            pendidikan: item.pendidikan || "",
             email: item.email || "",
             tanggalMulaiTugas: item.tanggalMulaiTugas || "",
             nomorSkPengangkatan: item.nomorSkPengangkatan || "",
-            lembagaPengangkat: "",
+            lembagaPengangkat: item.lembagaPengangkat || "",
             nomorSkPenugasan: item.nomorSkPenugasan || "",
-            lembagaPenugas: "",
+            lembagaPenugas: item.lembagaPenugas || "",
             alamat: item.alamat || "",
             rt: item.rt || "",
             rw: item.rw || "",

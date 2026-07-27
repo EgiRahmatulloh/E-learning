@@ -54,6 +54,25 @@ const NEXT_PROGRAM: Record<string, string> = {
   "PAKET B": "PAKET C",
 };
 
+const deriveProgramFromKelas = (kelasName?: string | null): string => {
+  if (!kelasName) return "";
+  const nama = kelasName.trim().toUpperCase();
+
+  if (nama.includes("PAKET A")) return "PAKET A";
+  if (nama.includes("PAKET B")) return "PAKET B";
+  if (nama.includes("PAKET C")) return "PAKET C";
+
+  const m = nama.match(/^(?:KELAS\s+)?(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I|12|11|10|9|8|7|6|5|4|3|2|1)/i);
+  if (m) {
+    const level = m[1].toUpperCase();
+    if (["I", "II", "III", "IV", "V", "VI", "1", "2", "3", "4", "5", "6"].includes(level)) return "PAKET A";
+    if (["VII", "VIII", "IX", "7", "8", "9"].includes(level)) return "PAKET B";
+    if (["X", "XI", "XII", "10", "11", "12"].includes(level)) return "PAKET C";
+  }
+
+  return "";
+};
+
 export default function WargaBelajarManager() {
   const confirm = useConfirm();
 
@@ -367,8 +386,13 @@ export default function WargaBelajarManager() {
     setIsAdding(false);
     setSelectedStudent(student);
     setOriginalFormData({ ...student, password: "" });
+    const rawProg = (student.program || "").toUpperCase().trim();
+    const derivedProg = deriveProgramFromKelas(student.kelas);
+    const currentProgram = rawProg || derivedProg || "PAKET C";
+
     setFormData({
       ...student,
+      program: currentProgram,
       password: "", // Keep empty to indicate unchanged unless typed
     });
     setIsEditing(false);
@@ -1185,10 +1209,23 @@ export default function WargaBelajarManager() {
                     <div className="flex flex-col gap-0.5">
                       <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PROGRAM <span className="text-red-300">*</span></label>
                       <select
-                        value={formData.program || "PAKET C"}
+                        value={(formData.program || "PAKET C").toUpperCase()}
                         onChange={(e) => {
-                          const prog = e.target.value;
-                          setFormData(prev => ({ ...prev, program: prog, kelas: "" }));
+                          const newProg = e.target.value;
+                          setFormData(prev => {
+                            const currentRombelProg = deriveProgramFromKelas(prev.kelas);
+                            let targetKelas = prev.kelas;
+                            if (currentRombelProg !== newProg) {
+                              // Cari rombel pertama di program baru
+                              const matchingRombel = rombels.find(r => deriveProgramFromKelas(r.nama) === newProg);
+                              targetKelas = matchingRombel ? matchingRombel.nama : "";
+                            }
+                            return {
+                              ...prev,
+                              program: newProg,
+                              kelas: targetKelas
+                            };
+                          });
                         }}
                         className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
@@ -1202,26 +1239,44 @@ export default function WargaBelajarManager() {
                       <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">ROMBEL</label>
                       <select
                         value={formData.kelas || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, kelas: e.target.value }))}
+                        onChange={(e) => {
+                          const selectedRombel = e.target.value;
+                          const derived = deriveProgramFromKelas(selectedRombel);
+                          setFormData(prev => ({
+                            ...prev,
+                            kelas: selectedRombel,
+                            program: derived || prev.program
+                          }));
+                        }}
                         className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
                       >
-                        <option value="" disabled>Pilih Rombel</option>
+                        <option value="">Pilih Rombel</option>
+                        {["PAKET A", "PAKET B", "PAKET C"].map((progGroup) => {
+                          const groupRombels = rombels
+                            .filter((r) => deriveProgramFromKelas(r.nama) === progGroup)
+                            .sort((a, b) => a.nama.localeCompare(b.nama));
+
+                          if (groupRombels.length === 0) return null;
+
+                          return (
+                            <optgroup key={progGroup} label={`--- ${progGroup} ---`}>
+                              {groupRombels.map((r) => (
+                                <option key={r.id} value={r.nama}>
+                                  {r.nama}
+                                </option>
+                              ))}
+                            </optgroup>
+                          );
+                        })}
+                        {/* Custom / Uncategorized Rombels */}
                         {rombels
-                          .filter((r) => {
-                            const nama = r.nama.toUpperCase();
-                            const level = nama.length > 1 && /^[A-Z]$/.test(nama.slice(-1)) ? nama.slice(0, -1) : nama;
-                            const prog = (formData.program || "").toUpperCase();
-                            if (prog === "PAKET A") return ["I", "II", "III", "IV", "V", "VI"].includes(level);
-                            if (prog === "PAKET B") return ["VII", "VIII", "IX"].includes(level);
-                            if (prog === "PAKET C") return ["X", "XI", "XII"].includes(level);
-                            return false;
-                          })
-                          .sort((a, b) => a.nama.localeCompare(b.nama))
+                          .filter((r) => !deriveProgramFromKelas(r.nama))
                           .map((r) => (
-                            <option key={r.id} value={r.nama}>{r.nama}</option>
-                          ))
-                        }
+                            <option key={r.id} value={r.nama}>
+                              {r.nama}
+                            </option>
+                          ))}
                       </select>
                     </div>
 

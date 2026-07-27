@@ -2,10 +2,11 @@
 import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { db } from "../config/db";
-import { rombels, rombelStudents, students, tutors } from "../models";
+import { rombels, rombelStudents, students, tutors, elearningSetups } from "../models";
 import { eq, and, sql, inArray } from "drizzle-orm";
 import { verifyAdmin } from "../middleware/auth";
 import { finalJwtSecret } from "../config/jwt";
+import { deriveProgramFromKelas } from "./students";
 
 export const rombelHandlers = new Elysia()
   .use(
@@ -150,30 +151,47 @@ export const rombelHandlers = new Elysia()
           return { success: false, message: "Rombel tidak ditemukan" };
         }
 
+        const newNama = nama?.trim();
+        const oldNama = existing.nama;
+
         // Cek duplikat nama jika ganti nama
-        if (nama && nama.trim() !== existing.nama) {
+        if (newNama && newNama !== oldNama) {
           const duplikat = await db
             .select()
             .from(rombels)
-            .where(and(eq(rombels.nama, nama.trim()), sql`${rombels.id} != ${id}`))
+            .where(and(eq(rombels.nama, newNama), sql`${rombels.id} != ${id}`))
             .get();
           if (duplikat) {
             set.status = 400;
-            return { success: false, message: `Rombel "${nama.trim()}" sudah ada` };
+            return { success: false, message: `Rombel "${newNama}" sudah ada` };
           }
         }
 
-        const updated = await db
-          .update(rombels)
-          .set({
-            nama: nama?.trim() || existing.nama,
-            waliKelasId: waliKelasId !== undefined ? waliKelasId : existing.waliKelasId,
-            updatedAt: new Date().toISOString(),
-          })
-          .where(eq(rombels.id, id))
-          .returning()
-          .get();
+        db.transaction((tx) => {
+          tx.update(rombels)
+            .set({
+              nama: newNama || oldNama,
+              waliKelasId: waliKelasId !== undefined ? waliKelasId : existing.waliKelasId,
+              updatedAt: new Date().toISOString(),
+            })
+            .where(eq(rombels.id, id))
+            .run();
 
+          // Jika nama rombel berubah, update semua siswa dan elearningSetups yang mengacu pada nama rombel lama
+          if (newNama && newNama !== oldNama) {
+            tx.update(students)
+              .set({ kelas: newNama, updatedAt: new Date().toISOString() })
+              .where(sql`UPPER(${students.kelas}) = UPPER(${oldNama})`)
+              .run();
+
+            tx.update(elearningSetups)
+              .set({ kelas: newNama })
+              .where(sql`UPPER(${elearningSetups.kelas}) = UPPER(${oldNama})`)
+              .run();
+          }
+        });
+
+        const updated = await db.select().from(rombels).where(eq(rombels.id, id)).get();
         return { success: true, data: updated };
       } catch (err) {
         console.error("PUT /api/rombels/:id error:", err);
@@ -209,9 +227,19 @@ export const rombelHandlers = new Elysia()
         return { success: false, message: "Rombel tidak ditemukan" };
       }
 
-      // Cascade delete: hapus relasi siswa dulu
-      await db.delete(rombelStudents).where(eq(rombelStudents.rombelId, id)).run();
-      await db.delete(rombels).where(eq(rombels.id, id)).run();
+      db.transaction((tx) => {
+        // Cascade delete: hapus relasi siswa dulu
+        tx.delete(rombelStudents).where(eq(rombelStudents.rombelId, id)).run();
+
+        // Kosongkan field kelas pada tabel students untuk semua siswa di rombel ini
+        tx.update(students)
+          .set({ kelas: "", updatedAt: new Date().toISOString() })
+          .where(sql`UPPER(${students.kelas}) = UPPER(${existing.nama})`)
+          .run();
+
+        // Hapus rombel
+        tx.delete(rombels).where(eq(rombels.id, id)).run();
+      });
 
       return { success: true, message: `Rombel "${existing.nama}" berhasil dihapus` };
     } catch (err) {
@@ -328,16 +356,28 @@ export const rombelHandlers = new Elysia()
           return { success: true, message: "Semua siswa sudah ada di rombel ini", added: 0 };
         }
 
-        // Insert relasi + update kelas siswa dalam satu transaksi
+        // Insert relasi + update kelas & program siswa dalam satu transaksi
         db.transaction((tx) => {
           tx.insert(rombelStudents)
             .values(newIds.map((sid) => ({ rombelId, studentId: sid })))
             .run();
 
-          tx.update(students)
-            .set({ kelas: existing.nama, updatedAt: new Date().toISOString() })
-            .where(inArray(students.id, newIds))
-            .run();
+          const targetProgram = deriveProgramFromKelas(existing.nama);
+
+          for (const sid of newIds) {
+            tx.delete(rombelStudents)
+              .where(and(eq(rombelStudents.studentId, sid), sql`${rombelStudents.rombelId} != ${rombelId}`))
+              .run();
+
+            tx.update(students)
+              .set({
+                kelas: existing.nama,
+                ...(targetProgram ? { program: targetProgram } : {}),
+                updatedAt: new Date().toISOString(),
+              })
+              .where(eq(students.id, sid))
+              .run();
+          }
         });
 
         return {
@@ -374,10 +414,18 @@ export const rombelHandlers = new Elysia()
     }
 
     try {
-      await db
-        .delete(rombelStudents)
-        .where(and(eq(rombelStudents.rombelId, rombelId), eq(rombelStudents.studentId, studentId)))
-        .run();
+      db.transaction((tx) => {
+        // 1. Hapus relasi dari rombel_students
+        tx.delete(rombelStudents)
+          .where(and(eq(rombelStudents.rombelId, rombelId), eq(rombelStudents.studentId, studentId)))
+          .run();
+
+        // 2. Kosongkan field kelas pada tabel students
+        tx.update(students)
+          .set({ kelas: "", updatedAt: new Date().toISOString() })
+          .where(eq(students.id, studentId))
+          .run();
+      });
 
       return { success: true, message: "Siswa berhasil dihapus dari rombel" };
     } catch (err) {
@@ -435,7 +483,42 @@ export const rombelHandlers = new Elysia()
       const allRombels = await db.select().from(rombels).all();
       const rombelMap = new Map<string, number>(allRombels.map((r) => [r.nama.trim().toUpperCase(), r.id]));
 
-      // Ambil semua relasi yang sudah ada untuk menghindari duplikat
+      // 1. PENTING: Bersihkan relasi lama dan pastikan program siswa sinkron dengan kelasnya
+      for (const s of allStudents) {
+        const correctKelas = s.kelas.trim().toUpperCase();
+        const correctRombelId = rombelMap.get(correctKelas);
+        const correctProgram = deriveProgramFromKelas(correctKelas);
+
+        if (correctRombelId) {
+          // Hapus relasi ke rombel LAIN selain correctRombelId
+          await db
+            .delete(rombelStudents)
+            .where(and(eq(rombelStudents.studentId, s.id), sql`${rombelStudents.rombelId} != ${correctRombelId}`))
+            .run();
+        }
+
+        if (correctProgram) {
+          await db
+            .update(students)
+            .set({ program: correctProgram, updatedAt: new Date().toISOString() })
+            .where(and(eq(students.id, s.id), sql`UPPER(${students.program}) != ${correctProgram}`))
+            .run();
+        }
+      }
+
+      // Hapus relasi rombel_students untuk siswa yang statusnya bukan AKTIF (misal ALUMNI / KELUAR)
+      const inactiveStudents = await db
+        .select({ id: students.id })
+        .from(students)
+        .where(sql`${students.status} != 'AKTIF'`)
+        .all();
+      
+      if (inactiveStudents.length > 0) {
+        const inactiveIds = inactiveStudents.map((s) => s.id);
+        await db.delete(rombelStudents).where(inArray(rombelStudents.studentId, inactiveIds)).run();
+      }
+
+      // 2. Tambahkan relasi ke correctRombelId jika belum ada
       const allExistingRelasi = await db.select().from(rombelStudents).all();
       const existingRelasiSet = new Set(allExistingRelasi.map((r) => `${r.rombelId}-${r.studentId}`));
 
@@ -455,6 +538,17 @@ export const rombelHandlers = new Elysia()
       if (relasiToInsert.length > 0) {
         await db.insert(rombelStudents).values(relasiToInsert).run();
         assigned = relasiToInsert.length;
+      }
+
+      // 3. Bersihkan rombel ter-clone yang sudah kosong tanpa siswa dan tanpa wali kelas
+      const allRombelsAfter = await db.select().from(rombels).all();
+      const activeRelasi = await db.select().from(rombelStudents).all();
+      const usedRombelIds = new Set(activeRelasi.map((r) => r.rombelId));
+      
+      for (const r of allRombelsAfter) {
+        if (!usedRombelIds.has(r.id) && !r.waliKelasId) {
+          await db.delete(rombels).where(eq(rombels.id, r.id)).run();
+        }
       }
 
       return {

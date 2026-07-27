@@ -14,6 +14,25 @@ const extractSectionLetter = (rombelName: string): string => {
   return m ? (m[1] || m[2]) : "";
 };
 
+export const deriveProgramFromKelas = (kelasName?: string | null): string => {
+  if (!kelasName) return "";
+  const nama = kelasName.trim().toUpperCase();
+
+  if (nama.includes("PAKET A")) return "PAKET A";
+  if (nama.includes("PAKET B")) return "PAKET B";
+  if (nama.includes("PAKET C")) return "PAKET C";
+
+  const m = nama.match(/^(?:KELAS\s+)?(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I|12|11|10|9|8|7|6|5|4|3|2|1)/i);
+  if (m) {
+    const level = m[1].toUpperCase();
+    if (["I", "II", "III", "IV", "V", "VI", "1", "2", "3", "4", "5", "6"].includes(level)) return "PAKET A";
+    if (["VII", "VIII", "IX", "7", "8", "9"].includes(level)) return "PAKET B";
+    if (["X", "XI", "XII", "10", "11", "12"].includes(level)) return "PAKET C";
+  }
+
+  return "";
+};
+
 export const studentsHandlers = new Elysia()
   .use(
     jwt({
@@ -159,13 +178,17 @@ export const studentsHandlers = new Elysia()
 
       try {
         const hashedPassword = await Bun.password.hash(password || "password123");
+        const targetKelas = kelas || "";
+        const derivedProg = deriveProgramFromKelas(targetKelas);
+        const targetProgram = (program || derivedProg || "PAKET C").toUpperCase().trim();
+
         const inserted = await db
           .insert(students)
           .values({
             nama,
             nik: nik || "",
-            program: program || "",
-            kelas: kelas || "",
+            program: targetProgram,
+            kelas: targetKelas,
             nisn: nisn || "",
             nis: nis || "",
             tempatTglLahir: tempatTglLahir || "",
@@ -192,22 +215,22 @@ export const studentsHandlers = new Elysia()
           .returning()
           .get();
 
-        // Auto-sync: jika kelas cocok dengan nama rombel, buat relasi rombel_students
-        if (inserted.kelas) {
-          const matchingRombel = await db
+        // Auto-sync: jika kelas diisi saat buat siswa baru, update relasi rombel_students
+        if (inserted.kelas && inserted.kelas.trim()) {
+          const newKelasName = inserted.kelas.trim();
+          let matchingRombel = await db
             .select()
             .from(rombels)
-            .where(sql`UPPER(${rombels.nama}) = UPPER(${inserted.kelas.trim()})`)
+            .where(sql`UPPER(${rombels.nama}) = UPPER(${newKelasName.toUpperCase()})`)
             .get();
+
+          if (!matchingRombel) {
+            matchingRombel = await db.insert(rombels).values({ nama: newKelasName }).returning().get();
+          }
+
           if (matchingRombel) {
-            const existingRelasi = await db
-              .select()
-              .from(rombelStudents)
-              .where(and(eq(rombelStudents.rombelId, matchingRombel.id), eq(rombelStudents.studentId, inserted.id)))
-              .get();
-            if (!existingRelasi) {
-              await db.insert(rombelStudents).values({ rombelId: matchingRombel.id, studentId: inserted.id }).run();
-            }
+            await db.delete(rombelStudents).where(eq(rombelStudents.studentId, inserted.id)).run();
+            await db.insert(rombelStudents).values({ rombelId: matchingRombel.id, studentId: inserted.id }).run();
           }
         }
 
@@ -304,13 +327,17 @@ export const studentsHandlers = new Elysia()
           finalPassword = await Bun.password.hash(password);
         }
 
+        const targetKelas = kelas !== undefined ? kelas : existing.kelas;
+        const derivedProg = deriveProgramFromKelas(targetKelas);
+        const targetProgram = (program || derivedProg || existing.program || "PAKET C").toUpperCase().trim();
+
         const updated = await db
           .update(students)
           .set({
             nama,
             nik: nik ?? existing.nik,
-            program: program ?? existing.program,
-            kelas: kelas ?? existing.kelas,
+            program: targetProgram,
+            kelas: targetKelas,
             nisn: nisn ?? existing.nisn,
             nis: nis ?? existing.nis,
             tempatTglLahir: tempatTglLahir ?? existing.tempatTglLahir,
@@ -339,16 +366,26 @@ export const studentsHandlers = new Elysia()
           .returning()
           .get();
 
-        // Auto-sync: jika kelas diubah dan cocok dengan nama rombel, update relasi rombel_students
-        if (kelas !== undefined && kelas !== existing.kelas && updated.kelas) {
-          const matchingRombel = await db
-            .select()
-            .from(rombels)
-            .where(sql`UPPER(${rombels.nama}) = UPPER(${updated.kelas.trim()})`)
-            .get();
-          if (matchingRombel) {
+        // Auto-sync: jika kelas diubah, update relasi rombel_students
+        if (kelas !== undefined && kelas !== existing.kelas) {
+          const newKelasName = (updated.kelas || "").trim();
+          if (newKelasName) {
+            let matchingRombel = await db
+              .select()
+              .from(rombels)
+              .where(sql`UPPER(${rombels.nama}) = UPPER(${newKelasName.toUpperCase()})`)
+              .get();
+
+            if (!matchingRombel) {
+              matchingRombel = await db.insert(rombels).values({ nama: newKelasName }).returning().get();
+            }
+
+            if (matchingRombel) {
+              await db.delete(rombelStudents).where(eq(rombelStudents.studentId, id)).run();
+              await db.insert(rombelStudents).values({ rombelId: matchingRombel.id, studentId: id }).run();
+            }
+          } else {
             await db.delete(rombelStudents).where(eq(rombelStudents.studentId, id)).run();
-            await db.insert(rombelStudents).values({ rombelId: matchingRombel.id, studentId: id }).run();
           }
         }
 

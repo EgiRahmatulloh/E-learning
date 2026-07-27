@@ -15,6 +15,8 @@ import {
   ChevronLeft,
   Users,
   GraduationCap,
+  User,
+  UserCheck,
 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
@@ -59,6 +61,25 @@ interface Student {
   rombels?: { id: number; nama: string }[];
 }
 
+const deriveProgramFromKelas = (kelasName?: string | null): string => {
+  if (!kelasName) return "";
+  const nama = kelasName.trim().toUpperCase();
+
+  if (nama.includes("PAKET A")) return "PAKET A";
+  if (nama.includes("PAKET B")) return "PAKET B";
+  if (nama.includes("PAKET C")) return "PAKET C";
+
+  const m = nama.match(/^(?:KELAS\s+)?(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I|12|11|10|9|8|7|6|5|4|3|2|1)/i);
+  if (m) {
+    const level = m[1].toUpperCase();
+    if (["I", "II", "III", "IV", "V", "VI", "1", "2", "3", "4", "5", "6"].includes(level)) return "PAKET A";
+    if (["VII", "VIII", "IX", "7", "8", "9"].includes(level)) return "PAKET B";
+    if (["X", "XI", "XII", "10", "11", "12"].includes(level)) return "PAKET C";
+  }
+
+  return "";
+};
+
 export default function RombelManager() {
   const confirm = useConfirm();
 
@@ -69,6 +90,44 @@ export default function RombelManager() {
   const [saving, setSaving] = useState(false);
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [search, setSearch] = useState("");
+  const [selectedProgramFilter, setSelectedProgramFilter] = useState<string>("Semua");
+
+  // Rombel Tanpa Wali Kelas Modal State
+  const [noWaliModalOpen, setNoWaliModalOpen] = useState(false);
+  const [selectedWaliAssignments, setSelectedWaliAssignments] = useState<{ [rombelId: number]: number | null }>({});
+  const [assigningWaliId, setAssigningWaliId] = useState<number | null>(null);
+
+  const handleQuickAssignWali = async (rombel: Rombel, tutorId: number | null) => {
+    if (!tutorId) {
+      toast.warning("Pilih wali kelas terlebih dahulu");
+      return;
+    }
+
+    setAssigningWaliId(rombel.id);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`/api/rombels/${rombel.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ nama: rombel.nama, waliKelasId: tutorId }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Wali kelas untuk rombel ${rombel.nama} berhasil disimpan!`);
+        fetchRombels();
+      } else {
+        toast.error(data.message || "Gagal menyimpan wali kelas");
+      }
+    } catch {
+      toast.error("Terjadi kesalahan sistem");
+    } finally {
+      setAssigningWaliId(null);
+    }
+  };
 
   // Detail view
   const [selectedRombel, setSelectedRombel] = useState<Rombel | null>(null);
@@ -257,6 +316,7 @@ export default function RombelManager() {
       if (data.success) {
         toast.success(data.message);
         fetchRombels();
+        fetchAllStudents();
         if (selectedRombel?.id === rombel.id) {
           setSelectedRombel(null);
           setDetailStudents([]);
@@ -379,6 +439,7 @@ export default function RombelManager() {
         toast.success("Siswa dihapus dari rombel");
         fetchDetailStudents(selectedRombel.id);
         fetchRombels();
+        fetchAllStudents();
       } else {
         toast.error(data.message || "Gagal menghapus siswa");
       }
@@ -390,9 +451,19 @@ export default function RombelManager() {
   // ==========================================
   // Filter
   // ==========================================
-  const filteredRombels = rombels.filter(
-    (r) => !search || r.nama.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredRombels = rombels.filter((r) => {
+    const matchesSearch = !search || r.nama.toLowerCase().includes(search.toLowerCase());
+    const rProg = deriveProgramFromKelas(r.nama);
+    let matchesProgram = false;
+    if (selectedProgramFilter === "Semua") {
+      matchesProgram = true;
+    } else if (selectedProgramFilter === "TanpaWali") {
+      matchesProgram = !r.waliKelas && !r.waliKelasId;
+    } else {
+      matchesProgram = rProg === selectedProgramFilter;
+    }
+    return matchesSearch && matchesProgram;
+  });
 
   // Filtered available students for modal
   const filteredAvailable = availableStudents.filter(
@@ -503,7 +574,7 @@ export default function RombelManager() {
                 </button>
                 <div>
                   <h2 className="text-xl font-black text-cyan-900 tracking-tight flex items-center gap-2">
-                    <span>📚</span> ROMBEL: {selectedRombel.nama}
+                    ROMBEL: {selectedRombel.nama}
                   </h2>
                   <p className="text-xs text-slate-500 font-semibold mt-1">
                     Wali Kelas: {selectedRombel.waliKelas?.nama || "Belum ditentukan"} ·{" "}
@@ -550,7 +621,7 @@ export default function RombelManager() {
                     />
                   ) : (
                     <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center shadow-lg shadow-purple-200/50">
-                      <span className="text-2xl">👨‍🏫</span>
+                      <UserCheck className="h-7 w-7 text-purple-600" />
                     </div>
                   )}
                   <div>
@@ -664,7 +735,7 @@ export default function RombelManager() {
             <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
               <div>
                 <h2 className="text-xl font-black text-cyan-900 tracking-tight flex items-center gap-2">
-                  <span>📚</span> KELOLA DATA ROMBEL
+                  KELOLA DATA ROMBEL
                 </h2>
                 <p className="text-xs text-slate-500 font-semibold mt-1">
                   Kelola rombongan belajar (kelas), wali kelas, dan penugasan siswa.
@@ -674,31 +745,70 @@ export default function RombelManager() {
 
             {/* TOOLBAR */}
             <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-center">
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <Search className="h-4 w-4" />
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="CARI NAMA ROMBEL"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner uppercase"
-                  />
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                {/* Search & Program Filter */}
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto flex-1">
+                  <div className="relative w-full sm:w-64">
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <Search className="h-4 w-4" />
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="CARI NAMA ROMBEL"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="w-full h-10 pl-9 pr-4 text-xs border border-slate-200 rounded-xl bg-white font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner uppercase"
+                    />
+                  </div>
+
+                  <div className="w-full sm:w-56">
+                    <select
+                      value={selectedProgramFilter}
+                      onChange={(e) => setSelectedProgramFilter(e.target.value)}
+                      className="w-full h-10 px-3 text-xs font-black border border-slate-200 rounded-xl bg-white text-slate-700 focus:outline-none focus:border-cyan-500 transition-colors cursor-pointer shadow-xs uppercase"
+                    >
+                      <option value="Semua">SEMUA PAKET / PROGRAM</option>
+                      <option value="PAKET A">PAKET A (Kelas I - VI)</option>
+                      <option value="PAKET B">PAKET B (Kelas VII - IX)</option>
+                      <option value="PAKET C">PAKET C (Kelas X - XII)</option>
+                      <option value="TanpaWali">ROMBEL TANPA WALI KELAS</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div className="flex gap-2 col-span-1 sm:col-span-3 items-center flex-wrap">
+                {/* Actions */}
+                <div className="flex gap-2 items-center flex-wrap w-full md:w-auto justify-end">
+                  <Button
+                    onClick={() => setNoWaliModalOpen(true)}
+                    className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md uppercase tracking-wider flex items-center gap-2 transition-all active:scale-95"
+                  >
+                    <UserCheck className="h-4 w-4" /> ROMBEL TANPA WALI KELAS
+                    {(() => {
+                      const count = rombels.filter((r) => !r.waliKelas && !r.waliKelasId).length;
+                      return (
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                          count > 0 ? "bg-white text-rose-600 shadow-xs" : "bg-rose-700/60 text-white"
+                        }`}>
+                          {count} ROMBEL
+                        </span>
+                      );
+                    })()}
+                  </Button>
+
                   <Button
                     onClick={openUnassigned}
-                    className="bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
+                    className="bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-md uppercase tracking-wider flex items-center gap-2 transition-all active:scale-95"
                   >
                     <UserPlus className="h-4 w-4" /> SISWA BELUM MEMILIKI KELAS
                     {(() => {
                       const count = allStudents.filter((s) => !s.rombels || s.rombels.length === 0).length;
-                      return count > 0 ? (
-                        <span className="ml-1 bg-white text-amber-600 rounded-full px-1.5 py-0.5 text-[10px] font-black">{count}</span>
-                      ) : null;
+                      return (
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                          count > 0 ? "bg-white text-amber-600 shadow-xs" : "bg-amber-600/60 text-white"
+                        }`}>
+                          {count} SISWA
+                        </span>
+                      );
                     })()}
                   </Button>
                   <Button
@@ -748,50 +858,58 @@ export default function RombelManager() {
                 ) : filteredRombels.length > 0 ? (
                   viewMode === "cards" ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
-                      {filteredRombels.map((rombel) => (
-                        <div
-                          key={rombel.id}
-                          onClick={() => openDetail(rombel)}
-                          className="bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-cyan-300 transition-all flex flex-col group cursor-pointer hover:shadow-md"
-                        >
-                          {/* Header */}
-                          <div className="h-20 bg-gradient-to-br from-[#00badb] to-[#009cb9] flex items-center justify-center relative">
-                            <span className="text-3xl font-black text-white drop-shadow-lg">
-                              {rombel.nama}
-                            </span>
-                          </div>
-                          {/* Body */}
-                          <div className="p-4 flex flex-col gap-2 flex-1">
-                            <div className="flex items-center gap-2">
-                              {rombel.waliKelas?.foto ? (
-                                <img
-                                  src={rombel.waliKelas.foto}
-                                  alt=""
-                                  className="h-8 w-8 rounded-full object-cover border-2 border-white shadow"
-                                />
-                              ) : (
-                                <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center text-sm">
-                                  👨‍🏫
-                                </div>
+                      {filteredRombels.map((rombel) => {
+                        const progBadge = deriveProgramFromKelas(rombel.nama);
+                        return (
+                          <div
+                            key={rombel.id}
+                            onClick={() => openDetail(rombel)}
+                            className="bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-cyan-300 transition-all flex flex-col group cursor-pointer hover:shadow-md"
+                          >
+                            {/* Header */}
+                            <div className="h-20 bg-gradient-to-br from-[#00badb] to-[#009cb9] flex items-center justify-center relative">
+                              {progBadge && (
+                                <span className="absolute top-2 right-2 px-2 py-0.5 bg-black/25 backdrop-blur-xs text-white font-black text-[9px] rounded-full uppercase tracking-wider">
+                                  {progBadge}
+                                </span>
                               )}
-                              <div className="min-w-0">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                  Wali Kelas
+                              <span className="text-3xl font-black text-white drop-shadow-lg">
+                                {rombel.nama}
+                              </span>
+                            </div>
+                            {/* Body */}
+                            <div className="p-4 flex flex-col gap-2 flex-1">
+                              <div className="flex items-center gap-2">
+                                {rombel.waliKelas?.foto ? (
+                                  <img
+                                    src={rombel.waliKelas.foto}
+                                    alt=""
+                                    className="h-8 w-8 rounded-full object-cover border-2 border-white shadow"
+                                  />
+                                ) : (
+                                  <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center text-sm">
+                                    <User className="h-4 w-4 text-purple-600" />
+                                  </div>
+                                )}
+                                <div className="min-w-0">
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                    Wali Kelas
+                                  </p>
+                                  <p className="text-xs font-black text-slate-700 truncate">
+                                    {rombel.waliKelas?.nama || "Belum ditentukan"}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="mt-auto pt-2 border-t border-slate-100">
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                  Siswa
                                 </p>
-                                <p className="text-xs font-black text-slate-700 truncate">
-                                  {rombel.waliKelas?.nama || "Belum ditentukan"}
-                                </p>
+                                <p className="text-lg font-black text-[#00badb]">{rombel.jumlahSiswa}</p>
                               </div>
                             </div>
-                            <div className="mt-auto pt-2 border-t border-slate-100">
-                              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                                Siswa
-                              </p>
-                              <p className="text-lg font-black text-[#00badb]">{rombel.jumlahSiswa}</p>
-                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : (
                     /* Table View */
@@ -801,6 +919,7 @@ export default function RombelManager() {
                           <tr className="bg-[#00badb] text-white uppercase tracking-wider">
                             <th className="p-3 text-left font-extrabold rounded-tl-xl">No</th>
                             <th className="p-3 text-left font-extrabold">Nama Rombel</th>
+                            <th className="p-3 text-left font-extrabold">Program</th>
                             <th className="p-3 text-left font-extrabold">Wali Kelas</th>
                             <th className="p-3 text-center font-extrabold">Jml Siswa</th>
                             <th className="p-3 text-center font-extrabold rounded-tr-xl">Aksi</th>
@@ -815,6 +934,7 @@ export default function RombelManager() {
                             >
                               <td className="p-3 font-bold text-slate-500">{idx + 1}</td>
                               <td className="p-3 font-bold text-slate-700">{rombel.nama}</td>
+                              <td className="p-3 font-bold text-purple-700">{deriveProgramFromKelas(rombel.nama) || "-"}</td>
                               <td className="p-3 font-semibold text-slate-500">
                                 {rombel.waliKelas?.nama || "-"}
                               </td>
@@ -1218,6 +1338,119 @@ export default function RombelManager() {
               <Button
                 onClick={() => setUnassignedOpen(false)}
                 className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold text-xs px-4 py-2 rounded-xl"
+              >
+                Tutup
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Rombel Tanpa Wali Kelas Modal ── */}
+      {noWaliModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-rose-50/50">
+              <div>
+                <h3 className="text-base font-black text-rose-900 uppercase tracking-tight flex items-center gap-2">
+                  <UserCheck className="h-5 w-5 text-rose-600" /> ROMBEL TANPA WALI KELAS
+                </h3>
+                <p className="text-xs text-slate-500 font-semibold mt-0.5">
+                  Daftar rombongan belajar yang belum memiliki penugasan wali kelas (tutor).
+                </p>
+              </div>
+              <button
+                onClick={() => setNoWaliModalOpen(false)}
+                className="p-2 rounded-xl hover:bg-slate-200/60 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5 text-slate-400" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1 space-y-4">
+              {(() => {
+                const unassignedRombels = rombels.filter((r) => !r.waliKelas && !r.waliKelasId);
+                if (unassignedRombels.length === 0) {
+                  return (
+                    <div className="flex flex-col items-center justify-center py-12 text-center space-y-3">
+                      <div className="h-16 w-16 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
+                        <UserCheck className="h-8 w-8" />
+                      </div>
+                      <h4 className="font-black text-slate-800 text-sm uppercase">Semua Rombel Sudah Memiliki Wali Kelas</h4>
+                      <p className="text-xs text-slate-500 max-w-sm font-semibold">
+                        Seluruh rombongan belajar telah terhubung dengan tutor wali kelas masing-masing.
+                      </p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-3">
+                    {unassignedRombels.map((rombel) => {
+                      const progBadge = deriveProgramFromKelas(rombel.nama);
+                      const currentSelectedTutor = selectedWaliAssignments[rombel.id] || null;
+
+                      return (
+                        <div
+                          key={rombel.id}
+                          className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs"
+                        >
+                          <div className="space-y-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-black text-slate-800 text-sm uppercase">{rombel.nama}</span>
+                              {progBadge && (
+                                <span className="bg-purple-100 text-purple-700 font-extrabold text-[9px] px-2.5 py-0.5 rounded-full uppercase">
+                                  {progBadge}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-500 font-semibold">
+                              Jumlah Siswa: <span className="font-black text-slate-700">{rombel.jumlahSiswa}</span>
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <select
+                              value={currentSelectedTutor || ""}
+                              onChange={(e) =>
+                                setSelectedWaliAssignments({
+                                  ...selectedWaliAssignments,
+                                  [rombel.id]: e.target.value ? Number(e.target.value) : null,
+                                })
+                              }
+                              className="h-9 px-3 text-xs font-bold border border-slate-300 rounded-xl bg-white text-slate-800 focus:outline-none focus:border-cyan-500 flex-1 sm:w-60 cursor-pointer"
+                            >
+                              <option value="">PILIH WALI KELAS (TUTOR)...</option>
+                              {tutors.map((tutor) => (
+                                <option key={tutor.id} value={tutor.id}>
+                                  {tutor.nama} ({tutor.tutorMapel || "Tutor"})
+                                </option>
+                              ))}
+                            </select>
+
+                            <Button
+                              disabled={!currentSelectedTutor || assigningWaliId === rombel.id}
+                              onClick={() => handleQuickAssignWali(rombel, currentSelectedTutor)}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-4 h-9 rounded-xl shadow-xs cursor-pointer uppercase shrink-0 transition-all active:scale-95 disabled:opacity-50"
+                            >
+                              {assigningWaliId === rombel.id ? "Menyimpan..." : "SIMPAN"}
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <p className="text-xs font-bold text-slate-400">
+                {rombels.filter((r) => !r.waliKelas && !r.waliKelasId).length} rombel belum ada wali kelas
+              </p>
+              <Button
+                onClick={() => setNoWaliModalOpen(false)}
+                className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold text-xs px-4 py-2 rounded-xl cursor-pointer"
               >
                 Tutup
               </Button>

@@ -12,17 +12,24 @@ interface TutorMonitoringData {
   diskusiCount?: number;
 }
 
-export default function TutorMonitoring() {
+export default function TutorMonitoring({ initialLevel }: { initialLevel?: string } = {}) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedLevel, setSelectedLevel] = useState("Semua");
+  const [selectedLevel, setSelectedLevel] = useState(initialLevel || "Semua");
   const [selectedKelas, setSelectedKelas] = useState("Semua");
   const [kelasList, setKelasList] = useState<string[]>([]);
   const [tutors, setTutors] = useState<TutorMonitoringData[]>([]);
+  const [rawSetups, setRawSetups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  useEffect(() => {
+    if (initialLevel) {
+      setSelectedLevel(initialLevel);
+    }
+  }, [initialLevel]);
 
   useEffect(() => {
     const fetchTutors = async () => {
@@ -42,6 +49,7 @@ export default function TutorMonitoring() {
 
         const setupsData = await setupsRes.json();
         if (setupsData.success) {
+          setRawSetups(setupsData.data);
           const uniqueKelas = [...new Set(setupsData.data.map((s: any) => s.kelas))] as string[];
           setKelasList(uniqueKelas.sort());
         }
@@ -78,11 +86,24 @@ export default function TutorMonitoring() {
     setSelectedKelas("Semua");
   }, [selectedLevel]);
 
-  const filtered = tutors.filter(
-    (t) =>
+  const filtered = tutors.filter((t) => {
+    const matchesSearch =
+      !searchTerm ||
       t.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      t.tutorMapel.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      t.tutorMapel.toLowerCase().includes(searchTerm.toLowerCase());
+
+    if (!matchesSearch) return false;
+
+    if (selectedKelas !== "Semua") {
+      return rawSetups.some((s) => s.tutorId === t.id && s.kelas === selectedKelas);
+    }
+
+    if (selectedLevel !== "Semua") {
+      return rawSetups.some((s) => s.tutorId === t.id && getLevel(s.kelas) === selectedLevel);
+    }
+
+    return true;
+  });
 
   const handleExportLaporan = () => {
     const today = new Date().toISOString().split("T")[0];

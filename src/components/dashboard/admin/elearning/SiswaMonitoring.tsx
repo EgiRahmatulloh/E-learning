@@ -15,16 +15,22 @@ interface StudentMonitoringData {
   avgScore?: number;
 }
 
-export default function SiswaMonitoring() {
+export default function SiswaMonitoring({ initialLevel }: { initialLevel?: string } = {}) {
   const [searchTerm, setSearchTerm] = useState("");
   const [students, setStudents] = useState<StudentMonitoringData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedLevel, setSelectedLevel] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState(initialLevel || "");
   const [selectedKelas, setSelectedKelas] = useState("");
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  useEffect(() => {
+    if (initialLevel) {
+      setSelectedLevel(initialLevel);
+    }
+  }, [initialLevel]);
 
   useEffect(() => {
     const fetchStudents = async () => {
