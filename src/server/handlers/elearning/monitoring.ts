@@ -25,7 +25,7 @@ import {
   elearningSessionAngkets
 } from "../../models";
 import { verifyAdmin, verifyAdminOrTutor } from "../../middleware/auth";
-import { verifyUser, sanitizeFilename, deriveProgram, buildAttendanceGrid, calculateGrade } from "./helpers";
+import { verifyUser, sanitizeFilename, deriveProgram, buildAttendanceGrid, calculateGrade, extractLevel } from "./helpers";
 import { fillTemplate } from "../../utils/templateXlsx";
 
   // GET Monitoring Tutors
@@ -33,16 +33,26 @@ export const monitoringHandlers = new Elysia()
   .get(
     "/monitoring/tutors",
     async (context: any) => {
-      const { headers, jwt, set } = context;
+      const { headers, jwt, query, set } = context;
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
 
       try {
-        const tutorsList = await db.select().from(tutors).all();
+        const filterLevel = query.level && query.level !== "Semua" ? query.level : null;
+
+        const allSetups = await db.select().from(elearningSetups).all();
+        let filteredSetups = allSetups;
+        if (filterLevel) {
+          filteredSetups = allSetups.filter(s => extractLevel(s.kelas) === parseInt(filterLevel));
+        }
+
+        const tutorIds = filterLevel ? [...new Set(filteredSetups.map(s => s.tutorId))] : null;
+        const tutorsList = tutorIds
+          ? (await db.select().from(tutors).all()).filter(t => tutorIds.includes(t.id))
+          : await db.select().from(tutors).all();
 
         // Enrich tutors with stats
         const allPosts = await db.select().from(elearningForumPosts).where(eq(elearningForumPosts.authorRole, "tutor")).all();
-        const allSetups = await db.select().from(elearningSetups).all();
         const allCourses = await db.select().from(elearningCourses).all();
         const allSessions = await db.select().from(elearningSessions).all();
         const allAssignments = await db.select().from(elearningAssignments).all();
@@ -52,8 +62,9 @@ export const monitoringHandlers = new Elysia()
           // 1. diskusiCount (posts made by this tutor)
           const diskusiCount = allPosts.filter(p => p.authorId == tutor.id && p.authorRole === "tutor").length;
 
-          // 2. tugasBelumDinilai
-          const tutorSetups = allSetups.filter(s => s.tutorId === tutor.id);
+          // 2. tugasBelumDinilai & jumlahKelas dari filteredSetups sesuai level
+          const tutorSetups = filteredSetups.filter(s => s.tutorId === tutor.id);
+          const jumlahKelas = new Set(tutorSetups.map(s => s.kelas)).size;
 
           const tutorCourseIds = allCourses.filter(c =>
             tutorSetups.some(s => s.mapel === c.namaMapel && deriveProgram(s.kelas) === c.program)
@@ -68,7 +79,7 @@ export const monitoringHandlers = new Elysia()
 
           return {
             ...tutor,
-            jumlahKelas: tutorSetups.length,
+            jumlahKelas: jumlahKelas || tutorSetups.length,
             diskusiCount,
             tugasBelumDinilai
           };
@@ -87,22 +98,44 @@ export const monitoringHandlers = new Elysia()
   .get(
     "/monitoring/students",
     async (context: any) => {
-      const { headers, jwt, set } = context;
+      const { headers, jwt, query, set } = context;
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
 
       try {
-        const studentsList = await db
-          .select({
-            id: students.id,
-            nama: students.nama,
-            nis: students.nis,
-            kelas: rombels.nama,
-          })
-          .from(students)
-          .innerJoin(rombelStudents, eq(students.id, rombelStudents.studentId))
-          .innerJoin(rombels, eq(rombelStudents.rombelId, rombels.id))
-          .all();
+        const filterLevel = query.level && query.level !== "Semua" ? query.level : null;
+
+        let studentsList;
+        if (filterLevel) {
+          const allRombels = await db.select().from(rombels).all();
+          const levelRombels = allRombels.filter(r => extractLevel(r.nama) === parseInt(filterLevel));
+          const rombelIds = levelRombels.map(r => r.id);
+
+          studentsList = rombelIds.length > 0 ? await db
+            .select({
+              id: students.id,
+              nama: students.nama,
+              nis: students.nis,
+              kelas: rombels.nama,
+            })
+            .from(students)
+            .innerJoin(rombelStudents, eq(students.id, rombelStudents.studentId))
+            .innerJoin(rombels, eq(rombelStudents.rombelId, rombels.id))
+            .where(inArray(rombelStudents.rombelId, rombelIds))
+            .all() : [];
+        } else {
+          studentsList = await db
+            .select({
+              id: students.id,
+              nama: students.nama,
+              nis: students.nis,
+              kelas: rombels.nama,
+            })
+            .from(students)
+            .innerJoin(rombelStudents, eq(students.id, rombelStudents.studentId))
+            .innerJoin(rombels, eq(rombelStudents.rombelId, rombels.id))
+            .all();
+        }
 
         // Calculate stats — fetch only what's needed via targeted queries
         const allPosts = await db.select().from(elearningForumPosts).where(eq(elearningForumPosts.authorRole, "siswa")).all();

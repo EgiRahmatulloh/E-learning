@@ -3,6 +3,10 @@ import { Search, GraduationCap, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { downloadFromTemplate } from "@/lib/downloadTemplate";
 
+interface TutorMonitoringProps {
+  kelasLevel: string | null;
+}
+
 interface TutorMonitoringData {
   id: number;
   nama: string;
@@ -12,7 +16,7 @@ interface TutorMonitoringData {
   diskusiCount?: number;
 }
 
-export default function TutorMonitoring() {
+export default function TutorMonitoring({ kelasLevel }: TutorMonitoringProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [tutors, setTutors] = useState<TutorMonitoringData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,8 +30,9 @@ export default function TutorMonitoring() {
       try {
         const token = localStorage.getItem("token");
         const headers = { Authorization: `Bearer ${token}` };
+        const levelParam = kelasLevel ? `?level=${kelasLevel}` : "";
 
-        const res = await fetch("/api/elearning/monitoring/tutors", { headers });
+        const res = await fetch(`/api/elearning/monitoring/tutors${levelParam}`, { headers });
         const data = await res.json();
         if (data.success) {
           setTutors(data.data);
@@ -39,7 +44,7 @@ export default function TutorMonitoring() {
       }
     };
     fetchTutors();
-  }, []);
+  }, [kelasLevel]);
 
   const filtered = tutors.filter((t) => {
     const matchesSearch =
@@ -52,7 +57,9 @@ export default function TutorMonitoring() {
 
   const handleExportLaporan = () => {
     const today = new Date().toISOString().split("T")[0];
-    downloadFromTemplate("/api/elearning/laporan/tutor-attendance", `laporan_kehadiran_tutor_SEMUA_KELAS_${today}.xlsx`);
+    const levelParam = kelasLevel ? `?level=${kelasLevel}` : "";
+    const label = kelasLevel ? `LEVEL_${kelasLevel}` : "SEMUA_KELAS";
+    downloadFromTemplate(`/api/elearning/laporan/tutor-attendance${levelParam}`, `laporan_kehadiran_tutor_${label}_${today}.xlsx`);
   };
 
   const paginatedTutors = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);

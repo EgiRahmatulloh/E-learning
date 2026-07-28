@@ -4,36 +4,38 @@ import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
 import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, GraduationCap, ArrowUpCircle, RefreshCw, List, LayoutGrid, Filter, Loader2, Edit3 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
-import BerkasUpload, { type BerkasItem } from "@/components/ui/BerkasUpload";
+import BerkasUpload from "@/components/ui/BerkasUpload";
+
+import { extractLevel } from "@/lib/kelas-helper";
 
 interface Student {
   id: number;
   nama: string;
   nik: string;
-  program: string;
-  kelas: string;
   nisn: string;
   nis: string;
+  program: string;
+  kelas: string;
   tempatTglLahir: string;
   titikLayanan: string;
   jenisKelamin: string;
-  noHp: string;
+  noHp?: string;
   agama: string;
-  namaAyah: string;
-  email: string;
-  namaIbu: string;
+  namaAyah?: string;
+  email?: string;
+  namaIbu?: string;
   alamat: string;
-  rt?: string;
-  rw?: string;
-  desa?: string;
-  kecamatan?: string;
-  kabupaten?: string;
-  provinsi?: string;
+  rt: string;
+  rw: string;
+  desa: string;
+  kecamatan: string;
+  kabupaten: string;
+  provinsi: string;
   sekolahAsal?: string;
-  password?: string;
+  status: string;
   foto: string;
-  berkas?: Record<string, string>;
-  status: string; // 'AKTIF', 'LULUS'
+  berkas: Record<string, string>;
+  password: string;
   rombels?: { id: number; nama: string }[];
 }
 
@@ -43,40 +45,32 @@ interface Rombel {
   jumlahSiswa: number;
 }
 
-const KELAS_BY_PROGRAM: Record<string, string[]> = {
-  "PAKET A": ["KELAS I", "KELAS II", "KELAS III", "KELAS IV", "KELAS V", "KELAS VI"],
-  "PAKET B": ["KELAS VII", "KELAS VIII", "KELAS IX"],
-  "PAKET C": ["KELAS X", "KELAS XI", "KELAS XII"],
-};
-
 const NEXT_PROGRAM: Record<string, string> = {
   "PAKET A": "PAKET B",
   "PAKET B": "PAKET C",
 };
 
+const MAX_GRADE: Record<string, number> = { "PAKET A": 6, "PAKET B": 9, "PAKET C": 12 };
+
+const FIRST_KELAS: Record<string, string> = {
+  "PAKET A": "PAKET A 1",
+  "PAKET B": "PAKET B 7",
+  "PAKET C": "PAKET C 10",
+};
+
 const deriveProgramFromKelas = (kelasName?: string | null): string => {
   if (!kelasName) return "";
-  const nama = kelasName.trim().toUpperCase();
-
-  if (nama.includes("PAKET A")) return "PAKET A";
-  if (nama.includes("PAKET B")) return "PAKET B";
-  if (nama.includes("PAKET C")) return "PAKET C";
-
-  const m = nama.match(/^(?:KELAS\s+)?(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I|12|11|10|9|8|7|6|5|4|3|2|1)/i);
-  if (m) {
-    const level = m[1].toUpperCase();
-    if (["I", "II", "III", "IV", "V", "VI", "1", "2", "3", "4", "5", "6"].includes(level)) return "PAKET A";
-    if (["VII", "VIII", "IX", "7", "8", "9"].includes(level)) return "PAKET B";
-    if (["X", "XI", "XII", "10", "11", "12"].includes(level)) return "PAKET C";
-  }
-
+  const upper = kelasName.trim().toUpperCase();
+  if (upper.startsWith("PAKET A")) return "PAKET A";
+  if (upper.startsWith("PAKET B")) return "PAKET B";
+  if (upper.startsWith("PAKET C")) return "PAKET C";
   return "";
 };
 
 export default function WargaBelajarManager() {
   const confirm = useConfirm();
 
-  const WB_BERKAS_TYPES: BerkasItem[] = [
+  const WB_BERKAS_TYPES: { label: string; key: string }[] = [
     { label: "KK (Kartu Keluarga)", key: "kk" },
     { label: "KTP / Akta Kelahiran", key: "ktp" },
     { label: "Ijazah Sebelumnya", key: "ijazah" },
@@ -178,17 +172,7 @@ export default function WargaBelajarManager() {
   };
 
   // Cek apakah siswa sudah di akhir program (untuk sembunyikan "Melanjutkan Program")
-  const MAX_GRADE: Record<string, number> = { "PAKET A": 6, "PAKET B": 9, "PAKET C": 12 };
-  const romanKeys = ["XII", "XI", "X", "IX", "VIII", "VII", "VI", "V", "IV", "III", "II", "I"];
-  const romanMap: Record<string, number> = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10, XI: 11, XII: 12 };
-
-  const getGradeFromKelas = (kelas: string): number => {
-    const upper = (kelas || "").toUpperCase().trim();
-    for (const r of romanKeys) {
-      if (upper.startsWith(r) || upper.includes(r)) return romanMap[r];
-    }
-    return 0;
-  };
+  const getGradeFromKelas = (kelas: string): number => extractLevel(kelas);
 
   const isAtEndOfProgram = (student: Student): boolean => {
     const program = (student.program || "").toUpperCase().trim();
@@ -603,7 +587,7 @@ export default function WargaBelajarManager() {
 
     const currentProg = (selectedStudent.program || "").toUpperCase().trim();
     const targetProg = NEXT_PROGRAM[currentProg];
-    const targetKelas = KELAS_BY_PROGRAM[targetProg]?.[0] || "";
+    const targetKelas = FIRST_KELAS[targetProg] || "";
     if (!targetProg) {
       toast.error("Program saat ini sudah maksimal (Paket C)");
       return;
@@ -751,7 +735,7 @@ export default function WargaBelajarManager() {
       return;
     }
     const targetProgram = NEXT_PROGRAM[currentPrograms[0]];
-    const targetKelas = KELAS_BY_PROGRAM[targetProgram]?.[0] || "";
+    const targetKelas = FIRST_KELAS[targetProgram] || "";
     if (!targetProgram) {
       toast.error("Program saat ini sudah maksimal (Paket C)");
       return;
@@ -840,28 +824,7 @@ export default function WargaBelajarManager() {
                 className="w-full h-10 pl-9 pr-4 text-xs font-bold border border-slate-200 rounded-xl bg-white text-slate-700 focus:outline-none focus:border-cyan-500 transition-colors shadow-inner uppercase appearance-none cursor-pointer"
               >
                 <option value="">SEMUA ROMBEL</option>
-                {rombels.slice().sort((a, b) => {
-                  const roman: Record<string, number> = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10, XI: 11, XII: 12 };
-                  const romanKeys = Object.keys(roman).sort((a, b) => b.length - a.length);
-                  const getGrade = (n: string) => {
-                    const upper = n.toUpperCase();
-                    for (const r of romanKeys) {
-                      if (upper.startsWith(r)) return roman[r];
-                    }
-                    return 0;
-                  };
-                  const getSection = (n: string) => {
-                    const upper = n.toUpperCase();
-                    for (const r of romanKeys) {
-                      if (upper.startsWith(r)) return upper.slice(r.length);
-                    }
-                    return upper;
-                  };
-                  const ga = getGrade(a.nama), gb = getGrade(b.nama);
-                  if (ga !== gb) return ga - gb;
-                  const sa = getSection(a.nama), sb = getSection(b.nama);
-                  return sa.localeCompare(sb);
-                }).map((r) => (
+                {rombels.slice().sort((a, b) => a.nama.localeCompare(b.nama, undefined, { numeric: true })).map((r) => (
                   <option key={r.id} value={r.id}>{r.nama} ({r.jumlahSiswa} siswa)</option>
                 ))}
               </select>
@@ -1689,7 +1652,7 @@ export default function WargaBelajarManager() {
                 {selectedStudent && (() => {
                   const currentProg = (selectedStudent.program || "").toUpperCase().trim();
                   const targetProg = NEXT_PROGRAM[currentProg];
-                  const targetKelas = targetProg ? KELAS_BY_PROGRAM[targetProg]?.[0] : null;
+                  const targetKelas = targetProg ? FIRST_KELAS[targetProg] : null;
                   return (
                     <div className="bg-white/10 rounded-xl px-4 py-3 space-y-2 text-white">
                       <div className="flex items-center gap-2">
@@ -1776,7 +1739,7 @@ export default function WargaBelajarManager() {
                     .filter((s): s is Student => !!s && isAtEndOfProgram(s) && s.status !== "LULUS");
                   const programs = [...new Set(eligibleStudents.map((s) => (s.program || "").toUpperCase().trim()))];
                   const targetProgram = programs.length === 1 ? NEXT_PROGRAM[programs[0]] : null;
-                  const targetKelas = targetProgram ? KELAS_BY_PROGRAM[targetProgram]?.[0] : null;
+                  const targetKelas = targetProgram ? FIRST_KELAS[targetProgram] : null;
 
                   return (
                     <div className="space-y-3.5 text-white">

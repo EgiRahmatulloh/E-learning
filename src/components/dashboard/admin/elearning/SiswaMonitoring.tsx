@@ -4,6 +4,10 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { downloadFromTemplate } from "@/lib/downloadTemplate";
 
+interface SiswaMonitoringProps {
+  kelasLevel: string | null;
+}
+
 interface StudentMonitoringData {
   id: number;
   nama: string;
@@ -15,7 +19,7 @@ interface StudentMonitoringData {
   avgScore?: number;
 }
 
-export default function SiswaMonitoring() {
+export default function SiswaMonitoring({ kelasLevel }: SiswaMonitoringProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [students, setStudents] = useState<StudentMonitoringData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,7 +31,8 @@ export default function SiswaMonitoring() {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const res = await fetch("/api/elearning/monitoring/students", {
+        const levelParam = kelasLevel ? `?level=${kelasLevel}` : "";
+        const res = await fetch(`/api/elearning/monitoring/students${levelParam}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         const data = await res.json();
@@ -51,24 +56,36 @@ export default function SiswaMonitoring() {
   );
 
 
-  const handleExportKehadiran = async () => {
-    const today = new Date().toISOString().split("T")[0];
-    await downloadFromTemplate(
-      "/api/elearning/laporan/student-attendance-rekap",
-      `rekap_kehadiran_wb_SEMUA_KELAS_${today}.xlsx`
-    );
-  };
-
   const [exporting, setExporting] = useState(false);
+
+  const handleExportKehadiran = async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const levelParam = kelasLevel ? `?level=${kelasLevel}` : "";
+      const label = kelasLevel ? `LEVEL_${kelasLevel}` : "SEMUA_KELAS";
+      await downloadFromTemplate(
+        `/api/elearning/laporan/student-attendance-rekap${levelParam}`,
+        `rekap_kehadiran_wb_${label}_${today}.xlsx`
+      );
+    } catch (err: any) {
+      toast.error("Gagal mengunduh rekap kehadiran", { description: err.message });
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const handleExportNilai = async () => {
     if (exporting) return;
     setExporting(true);
     try {
       const today = new Date().toISOString().split("T")[0];
+      const levelParam = kelasLevel ? `?level=${kelasLevel}` : "";
+      const label = kelasLevel ? `LEVEL_${kelasLevel}` : "SEMUA_KELAS";
       await downloadFromTemplate(
-        "/api/elearning/laporan/student-grades-rekap",
-        `rekap_nilai_wb_semua_kelas_${today}.xlsx`
+        `/api/elearning/laporan/student-grades-rekap${levelParam}`,
+        `rekap_nilai_wb_${label}_${today}.xlsx`
       );
     } catch (err: any) {
       toast.error("Gagal mengunduh rekap nilai", { description: err.message });

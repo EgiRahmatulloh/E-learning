@@ -102,6 +102,10 @@ function removeClonedMerges(template: any, originalMergeRefs: string[], headerEn
     const isModifiedOriginal = originals.some(o => o.startRow === startRow);
     if (isModifiedOriginal) continue; // modified original, keep
 
+    // Check if this is a footer merge (original start row was below headerEndRow)
+    const isFooterMerge = originals.some(o => o.startRow > headerEndRow);
+    if (isFooterMerge) continue; // shifted footer merge, keep
+
     // Otherwise it's a clone (start row is beyond original range)
     toRemove.push(el);
   }
