@@ -258,8 +258,9 @@ export const laporanHandlers = new Elysia()
         const filterKelas = query.kelas && query.kelas !== "Semua" ? query.kelas : null;
         const filterLevel = query.level && query.level !== "Semua" ? query.level : null;
 
-        // Cari rombel berdasarkan filter
-        const allRombels = await db.select().from(rombels).all();
+        // Cari rombel berdasarkan filter (urutkan alfabetis agar PAKET B 9 didahulukan sebelum PAKET B 9 A)
+        const allRombels = (await db.select().from(rombels).all())
+          .sort((a, b) => a.nama.localeCompare(b.nama, undefined, { numeric: true }));
         let rombelList: typeof allRombels;
         if (filterKelas) {
           rombelList = allRombels.filter(r => r.nama === filterKelas);
@@ -703,11 +704,11 @@ export const laporanHandlers = new Elysia()
         const program = filteredSetups.length > 0 ? deriveProgram(filteredSetups[0].kelas).toUpperCase() : "PAKET A/B/C";
         const semester = filteredSetups.length > 0 ? (filteredSetups[0].semester || "Ganjil").toUpperCase() : "GANJIL";
 
-        const rombelForWali = filterKelas
+        const rombelForWali = (filterKelas
           ? rombelList.filter(r => r.nama === filterKelas)
           : filterLevel
-            ? rombelList.filter(r => extractLevel(r.nama) === parseInt(filterLevel)).sort((a, b) => a.nama.localeCompare(b.nama))
-            : rombelList;
+            ? rombelList.filter(r => extractLevel(r.nama) === parseInt(filterLevel))
+            : rombelList).sort((a, b) => a.nama.localeCompare(b.nama, undefined, { numeric: true }));
         const rombelWithWali = rombelForWali.find(r => r.waliKelasId != null);
         const waliKelasObj = rombelWithWali
           ? await db.select().from(tutors).where(eq(tutors.id, rombelWithWali.waliKelasId!)).get()
