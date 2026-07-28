@@ -21,10 +21,21 @@ export const sanitizeFilename = (s: string): string =>
 
 // Helper: derive program from class name
 export const deriveProgram = (kelas: string): string => {
-  const upper = kelas.toUpperCase();
-  if (upper.includes("PAKET A")) return "Paket A";
-  if (upper.includes("PAKET B")) return "Paket B";
+  if (!kelas) return "Paket C";
+  const upper = kelas.trim().toUpperCase();
+  if (upper.startsWith("PAKET A")) return "Paket A";
+  if (upper.startsWith("PAKET B")) return "Paket B";
   return "Paket C";
+};
+
+export const extractLevel = (nama: string): number => {
+  const m = nama.match(/PAKET\s+[ABC]\s+(\d+)/i);
+  return m ? parseInt(m[1]) : 0;
+};
+
+export const extractSub = (nama: string): string => {
+  const m = nama.match(/PAKET\s+[ABC]\s+\d+\s+([A-Z])$/i);
+  return m ? m[1] : "";
 };
 
 const jakartaFormatter = new Intl.DateTimeFormat("en-US", {

@@ -88,7 +88,7 @@ export const getSubjectsSiswa = (program?: string, kelas?: string): string[] => 
   if (program === "Paket A") return pA;
   if (program === "Paket B") return pB;
   if (program?.toLowerCase().includes("paket c")) {
-    if (kelas === "Kelas 10") return pC10;
+    if (kelas?.toUpperCase().includes("10") || kelas === "Kelas 10") return pC10;
     return pC1112;
   }
   // Fallback: tampilkan semua mapel Paket B

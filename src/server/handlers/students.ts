@@ -7,29 +7,23 @@ import { eq, and, inArray, sql } from "drizzle-orm";
 import { verifyAdmin, verifyUser } from "../middleware/auth";
 import { finalJwtSecret } from "../config/jwt";
 
-// Ekstrak huruf section dari nama rombel (mis. "XB" → "B", "XIB" → "B", "10A" → "A").
-// Hanya cocok untuk pola roman/angka + 1 huruf section; nama lain ("KELAS X") tidak punya section.
+// Ekstrak huruf section dari nama rombel (mis. "PAKET C 10 A" → "A").
 const extractSectionLetter = (rombelName: string): string => {
-  const m = rombelName.match(/^(?:[IVX]+([A-HJ-UWYZ])|\d{1,2}([A-Z]))$/);
-  return m ? (m[1] || m[2]) : "";
+  const m = rombelName.match(/PAKET\s+[ABC]\s+\d+\s+([A-Z])$/i);
+  return m ? m[1] : "";
+};
+
+const extractGradeLevel = (nama: string): number => {
+  const m = nama.match(/PAKET\s+[ABC]\s+(\d+)/i);
+  return m ? parseInt(m[1]) : 0;
 };
 
 export const deriveProgramFromKelas = (kelasName?: string | null): string => {
   if (!kelasName) return "";
-  const nama = kelasName.trim().toUpperCase();
-
-  if (nama.includes("PAKET A")) return "PAKET A";
-  if (nama.includes("PAKET B")) return "PAKET B";
-  if (nama.includes("PAKET C")) return "PAKET C";
-
-  const m = nama.match(/^(?:KELAS\s+)?(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I|12|11|10|9|8|7|6|5|4|3|2|1)/i);
-  if (m) {
-    const level = m[1].toUpperCase();
-    if (["I", "II", "III", "IV", "V", "VI", "1", "2", "3", "4", "5", "6"].includes(level)) return "PAKET A";
-    if (["VII", "VIII", "IX", "7", "8", "9"].includes(level)) return "PAKET B";
-    if (["X", "XI", "XII", "10", "11", "12"].includes(level)) return "PAKET C";
-  }
-
+  const upper = kelasName.trim().toUpperCase();
+  if (upper.startsWith("PAKET A")) return "PAKET A";
+  if (upper.startsWith("PAKET B")) return "PAKET B";
+  if (upper.startsWith("PAKET C")) return "PAKET C";
   return "";
 };
 
@@ -446,22 +440,10 @@ export const studentsHandlers = new Elysia()
         return { success: false, message: "Data warga belajar tidak ditemukan" };
       }
 
-      const GRADE_NUMS_S = ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"];
-      const ROMAN_TO_NUM_S: Record<string, number> = {}; GRADE_NUMS_S.forEach((r,i) => ROMAN_TO_NUM_S[r] = i+1);
-      const NUM_TO_ROMAN_S: Record<string, string> = { "1":"I","2":"II","3":"III","4":"IV","5":"V","6":"VI","7":"VII","8":"VIII","9":"IX","10":"X","11":"XI","12":"XII" };
       const MAX_BY_PROGRAM_S: Record<string, number> = { "PAKET A": 6, "PAKET B": 9, "PAKET C": 12 };
 
       const g = existing.kelas.toUpperCase().trim();
-      let gradeNum = 0;
-      const numMatchS = g.match(/KELAS\s+(\d{1,2})/);
-      if (numMatchS) { gradeNum = parseInt(numMatchS[1]); }
-      else {
-        for (const [roman, n] of Object.entries(ROMAN_TO_NUM_S).sort((a,b) => b[0].length - a[0].length)) {
-          if (g.startsWith(`KELAS ${roman}`) || g.startsWith(roman) || g.includes(`(${roman})`)) {
-            gradeNum = n; break;
-          }
-        }
-      }
+      let gradeNum = extractGradeLevel(g);
       if (gradeNum <= 0 || gradeNum > 12) {
         set.status = 400;
         return { success: false, message: "Tidak dapat menentukan kelas saat ini" };
@@ -469,11 +451,11 @@ export const studentsHandlers = new Elysia()
       const maxGradeS = MAX_BY_PROGRAM_S[existing.program?.toUpperCase().trim()] || 12;
       if (gradeNum >= maxGradeS) {
         set.status = 400;
-        return { success: false, message: `Warga belajar sudah berada di kelas tertinggi (Kelas ${NUM_TO_ROMAN_S[String(gradeNum)]})` };
+        return { success: false, message: "Warga belajar sudah berada di kelas tertinggi" };
       }
 
-      const nextRoman = NUM_TO_ROMAN_S[String(gradeNum + 1)];
-      const nextGrade = `KELAS ${nextRoman}`;
+      const nextProg = existing.program ? existing.program.toUpperCase().replace("PAKET ", "").trim() : "C";
+      const nextGrade = `PAKET ${nextProg} ${gradeNum + 1}`;
 
       // Pre-fetch data rombel untuk dipakai di dalam transaksi
       const allRombelsList = await db.select().from(rombels).all();
@@ -485,7 +467,7 @@ export const studentsHandlers = new Elysia()
       const currentRombelObj = currentRels.length > 0 ? allRombelsList.find(r => r.id === currentRels[0].rombelId) : null;
       const currentRombelName = currentRombelObj?.nama.toUpperCase() || "";
       const sectionLetter = extractSectionLetter(currentRombelName);
-      const targetRombelName = `${nextRoman}${sectionLetter}`;
+      const targetRombelName = sectionLetter ? `${nextGrade} ${sectionLetter}` : nextGrade;
 
       let updated: typeof existing | undefined;
 
@@ -798,8 +780,8 @@ export const studentsHandlers = new Elysia()
         const insertValues = dedupedItems.map((item) => ({
           nama: item.nama,
           nik: typeof item.nik === "string" ? item.nik : "",
-          program: typeof item.program === "string" ? item.program : "",
-          kelas: typeof item.kelas === "string" ? item.kelas : "",
+          program: typeof item.program === "string" && item.program.trim() ? item.program.trim().toUpperCase() : deriveProgramFromKelas(typeof item.kelas === "string" ? item.kelas : ""),
+          kelas: typeof item.kelas === "string" ? item.kelas.trim() : "",
           nisn: typeof item.nisn === "string" ? item.nisn : "",
           nis: typeof item.nis === "string" ? item.nis : "",
           tempatTglLahir: typeof item.tempatTglLahir === "string" ? item.tempatTglLahir : "",
@@ -894,9 +876,6 @@ export const studentsHandlers = new Elysia()
         let promoted = 0;
         let skipped = 0;
 
-        const GRADE_NUMS = ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"];
-        const NUM_TO_ROMAN: Record<string, string> = { "1":"I","2":"II","3":"III","4":"IV","5":"V","6":"VI","7":"VII","8":"VIII","9":"IX","10":"X","11":"XI","12":"XII" };
-        const ROMAN_TO_NUM: Record<string, number> = {}; GRADE_NUMS.forEach((r,i) => ROMAN_TO_NUM[r] = i+1);
         const MAX_BY_PROGRAM: Record<string, number> = { "PAKET A": 6, "PAKET B": 9, "PAKET C": 12 };
 
         // Pre-fetch all rombels and current rombel assignments for affected students
@@ -919,21 +898,12 @@ export const studentsHandlers = new Elysia()
         db.transaction((tx) => {
           for (const s of existing) {
             const g = s.kelas.toUpperCase().trim();
-            let gradeNum = 0;
-            const numMatch = g.match(/KELAS\s+(\d{1,2})/);
-            if (numMatch) { gradeNum = parseInt(numMatch[1]); }
-            else {
-              for (const [roman, n] of Object.entries(ROMAN_TO_NUM).sort((a,b) => b[0].length - a[0].length)) {
-                if (g.startsWith(`KELAS ${roman}`) || g.startsWith(roman) || g.includes(`(${roman})`)) {
-                  gradeNum = n; break;
-                }
-              }
-            }
+            let gradeNum = extractGradeLevel(g);
             if (gradeNum <= 0 || gradeNum > 12) { skipped++; continue; }
             const maxGrade = MAX_BY_PROGRAM[s.program?.toUpperCase().trim()] || 12;
             if (gradeNum >= maxGrade) { skipped++; continue; }
-            const nextRoman = NUM_TO_ROMAN[String(gradeNum + 1)];
-            const newKelas = `KELAS ${nextRoman}`;
+            const progLetter = s.program ? s.program.toUpperCase().replace("PAKET ", "").trim() : "C";
+            const newKelas = `PAKET ${progLetter} ${gradeNum + 1}`;
 
             // Update kelas field
             tx.update(students)
@@ -941,12 +911,12 @@ export const studentsHandlers = new Elysia()
               .where(eq(students.id, s.id))
               .run();
 
-            // Move student to new rombel: preserve section letter (e.g. XB → XIB)
+            // Move student to new rombel: preserve section letter (e.g. PAKET C 10 A → PAKET C 11 A)
             const currentRombelIds = currentRombelMap.get(s.id) || [];
             const currentRombelObj = currentRombelIds.length > 0 ? allRombels.find(r => r.id === currentRombelIds[0]) : null;
             const currentRombelName = currentRombelObj?.nama.toUpperCase() || "";
             const sectionLetter = extractSectionLetter(currentRombelName);
-            const targetRombelName = `${nextRoman}${sectionLetter}`;
+            const targetRombelName = sectionLetter ? `${newKelas} ${sectionLetter}` : newKelas;
 
             // Find or create target rombel
             let targetRombel = allRombels.find(r => r.nama.toUpperCase() === targetRombelName);

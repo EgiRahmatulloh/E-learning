@@ -51,24 +51,14 @@ export default function TutorManager() {
   const [saving, setSaving] = useState(false);
   const [rombels, setRombels] = useState<{ id: number; nama: string; waliKelasId: number | null }[]>([]);
 
-  const deriveProgramFromKelas = (kelasName?: string | null): string => {
-    if (!kelasName) return "";
-    const nama = kelasName.trim().toUpperCase();
-
-    if (nama.includes("PAKET A")) return "Paket A";
-    if (nama.includes("PAKET B")) return "Paket B";
-    if (nama.includes("PAKET C")) return "Paket C";
-
-    const m = nama.match(/^(?:KELAS\s+)?(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I|12|11|10|9|8|7|6|5|4|3|2|1)/i);
-    if (m) {
-      const level = m[1].toUpperCase();
-      if (["I", "II", "III", "IV", "V", "VI", "1", "2", "3", "4", "5", "6"].includes(level)) return "Paket A";
-      if (["VII", "VIII", "IX", "7", "8", "9"].includes(level)) return "Paket B";
-      if (["X", "XI", "XII", "10", "11", "12"].includes(level)) return "Paket C";
-    }
-
-    return "";
-  };
+const deriveProgramFromKelas = (kelasName?: string | null): string => {
+  if (!kelasName) return "";
+  const upper = kelasName.trim().toUpperCase();
+  if (upper.startsWith("PAKET A")) return "Paket A";
+  if (upper.startsWith("PAKET B")) return "Paket B";
+  if (upper.startsWith("PAKET C")) return "Paket C";
+  return "";
+};
 
   const normalizeProg = (prog?: string | null): string => {
     if (!prog) return "";

@@ -491,7 +491,7 @@ export const elearningQuizSubmissions = sqliteTable('elearning_quiz_submissions'
 
 export const rombels = sqliteTable('rombels', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  nama: text('nama').notNull(), // e.g. "10A", "10B", "11A"
+  nama: text('nama').notNull(), // e.g. "PAKET C 10 A", "PAKET B 8"
   waliKelasId: integer('wali_kelas_id'), // FK → tutors.id (nullable)
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
   updatedAt: text('updated_at')

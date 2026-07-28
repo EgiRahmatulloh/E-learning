@@ -4,6 +4,7 @@ import KelolaElearning from "./KelolaElearning";
 import TutorMonitoring from "./TutorMonitoring";
 import SiswaMonitoring from "./SiswaMonitoring";
 import AngketEvaluasiTutor from "./AngketEvaluasiTutor";
+import { extractLevel } from "@/lib/kelas-helper";
 
 interface RombelData {
   id: number;
@@ -12,27 +13,24 @@ interface RombelData {
 
 // Static all 12 levels
 const ALL_LEVELS = [
-  { id: "I", namaIndonesia: "Satu", program: "Paket A (Kelas I-VI)" },
-  { id: "II", namaIndonesia: "Dua", program: "Paket A (Kelas I-VI)" },
-  { id: "III", namaIndonesia: "Tiga", program: "Paket A (Kelas I-VI)" },
-  { id: "IV", namaIndonesia: "Empat", program: "Paket A (Kelas I-VI)" },
-  { id: "V", namaIndonesia: "Lima", program: "Paket A (Kelas I-VI)" },
-  { id: "VI", namaIndonesia: "Enam", program: "Paket A (Kelas I-VI)" },
-  { id: "VII", namaIndonesia: "Tujuh", program: "Paket B (Kelas VII-IX)" },
-  { id: "VIII", namaIndonesia: "Delapan", program: "Paket B (Kelas VII-IX)" },
-  { id: "IX", namaIndonesia: "Sembilan", program: "Paket B (Kelas VII-IX)" },
-  { id: "X", namaIndonesia: "Sepuluh", program: "Paket C (Kelas X-XII)" },
-  { id: "XI", namaIndonesia: "Sebelas", program: "Paket C (Kelas X-XII)" },
-  { id: "XII", namaIndonesia: "Dua Belas", program: "Paket C (Kelas X-XII)" },
+  { id: "1", namaIndonesia: "Satu", program: "Paket A (Kelas 1-6)" },
+  { id: "2", namaIndonesia: "Dua", program: "Paket A (Kelas 1-6)" },
+  { id: "3", namaIndonesia: "Tiga", program: "Paket A (Kelas 1-6)" },
+  { id: "4", namaIndonesia: "Empat", program: "Paket A (Kelas 1-6)" },
+  { id: "5", namaIndonesia: "Lima", program: "Paket A (Kelas 1-6)" },
+  { id: "6", namaIndonesia: "Enam", program: "Paket A (Kelas 1-6)" },
+  { id: "7", namaIndonesia: "Tujuh", program: "Paket B (Kelas 7-9)" },
+  { id: "8", namaIndonesia: "Delapan", program: "Paket B (Kelas 7-9)" },
+  { id: "9", namaIndonesia: "Sembilan", program: "Paket B (Kelas 7-9)" },
+  { id: "10", namaIndonesia: "Sepuluh", program: "Paket C (Kelas 10-12)" },
+  { id: "11", namaIndonesia: "Sebelas", program: "Paket C (Kelas 10-12)" },
+  { id: "12", namaIndonesia: "Dua Belas", program: "Paket C (Kelas 10-12)" },
 ];
 
-// Extract level from rombel name: "IVA" → "IV", "XA" → "X"
+// Extract level number from rombel name: "PAKET C 10 A" → "10"
 const extractLevelFromRombel = (namaRombel: string): string => {
-  const nama = namaRombel.toUpperCase();
-  if (nama.length > 1 && /^[A-Z]$/.test(nama.slice(-1))) {
-    return nama.slice(0, -1);
-  }
-  return nama;
+  const level = extractLevel(namaRombel);
+  return level ? level.toString() : namaRombel;
 };
 
 const getImageByProgram = (program: string): string => {
@@ -80,14 +78,18 @@ export default function ElearningAdminDashboard() {
       levelMap.get(levelId)!.push(rombel);
     }
 
-    return ALL_LEVELS.map((level) => ({
-      id: level.id,
-      nama: `KELAS ${level.id}`,
-      namaIndonesia: `Kelas ${level.namaIndonesia}`,
-      rombels: levelMap.get(level.id) || [],
-      program: level.program,
-      image: getImageByProgram(level.program),
-    }));
+    return ALL_LEVELS.map((level) => {
+      const levelNum = parseInt(level.id);
+      const paket = levelNum <= 6 ? "A" : levelNum <= 9 ? "B" : "C";
+      return {
+        id: level.id,
+        nama: `PAKET ${paket} ${level.id}`,
+        namaIndonesia: `Kelas ${level.namaIndonesia}`,
+        rombels: levelMap.get(level.id) || [],
+        program: level.program,
+        image: getImageByProgram(level.program),
+      };
+    });
   }, [rombels]);
 
   // Filtered kelas by search
@@ -174,9 +176,10 @@ export default function ElearningAdminDashboard() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 pt-10">
-                        <span className="font-black text-sm text-white block text-center drop-shadow-lg">
-                          {level.nama}
-                        </span>
+                        <div className="text-center leading-tight">
+                          <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider block">PAKET {(() => { const n = parseInt(level.id); return n <= 6 ? "A" : n <= 9 ? "B" : "C"; })()}</span>
+                          <span className="font-black text-lg text-white block drop-shadow-lg -mt-0.5">{level.id}</span>
+                        </div>
                       </div>
                     </div>
                     {/* Info Kelas */}
@@ -260,8 +263,8 @@ export default function ElearningAdminDashboard() {
       {/* Active Tab Content */}
       <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
         {activeTab === "kelola" && <KelolaElearning initialKelasId={selectedKelasId} />}
-        {activeTab === "monitoring" && <TutorMonitoring />}
-        {activeTab === "siswa" && <SiswaMonitoring />}
+        {activeTab === "monitoring" && <TutorMonitoring kelasLevel={selectedKelasId} />}
+        {activeTab === "siswa" && <SiswaMonitoring kelasLevel={selectedKelasId} />}
         {activeTab === "angket" && <AngketEvaluasiTutor />}
       </div>
     </div>

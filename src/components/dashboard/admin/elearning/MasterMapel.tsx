@@ -1,7 +1,7 @@
 import { BookOpen } from "lucide-react";
 
 export const MASTER_MAPEL = {
-  "Paket A (Kelas I-VI)": [
+  "Paket A (Kelas 1-6)": [
     "Pendidikan Agama Islam dan Budi Pekerti",
     "Pendidikan Pancasila",
     "Bahasa Indonesia",
@@ -13,7 +13,7 @@ export const MASTER_MAPEL = {
     "Pemberdayaan",
     "Keterampilan"
   ],
-  "Paket B (Kelas VII-IX)": [
+  "Paket B (Kelas 7-9)": [
     "Pendidikan Agama Islam dan Budi Pekerti",
     "Pendidikan Pancasila",
     "Bahasa Indonesia",
@@ -26,24 +26,13 @@ export const MASTER_MAPEL = {
     "Pemberdayaan",
     "Keterampilan"
   ],
-  "Paket C (Kelas X)": [
+  "Paket C (Kelas 10-12)": [
     "Pendidikan Agama Islam dan Budi Pekerti",
     "Pendidikan Pancasila",
     "Bahasa Indonesia",
     "Matematika",
     "Ilmu Pengetahuan Alam",
     "Ilmu Pengetahuan Sosial",
-    "Bahasa Inggris",
-    "PJOK",
-    "Seni",
-    "Pemberdayaan",
-    "Keterampilan"
-  ],
-  "Paket C (Kelas XI-XII)": [
-    "Pendidikan Agama Islam dan Budi Pekerti",
-    "Pendidikan Pancasila",
-    "Bahasa Indonesia",
-    "Matematika",
     "Bahasa Inggris",
     "PJOK",
     "Seni",
@@ -59,35 +48,37 @@ export const MASTER_MAPEL = {
 
 export default function MasterMapel() {
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6">
-        <div className="flex items-center gap-4 border-b border-slate-100 pb-4 mb-6">
-          <div className="p-3 bg-purple-50 rounded-xl">
-            <BookOpen className="h-6 w-6 text-purple-600" />
-          </div>
-          <div>
-            <h3 className="text-lg font-black text-slate-800">Daftar Mata Pelajaran Tetap</h3>
-            <p className="text-sm text-slate-500">Tabel referensi mata pelajaran berdasarkan Program/Paket.</p>
-          </div>
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="p-2.5 bg-[#280f91]/10 text-[#280f91] rounded-xl">
+          <BookOpen className="h-6 w-6" />
         </div>
+        <div>
+          <h2 className="text-lg font-bold text-slate-800">Master Mata Pelajaran</h2>
+          <p className="text-xs text-slate-500 font-medium">Daftar mata pelajaran standar per paket/program</p>
+        </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {Object.entries(MASTER_MAPEL).map(([paket, mapels]) => (
-            <div key={paket} className="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
-              <div className="bg-slate-100 px-4 py-3 border-b border-slate-200">
-                <h4 className="font-bold text-[#280f91]">{paket}</h4>
-              </div>
-              <ul className="divide-y divide-slate-200 text-sm">
-                {mapels.map((mapel, idx) => (
-                  <li key={idx} className="px-4 py-2 text-slate-700 flex gap-2">
-                    <span className="text-slate-400 font-mono w-5">{idx + 1}.</span>
-                    <span className="font-semibold">{mapel}</span>
-                  </li>
-                ))}
-              </ul>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {Object.entries(MASTER_MAPEL).map(([paket, mapels]) => (
+          <div key={paket} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
+            <div className="flex items-center gap-2 pb-3 mb-4 border-b border-slate-100">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#00badb]"></span>
+              <h3 className="font-bold text-slate-800 text-sm">{paket}</h3>
+              <span className="ml-auto text-[10px] font-extrabold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md uppercase">
+                {mapels.length} Mapel
+              </span>
             </div>
-          ))}
-        </div>
+            <ul className="space-y-2">
+              {mapels.map((m, idx) => (
+                <li key={idx} className="text-xs text-slate-600 font-medium flex items-center gap-2">
+                  <span className="text-[10px] text-slate-400 font-mono w-4 text-right">{idx + 1}.</span>
+                  {m}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Settings, Plus, Save, Trash2, Edit, BookOpen, Clock, AlertTriangle, Search, GraduationCap, X } from "lucide-react";
 import { toast } from "sonner";
 import { MASTER_MAPEL } from "./MasterMapel";
+import { extractLevel } from "@/lib/kelas-helper";
 
 interface Tutor {
   id: number;
@@ -33,30 +34,26 @@ const getImageByProgram = (program: string): string => {
 };
 
 // Ekstrak level ID dari nama rombel
-// "IVA" → "IV", "VA" → "V", "XIIA" → "XII", "X" → "X"
+// "PAKET C 10 A" → "10", "PAKET B 8" → "8"
 const extractLevelFromRombel = (namaRombel: string): string => {
-  const nama = namaRombel.toUpperCase();
-  // Jika huruf terakhir adalah A-Z tunggal (suffix rombel), buang itu
-  if (nama.length > 1 && /^[A-Z]$/.test(nama.slice(-1))) {
-    return nama.slice(0, -1);
-  }
-  return nama;
+  const level = extractLevel(namaRombel);
+  return level ? level.toString() : namaRombel;
 };
 
 // Static all 12 levels
 const ALL_LEVELS = [
-  { id: "I", namaIndonesia: "Satu", program: "Paket A (Kelas I-VI)" },
-  { id: "II", namaIndonesia: "Dua", program: "Paket A (Kelas I-VI)" },
-  { id: "III", namaIndonesia: "Tiga", program: "Paket A (Kelas I-VI)" },
-  { id: "IV", namaIndonesia: "Empat", program: "Paket A (Kelas I-VI)" },
-  { id: "V", namaIndonesia: "Lima", program: "Paket A (Kelas I-VI)" },
-  { id: "VI", namaIndonesia: "Enam", program: "Paket A (Kelas I-VI)" },
-  { id: "VII", namaIndonesia: "Tujuh", program: "Paket B (Kelas VII-IX)" },
-  { id: "VIII", namaIndonesia: "Delapan", program: "Paket B (Kelas VII-IX)" },
-  { id: "IX", namaIndonesia: "Sembilan", program: "Paket B (Kelas VII-IX)" },
-  { id: "X", namaIndonesia: "Sepuluh", program: "Paket C (Kelas X)" },
-  { id: "XI", namaIndonesia: "Sebelas", program: "Paket C (Kelas XI-XII)" },
-  { id: "XII", namaIndonesia: "Dua Belas", program: "Paket C (Kelas XI-XII)" },
+  { id: "1", namaIndonesia: "Satu", program: "Paket A (Kelas 1-6)" },
+  { id: "2", namaIndonesia: "Dua", program: "Paket A (Kelas 1-6)" },
+  { id: "3", namaIndonesia: "Tiga", program: "Paket A (Kelas 1-6)" },
+  { id: "4", namaIndonesia: "Empat", program: "Paket A (Kelas 1-6)" },
+  { id: "5", namaIndonesia: "Lima", program: "Paket A (Kelas 1-6)" },
+  { id: "6", namaIndonesia: "Enam", program: "Paket A (Kelas 1-6)" },
+  { id: "7", namaIndonesia: "Tujuh", program: "Paket B (Kelas 7-9)" },
+  { id: "8", namaIndonesia: "Delapan", program: "Paket B (Kelas 7-9)" },
+  { id: "9", namaIndonesia: "Sembilan", program: "Paket B (Kelas 7-9)" },
+  { id: "10", namaIndonesia: "Sepuluh", program: "Paket C (Kelas 10-12)" },
+  { id: "11", namaIndonesia: "Sebelas", program: "Paket C (Kelas 10-12)" },
+  { id: "12", namaIndonesia: "Dua Belas", program: "Paket C (Kelas 10-12)" },
 ];
 
 // Tahun ajaran berdasarkan bulan saat ini
@@ -241,14 +238,18 @@ export default function KelolaElearning({ initialKelasId }: { initialKelasId?: s
       levelMap.get(levelId)!.push(rombel);
     }
 
-    return ALL_LEVELS.map((level) => ({
-      id: level.id,
-      nama: `KELAS ${level.id}`,
-      namaIndonesia: `Kelas ${level.namaIndonesia}`,
-      rombels: levelMap.get(level.id) || [],
-      program: level.program,
-      image: getImageByProgram(level.program),
-    }));
+    return ALL_LEVELS.map((level) => {
+      const levelNum = parseInt(level.id);
+      const paket = levelNum <= 6 ? "A" : levelNum <= 9 ? "B" : "C";
+      return {
+        id: level.id,
+        nama: `PAKET ${paket} ${level.id}`,
+        namaIndonesia: `Kelas ${level.namaIndonesia}`,
+        rombels: levelMap.get(level.id) || [],
+        program: level.program,
+        image: getImageByProgram(level.program),
+      };
+    });
   }, [rombels]);
 
   // Objek level yang sedang dipilih, selalu diturunkan dari kelasLevels terbaru

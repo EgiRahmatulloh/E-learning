@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
+import { extractLevel, buildNamaKelas, PROGRAM_LEVELS } from "@/lib/kelas-helper";
 
 // ==========================================
 // Types
@@ -63,20 +64,10 @@ interface Student {
 
 const deriveProgramFromKelas = (kelasName?: string | null): string => {
   if (!kelasName) return "";
-  const nama = kelasName.trim().toUpperCase();
-
-  if (nama.includes("PAKET A")) return "PAKET A";
-  if (nama.includes("PAKET B")) return "PAKET B";
-  if (nama.includes("PAKET C")) return "PAKET C";
-
-  const m = nama.match(/^(?:KELAS\s+)?(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I|12|11|10|9|8|7|6|5|4|3|2|1)/i);
-  if (m) {
-    const level = m[1].toUpperCase();
-    if (["I", "II", "III", "IV", "V", "VI", "1", "2", "3", "4", "5", "6"].includes(level)) return "PAKET A";
-    if (["VII", "VIII", "IX", "7", "8", "9"].includes(level)) return "PAKET B";
-    if (["X", "XI", "XII", "10", "11", "12"].includes(level)) return "PAKET C";
-  }
-
+  const upper = kelasName.trim().toUpperCase();
+  if (upper.startsWith("PAKET A")) return "PAKET A";
+  if (upper.startsWith("PAKET B")) return "PAKET B";
+  if (upper.startsWith("PAKET C")) return "PAKET C";
   return "";
 };
 
@@ -140,6 +131,9 @@ export default function RombelManager() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ nama: "", waliKelasId: null as number | null });
   const [originalFormData, setOriginalFormData] = useState<{ nama: string; waliKelasId: number | null }>({ nama: "", waliKelasId: null });
+  const [formPaket, setFormPaket] = useState("");
+  const [formLevel, setFormLevel] = useState("");
+  const [formSub, setFormSub] = useState("");
 
   // Add students modal
   const [addStudentsOpen, setAddStudentsOpen] = useState(false);
@@ -247,6 +241,9 @@ export default function RombelManager() {
     setIsEditing(true);
     setFormData({ nama: "", waliKelasId: null });
     setOriginalFormData({ nama: "", waliKelasId: null });
+    setFormPaket("");
+    setFormLevel("");
+    setFormSub("");
     setFormOpen(true);
   };
 
@@ -255,15 +252,29 @@ export default function RombelManager() {
     setIsEditing(true);
     setOriginalFormData({ nama: rombel.nama, waliKelasId: rombel.waliKelasId });
     setFormData({ nama: rombel.nama, waliKelasId: rombel.waliKelasId });
+    // Parse existing nama to extract paket, level, sub
+    const level = extractLevel(rombel.nama);
+    const mPaket = rombel.nama.match(/PAKET\s+([ABC])/i);
+    const mSub = rombel.nama.match(/PAKET\s+[ABC]\s+\d+\s+([A-Z])$/i);
+    setFormPaket(mPaket ? mPaket[1].toUpperCase() : "");
+    setFormLevel(level ? level.toString() : "");
+    setFormSub(mSub ? mSub[1].toUpperCase() : "");
     setSelectedRombel(rombel);
     setFormOpen(true);
   };
 
   const handleSave = async () => {
-    if (!formData.nama.trim()) {
-      toast.error("Nama rombel wajib diisi");
+    if (!formPaket || !formLevel) {
+      toast.error("Paket dan kelas wajib diisi");
       return;
     }
+    const levelNum = parseInt(formLevel);
+    const progInfo = PROGRAM_LEVELS[formPaket];
+    if (!progInfo || levelNum < progInfo.min || levelNum > progInfo.max) {
+      toast.error(`Level ${formLevel} tidak valid untuk ${progInfo?.label || formPaket}`);
+      return;
+    }
+    const nama = buildNamaKelas(formPaket, levelNum, formSub || undefined);
 
     setSaving(true);
     try {
@@ -277,7 +288,7 @@ export default function RombelManager() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ nama, waliKelasId: formData.waliKelasId }),
       });
 
       const data = await res.json();
@@ -344,8 +355,8 @@ export default function RombelManager() {
     setDetailStudents([]);
   };
 
-  // Derive level dari nama rombel (XA → X, XIIA → XII)
-  const getLevel = (nama: string): string => nama.replace(/[A-Z]$/, "");
+// Derive level number from rombel name (PAKET A 5 → 5, PAKET C 10 A → 10)
+const getLevel = (nama: string): string => extractLevel(nama).toString();
 
   const openAddStudents = () => {
     if (!selectedRombel) return;
@@ -768,9 +779,9 @@ export default function RombelManager() {
                       className="w-full h-10 px-3 text-xs font-black border border-slate-200 rounded-xl bg-white text-slate-700 focus:outline-none focus:border-cyan-500 transition-colors cursor-pointer shadow-xs uppercase"
                     >
                       <option value="Semua">SEMUA PAKET / PROGRAM</option>
-                      <option value="PAKET A">PAKET A (Kelas I - VI)</option>
-                      <option value="PAKET B">PAKET B (Kelas VII - IX)</option>
-                      <option value="PAKET C">PAKET C (Kelas X - XII)</option>
+                      <option value="PAKET A">PAKET A (Kelas 1 - 6)</option>
+                      <option value="PAKET B">PAKET B (Kelas 7 - 9)</option>
+                      <option value="PAKET C">PAKET C (Kelas 10 - 12)</option>
                       <option value="TanpaWali">ROMBEL TANPA WALI KELAS</option>
                     </select>
                   </div>
@@ -859,7 +870,6 @@ export default function RombelManager() {
                   viewMode === "cards" ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
                       {filteredRombels.map((rombel) => {
-                        const progBadge = deriveProgramFromKelas(rombel.nama);
                         return (
                           <div
                             key={rombel.id}
@@ -867,14 +877,18 @@ export default function RombelManager() {
                             className="bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-cyan-300 transition-all flex flex-col group cursor-pointer hover:shadow-md"
                           >
                             {/* Header */}
-                            <div className="h-20 bg-gradient-to-br from-[#00badb] to-[#009cb9] flex items-center justify-center relative">
-                              {progBadge && (
-                                <span className="absolute top-2 right-2 px-2 py-0.5 bg-black/25 backdrop-blur-xs text-white font-black text-[9px] rounded-full uppercase tracking-wider">
-                                  {progBadge}
-                                </span>
-                              )}
-                              <span className="text-3xl font-black text-white drop-shadow-lg">
-                                {rombel.nama}
+                            <div className="h-20 bg-gradient-to-br from-[#00badb] to-[#009cb9] flex flex-col items-center justify-center relative">
+                              <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider leading-none">
+                                {(() => {
+                                  const parts = rombel.nama.split(" ");
+                                  return parts.slice(0, 2).join(" ");
+                                })()}
+                              </span>
+                              <span className="text-2xl font-black text-white drop-shadow-lg leading-tight -mt-0.5">
+                                {(() => {
+                                  const parts = rombel.nama.split(" ");
+                                  return parts.slice(2).join(" ");
+                                })() || rombel.nama}
                               </span>
                             </div>
                             {/* Body */}
@@ -1001,14 +1015,47 @@ export default function RombelManager() {
                 <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">
                   Nama Rombel *
                 </label>
-                <input
-                  type="text"
-                  value={formData.nama}
-                  onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
-                  placeholder="Contoh: XA, XB, XIA"
-                  disabled={!isEditing}
-                  className="w-full h-10 px-3 text-xs font-bold border-2 border-white rounded-xl bg-slate-50 focus:bg-white focus:border-[#00badb] outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                />
+                <div className="flex gap-2 items-start">
+                  <select
+                    value={formPaket}
+                    onChange={(e) => { setFormPaket(e.target.value); setFormLevel(""); setFormSub(""); }}
+                    disabled={!isEditing}
+                    className="w-28 h-10 px-2 text-xs font-bold border-2 border-white rounded-xl bg-slate-50 focus:bg-white focus:border-[#00badb] outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Paket</option>
+                    <option value="A">PAKET A (1-6)</option>
+                    <option value="B">PAKET B (7-9)</option>
+                    <option value="C">PAKET C (10-12)</option>
+                  </select>
+                  <select
+                    value={formLevel}
+                    onChange={(e) => setFormLevel(e.target.value)}
+                    disabled={!isEditing || !formPaket}
+                    className="w-20 h-10 px-2 text-xs font-bold border-2 border-white rounded-xl bg-slate-50 focus:bg-white focus:border-[#00badb] outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Kelas</option>
+                    {formPaket && PROGRAM_LEVELS[formPaket] && Array.from(
+                      { length: PROGRAM_LEVELS[formPaket].max - PROGRAM_LEVELS[formPaket].min + 1 },
+                      (_, i) => PROGRAM_LEVELS[formPaket].min + i
+                    ).map((l) => (
+                      <option key={l} value={l}>{l}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={formSub}
+                    onChange={(e) => setFormSub(e.target.value)}
+                    disabled={!isEditing || !formLevel}
+                    className="w-16 h-10 px-2 text-xs font-bold border-2 border-white rounded-xl bg-slate-50 focus:bg-white focus:border-[#00badb] outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Sub</option>
+                    {"ABCDEFGHIJ".split("").map((l) => (
+                      <option key={l} value={l}>{l}</option>
+                    ))}
+                  </select>
+                  <div className="flex-1 h-10 px-3 text-xs font-bold rounded-xl bg-slate-100 flex items-center text-slate-500">
+                    {formPaket && formLevel ? buildNamaKelas(formPaket, parseInt(formLevel), formSub || undefined) : "PAKET ? ?"}
+                  </div>
+                </div>
               </div>
 
               {/* Wali Kelas */}
@@ -1250,7 +1297,7 @@ export default function RombelManager() {
                   className="h-9 px-3 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-700 focus:outline-none focus:border-[#280f91] shadow-xs cursor-pointer"
                 >
                   <option value="">Pilih Rombel</option>
-                  {rombels.sort((a, b) => a.nama.localeCompare(b.nama)).map((r) => (
+                  {rombels.slice().sort((a, b) => a.nama.localeCompare(b.nama, undefined, { numeric: true })).map((r) => (
                     <option key={r.id} value={r.nama}>{r.nama}</option>
                   ))}
                 </select>
