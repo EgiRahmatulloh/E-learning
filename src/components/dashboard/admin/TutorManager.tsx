@@ -270,6 +270,7 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
         { key: "tanggalMulaiTugas", aliases: ["tmt kerja", "tanggal mulai tugas", "tmt", "start date", "tanggalmulaitugas"], defaultIndex: 23 },
         { key: "program", aliases: ["program", "paket"], defaultIndex: 24 },
         { key: "kelas", aliases: ["kelas", "rombel", "kelas (wali kelas)", "wali kelas"], defaultIndex: 25 },
+        { key: "password", aliases: ["password", "kata sandi", "pass"], defaultIndex: 26 },
       ]);
 
       const importedData = mapped
@@ -295,6 +296,7 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
             kecamatan: item.kecamatan || "",
             kabupaten: item.kabupaten || "",
             provinsi: item.provinsi || "",
+            password: item.password || "",
             foto: "",
             berkas: {},
             tanggalMulaiTugas: item.tanggalMulaiTugas || "",

@@ -616,6 +616,7 @@ export default function ManagerManager() {
         { key: "lembagaPenugas", aliases: ["lembaga penugas", "lembagapenugas"], defaultIndex: 22 },
         { key: "jabatan", aliases: ["jabatan", "role", "position"], defaultIndex: 23 },
         { key: "tanggalMulaiTugas", aliases: ["tmt kerja", "tanggal mulai tugas", "tmt", "start date", "tanggalmulaitugas"], defaultIndex: 24 },
+        { key: "password", aliases: ["password", "kata sandi", "pass"], defaultIndex: 25 },
         { key: "foto", aliases: ["foto", "photo", "image", "gambar"], defaultIndex: -1 },
       ]);
 
@@ -649,6 +650,7 @@ export default function ManagerManager() {
             kecamatan: item.kecamatan || "",
             kabupaten: item.kabupaten || "",
             provinsi: item.provinsi || "",
+            password: item.password || "",
             foto: item.foto || "",
             berkas: {},
           };

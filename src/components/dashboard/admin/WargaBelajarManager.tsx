@@ -264,6 +264,7 @@ export default function WargaBelajarManager() {
         { key: "kelas", aliases: ["rombel", "kelas", "tingkatan", "grade"], defaultIndex: 21 },
         { key: "titikLayanan", aliases: ["titik layanan", "titiklayanan", "tupok", "lokasi"], defaultIndex: 22 },
         { key: "sekolahAsal", aliases: ["sekolah asal", "sekolahasal", "asal sekolah"], defaultIndex: 23 },
+        { key: "password", aliases: ["password", "kata sandi", "pass"], defaultIndex: 24 },
         { key: "foto", aliases: ["foto", "photo", "image", "gambar"], defaultIndex: -1 },
         { key: "status", aliases: ["status", "keaktifan"], defaultIndex: -1 },
       ]);
@@ -297,6 +298,7 @@ export default function WargaBelajarManager() {
             kabupaten: item.kabupaten || "",
             provinsi: item.provinsi || "",
             sekolahAsal: item.sekolahAsal || "",
+            password: item.password || "",
             foto: item.foto || "",
             berkas: {},
             status: item.status || "AKTIF",

@@ -293,35 +293,47 @@ export const managersHandlers = new Elysia()
         }
 
         const defaultPassword = await Bun.password.hash("password123");
-        const insertValues = dedupedItems.map((item) => ({
-          nama: item.nama,
-          nik: typeof item.nik === "string" ? item.nik : "",
-          jabatan: typeof item.jabatan === "string" ? item.jabatan : "",
-          nip: typeof item.nip === "string" ? item.nip : "",
-          tempatTglLahir: typeof item.tempatTglLahir === "string" ? item.tempatTglLahir : "",
-          jenisKelamin: typeof item.jenisKelamin === "string" ? item.jenisKelamin : "",
-          agama: typeof item.agama === "string" ? item.agama : "",
-          pendidikan: typeof item.pendidikan === "string" ? item.pendidikan : "",
-          email: typeof item.email === "string" ? item.email : "",
-          tanggalMulaiTugas:
-            typeof item.tanggalMulaiTugas === "string" ? item.tanggalMulaiTugas : "",
-          nomorSkPengangkatan:
-            typeof item.nomorSkPengangkatan === "string" ? item.nomorSkPengangkatan : "",
-          lembagaPengangkat:
-            typeof item.lembagaPengangkat === "string" ? item.lembagaPengangkat : "",
-          nomorSkPenugasan:
-            typeof item.nomorSkPenugasan === "string" ? item.nomorSkPenugasan : "",
-          lembagaPenugas: typeof item.lembagaPenugas === "string" ? item.lembagaPenugas : "",
-          alamat: typeof item.alamat === "string" ? item.alamat : "",
-          rt: typeof item.rt === "string" ? item.rt : "",
-          rw: typeof item.rw === "string" ? item.rw : "",
-          desa: typeof item.desa === "string" ? item.desa : "",
-          kecamatan: typeof item.kecamatan === "string" ? item.kecamatan : "",
-          kabupaten: typeof item.kabupaten === "string" ? item.kabupaten : "",
-          provinsi: typeof item.provinsi === "string" ? item.provinsi : "",
-          password: defaultPassword,
-          foto: typeof item.foto === "string" ? item.foto : "",
-        }));
+        const insertValues = await Promise.all(
+          dedupedItems.map(async (item: any) => {
+            const rawPass =
+              typeof item.password === "string" && item.password.trim()
+                ? item.password.trim()
+                : typeof item.Password === "string" && item.Password.trim()
+                ? item.Password.trim()
+                : null;
+            const password = rawPass ? await Bun.password.hash(rawPass) : defaultPassword;
+
+            return {
+              nama: item.nama,
+              nik: typeof item.nik === "string" ? item.nik : "",
+              jabatan: typeof item.jabatan === "string" ? item.jabatan : "",
+              nip: typeof item.nip === "string" ? item.nip : "",
+              tempatTglLahir: typeof item.tempatTglLahir === "string" ? item.tempatTglLahir : "",
+              jenisKelamin: typeof item.jenisKelamin === "string" ? item.jenisKelamin : "",
+              agama: typeof item.agama === "string" ? item.agama : "",
+              pendidikan: typeof item.pendidikan === "string" ? item.pendidikan : "",
+              email: typeof item.email === "string" ? item.email : "",
+              tanggalMulaiTugas:
+                typeof item.tanggalMulaiTugas === "string" ? item.tanggalMulaiTugas : "",
+              nomorSkPengangkatan:
+                typeof item.nomorSkPengangkatan === "string" ? item.nomorSkPengangkatan : "",
+              lembagaPengangkat:
+                typeof item.lembagaPengangkat === "string" ? item.lembagaPengangkat : "",
+              nomorSkPenugasan:
+                typeof item.nomorSkPenugasan === "string" ? item.nomorSkPenugasan : "",
+              lembagaPenugas: typeof item.lembagaPenugas === "string" ? item.lembagaPenugas : "",
+              alamat: typeof item.alamat === "string" ? item.alamat : "",
+              rt: typeof item.rt === "string" ? item.rt : "",
+              rw: typeof item.rw === "string" ? item.rw : "",
+              desa: typeof item.desa === "string" ? item.desa : "",
+              kecamatan: typeof item.kecamatan === "string" ? item.kecamatan : "",
+              kabupaten: typeof item.kabupaten === "string" ? item.kabupaten : "",
+              provinsi: typeof item.provinsi === "string" ? item.provinsi : "",
+              password,
+              foto: typeof item.foto === "string" ? item.foto : "",
+            };
+          })
+        );
 
         const chunkSize = 100;
         db.transaction((tx) => {
@@ -368,6 +380,8 @@ export const managersHandlers = new Elysia()
           kecamatan: t.Optional(t.String()),
           kabupaten: t.Optional(t.String()),
           provinsi: t.Optional(t.String()),
+          password: t.Optional(t.String()),
+          Password: t.Optional(t.String()),
           foto: t.Optional(t.String()),
         })
       ),
