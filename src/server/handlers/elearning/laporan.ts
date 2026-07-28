@@ -780,9 +780,10 @@ export const laporanHandlers = new Elysia()
           .where(inArray(rombelStudents.rombelId, rombelIds)).all() : [];
         const totalStudents = studentsList.length;
 
-        // Sesi pada course, urut berdasarkan nomor sesi
-        const sessionsList = course ? await db.select().from(elearningSessions)
-          .where(eq(elearningSessions.courseId, course.id)).all() : [];
+        // Sesi pada course, urut berdasarkan nomor sesi (abaikan sesi 0 / pendahuluan)
+        const sessionsList = course ? (await db.select().from(elearningSessions)
+          .where(eq(elearningSessions.courseId, course.id)).all())
+          .filter(s => (s.sessionNumber ?? 0) > 0) : [];
         sessionsList.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
         const sessionIds = sessionsList.map(s => s.id);
 
