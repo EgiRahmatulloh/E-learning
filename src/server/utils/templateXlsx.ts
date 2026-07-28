@@ -327,8 +327,8 @@ function duplicateColumnsInXml(xmlString: string, mapelCount: number, indexMap: 
   }
   const newColsEl = etree.Element("cols");
   newColsEl.append(etree.Element("col", { min: "1", max: "1", width: "4", customWidth: "1", style: "1" }));
-  newColsEl.append(etree.Element("col", { min: "2", max: "2", width: "15.42", customWidth: "1", style: "5" }));
-  newColsEl.append(etree.Element("col", { min: "3", max: "3", width: "14.71", customWidth: "1", style: "5" }));
+  newColsEl.append(etree.Element("col", { min: "2", max: "2", width: "15.42", customWidth: "1", style: "1" }));
+  newColsEl.append(etree.Element("col", { min: "3", max: "3", width: "14.71", customWidth: "1", style: "1" }));
   newColsEl.append(etree.Element("col", { min: "4", max: "4", width: "27.28", customWidth: "1", style: "1" }));
   newColsEl.append(etree.Element("col", { min: "5", max: "5", width: "10.42", customWidth: "1", style: "1" }));
   newColsEl.append(etree.Element("col", { min: "6", max: "6", width: "13.71", customWidth: "1", style: "1" }));
