@@ -260,8 +260,8 @@ export default function ElearningAdminDashboard() {
       {/* Active Tab Content */}
       <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
         {activeTab === "kelola" && <KelolaElearning initialKelasId={selectedKelasId} />}
-        {activeTab === "monitoring" && <TutorMonitoring initialLevel={selectedKelasId || undefined} />}
-        {activeTab === "siswa" && <SiswaMonitoring initialLevel={selectedKelasId || undefined} />}
+        {activeTab === "monitoring" && <TutorMonitoring />}
+        {activeTab === "siswa" && <SiswaMonitoring />}
         {activeTab === "angket" && <AngketEvaluasiTutor />}
       </div>
     </div>

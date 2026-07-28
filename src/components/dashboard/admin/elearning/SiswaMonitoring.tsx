@@ -15,22 +15,14 @@ interface StudentMonitoringData {
   avgScore?: number;
 }
 
-export default function SiswaMonitoring({ initialLevel }: { initialLevel?: string } = {}) {
+export default function SiswaMonitoring() {
   const [searchTerm, setSearchTerm] = useState("");
   const [students, setStudents] = useState<StudentMonitoringData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedLevel, setSelectedLevel] = useState(initialLevel || "");
-  const [selectedKelas, setSelectedKelas] = useState("");
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-
-  useEffect(() => {
-    if (initialLevel) {
-      setSelectedLevel(initialLevel);
-    }
-  }, [initialLevel]);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -51,63 +43,19 @@ export default function SiswaMonitoring({ initialLevel }: { initialLevel?: strin
     fetchStudents();
   }, []);
 
-  // Derive level dari nama kelas
-  const getLevel = (kelas: string): string => kelas.replace(/[A-Z]$/, "");
-
-  // Get unique kelas and level list
-  const kelasList = [...new Set(students.map(s => s.kelas))].sort();
-  const levelList = [...new Set(kelasList.map(getLevel))].sort((a, b) => {
-    const romanToNum = (r: string) => {
-      const map: Record<string, number> = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10, XI: 11, XII: 12 };
-      return map[r] || 99;
-    };
-    return romanToNum(a) - romanToNum(b);
-  });
-
-  // Sub-kelas berdasarkan level
-  const subKelasList = selectedLevel
-    ? kelasList.filter((k) => getLevel(k) === selectedLevel)
-    : [];
-
-  // Reset sub-kelas saat level berubah
-  useEffect(() => {
-    setSelectedKelas("");
-  }, [selectedLevel]);
-
   const filtered = students.filter(
     (s) =>
-      (selectedKelas === "" && selectedLevel === "" ? true
-        : selectedKelas ? s.kelas === selectedKelas
-        : selectedLevel ? getLevel(s.kelas) === selectedLevel
-        : true) &&
-      (s.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.kelas.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.nis.toLowerCase().includes(searchTerm.toLowerCase()))
+      s.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.kelas.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.nis.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
 
-  const buildFilterParam = () => {
-    if (selectedKelas) return `kelas=${encodeURIComponent(selectedKelas)}`;
-    if (selectedLevel) return `level=${encodeURIComponent(selectedLevel)}`;
-    return "";
-  };
-
-  const buildFilterLabel = () => {
-    if (selectedKelas) return selectedKelas.replace(/\s+/g, "_");
-    if (selectedLevel) return `KELAS_${selectedLevel}`;
-    return "SEMUA_KELAS";
-  };
-
   const handleExportKehadiran = async () => {
-    const param = buildFilterParam();
-    if (!param) {
-      toast.warning("Pilih kelas atau level terlebih dahulu");
-      return;
-    }
     const today = new Date().toISOString().split("T")[0];
     await downloadFromTemplate(
-      `/api/elearning/laporan/student-attendance-rekap?${param}`,
-      `rekap_kehadiran_wb_${buildFilterLabel()}_${today}.xlsx`
+      "/api/elearning/laporan/student-attendance-rekap",
+      `rekap_kehadiran_wb_SEMUA_KELAS_${today}.xlsx`
     );
   };
 
@@ -118,15 +66,10 @@ export default function SiswaMonitoring({ initialLevel }: { initialLevel?: strin
     setExporting(true);
     try {
       const today = new Date().toISOString().split("T")[0];
-      const param = buildFilterParam();
-      const endpoint = param
-        ? `/api/elearning/laporan/student-grades-rekap?${param}`
-        : "/api/elearning/laporan/student-grades-rekap";
-      const filename = param
-        ? `rekap_nilai_wb_${buildFilterLabel()}_${today}.xlsx`
-        : `rekap_nilai_wb_semua_kelas_${today}.xlsx`;
-
-      await downloadFromTemplate(endpoint, filename);
+      await downloadFromTemplate(
+        "/api/elearning/laporan/student-grades-rekap",
+        `rekap_nilai_wb_semua_kelas_${today}.xlsx`
+      );
     } catch (err: any) {
       toast.error("Gagal mengunduh rekap nilai", { description: err.message });
     } finally {
@@ -149,24 +92,6 @@ export default function SiswaMonitoring({ initialLevel }: { initialLevel?: strin
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          <select
-            value={selectedLevel}
-            onChange={(e) => { setSelectedLevel(e.target.value); setCurrentPage(1); }}
-            className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:outline-none focus:border-[#280f91] shadow-xs"
-          >
-            <option value="">Semua Level</option>
-            {levelList.map(l => <option key={l} value={l}>Kelas {l}</option>)}
-          </select>
-          {selectedLevel && subKelasList.length > 1 && (
-            <select
-              value={selectedKelas}
-              onChange={(e) => { setSelectedKelas(e.target.value); setCurrentPage(1); }}
-              className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:outline-none focus:border-[#280f91] shadow-xs"
-            >
-              <option value="">Semua {selectedLevel}</option>
-              {subKelasList.map(k => <option key={k} value={k}>{k}</option>)}
-            </select>
-          )}
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
