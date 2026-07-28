@@ -1015,30 +1015,33 @@ const getLevel = (nama: string): string => extractLevel(nama).toString();
                 <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">
                   Nama Rombel *
                 </label>
-                <div className="flex gap-2 items-start">
+                <div className="flex gap-2 items-center flex-wrap sm:flex-nowrap">
+                  <div className="h-10 px-3 text-xs font-black uppercase rounded-xl bg-slate-100 text-slate-700 flex items-center shrink-0 border border-slate-200">
+                    PAKET
+                  </div>
                   <select
                     value={formPaket}
                     onChange={(e) => { setFormPaket(e.target.value); setFormLevel(""); setFormSub(""); }}
                     disabled={!isEditing}
-                    className="w-28 h-10 px-2 text-xs font-bold border-2 border-white rounded-xl bg-slate-50 focus:bg-white focus:border-[#00badb] outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-16 h-10 px-2 text-xs font-bold border-2 border-white rounded-xl bg-slate-50 focus:bg-white focus:border-[#00badb] outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <option value="">Paket</option>
-                    <option value="A">PAKET A (1-6)</option>
-                    <option value="B">PAKET B (7-9)</option>
-                    <option value="C">PAKET C (10-12)</option>
+                    <option value="">-</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
                   </select>
                   <select
                     value={formLevel}
                     onChange={(e) => setFormLevel(e.target.value)}
                     disabled={!isEditing || !formPaket}
-                    className="w-20 h-10 px-2 text-xs font-bold border-2 border-white rounded-xl bg-slate-50 focus:bg-white focus:border-[#00badb] outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-24 h-10 px-2 text-xs font-bold border-2 border-white rounded-xl bg-slate-50 focus:bg-white focus:border-[#00badb] outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">Kelas</option>
                     {formPaket && PROGRAM_LEVELS[formPaket] && Array.from(
                       { length: PROGRAM_LEVELS[formPaket].max - PROGRAM_LEVELS[formPaket].min + 1 },
                       (_, i) => PROGRAM_LEVELS[formPaket].min + i
                     ).map((l) => (
-                      <option key={l} value={l}>{l}</option>
+                      <option key={l} value={l}>Kelas {l}</option>
                     ))}
                   </select>
                   <select
