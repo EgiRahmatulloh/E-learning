@@ -553,7 +553,7 @@ export default function ProductsManager() {
 
                 {/* Drag & Drop Upload Block */}
                 <div
-                  className={`border-2 border-dashed rounded-xl p-3 text-center transition cursor-pointer text-xs ${dragActive ? "border-yellow-300 bg-yellow-50" : "border-slate-300 hover:border-cyan-400 hover:bg-cyan-50"
+                  className={`border-2 border-dashed rounded-xl p-3 text-center transition cursor-pointer text-xs ${dragActive ? "border-yellow-300 bg-yellow-50" : "border-cyan-300 bg-cyan-50 hover:border-cyan-400 hover:bg-cyan-100"
                     } ${!isEditing && "pointer-events-none opacity-60"}`}
                   onDragEnter={handleDrag}
                   onDragOver={handleDrag}
@@ -572,11 +572,11 @@ export default function ProductsManager() {
                       }
                     }}
                   />
-                  <Upload className="mx-auto text-slate-400 mb-1" size={20} />
-                  <span className="font-bold text-slate-700 block">
+                  <Upload className="mx-auto text-cyan-600 mb-1" size={20} />
+                  <span className="font-bold text-purple-950 block">
                     {uploading ? "Mengunggah..." : "Tarik Foto / Klik di sini"}
                   </span>
-                  <span className="text-[10px] text-slate-400 block mt-0.5">Mendukung format JPG, PNG, WEBP (Maksimal 5MB)</span>
+                  <span className="text-[10px] text-cyan-700 block mt-0.5">Mendukung format JPG, PNG, WEBP (Maksimal 5MB)</span>
                 </div>
               </div>
 

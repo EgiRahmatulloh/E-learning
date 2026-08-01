@@ -592,11 +592,11 @@ export function HeaderManager() {
                       </div>
                     ) : (
                       <>
-                        <UploadCloud className="h-10 w-10 text-slate-400 mb-2 animate-pulse" />
-                        <span className="text-xs font-black tracking-wider uppercase block text-slate-600">
+                        <UploadCloud className="h-10 w-10 text-cyan-600 mb-2 animate-pulse" />
+                        <span className="text-xs font-black tracking-wider uppercase block text-purple-950">
                           DRAG AND DROP A FILE HERE OR CLICK
                         </span>
-                        <span className="text-[10px] text-slate-400 font-bold block mt-1">
+                        <span className="text-[10px] text-cyan-700 font-bold block mt-1">
                           Max: 5000px | 5MB
                         </span>
                       </>

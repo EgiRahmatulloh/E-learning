@@ -1208,7 +1208,7 @@ export default function ManagerManager() {
                     onClick={() => {
                       if (isEditing) fileInputRef.current?.click();
                     }}
-                    className={`${!isEditing ? "pointer-events-none opacity-60 " : ""}w-full h-44 border-4 border-dashed rounded-xl flex flex-col items-center justify-center p-3 relative overflow-hidden transition-all text-center bg-white border-purple-400 hover:border-purple-600 hover:bg-purple-50/20 cursor-pointer`}
+                    className={`${!isEditing ? "pointer-events-none opacity-60 " : ""}w-full h-44 border-4 border-dashed rounded-xl flex flex-col items-center justify-center p-3 relative overflow-hidden transition-all text-center bg-cyan-50 border-cyan-300 hover:border-cyan-400 hover:bg-cyan-100 cursor-pointer`}
                   >
                     <input
                       ref={fileInputRef}
@@ -1246,11 +1246,11 @@ export default function ManagerManager() {
                       </div>
                     ) : (
                       <>
-                        <UploadCloud className="h-7 w-7 text-purple-600 mb-1.5" />
-                        <span className="text-[9px] font-black text-cyan-900 uppercase block tracking-wider leading-relaxed">
+                        <UploadCloud className="h-7 w-7 text-cyan-600 mb-1.5" />
+                        <span className="text-[9px] font-black text-purple-950 uppercase block tracking-wider leading-relaxed">
                           DRAG AND DROP
                         </span>
-                        <span className="text-[7px] font-bold text-cyan-600 block mt-0.5">
+                        <span className="text-[7px] font-bold text-cyan-700 block mt-0.5">
                           KLIK UNTUK BROWSE
                         </span>
                       </>

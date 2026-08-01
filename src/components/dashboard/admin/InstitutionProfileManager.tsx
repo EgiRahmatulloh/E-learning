@@ -533,10 +533,10 @@ export default function InstitutionProfileManager() {
               }
               document.getElementById("file-upload-foto")?.click();
             }}
-            className={`w-full aspect-square border-4 border-dashed rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden transition-all text-center bg-slate-50/50 ${
+            className={`w-full aspect-square border-4 border-dashed rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden transition-all text-center bg-cyan-50 ${
               !isEditing
                 ? "border-slate-200 cursor-not-allowed opacity-80"
-                : "border-cyan-400 hover:border-cyan-600 hover:bg-cyan-50/30 cursor-pointer"
+                : "border-cyan-300 hover:border-cyan-400 hover:bg-cyan-100 cursor-pointer"
             }`}
           >
             <input
@@ -557,7 +557,7 @@ export default function InstitutionProfileManager() {
             {uploadingFoto ? (
               <div className="flex flex-col items-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-cyan-500 mb-2" />
-                <span className="text-[10px] font-bold text-slate-400 uppercase">MENGUNGGAH...</span>
+                <span className="text-[10px] font-bold text-purple-950 uppercase">MENGUNGGAH...</span>
               </div>
             ) : profile.foto ? (
               <div className="w-full h-full relative group">
@@ -574,11 +574,11 @@ export default function InstitutionProfileManager() {
               </div>
             ) : (
               <>
-                <UploadCloud className="h-10 w-10 text-cyan-400 mb-2" />
-                <span className="text-[10px] font-black text-cyan-900 uppercase block tracking-wider leading-relaxed">
+                <UploadCloud className="h-10 w-10 text-cyan-600 mb-2" />
+                <span className="text-[10px] font-black text-purple-950 uppercase block tracking-wider leading-relaxed">
                   DRAG AND DROP A FILE
                 </span>
-                <span className="text-[8px] font-bold text-cyan-600 block mt-0.5">
+                <span className="text-[8px] font-bold text-cyan-700 block mt-0.5">
                   HERE OR CLICK
                 </span>
               </>
@@ -627,10 +627,10 @@ export default function InstitutionProfileManager() {
             }
             document.getElementById("file-upload-gambar")?.click();
           }}
-          className={`w-full max-w-2xl min-h-[160px] border-4 border-dashed rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden transition-all text-center bg-slate-50/50 ${
+          className={`w-full max-w-2xl min-h-[160px] border-4 border-dashed rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden transition-all text-center bg-cyan-50 ${
             !isEditing
               ? "border-slate-200 cursor-not-allowed opacity-80"
-              : "border-cyan-400 hover:border-cyan-600 hover:bg-cyan-50/30 cursor-pointer"
+              : "border-cyan-300 hover:border-cyan-400 hover:bg-cyan-100 cursor-pointer"
           }`}
         >
           <input
@@ -651,7 +651,7 @@ export default function InstitutionProfileManager() {
           {uploadingGambar ? (
             <div className="flex flex-col items-center">
               <div className="animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-cyan-500 mb-2" />
-              <span className="text-[10px] font-bold text-slate-400 uppercase">MENGUNGGAH...</span>
+              <span className="text-[10px] font-bold text-purple-950 uppercase">MENGUNGGAH...</span>
             </div>
           ) : profile.gambar ? (
             <div className="w-full max-h-[300px] relative group flex items-center justify-center">
@@ -668,11 +668,11 @@ export default function InstitutionProfileManager() {
             </div>
           ) : (
             <>
-              <UploadCloud className="h-10 w-10 text-cyan-400 mb-2" />
-              <span className="text-xs font-black text-cyan-900 uppercase block tracking-wider">
+              <UploadCloud className="h-10 w-10 text-cyan-600 mb-2" />
+              <span className="text-xs font-black text-purple-950 uppercase block tracking-wider">
                 DRAG AND DROP A FILE
               </span>
-              <span className="text-[10px] font-bold text-cyan-600 block mt-0.5">
+              <span className="text-[10px] font-bold text-cyan-700 block mt-0.5">
                 HERE OR CLICK
               </span>
             </>

@@ -1455,7 +1455,7 @@ export default function WargaBelajarManager() {
                         onDragOver={handleDrag}
                         onDragLeave={handleDrag}
                         onDrop={handleDrop}
-                        className={`border-2 border-dashed rounded-xl p-2.5 text-center transition-all ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-slate-200 bg-slate-50 hover:bg-slate-100"
+                        className={`border-2 border-dashed rounded-xl p-2.5 text-center transition-all ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-cyan-300 bg-cyan-50 hover:bg-cyan-100"
                           } h-44 flex flex-col justify-center items-center relative overflow-hidden ${!isEditing && "pointer-events-none opacity-60"}`}
                       >
                         {formData.foto ? (
@@ -1475,9 +1475,9 @@ export default function WargaBelajarManager() {
                           </div>
                         ) : (
                           <>
-                            <Upload className="h-6 w-6 text-slate-400 mb-1" />
-                            <p className="text-[9px] font-black text-slate-600 uppercase tracking-wider">DRAG AND DROP</p>
-                            <p className="text-[8px] text-slate-500 font-semibold uppercase mt-0.5">CLICK TO BROWSE</p>
+                            <Upload className="h-6 w-6 text-cyan-600 mb-1" />
+                            <p className="text-[9px] font-black text-purple-950 uppercase tracking-wider">DRAG AND DROP</p>
+                            <p className="text-[8px] text-cyan-700 font-semibold uppercase mt-0.5">CLICK TO BROWSE</p>
                             <input
                               type="file"
                               accept="image/*"

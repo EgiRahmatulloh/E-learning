@@ -76,7 +76,7 @@ export default function BerkasUpload({
     <>
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wider">
+          <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
             {label}
           </label>
           <span className="text-[8px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-full">
@@ -84,7 +84,7 @@ export default function BerkasUpload({
           </span>
         </div>
 
-        <div className="bg-white rounded-lg border-2 border-white divide-y divide-slate-100 overflow-hidden">
+        <div className="bg-slate-50 rounded-lg border-2 border-slate-200 divide-y divide-slate-200 overflow-hidden">
           {berkasTypes.map((berkas) => {
             const url = value[berkas.key];
             const isUploading = uploadingKey === berkas.key;
@@ -95,7 +95,7 @@ export default function BerkasUpload({
                 onClick={() => {
                   if (!url && isEditing && !isUploading) fileInputRefs.current[berkas.key]?.click();
                 }}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 group transition-colors ${!url && isEditing ? "cursor-pointer hover:bg-purple-50" : "hover:bg-slate-50"}`}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 group transition-colors ${!url && isEditing ? "cursor-pointer hover:bg-purple-100" : "hover:bg-slate-100"}`}
               >
                 <input
                   ref={(el) => { fileInputRefs.current[berkas.key] = el; }}

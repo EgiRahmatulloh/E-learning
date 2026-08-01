@@ -529,9 +529,9 @@ export default function GalleryManager() {
                       </div>
                     ) : (
                       <div className="py-6 space-y-2">
-                        <Image size={28} className="text-slate-400 mx-auto" />
-                        <p className="text-[10px] font-bold text-slate-600">Klik atau drag & drop foto di sini (bisa banyak)</p>
-                        <p className="text-[9px] text-slate-400">JPG, PNG, WEBP</p>
+                        <Image size={28} className="text-cyan-600 mx-auto" />
+                        <p className="text-[10px] font-bold text-purple-950">Klik atau drag & drop foto di sini (bisa banyak)</p>
+                        <p className="text-[9px] text-cyan-700">JPG, PNG, WEBP</p>
                       </div>
                     )}
                   </div>

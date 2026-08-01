@@ -512,7 +512,7 @@ export default function DownloadsManager() {
                       </div>
                     ) : (
                       <div className="space-y-2 text-slate-500">
-                        {uploading ? <Loader2 className="h-8 w-8 text-slate-400 animate-spin mx-auto" /> : <Upload className="h-8 w-8 text-slate-400 mx-auto" />}
+                        {uploading ? <Loader2 className="h-8 w-8 text-cyan-600 animate-spin mx-auto" /> : <Upload className="h-8 w-8 text-cyan-600 mx-auto" />}
                         <p className="text-[10px] font-bold">
                           {uploading ? "Mengupload..." : "Tarik berkas Anda ke sini, atau klik untuk memilih"}
                         </p>
