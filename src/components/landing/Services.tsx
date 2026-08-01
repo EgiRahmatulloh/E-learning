@@ -12,6 +12,8 @@ import {
 import {
   AlertCircle,
   CheckCircle2,
+  Eye,
+  EyeOff,
   MessageCircle,
 } from "lucide-react";
 
@@ -33,6 +35,7 @@ export default function Services({ onLoginSuccess, activeDialog, onDialogClose }
 
   const [elearningUsername, setElearningUsername] = useState("");
   const [elearningPassword, setElearningPassword] = useState("");
+  const [showElearningPassword, setShowElearningPassword] = useState(false);
   const [elearningError, setElearningError] = useState("");
   const [elearningLoading, setElearningLoading] = useState(false);
 
@@ -179,17 +182,28 @@ export default function Services({ onLoginSuccess, activeDialog, onDialogClose }
 
               <div className="space-y-2">
                 <label htmlFor="elearning-password" className="text-xs font-black text-slate-700 uppercase tracking-widest block">Password</label>
-                <input
-                  id="elearning-password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  placeholder="••••••••"
-                  value={elearningPassword}
-                  onChange={(e) => setElearningPassword(e.target.value)}
-                  className="w-full h-11 px-4 border border-slate-200 rounded-xl font-medium focus:outline-none focus:border-[#280f91] transition-all bg-slate-50/50"
-                />
+                <div className="relative">
+                  <input
+                    id="elearning-password"
+                    name="password"
+                    type={showElearningPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    required
+                    placeholder="••••••••"
+                    value={elearningPassword}
+                    onChange={(e) => setElearningPassword(e.target.value)}
+                    className="w-full h-11 pl-4 pr-11 border border-slate-200 rounded-xl font-medium focus:outline-none focus:border-[#280f91] transition-all bg-slate-50/50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowElearningPassword((v) => !v)}
+                    aria-label={showElearningPassword ? "Sembunyikan password" : "Tampilkan password"}
+                    tabIndex={-1}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#280f91] transition-colors cursor-pointer"
+                  >
+                    {showElearningPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
               </div>
 
               <p className="text-xs text-slate-500 leading-relaxed font-medium">

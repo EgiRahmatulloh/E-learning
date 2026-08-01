@@ -5,7 +5,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { AlertCircle, GraduationCap } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, GraduationCap } from "lucide-react";
+import { useState } from "react";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export default function LoginModal({
   loginError,
   loginLoading
 }: LoginModalProps) {
+  const [showPassword, setShowPassword] = useState(false);
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px] border-[#280f91]/20 bg-white/95 backdrop-blur-md">
@@ -66,17 +68,28 @@ export default function LoginModal({
 
           <div className="space-y-2">
             <label htmlFor="login-password" className="text-xs font-black text-slate-700 uppercase tracking-widest block">Password</label>
-            <input
-              id="login-password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              placeholder="••••••••"
-              value={loginPassword}
-              onChange={(e) => setLoginPassword(e.target.value)}
-              className="w-full h-11 px-4 border border-slate-200 rounded-xl font-medium focus:outline-none focus:border-[#280f91] transition-all bg-slate-50/50"
-            />
+            <div className="relative">
+              <input
+                id="login-password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                required
+                placeholder="••••••••"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                className="w-full h-11 pl-4 pr-11 border border-slate-200 rounded-xl font-medium focus:outline-none focus:border-[#280f91] transition-all bg-slate-50/50"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+                tabIndex={-1}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#280f91] transition-colors cursor-pointer"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
           </div>
 
 

@@ -8,7 +8,9 @@ import {
   ChevronDown,
   BookOpen,
   Upload,
-  Trash2
+  Trash2,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { AdminDashboard } from "./admin/AdminDashboard";
 import { ElearningSiswa } from "./siswa/ElearningSiswa";
@@ -79,6 +81,8 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
   // Profile Form States
   const [profileLoading, setProfileLoading] = useState(false);
   const [uploadingFoto, setUploadingFoto] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [profileMsg, setProfileMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const [formData, setFormData] = useState({
@@ -516,28 +520,50 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Password Baru (Opsional)</label>
-                  <input
-                    type="password"
-                    name="new-password"
-                    autoComplete="new-password"
-                    placeholder="Kosongkan jika tidak diubah"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      name="new-password"
+                      autoComplete="new-password"
+                      placeholder="Kosongkan jika tidak diubah"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-4 pr-11 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword((v) => !v)}
+                      aria-label={showNewPassword ? "Sembunyikan password" : "Tampilkan password"}
+                      tabIndex={-1}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#280f91] transition-colors cursor-pointer"
+                    >
+                      {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Konfirmasi Password Baru</label>
-                  <input
-                    type="password"
-                    name="confirm-password"
-                    autoComplete="new-password"
-                    placeholder="Kosongkan jika tidak diubah"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      name="confirm-password"
+                      autoComplete="new-password"
+                      placeholder="Kosongkan jika tidak diubah"
+                      value={formData.confirmPassword}
+                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-4 pr-11 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((v) => !v)}
+                      aria-label={showConfirmPassword ? "Sembunyikan password" : "Tampilkan password"}
+                      tabIndex={-1}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#280f91] transition-colors cursor-pointer"
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
                 </div>
               </div>
 
