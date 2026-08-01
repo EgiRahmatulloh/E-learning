@@ -1086,7 +1086,7 @@ const getLevel = (nama: string): string => extractLevel(nama).toString();
                 </select>
               </div>
             </div>
-            <div className="p-5 border-t border-white/10 flex justify-end gap-3">
+            <div className="p-5 border-t border-slate-100 flex justify-end gap-3">
               {isAdding ? (
                 <>
                   <Button

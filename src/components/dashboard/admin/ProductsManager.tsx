@@ -553,7 +553,7 @@ export default function ProductsManager() {
 
                 {/* Drag & Drop Upload Block */}
                 <div
-                  className={`border-2 border-dashed rounded-xl p-3 text-center transition cursor-pointer text-xs ${dragActive ? "border-yellow-300 bg-yellow-50" : "border-cyan-300 bg-cyan-50 hover:border-cyan-400 hover:bg-cyan-100"
+                  className={`border-2 border-dashed rounded-xl p-3 text-center transition cursor-pointer text-xs ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-cyan-300 bg-cyan-50 hover:border-cyan-400 hover:bg-cyan-100"
                     } ${!isEditing && "pointer-events-none opacity-60"}`}
                   onDragEnter={handleDrag}
                   onDragOver={handleDrag}

@@ -140,7 +140,7 @@ export default function VisiMisiManager() {
       </div>
 
       {/* MAIN CONTAINER */}
-      <div className="bg-[#fff9f3] p-6 sm:p-8 rounded-3xl border border-orange-100 shadow-sm relative overflow-hidden min-h-[450px] flex flex-col justify-between">
+      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden min-h-[450px] flex flex-col justify-between">
         <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
           
           {/* VISI INPUT */}
@@ -174,7 +174,7 @@ export default function VisiMisiManager() {
           </div>
 
           {/* BUTTON EDIT / SIMPAN */}
-          <div className="border-t border-white/10 pt-6 flex items-center justify-end gap-3">
+          <div className="border-t border-slate-200 pt-6 flex items-center justify-end gap-3">
             {!isEditing ? (
               <Button
                 type="button"

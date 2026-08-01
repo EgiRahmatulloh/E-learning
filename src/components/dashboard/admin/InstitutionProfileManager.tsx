@@ -224,7 +224,7 @@ export default function InstitutionProfileManager() {
       {/* MAIN CONTAINER */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* FORM PANEL (LEFT) */}
-        <div className="lg:col-span-3 bg-[#fff9f3] p-6 sm:p-8 rounded-3xl border border-orange-100 shadow-sm relative overflow-hidden">
+        <div className="lg:col-span-3 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden">
           <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
               
@@ -465,7 +465,7 @@ export default function InstitutionProfileManager() {
             </div>
 
             {/* BUTTON EDIT / SIMPAN */}
-            <div className="pt-6 border-t border-white/10 flex items-center justify-end gap-3">
+            <div className="pt-6 border-t border-slate-200 flex items-center justify-end gap-3">
               {!isEditing ? (
                 <Button
                   type="button"
