@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Save, HelpCircle, Image, X, Edit3, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
+import { parsePhotos, serializePhotos } from "@/lib/photos";
 
 const GALLERY_CATEGORIES = [
   "KEGIATAN PEMBELAJARAN",
@@ -43,13 +44,14 @@ export default function GalleryManager() {
   const [isAdding, setIsAdding] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [originalData, setOriginalData] = useState<{ namaFile: string; kategori: string; tanggalPosting: string; foto: string; status: string }>({ namaFile: "", kategori: "", tanggalPosting: "", foto: "", status: "" });
+  const [, setOriginalData] = useState<{ namaFile: string; kategori: string; tanggalPosting: string; foto: string; status: string }>({ namaFile: "", kategori: "", tanggalPosting: "", foto: "", status: "" });
 
   // Form inputs
   const [namaFile, setNamaFile] = useState("");
   const [kategori, setKategori] = useState(GALLERY_CATEGORIES[0]);
   const [tanggalPosting, setTanggalPosting] = useState(new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }).toUpperCase());
-  const [foto, setFoto] = useState("");
+  const [fotoList, setFotoList] = useState<string[]>([]);
+  const [urlInput, setUrlInput] = useState("");
   const [status, setStatus] = useState("PUBLISH");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -84,7 +86,8 @@ export default function GalleryManager() {
     setNamaFile(item.namaFile);
     setKategori(item.kategori);
     setTanggalPosting(item.tanggalPosting);
-    setFoto(item.foto);
+    setFotoList(parsePhotos(item.foto));
+    setUrlInput("");
     setStatus(item.status);
     setIsEditing(false);
     setIsFormOpen(true);
@@ -97,7 +100,8 @@ export default function GalleryManager() {
     setNamaFile("");
     setKategori(GALLERY_CATEGORIES[0]);
     setTanggalPosting(new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }).toUpperCase());
-    setFoto("");
+    setFotoList([]);
+    setUrlInput("");
     setStatus("PUBLISH");
     setIsEditing(true);
     setIsFormOpen(true);
@@ -110,29 +114,56 @@ export default function GalleryManager() {
     setIsAdding(false);
   };
 
-  const handleImageUpload = async (file: File) => {
+  const handleImagesUpload = async (files: File[]) => {
+    const imageFiles = files.filter((f) => f.type.startsWith("image/"));
+    if (imageFiles.length === 0) {
+      toast.error("Hanya file gambar yang diperbolehkan");
+      return;
+    }
+    const oversized = imageFiles.some((f) => f.size > 5 * 1024 * 1024);
+    if (oversized) {
+      toast.error("Ukuran foto melebihi batas 5MB");
+      return;
+    }
+
     setUploading(true);
-    const body = new FormData();
-    body.append("file", file);
+    let successCount = 0;
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body,
-      });
-      const data = await res.json();
-      if (data.success && data.url) {
-        setFoto(data.url);
-        toast.success("Foto berhasil diunggah!");
-      } else {
-        toast.error("Upload gagal: " + (data.message || "Error tidak diketahui"));
+      for (const file of imageFiles) {
+        const body = new FormData();
+        body.append("file", file);
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body,
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+          setFotoList((prev) => [...prev, data.url]);
+          successCount++;
+        } else {
+          toast.error("Upload gagal: " + (data.message || "Error tidak diketahui"));
+        }
+      }
+      if (successCount > 0) {
+        toast.success(`${successCount} foto berhasil diunggah!`);
       }
     } catch (e) {
       toast.error("Error mengunggah foto");
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleAddUrl = () => {
+    const url = urlInput.trim();
+    if (!url) {
+      toast.error("Masukkan URL gambar terlebih dahulu!");
+      return;
+    }
+    setFotoList((prev) => [...prev, url]);
+    setUrlInput("");
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -146,13 +177,8 @@ export default function GalleryManager() {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      if (file.type.startsWith("image/")) {
-        await handleImageUpload(file);
-      } else {
-        toast.error("Hanya file gambar yang diperbolehkan");
-      }
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      await handleImagesUpload(Array.from(e.dataTransfer.files));
     }
   };
 
@@ -160,7 +186,7 @@ export default function GalleryManager() {
     e.preventDefault();
     setSaving(true);
     const token = localStorage.getItem("token");
-    const payload = { namaFile, kategori, tanggalPosting, foto, status };
+    const payload = { namaFile, kategori, tanggalPosting, foto: serializePhotos(fotoList), status };
 
     try {
       let res;
@@ -318,7 +344,14 @@ export default function GalleryManager() {
                     </td>
                     <td className="py-4 px-6 border-r border-slate-100 text-center">
                       {item.foto ? (
-                        <img src={item.foto} alt={item.namaFile} className="h-10 w-10 object-cover rounded-lg border border-slate-200 mx-auto shadow-xs" />
+                        <div className="relative inline-block">
+                          <img src={parsePhotos(item.foto)[0]} alt={item.namaFile} className="h-10 w-10 object-cover rounded-lg border border-slate-200 mx-auto shadow-xs" />
+                          {parsePhotos(item.foto).length > 1 && (
+                            <span className="absolute -top-2 -right-2 bg-[#ff6105] text-white text-[9px] font-black rounded-full h-5 min-w-5 px-1 flex items-center justify-center shadow">
+                              {parsePhotos(item.foto).length}+
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <div className="h-10 w-10 bg-slate-100 rounded-lg flex items-center justify-center mx-auto border border-slate-200">
                           <Image size={14} className="text-slate-400" />
@@ -471,8 +504,10 @@ export default function GalleryManager() {
 
                 {/* Foto Upload */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">Foto Kegiatan</label>
-                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])} />
+                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">
+                    Foto Kegiatan {fotoList.length > 0 && <span className="text-[#ffb300]">({fotoList.length})</span>}
+                  </label>
+                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple onChange={(e) => e.target.files && handleImagesUpload(Array.from(e.target.files))} />
                   <div
                     onDragEnter={handleDrag}
                     onDragLeave={handleDrag}
@@ -487,30 +522,65 @@ export default function GalleryManager() {
                         <Loader2 className="h-7 w-7 text-white animate-spin" />
                         <span className="text-[10px] font-bold text-white">Mengunggah...</span>
                       </div>
-                    ) : foto ? (
+                    ) : fotoList.length > 0 ? (
                       <div className="w-full">
-                        <img src={foto} alt="Preview" className="w-full h-44 object-cover rounded-xl" />
-                        <p className="text-[9px] text-white/70 font-bold py-1.5">Klik untuk ganti foto</p>
+                        <img src={fotoList[0]} alt="Preview" className="w-full h-44 object-cover rounded-xl" />
+                        <p className="text-[9px] text-white/70 font-bold py-1.5">Klik untuk tambah/ganti foto</p>
                       </div>
                     ) : (
                       <div className="py-6 space-y-2">
                         <Image size={28} className="text-white/60 mx-auto" />
-                        <p className="text-[10px] font-bold text-white/80">Klik atau drag & drop foto di sini</p>
+                        <p className="text-[10px] font-bold text-white/80">Klik atau drag & drop foto di sini (bisa banyak)</p>
                         <p className="text-[9px] text-white/50">JPG, PNG, WEBP</p>
                       </div>
                     )}
                   </div>
                   <p className="text-[10px] font-bold text-white/80 mt-1 italic">
-                    * Batas maksimal ukuran foto adalah 5MB.
+                    * Bisa pilih banyak foto sekaligus. Batas maksimal per foto 5MB.
                   </p>
-                  <input
-                    type="text"
-                    disabled={!isEditing}
-                    className="w-full mt-2 text-[10px] font-mono border border-transparent rounded-lg px-2.5 py-2 bg-white text-slate-800 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
-                    value={foto}
-                    onChange={(e) => setFoto(e.target.value)}
-                    placeholder="Masukkan URL foto..."
-                  />
+
+                  {fotoList.length > 0 && (
+                    <div className="grid grid-cols-4 gap-2 mt-1">
+                      {fotoList.map((src, idx) => (
+                        <div key={`${src}-${idx}`} className="relative group rounded-lg overflow-hidden border border-white/30 bg-white/20">
+                          <img src={src} alt={`Foto ${idx + 1}`} className="w-full h-14 object-cover" />
+                          {isEditing && (
+                            <button
+                              type="button"
+                              onClick={() => setFotoList((prev) => prev.filter((_, i) => i !== idx))}
+                              className="absolute -top-1.5 -right-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-full h-5 w-5 flex items-center justify-center shadow cursor-pointer transition-colors"
+                              title="Hapus foto"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          )}
+                          <span className="absolute bottom-0.5 left-0.5 bg-black/60 text-white text-[8px] font-black rounded px-1 py-px">
+                            {idx + 1}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex gap-1.5 mt-2">
+                    <input
+                      type="text"
+                      disabled={!isEditing}
+                      className="flex-1 min-w-0 text-[10px] font-mono border border-transparent rounded-lg px-2.5 py-2 bg-white text-slate-800 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter" && isEditing) { e.preventDefault(); handleAddUrl(); } }}
+                      placeholder="Masukkan URL foto..."
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleAddUrl}
+                      disabled={!isEditing}
+                      className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white text-[10px] font-black px-3 h-9 rounded-lg cursor-pointer transition-all disabled:opacity-50 shrink-0"
+                    >
+                      TAMBAH
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Action Buttons */}
@@ -544,14 +614,7 @@ export default function GalleryManager() {
                     <>
                       <Button
                         type="button"
-                        onClick={() => {
-                          setNamaFile(originalData.namaFile);
-                          setKategori(originalData.kategori);
-                          setTanggalPosting(originalData.tanggalPosting);
-                          setFoto(originalData.foto);
-                          setStatus(originalData.status);
-                          setIsEditing(false);
-                        }}
+                        onClick={closeForm}
                         className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                       >
                         BATAL

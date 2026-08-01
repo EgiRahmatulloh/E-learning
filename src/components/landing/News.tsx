@@ -10,6 +10,8 @@ import {
   DialogClose
 } from "@/components/ui/dialog";
 import { Calendar, ShieldAlert, Search, ChevronRight, ChevronLeft } from "lucide-react";
+import PhotoCarousel from "@/components/ui/PhotoCarousel";
+import { parsePhotos } from "@/lib/photos";
 
 interface NewsItem {
   id: number;
@@ -189,9 +191,9 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
                     >
                       {/* Image + Category overlay */}
                       <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-                        {news.foto ? (
+                        {parsePhotos(news.foto).length > 0 ? (
                           <img 
-                            src={news.foto} 
+                            src={parsePhotos(news.foto)[0]} 
                             alt={news.judul} 
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
@@ -199,6 +201,12 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
                           <div className="w-full h-full flex items-center justify-center text-slate-300">
                             <Calendar className="h-12 w-12" />
                           </div>
+                        )}
+
+                        {parsePhotos(news.foto).length > 1 && (
+                          <span className="absolute bottom-2 right-2 z-10 rounded-full bg-black/50 px-2 py-0.5 text-[9px] font-black text-white">
+                            {parsePhotos(news.foto).length} foto
+                          </span>
                         )}
 
                         {/* Category tag overlay */}
@@ -243,11 +251,11 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
                     </DialogHeader>
                     <div className="space-y-4 py-2">
                       <div className="h-56 w-full rounded-2xl relative overflow-hidden border border-slate-200">
-                        {news.foto ? (
-                          <img 
-                            src={news.foto} 
+                        {parsePhotos(news.foto).length > 0 ? (
+                          <PhotoCarousel
+                            photos={parsePhotos(news.foto)}
                             alt={news.judul}
-                            className="w-full h-full object-cover" 
+                            imageClassName="h-56"
                           />
                         ) : (
                           <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
@@ -390,9 +398,9 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
                         className="snap-start shrink-0 w-[calc(50%-0.75rem)] sm:w-[calc(50%-0.75rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(20%-1.2rem)] bg-white rounded-3xl overflow-hidden p-4 flex flex-col justify-between border border-slate-300 group hover:border-[#ff6105] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer text-left"
                       >
                         <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-slate-50">
-                          {news.foto ? (
+                          {parsePhotos(news.foto).length > 0 ? (
                             <img
-                              src={news.foto}
+                              src={parsePhotos(news.foto)[0]}
                               alt={news.judul}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                             />
@@ -400,6 +408,12 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
                             <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-300">
                               <Calendar className="h-12 w-12" />
                             </div>
+                          )}
+
+                          {parsePhotos(news.foto).length > 1 && (
+                            <span className="absolute bottom-2 right-2 z-10 rounded-full bg-black/50 px-2 py-0.5 text-[9px] font-black text-white">
+                              {parsePhotos(news.foto).length} foto
+                            </span>
                           )}
 
                           <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[85%] z-10 text-center">
@@ -441,11 +455,11 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
                       </DialogHeader>
                       <div className="space-y-4 py-2">
                         <div className="h-56 w-full rounded-2xl relative overflow-hidden border border-slate-200">
-                          {news.foto ? (
-                            <img
-                              src={news.foto}
+                          {parsePhotos(news.foto).length > 0 ? (
+                            <PhotoCarousel
+                              photos={parsePhotos(news.foto)}
                               alt={news.judul}
-                              className="w-full h-full object-cover"
+                              imageClassName="h-56"
                             />
                           ) : (
                             <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">

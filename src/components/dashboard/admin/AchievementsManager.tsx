@@ -45,7 +45,7 @@ export function AchievementsManager() {
   const [formVisible, setFormVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [originalData, setOriginalData] = useState<{ nama: string; tahun: string; tingkat: string; penyelenggara: string; peserta: string; keterangan: string; foto: string }>({ nama: "", tahun: "", tingkat: "", penyelenggara: "", peserta: "", keterangan: "", foto: "" });
+  const [, setOriginalData] = useState<{ nama: string; tahun: string; tingkat: string; penyelenggara: string; peserta: string; keterangan: string; foto: string }>({ nama: "", tahun: "", tingkat: "", penyelenggara: "", peserta: "", keterangan: "", foto: "" });
   const [nama, setNama] = useState("");
   const [tahun, setTahun] = useState("");
   const [tingkat, setTingkat] = useState("");
@@ -745,16 +745,7 @@ export function AchievementsManager() {
                   <>
                     <Button
                       type="button"
-                      onClick={() => {
-                        setNama(originalData.nama);
-                        setTahun(originalData.tahun);
-                        setTingkat(originalData.tingkat);
-                        setPenyelenggara(originalData.penyelenggara);
-                        setPeserta(originalData.peserta);
-                        setKeterangan(originalData.keterangan);
-                        setFoto(originalData.foto);
-                        setIsEditing(false);
-                      }}
+                      onClick={resetForm}
                       className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                     >
                       BATAL

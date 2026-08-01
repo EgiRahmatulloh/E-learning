@@ -42,7 +42,7 @@ export function HeaderManager() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [originalData, setOriginalData] = useState<{ title: string; status: string; image: string }>({ title: "", status: "", image: "" });
+  const [, setOriginalData] = useState<{ title: string; status: string; image: string }>({ title: "", status: "", image: "" });
   const [formTitle, setFormTitle] = useState("");
   const [formStatus, setFormStatus] = useState<"AKTIF" | "NON AKTIF">("AKTIF");
   const [formImage, setFormImage] = useState("");
@@ -642,16 +642,7 @@ export function HeaderManager() {
                     <>
                       <Button
                         type="button"
-                        onClick={() => {
-                          if (editId) {
-                            setFormTitle(originalData.title);
-                            setFormStatus(originalData.status as "AKTIF" | "NON AKTIF");
-                            setFormImage(originalData.image);
-                            setIsEditing(false);
-                          } else {
-                            closeForm();
-                          }
-                        }}
+                        onClick={closeForm}
                         className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                       >
                         BATAL

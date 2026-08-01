@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Search, ChevronLeft } from "lucide-react";
+import PhotoCarousel from "@/components/ui/PhotoCarousel";
+import { parsePhotos } from "@/lib/photos";
 
 const GALLERY_CATEGORIES = [
   { id: "KEGIATAN PEMBELAJARAN", label: "KEGIATAN PEMBELAJARAN", color: "from-purple-900 to-indigo-900" },
@@ -89,7 +91,7 @@ export default function GalleryPage(_props: GalleryPageProps) {
   // Get representative photo for each category
   const getCategoryPhoto = (categoryId: string) => {
     const items = galleryList.filter((g) => g.kategori === categoryId);
-    return items.length > 0 ? items[0].foto : null;
+    return items.length > 0 ? parsePhotos(items[0].foto)[0] : null;
   };
 
   // Get count for each category
@@ -227,9 +229,9 @@ export default function GalleryPage(_props: GalleryPageProps) {
                       className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 p-3 flex flex-col justify-between group hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer"
                     >
                       <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-slate-100 mb-2 border border-slate-100">
-                        {item.foto ? (
+                        {parsePhotos(item.foto).length > 0 ? (
                           <img
-                            src={item.foto}
+                            src={parsePhotos(item.foto)[0]}
                             alt={item.namaFile}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
@@ -239,6 +241,11 @@ export default function GalleryPage(_props: GalleryPageProps) {
                               <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
                             </svg>
                           </div>
+                        )}
+                        {parsePhotos(item.foto).length > 1 && (
+                          <span className="absolute top-2 right-2 z-10 rounded-full bg-black/50 px-2 py-0.5 text-[9px] font-black text-white">
+                            {parsePhotos(item.foto).length} foto
+                          </span>
                         )}
                       </div>
                       <div className="text-center px-1 pb-1">
@@ -299,11 +306,11 @@ export default function GalleryPage(_props: GalleryPageProps) {
                   </DialogTitle>
                 </DialogHeader>
                 <div className="py-3">
-                  {lightboxPhoto.foto && (
-                    <img
-                      src={lightboxPhoto.foto}
+                  {parsePhotos(lightboxPhoto.foto).length > 0 && (
+                    <PhotoCarousel
+                      photos={parsePhotos(lightboxPhoto.foto)}
                       alt={lightboxPhoto.namaFile}
-                      className="w-full max-h-[60vh] object-contain rounded-2xl bg-black"
+                      imageClassName="max-h-[60vh] object-contain rounded-2xl bg-black"
                     />
                   )}
                   <div className="mt-4 space-y-1">

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Search, UploadCloud, Plus, Save, Edit3, Trash2, X, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
+import { parsePhotos, serializePhotos } from "@/lib/photos";
 
 interface News {
   id: number;
@@ -61,12 +62,13 @@ export default function NewsManager() {
   // News Form States
   const [editId, setEditId] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [originalData, setOriginalData] = useState<{ judul: string; kategori: string; tanggalPosting: string; status: string; foto: string; konten: string }>({ judul: "", kategori: "", tanggalPosting: "", status: "", foto: "", konten: "" });
+  const [, setOriginalData] = useState<{ judul: string; kategori: string; tanggalPosting: string; status: string; foto: string; konten: string }>({ judul: "", kategori: "", tanggalPosting: "", status: "", foto: "", konten: "" });
   const [judul, setJudul] = useState("");
   const [kategori, setKategori] = useState("");
   const [tanggalPosting, setTanggalPosting] = useState("");
   const [status, setStatus] = useState("PUBLISH");
-  const [foto, setFoto] = useState("");
+  const [fotoList, setFotoList] = useState<string[]>([]);
+  const [urlInput, setUrlInput] = useState("");
   const [konten, setKonten] = useState("");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -134,7 +136,8 @@ export default function NewsManager() {
     setKategori("");
     setTanggalPosting(getIndonesianDate());
     setStatus("PUBLISH");
-    setFoto("");
+    setFotoList([]);
+    setUrlInput("");
     setKonten("");
     setEditId(null);
     setIsEditing(false);
@@ -148,7 +151,8 @@ export default function NewsManager() {
     setKategori(item.kategori);
     setTanggalPosting(item.tanggalPosting);
     setStatus(item.status);
-    setFoto(item.foto);
+    setFotoList(parsePhotos(item.foto));
+    setUrlInput("");
     setKonten(item.konten);
     setIsEditing(false);
     setNewsModalVisible(true);
@@ -181,41 +185,60 @@ export default function NewsManager() {
     }
   };
 
-  const processUpload = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
+  const processUpload = async (files: File[]) => {
+    const imageFiles = files.filter((f) => f.type.startsWith("image/"));
+    if (imageFiles.length === 0) {
       toast.error("Hanya berkas gambar yang diperbolehkan!");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
+    const oversized = imageFiles.some((f) => f.size > 5 * 1024 * 1024);
+    if (oversized) {
       toast.error("Ukuran gambar melebihi batas 5MB!");
       return;
     }
 
     setUploading(true);
     const token = getSafeItem("token");
-    const formData = new FormData();
-    formData.append("file", file);
+    let successCount = 0;
 
     try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.success && data.url) {
-        setFoto(data.url);
-        toast.success("Foto berita berhasil diunggah!");
-      } else {
-        throw new Error(data.message || "Gagal mengunggah gambar");
+      for (const file of imageFiles) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+          body: formData,
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+          setFotoList((prev) => [...prev, data.url]);
+          successCount++;
+        } else {
+          toast.error(data.message || "Gagal mengunggah gambar");
+        }
       }
-    } catch (err: any) {
-      toast.error(err.message || "Gagal mengunggah gambar.");
+      if (successCount > 0) {
+        toast.success(`${successCount} foto berhasil diunggah!`);
+      }
+    } catch (err) {
+      toast.error("Gagal mengunggah gambar.");
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleAddUrl = () => {
+    const url = urlInput.trim();
+    if (!url) {
+      toast.error("Masukkan URL gambar terlebih dahulu!");
+      return;
+    }
+    setFotoList((prev) => [...prev, url]);
+    setUrlInput("");
   };
 
   const handleSaveNews = async () => {
@@ -239,7 +262,7 @@ export default function NewsManager() {
       kategori,
       tanggalPosting,
       status,
-      foto,
+      foto: serializePhotos(fotoList),
       konten
     };
 
@@ -467,11 +490,18 @@ export default function NewsManager() {
                     </td>
                     <td className="py-4 px-6 border-r border-slate-100 text-center">
                       {item.foto ? (
-                        <img
-                          src={item.foto}
-                          alt={item.judul}
-                          className="h-14 w-24 object-cover rounded-lg mx-auto shadow-xs border border-slate-200"
-                        />
+                        <div className="relative inline-block">
+                          <img
+                            src={parsePhotos(item.foto)[0]}
+                            alt={item.judul}
+                            className="h-14 w-24 object-cover rounded-lg mx-auto shadow-xs border border-slate-200"
+                          />
+                          {parsePhotos(item.foto).length > 1 && (
+                            <span className="absolute -top-2 -right-2 bg-[#ff6105] text-white text-[9px] font-black rounded-full h-5 min-w-5 px-1 flex items-center justify-center shadow">
+                              {parsePhotos(item.foto).length}+
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">TIDAK ADA FOTO</span>
                       )}
@@ -634,7 +664,7 @@ export default function NewsManager() {
               {/* FOTO COLUMN (Right) */}
               <div className="md:col-span-1 flex flex-col items-center justify-start pt-2">
                 <h4 className="text-xs font-black text-cyan-50 uppercase tracking-wider mb-2">
-                  FOTO
+                  FOTO {fotoList.length > 0 && <span className="text-[#ffb300]">({fotoList.length})</span>}
                 </h4>
 
                 <div
@@ -642,8 +672,8 @@ export default function NewsManager() {
                   onDrop={(e) => {
                     e.preventDefault();
                     if (!isEditing) return;
-                    const file = e.dataTransfer.files?.[0];
-                    if (file) processUpload(file);
+                    const files = Array.from(e.dataTransfer.files || []);
+                    if (files.length > 0) processUpload(files);
                   }}
                   onClick={() => { if (isEditing) document.getElementById("news-file-upload")?.click(); }}
                   className={`${!isEditing ? "pointer-events-none opacity-60 " : ""}w-full aspect-square border-4 border-dashed border-white/60 hover:border-white rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden transition-all text-center bg-cyan-300/40 hover:bg-cyan-350/50 cursor-pointer`}
@@ -652,10 +682,11 @@ export default function NewsManager() {
                     id="news-file-upload"
                     type="file"
                     accept="image/*"
+                    multiple
                     onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        processUpload(file);
+                      const files = Array.from(e.target.files || []);
+                      if (files.length > 0) {
+                        processUpload(files);
                         e.target.value = "";
                       }
                     }}
@@ -667,15 +698,18 @@ export default function NewsManager() {
                       <div className="animate-spin rounded-full h-8 w-8 border-4 border-white/30 border-t-purple-600 mb-2" />
                       <span className="text-[10px] font-black text-purple-950 uppercase tracking-wide">MENGUNGGAH...</span>
                     </div>
-                  ) : foto ? (
-                    <div className="w-full h-full relative group">
+                  ) : fotoList.length > 0 ? (
+                    <div className="w-full h-full relative flex items-center justify-center bg-black/20 rounded-lg">
                       <img
-                        src={foto}
+                        src={fotoList[0]}
                         alt="Pratinjau Berita"
-                        className="w-full h-full object-cover rounded-lg"
+                        className="max-h-full max-w-full object-cover rounded-lg"
                       />
-                      <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-lg">
-                        <span className="text-white text-[10px] font-black uppercase tracking-wider">UBAH FOTO</span>
+                      <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center rounded-lg">
+                        <div className="text-center">
+                          <span className="block text-white text-[10px] font-black uppercase tracking-wider">TAMBAH / UBAH</span>
+                          <span className="block text-white/80 text-[9px] font-bold mt-0.5">KLIK UNTUK PILIH BANYAK FOTO</span>
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -685,25 +719,62 @@ export default function NewsManager() {
                         DRAG & DROP
                       </span>
                       <span className="text-[9px] font-black text-purple-950 block mt-0.5 uppercase tracking-wide">
-                        OR CLICK
+                        OR CLICK (BANYAK FILE)
                       </span>
                     </div>
                   )}
                 </div>
                 <p className="text-[10px] font-bold text-white/80 mt-1.5 italic text-center">
-                  * Batas maksimal ukuran foto adalah 5MB.
+                  * Bisa pilih banyak foto sekaligus. Batas maksimal per foto 5MB.
                 </p>
+
+                {/* Thumbnail grid with remove buttons */}
+                {fotoList.length > 0 && (
+                  <div className="w-full mt-3">
+                    <div className="grid grid-cols-3 gap-2">
+                      {fotoList.map((src, idx) => (
+                        <div key={`${src}-${idx}`} className="relative group rounded-lg overflow-hidden border border-white/30 bg-white/20">
+                          <img src={src} alt={`Foto ${idx + 1}`} className="w-full h-14 object-cover" />
+                          {isEditing && (
+                            <button
+                              type="button"
+                              onClick={() => setFotoList((prev) => prev.filter((_, i) => i !== idx))}
+                              className="absolute -top-1.5 -right-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-full h-5 w-5 flex items-center justify-center shadow cursor-pointer transition-colors"
+                              title="Hapus foto"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          )}
+                          <span className="absolute bottom-0.5 left-0.5 bg-black/60 text-white text-[8px] font-black rounded px-1 py-px">
+                            {idx + 1}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="w-full mt-4 flex flex-col gap-1 text-left">
                   <label className="text-[10px] font-black uppercase text-cyan-50">URL Gambar Berita</label>
-                  <input
-                    type="text"
-                    placeholder="Masukkan URL gambar..."
-                    value={foto}
-                    onChange={(e) => setFoto(e.target.value)}
-                    disabled={!isEditing}
-                    className="w-full text-xs font-semibold border-none rounded-lg px-3 py-2 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-70 disabled:cursor-not-allowed"
-                  />
+                  <div className="flex flex-col gap-1.5">
+                    <input
+                      type="text"
+                      placeholder="Masukkan URL gambar..."
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter" && isEditing) { e.preventDefault(); handleAddUrl(); } }}
+                      disabled={!isEditing}
+                      className="w-full min-w-0 text-xs font-semibold border-none rounded-lg px-3 py-2 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-70 disabled:cursor-not-allowed"
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleAddUrl}
+                      disabled={!isEditing}
+                      className="w-full bg-[#9c27b0] hover:bg-[#7b1fa2] text-white text-[10px] font-black px-3 h-8 rounded-lg cursor-pointer transition-all disabled:opacity-50"
+                    >
+                      TAMBAH
+                    </Button>
+                  </div>
                 </div>
               </div>
 
@@ -715,15 +786,7 @@ export default function NewsManager() {
                   <>
                     <Button
                       type="button"
-                      onClick={() => {
-                        setJudul(originalData.judul);
-                        setKategori(originalData.kategori);
-                        setTanggalPosting(originalData.tanggalPosting);
-                        setStatus(originalData.status);
-                        setFoto(originalData.foto);
-                        setKonten(originalData.konten);
-                        setIsEditing(false);
-                      }}
+                      onClick={resetNewsForm}
                       className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                     >
                       BATAL

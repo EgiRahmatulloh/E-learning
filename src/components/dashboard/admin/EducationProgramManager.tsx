@@ -44,7 +44,7 @@ export default function EducationProgramManager() {
   const [formVisible, setFormVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [originalData, setOriginalData] = useState<{ program: string; penjab: string; keterangan: string; foto: string }>({ program: "", penjab: "", keterangan: "", foto: "" });
+  const [, setOriginalData] = useState<{ program: string; penjab: string; keterangan: string; foto: string }>({ program: "", penjab: "", keterangan: "", foto: "" });
   const [program, setProgram] = useState("");
   const [penjab, setPenjab] = useState("");
   const [keterangan, setKeterangan] = useState("");
@@ -535,13 +535,7 @@ export default function EducationProgramManager() {
                   <>
                     <Button
                       type="button"
-                      onClick={() => {
-                        setProgram(originalData.program);
-                        setPenjab(originalData.penjab);
-                        setKeterangan(originalData.keterangan);
-                        setFoto(originalData.foto);
-                        setIsEditing(false);
-                      }}
+                      onClick={resetForm}
                       className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                     >
                       BATAL

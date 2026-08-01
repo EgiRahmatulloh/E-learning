@@ -112,7 +112,7 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
     lembagaPenugas: "",
   });
 
-  const [originalFormData, setOriginalFormData] = useState<Partial<Tutor>>({});
+  const [, setOriginalFormData] = useState<Partial<Tutor>>({});
 
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -1289,12 +1289,7 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
                     <>
                       <Button
                         type="button"
-                        onClick={() => {
-                          if (Object.keys(originalFormData).length > 0) {
-                            setFormData(originalFormData);
-                          }
-                          setIsEditing(false);
-                        }}
+                        onClick={() => setFormOpen(false)}
                         className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                       >
                         BATAL

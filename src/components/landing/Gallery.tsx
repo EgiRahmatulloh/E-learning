@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, ShieldAlert } from "lucide-react";
+import { parsePhotos } from "@/lib/photos";
 
 interface GalleryApiItem {
   id: number;
@@ -109,11 +110,16 @@ export default function Gallery(_props: GalleryProps) {
                     className="snap-start shrink-0 w-[calc(50%-0.75rem)] sm:w-[calc(50%-0.75rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(20%-1.2rem)] group overflow-hidden rounded-2xl border border-slate-300 relative aspect-[4/3] bg-slate-100"
                   >
                     <img
-                      src={item.foto}
+                      src={parsePhotos(item.foto)[0]}
                       alt={item.namaFile}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"
                     />
+                    {parsePhotos(item.foto).length > 1 && (
+                      <span className="absolute top-2 right-2 z-10 rounded-full bg-black/50 px-2 py-0.5 text-[9px] font-black text-white">
+                        {parsePhotos(item.foto).length} foto
+                      </span>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                       <div>
                         <span className="block text-[10px] font-black tracking-widest text-[#ff6105] uppercase mb-1">{item.kategori}</span>

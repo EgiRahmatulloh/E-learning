@@ -63,7 +63,7 @@ export default function AlumniManager() {
   const [isAdding, setIsAdding] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [originalData, setOriginalData] = useState<{ nama: string; nik: string; program: string; tahunLulus: string; nisn: string; nis: string; tempatTglLahir: string; noHp: string; namaAyah: string; namaIbu: string; jenisKelamin: string; agama: string; email: string; alamat: string; rt: string; rw: string; desa: string; kecamatan: string; kabupaten: string; provinsi: string; melanjutkanKe: string; pekerjaan: string; cerita: string; foto: string; berkas: Record<string, string> }>({ nama: "", nik: "", program: "", tahunLulus: "", nisn: "", nis: "", tempatTglLahir: "", noHp: "", namaAyah: "", namaIbu: "", jenisKelamin: "", agama: "", email: "", alamat: "", rt: "", rw: "", desa: "", kecamatan: "", kabupaten: "", provinsi: "", melanjutkanKe: "", pekerjaan: "", cerita: "", foto: "", berkas: {} });
+  const [, setOriginalData] = useState<{ nama: string; nik: string; program: string; tahunLulus: string; nisn: string; nis: string; tempatTglLahir: string; noHp: string; namaAyah: string; namaIbu: string; jenisKelamin: string; agama: string; email: string; alamat: string; rt: string; rw: string; desa: string; kecamatan: string; kabupaten: string; provinsi: string; melanjutkanKe: string; pekerjaan: string; cerita: string; foto: string; berkas: Record<string, string> }>({ nama: "", nik: "", program: "", tahunLulus: "", nisn: "", nis: "", tempatTglLahir: "", noHp: "", namaAyah: "", namaIbu: "", jenisKelamin: "", agama: "", email: "", alamat: "", rt: "", rw: "", desa: "", kecamatan: "", kabupaten: "", provinsi: "", melanjutkanKe: "", pekerjaan: "", cerita: "", foto: "", berkas: {} });
 
   // Form inputs
   const [nama, setNama] = useState("");
@@ -1108,34 +1108,7 @@ export default function AlumniManager() {
                     <>
                       <Button
                         type="button"
-                        onClick={() => {
-                          setNama(originalData.nama);
-                          setNik(originalData.nik);
-                          setProgram(originalData.program);
-                          setTahunLulus(originalData.tahunLulus);
-                          setNisn(originalData.nisn);
-                          setNis(originalData.nis);
-                          setTempatTglLahir(originalData.tempatTglLahir);
-                          setNoHp(originalData.noHp);
-                          setNamaAyah(originalData.namaAyah);
-                          setNamaIbu(originalData.namaIbu);
-                          setJenisKelamin(originalData.jenisKelamin);
-                          setAgama(originalData.agama);
-                          setEmail(originalData.email);
-                          setAlamat(originalData.alamat);
-                          setRt(originalData.rt || "");
-                          setRw(originalData.rw || "");
-                          setDesa(originalData.desa || "");
-                          setKecamatan(originalData.kecamatan || "");
-                          setKabupaten(originalData.kabupaten || "");
-                          setProvinsi(originalData.provinsi || "");
-                          setCerita(originalData.cerita);
-                          setMelanjutkanKe(originalData.melanjutkanKe || "");
-                          setPekerjaan(originalData.pekerjaan || "");
-                          setFoto(originalData.foto);
-                          setBerkas(originalData.berkas);
-                          setIsEditing(false);
-                        }}
+                        onClick={closeForm}
                         className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                       >
                         BATAL

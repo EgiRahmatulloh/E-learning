@@ -42,7 +42,7 @@ export default function ProductsManager() {
   const [status, setStatus] = useState("AKTIF");
   const [gambar, setGambar] = useState("");
 
-  const [originalProduct, setOriginalProduct] = useState<ProductItem | null>(null);
+  const [, setOriginalProduct] = useState<ProductItem | null>(null);
 
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -610,19 +610,7 @@ export default function ProductsManager() {
                     <>
                       <Button
                         type="button"
-                        onClick={() => {
-                          if (originalProduct) {
-                            setNamaProduk(originalProduct.namaProduk);
-                            setDeskripsi(originalProduct.deskripsi);
-                            setNoHp(originalProduct.noHp);
-                            setPenjual(originalProduct.penjual);
-                            setSatuan(originalProduct.satuan);
-                            setHarga(originalProduct.harga);
-                            setStatus(originalProduct.status);
-                            setGambar(originalProduct.gambar);
-                          }
-                          setIsEditing(false);
-                        }}
+                        onClick={() => setFormOpen(false)}
                         className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                       >
                         BATAL

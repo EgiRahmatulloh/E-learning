@@ -42,7 +42,7 @@ export default function AgendaManager() {
   const [formVisible, setFormVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [originalData, setOriginalData] = useState<{ nama: string; pelaksanaan: string; waktu: string; peserta: string; lokasi: string; penyelenggara: string; penanggungjawab: string; keterangan: string; foto: string }>({ nama: "", pelaksanaan: "", waktu: "", peserta: "", lokasi: "", penyelenggara: "", penanggungjawab: "", keterangan: "", foto: "" });
+  const [, setOriginalData] = useState<{ nama: string; pelaksanaan: string; waktu: string; peserta: string; lokasi: string; penyelenggara: string; penanggungjawab: string; keterangan: string; foto: string }>({ nama: "", pelaksanaan: "", waktu: "", peserta: "", lokasi: "", penyelenggara: "", penanggungjawab: "", keterangan: "", foto: "" });
   const [nama, setNama] = useState("");
   const [pelaksanaan, setPelaksanaan] = useState("");
   const [waktu, setWaktu] = useState("");
@@ -632,18 +632,7 @@ export default function AgendaManager() {
                   <>
                     <Button
                       type="button"
-                      onClick={() => {
-                        setNama(originalData.nama);
-                        setPelaksanaan(originalData.pelaksanaan);
-                        setWaktu(originalData.waktu);
-                        setPeserta(originalData.peserta);
-                        setLokasi(originalData.lokasi);
-                        setPenyelenggara(originalData.penyelenggara);
-                        setPenanggungjawab(originalData.penanggungjawab);
-                        setKeterangan(originalData.keterangan);
-                        setFoto(originalData.foto);
-                        setIsEditing(false);
-                      }}
+                      onClick={resetForm}
                       className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                     >
                       BATAL

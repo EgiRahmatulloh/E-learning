@@ -614,7 +614,7 @@ export default function FacilitiesManager() {
                   <>
                     <Button
                       type="button"
-                      onClick={() => setIsEditing(false)}
+                      onClick={resetForm}
                       className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                     >
                       BATAL

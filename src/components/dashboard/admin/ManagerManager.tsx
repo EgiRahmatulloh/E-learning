@@ -118,7 +118,7 @@ export default function ManagerManager() {
   const [hasUnsyncedOfflineData, setHasUnsyncedOfflineData] = useState(false);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [originalManager, setOriginalManager] = useState<ManagerData | null>(null);
+  const [, setOriginalManager] = useState<ManagerData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
   const [dbManagerIds, setDbManagerIds] = useState<Set<number>>(new Set());
@@ -1340,12 +1340,7 @@ export default function ManagerManager() {
                 <>
                   <Button
                     type="button"
-                    onClick={() => {
-                      if (originalManager) {
-                        setSelectedManager(originalManager);
-                      }
-                      setIsEditing(false);
-                    }}
+                    onClick={handleCloseForm}
                     className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                   >
                     BATAL
