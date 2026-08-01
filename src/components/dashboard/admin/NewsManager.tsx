@@ -560,16 +560,16 @@ export default function NewsManager() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={resetNewsForm} />
 
-          <div className="relative bg-[#00badb] rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col border-4 border-cyan-400 animate-in zoom-in-95 duration-200 text-white">
+          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col border-4 border-cyan-400 animate-in zoom-in-95 duration-200">
 
             <button
               onClick={resetNewsForm}
-              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer z-10"
+              className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer z-10"
             >
               <X className="h-5 w-5" />
             </button>
 
-            <div className="p-6 sm:p-8 pb-4 shrink-0 border-b border-white/10 text-left">
+            <div className="p-6 sm:p-8 pb-4 shrink-0 border-b border-slate-200 text-left">
               <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
                 {editId !== null ? (isEditing ? "EDIT DATA" : "DETAIL DATA") : "TAMBAH DATA"}
               </span>
@@ -581,7 +581,7 @@ export default function NewsManager() {
 
                 {/* JUDUL */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">
                     JUDUL BERITA
                   </label>
                   <input
@@ -590,21 +590,21 @@ export default function NewsManager() {
                     onChange={(e) => setJudul(e.target.value)}
                     placeholder="Masukkan judul berita"
                     disabled={!isEditing}
-                    className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full h-10 px-4 text-sm font-extrabold rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
 
                 {/* KATEGORI & STATUS (Row) */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-wide">
                       KATEGORI
                     </label>
                     <select
                       value={kategori}
                       onChange={(e) => setKategori(e.target.value)}
                       disabled={!isEditing}
-                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner disabled:opacity-70 disabled:cursor-not-allowed"
+                      className="w-full h-10 px-4 text-sm font-extrabold rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       <option value="">-- PILIH KATEGORI --</option>
                       {categories.map((cat) => (
@@ -616,14 +616,14 @@ export default function NewsManager() {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-wide">
                       STATUS PUBLIKASI
                     </label>
                     <select
                       value={status}
                       onChange={(e) => setStatus(e.target.value)}
                       disabled={!isEditing}
-                      className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner disabled:opacity-70 disabled:cursor-not-allowed"
+                      className="w-full h-10 px-4 text-sm font-extrabold rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       <option value="PUBLISH">PUBLISH</option>
                       <option value="DRAFT">DRAFT</option>
@@ -633,7 +633,7 @@ export default function NewsManager() {
 
                 {/* TANGGAL POSTING */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">
                     TANGGAL POSTING
                   </label>
                   <input
@@ -641,13 +641,13 @@ export default function NewsManager() {
                     value={tanggalPosting}
                     onChange={(e) => setTanggalPosting(e.target.value)}
                     disabled={!isEditing}
-                    className="w-full h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full h-10 px-4 text-sm font-extrabold rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
 
                 {/* KONTEN */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">
                     ISI KONTEN BERITA
                   </label>
                   <textarea
@@ -656,14 +656,14 @@ export default function NewsManager() {
                     onChange={(e) => setKonten(e.target.value)}
                     placeholder="Tuliskan berita lengkap..."
                     disabled={!isEditing}
-                    className="w-full p-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner resize-none leading-relaxed disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full p-4 text-sm font-extrabold rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner resize-none leading-relaxed disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
 
               {/* FOTO COLUMN (Right) */}
               <div className="md:col-span-1 flex flex-col items-center justify-start pt-2">
-                <h4 className="text-xs font-black text-cyan-50 uppercase tracking-wider mb-2">
+                <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-2">
                   FOTO {fotoList.length > 0 && <span className="text-[#ffb300]">({fotoList.length})</span>}
                 </h4>
 
@@ -676,7 +676,7 @@ export default function NewsManager() {
                     if (files.length > 0) processUpload(files);
                   }}
                   onClick={() => { if (isEditing) document.getElementById("news-file-upload")?.click(); }}
-                  className={`${!isEditing ? "pointer-events-none opacity-60 " : ""}w-full aspect-square border-4 border-dashed border-white/60 hover:border-white rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden transition-all text-center bg-cyan-300/40 hover:bg-cyan-350/50 cursor-pointer`}
+                  className={`${!isEditing ? "pointer-events-none opacity-60 " : ""}w-full aspect-square border-4 border-dashed border-cyan-300 hover:border-cyan-400 rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden transition-all text-center bg-cyan-50 hover:bg-cyan-100 cursor-pointer`}
                 >
                   <input
                     id="news-file-upload"
@@ -695,7 +695,7 @@ export default function NewsManager() {
 
                   {uploading ? (
                     <div className="flex flex-col items-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-4 border-white/30 border-t-purple-600 mb-2" />
+                      <div className="animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-purple-600 mb-2" />
                       <span className="text-[10px] font-black text-purple-950 uppercase tracking-wide">MENGUNGGAH...</span>
                     </div>
                   ) : fotoList.length > 0 ? (
@@ -708,13 +708,13 @@ export default function NewsManager() {
                       <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center rounded-lg">
                         <div className="text-center">
                           <span className="block text-white text-[10px] font-black uppercase tracking-wider">TAMBAH / UBAH</span>
-                          <span className="block text-white/80 text-[9px] font-bold mt-0.5">KLIK UNTUK PILIH BANYAK FOTO</span>
+                          <span className="block text-slate-400 text-[9px] font-bold mt-0.5">KLIK UNTUK PILIH BANYAK FOTO</span>
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center">
-                      <UploadCloud className="h-10 w-10 text-white mb-2" />
+                      <UploadCloud className="h-10 w-10 text-cyan-600 mb-2" />
                       <span className="text-[9px] font-black text-purple-950 uppercase block tracking-wider leading-relaxed">
                         DRAG & DROP
                       </span>
@@ -724,7 +724,7 @@ export default function NewsManager() {
                     </div>
                   )}
                 </div>
-                <p className="text-[10px] font-bold text-white/80 mt-1.5 italic text-center">
+                <p className="text-[10px] font-bold text-slate-400 mt-1.5 italic text-center">
                   * Bisa pilih banyak foto sekaligus. Batas maksimal per foto 5MB.
                 </p>
 
@@ -733,7 +733,7 @@ export default function NewsManager() {
                   <div className="w-full mt-3">
                     <div className="grid grid-cols-3 gap-2">
                       {fotoList.map((src, idx) => (
-                        <div key={`${src}-${idx}`} className="relative group rounded-lg overflow-hidden border border-white/30 bg-white/20">
+                        <div key={`${src}-${idx}`} className="relative group rounded-lg overflow-hidden border border-slate-200 bg-white">
                           <img src={src} alt={`Foto ${idx + 1}`} className="w-full h-14 object-cover" />
                           {isEditing && (
                             <button
@@ -755,7 +755,7 @@ export default function NewsManager() {
                 )}
 
                 <div className="w-full mt-4 flex flex-col gap-1 text-left">
-                  <label className="text-[10px] font-black uppercase text-cyan-50">URL Gambar Berita</label>
+                  <label className="text-[10px] font-black uppercase text-slate-500">URL Gambar Berita</label>
                   <div className="flex flex-col gap-1.5">
                     <input
                       type="text"
@@ -764,7 +764,7 @@ export default function NewsManager() {
                       onChange={(e) => setUrlInput(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter" && isEditing) { e.preventDefault(); handleAddUrl(); } }}
                       disabled={!isEditing}
-                      className="w-full min-w-0 text-xs font-semibold border-none rounded-lg px-3 py-2 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-70 disabled:cursor-not-allowed"
+                      className="w-full min-w-0 text-xs font-semibold rounded-lg px-3 py-2 bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-70 disabled:cursor-not-allowed"
                     />
                     <Button
                       type="button"
@@ -781,7 +781,7 @@ export default function NewsManager() {
               </div>
 
               {/* ACTION BUTTONS */}
-              <div className="p-6 sm:p-8 pt-4 shrink-0 border-t border-white/10 flex items-center justify-end gap-3 bg-[#00badb] rounded-b-3xl">
+              <div className="p-6 sm:p-8 pt-4 shrink-0 border-t border-slate-200 flex items-center justify-end gap-3 bg-white rounded-b-3xl">
                 {isEditing ? (
                   <>
                     <Button
@@ -837,16 +837,16 @@ export default function NewsManager() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setCategoryModalVisible(false)} />
 
-          <div className="relative bg-[#00badb] rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col border-4 border-cyan-400 animate-in zoom-in-95 duration-200 text-white text-center">
+          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col border-4 border-cyan-400 animate-in zoom-in-95 duration-200 text-center">
 
             <button
               onClick={() => setCategoryModalVisible(false)}
-              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer z-10"
+              className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer z-10"
             >
               <X className="h-5 w-5" />
             </button>
 
-            <div className="p-6 pb-4 shrink-0 border-b border-white/10 text-left">
+            <div className="p-6 pb-4 shrink-0 border-b border-slate-200 text-left">
               <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
                 TAMBAH DATA KATEGORI
               </span>
@@ -860,7 +860,7 @@ export default function NewsManager() {
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
                 placeholder="NAMA KATEGORI BARU"
-                className="flex-1 h-10 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner uppercase placeholder-slate-400"
+                className="flex-1 h-10 px-4 text-sm font-extrabold rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner uppercase placeholder-slate-400"
               />
               <Button
                 onClick={handleAddCategory}
@@ -872,16 +872,16 @@ export default function NewsManager() {
 
             {/* List of categories with delete */}
             <div className="space-y-2 max-h-60 overflow-y-auto mb-6 text-left pr-1">
-              <label className="text-[10px] font-black text-cyan-50 uppercase tracking-widest block mb-2.5">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2.5">
                 Daftar Kategori Terdaftar
               </label>
               {categories.length > 0 ? (
                 categories.map((cat) => (
-                  <div key={cat.id} className="flex items-center justify-between bg-cyan-950/20 border border-white/10 rounded-lg px-4 py-2 text-sm font-extrabold">
+                  <div key={cat.id} className="flex items-center justify-between bg-cyan-50 border border-slate-200 rounded-lg px-4 py-2 text-sm font-extrabold">
                     <span>{cat.nama}</span>
                     <button
                       onClick={() => handleDeleteCategory(cat.id)}
-                      className="text-red-200 hover:text-red-400 p-1 cursor-pointer transition-colors"
+                      className="text-rose-400 hover:text-rose-600 p-1 cursor-pointer transition-colors"
                       title="Hapus Kategori"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -889,7 +889,7 @@ export default function NewsManager() {
                   </div>
                 ))
               ) : (
-                <div className="text-center py-4 text-cyan-100 text-xs font-bold uppercase">
+                <div className="text-center py-4 text-slate-400 text-xs font-bold uppercase">
                   Tidak ada kategori terdaftar
                 </div>
               )}
@@ -898,7 +898,7 @@ export default function NewsManager() {
             </div>
             
             {/* Close button */}
-            <div className="p-6 pt-4 shrink-0 border-t border-white/10 flex justify-end bg-[#00badb] rounded-b-3xl">
+            <div className="p-6 pt-4 shrink-0 border-t border-slate-200 flex justify-end bg-white rounded-b-3xl">
               <Button
                 onClick={() => setCategoryModalVisible(false)}
                 className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-10 rounded-lg cursor-pointer uppercase tracking-widest transition-all"

@@ -377,18 +377,18 @@ export default function EducationProgramManager() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={resetForm} />
 
           {/* Form Container */}
-          <div className="relative bg-[#00badb] rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col border-4 border-cyan-400 animate-in zoom-in-95 duration-200 text-white">
+          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col border-4 border-cyan-400 animate-in zoom-in-95 duration-200">
 
             {/* Close button inside modal */}
             <button
               onClick={resetForm}
-              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer z-10"
+              className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer z-10"
             >
               <X className="h-5 w-5" />
             </button>
 
             {/* Modal Form Title */}
-            <div className="p-6 sm:p-8 pb-4 shrink-0 border-b border-white/10 text-left">
+            <div className="p-6 sm:p-8 pb-4 shrink-0 border-b border-slate-200 text-left">
               <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
                 {editId !== null ? "EDIT DATA" : "TAMBAH DATA"}
               </span>
@@ -401,7 +401,7 @@ export default function EducationProgramManager() {
 
                 {/* NAMA PROGRAM */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">
                     NAMA PROGRAM
                   </label>
                   <input
@@ -410,20 +410,20 @@ export default function EducationProgramManager() {
                     onChange={(e) => setProgram(e.target.value)}
                     placeholder="Masukkan nama program (Contoh: Paket C)"
                     disabled={!isEditing}
-                    className="w-full h-11 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full h-11 px-4 text-sm font-extrabold rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
 
                 {/* PENJAB */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">
                     PENJAB
                   </label>
                   <select
                     value={penjab}
                     onChange={(e) => setPenjab(e.target.value)}
                     disabled={!isEditing}
-                    className="w-full h-11 px-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full h-11 px-4 text-sm font-extrabold rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     <option value="" disabled>Pilih Penanggung Jawab (Dropdown Pengelola)</option>
                     {managers.map((m) => (
@@ -436,7 +436,7 @@ export default function EducationProgramManager() {
 
                 {/* KETERANGAN */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">
                     KETERANGAN
                   </label>
                   <textarea
@@ -445,14 +445,14 @@ export default function EducationProgramManager() {
                     onChange={(e) => setKeterangan(e.target.value)}
                     placeholder="Deskripsikan penjelasan singkat tentang program ini..."
                     disabled={!isEditing}
-                    className="w-full p-4 text-sm font-extrabold border-none rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner resize-none leading-relaxed disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full p-4 text-sm font-extrabold rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner resize-none leading-relaxed disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
 
               {/* FOTO COLUMN (Right) */}
               <div className="md:col-span-1 flex flex-col items-center justify-start pt-2">
-                <h4 className="text-xs font-black text-cyan-50 uppercase tracking-wider mb-2">
+                <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-2">
                   FOTO
                 </h4>
 
@@ -465,7 +465,7 @@ export default function EducationProgramManager() {
                     if (file) processUpload(file);
                   }}
                   onClick={() => { if (isEditing) document.getElementById("program-file-upload")?.click(); }}
-                  className={`${!isEditing ? "pointer-events-none opacity-60 " : ""}w-full aspect-square border-4 border-dashed border-white/60 hover:border-white rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden transition-all text-center bg-cyan-300/40 hover:bg-cyan-350/50 cursor-pointer`}
+                  className={`${!isEditing ? "pointer-events-none opacity-60 " : ""}w-full aspect-square border-4 border-dashed border-cyan-300 hover:border-cyan-400 rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden transition-all text-center bg-cyan-50 hover:bg-cyan-100 cursor-pointer`}
                 >
                   <input
                     id="program-file-upload"
@@ -483,7 +483,7 @@ export default function EducationProgramManager() {
 
                   {uploading ? (
                     <div className="flex flex-col items-center">
-                      <Loader2 className="h-8 w-8 text-white/60 animate-spin mb-2" />
+                      <Loader2 className="h-8 w-8 text-slate-400 animate-spin mb-2" />
                       <span className="text-[10px] font-black text-purple-950 uppercase tracking-wide">MENGUNGGAH...</span>
                     </div>
                   ) : foto ? (
@@ -499,7 +499,7 @@ export default function EducationProgramManager() {
                     </div>
                   ) : (
                     <>
-                      <UploadCloud className="h-10 w-10 text-white mb-2" />
+                      <UploadCloud className="h-10 w-10 text-cyan-600 mb-2" />
                       <span className="text-[9px] font-black text-purple-950 uppercase block tracking-wider leading-relaxed">
                         DRAG & DROP
                       </span>
@@ -510,19 +510,19 @@ export default function EducationProgramManager() {
                   )}
                 </div>
 
-                <p className="text-[10px] font-bold text-white/80 mt-1.5 italic text-center">
+                <p className="text-[10px] font-bold text-slate-400 mt-1.5 italic text-center">
                   * Batas maksimal ukuran foto adalah 5MB.
                 </p>
 
                 <div className="w-full mt-4 flex flex-col gap-1 text-left">
-                  <label className="text-[10px] font-black uppercase text-cyan-50">URL Foto Program</label>
+                  <label className="text-[10px] font-black uppercase text-slate-500">URL Foto Program</label>
                   <input
                     type="text"
                     placeholder="Masukkan URL foto..."
                     value={foto}
                     onChange={(e) => setFoto(e.target.value)}
                     disabled={!isEditing}
-                    className="w-full text-xs font-semibold border-none rounded-lg px-3 py-2 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full text-xs font-semibold border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -530,7 +530,7 @@ export default function EducationProgramManager() {
               </div>
 
               {/* ACTION BUTTONS */}
-              <div className="p-6 sm:p-8 pt-4 shrink-0 border-t border-white/10 flex items-center justify-end gap-3 bg-[#00badb] rounded-b-3xl">
+              <div className="p-6 sm:p-8 pt-4 shrink-0 border-t border-slate-200 flex items-center justify-end gap-3 bg-white rounded-b-3xl">
                 {isEditing ? (
                   <>
                     <Button

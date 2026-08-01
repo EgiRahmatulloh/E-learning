@@ -427,17 +427,17 @@ export default function ProductsManager() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setFormOpen(false)} />
 
           {/* Form Container */}
-          <div className="relative bg-[#00badb] rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col border-4 border-cyan-400 animate-in zoom-in-95 duration-200 text-white z-10">
+          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col border-4 border-cyan-400 animate-in zoom-in-95 duration-200 z-10">
             
             {/* Close Button */}
             <button
               onClick={() => setFormOpen(false)}
-              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer z-10"
+              className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer z-10"
             >
               <X className="h-5 w-5" />
             </button>
 
-            <div className="p-6 shrink-0 border-b border-white/10 text-left">
+            <div className="p-6 shrink-0 border-b border-slate-200 text-left">
               <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
                 {isAdding ? "TAMBAH DATA" : (!isEditing ? "DETAIL DATA" : "EDIT DATA")}
               </span>
@@ -447,24 +447,24 @@ export default function ProductsManager() {
               <div className="flex-1 overflow-y-auto p-6 space-y-4 text-slate-800">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-black tracking-wider uppercase text-cyan-50 mb-1">Nama Produk</label>
+                    <label className="block text-xs font-black tracking-wider uppercase text-slate-500 mb-1">Nama Produk</label>
                     <input
                       type="text"
                       required
                       disabled={!isEditing}
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full text-xs font-semibold border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-50 focus:ring-2 focus:ring-purple-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="Contoh: Keset Rajut Cantik"
                       value={namaProduk}
                       onChange={(e) => setNamaProduk(e.target.value)}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-black tracking-wider uppercase text-cyan-50 mb-1">Penjual (Warga Belajar)</label>
+                    <label className="block text-xs font-black tracking-wider uppercase text-slate-500 mb-1">Penjual (Warga Belajar)</label>
                     <input
                       type="text"
                       required
                       disabled={!isEditing}
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full text-xs font-semibold border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-50 focus:ring-2 focus:ring-purple-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="Contoh: Aceng"
                       value={penjual}
                       onChange={(e) => setPenjual(e.target.value)}
@@ -474,37 +474,37 @@ export default function ProductsManager() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-black tracking-wider uppercase text-cyan-50 mb-1">Harga (Rp)</label>
+                    <label className="block text-xs font-black tracking-wider uppercase text-slate-500 mb-1">Harga (Rp)</label>
                     <input
                       type="number"
                       required
                       min={0}
                       disabled={!isEditing}
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full text-xs font-semibold border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-50 focus:ring-2 focus:ring-purple-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="Contoh: 15000"
                       value={harga}
                       onChange={(e) => setHarga(Number(e.target.value))}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-black tracking-wider uppercase text-cyan-50 mb-1">Satuan</label>
+                    <label className="block text-xs font-black tracking-wider uppercase text-slate-500 mb-1">Satuan</label>
                     <input
                       type="text"
                       required
                       disabled={!isEditing}
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full text-xs font-semibold border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-50 focus:ring-2 focus:ring-purple-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="Contoh: Buah, Paket, Kg"
                       value={satuan}
                       onChange={(e) => setSatuan(e.target.value)}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-black tracking-wider uppercase text-cyan-50 mb-1">No. HP/WhatsApp</label>
+                    <label className="block text-xs font-black tracking-wider uppercase text-slate-500 mb-1">No. HP/WhatsApp</label>
                     <input
                       type="text"
                       required
                       disabled={!isEditing}
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full text-xs font-semibold border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-50 focus:ring-2 focus:ring-purple-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="Contoh: 0812..."
                       value={noHp}
                       onChange={(e) => setNoHp(e.target.value)}
@@ -513,12 +513,12 @@ export default function ProductsManager() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black tracking-wider uppercase text-cyan-50 mb-1">Deskripsi Produk</label>
+                  <label className="block text-xs font-black tracking-wider uppercase text-slate-500 mb-1">Deskripsi Produk</label>
                   <textarea
                     required
                     rows={2}
                     disabled={!isEditing}
-                    className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none resize-none disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full text-xs font-semibold border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-50 focus:ring-2 focus:ring-purple-600 focus:outline-none resize-none disabled:opacity-60 disabled:cursor-not-allowed"
                     placeholder="Tuliskan deskripsi lengkap produk hasil karya di sini..."
                     value={deskripsi}
                     onChange={(e) => setDeskripsi(e.target.value)}
@@ -527,10 +527,10 @@ export default function ProductsManager() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-black tracking-wider uppercase text-cyan-50 mb-1">Status Keaktifan</label>
+                    <label className="block text-xs font-black tracking-wider uppercase text-slate-500 mb-1">Status Keaktifan</label>
                     <select
                       disabled={!isEditing}
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full text-xs font-semibold border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-50 focus:ring-2 focus:ring-purple-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                       value={status}
                       onChange={(e) => setStatus(e.target.value)}
                     >
@@ -539,11 +539,11 @@ export default function ProductsManager() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-black tracking-wider uppercase text-cyan-50 mb-1">URL / Link Gambar</label>
+                    <label className="block text-xs font-black tracking-wider uppercase text-slate-500 mb-1">URL / Link Gambar</label>
                     <input
                       type="text"
                       disabled={!isEditing}
-                      className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full text-xs font-semibold border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="Masukkan URL gambar..."
                       value={gambar}
                       onChange={(e) => setGambar(e.target.value)}
@@ -553,7 +553,7 @@ export default function ProductsManager() {
 
                 {/* Drag & Drop Upload Block */}
                 <div
-                  className={`border-2 border-dashed rounded-xl p-3 text-center transition cursor-pointer text-xs ${dragActive ? "border-yellow-300 bg-white/20" : "border-white/40 hover:border-white hover:bg-white/10"
+                  className={`border-2 border-dashed rounded-xl p-3 text-center transition cursor-pointer text-xs ${dragActive ? "border-yellow-300 bg-yellow-50" : "border-slate-300 hover:border-cyan-400 hover:bg-cyan-50"
                     } ${!isEditing && "pointer-events-none opacity-60"}`}
                   onDragEnter={handleDrag}
                   onDragOver={handleDrag}
@@ -572,15 +572,15 @@ export default function ProductsManager() {
                       }
                     }}
                   />
-                  <Upload className="mx-auto text-white/60 mb-1" size={20} />
-                  <span className="font-bold text-white block">
+                  <Upload className="mx-auto text-slate-400 mb-1" size={20} />
+                  <span className="font-bold text-slate-700 block">
                     {uploading ? "Mengunggah..." : "Tarik Foto / Klik di sini"}
                   </span>
-                  <span className="text-[10px] text-cyan-100 block mt-0.5">Mendukung format JPG, PNG, WEBP (Maksimal 5MB)</span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">Mendukung format JPG, PNG, WEBP (Maksimal 5MB)</span>
                 </div>
               </div>
 
-              <div className="p-6 shrink-0 border-t border-white/10 flex items-center justify-end gap-3 bg-[#00badb] rounded-b-3xl">
+              <div className="p-6 shrink-0 border-t border-slate-200 flex items-center justify-end gap-3 bg-white rounded-b-3xl">
                 {isAdding ? (
                     <>
                       <Button

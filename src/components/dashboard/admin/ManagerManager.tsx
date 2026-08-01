@@ -913,18 +913,18 @@ export default function ManagerManager() {
           {/* Backdrop Click Closes Popup */}
           <div className="absolute inset-0 cursor-default" onClick={handleCloseForm} />
 
-          <div className="bg-[#00badb] w-full max-w-4xl max-h-[90vh] flex flex-col p-3 rounded-3xl border-4 border-cyan-400 shadow-2xl relative animate-in zoom-in-95 duration-200 text-white select-text">
+          <div className="bg-white w-full max-w-4xl max-h-[90vh] flex flex-col p-3 rounded-3xl border-4 border-cyan-400 shadow-2xl relative animate-in zoom-in-95 duration-200 select-text">
 
             {/* Elegant Close Button */}
             <button
               onClick={handleCloseForm}
-              className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-white/20 text-white hover:bg-white/30 flex items-center justify-center transition-colors cursor-pointer text-sm font-black shadow-inner"
+              className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition-colors cursor-pointer text-sm font-black shadow-inner"
             >
               ✕
             </button>
 
             {/* PANEL TITLE */}
-            <div className="mb-4 pr-10 shrink-0 flex justify-between items-center border-b border-white/20 pb-4">
+            <div className="mb-4 pr-10 shrink-0 flex justify-between items-center border-b border-slate-200 pb-4">
               <h3 className="bg-[#9c27b0] text-white font-extrabold text-xs px-4 py-1.5 rounded-full uppercase tracking-widest shadow-md">
                 {isNew ? "TAMBAH DATA" : (isEditing ? "EDIT DATA" : "DETAIL DATA")}
               </h3>
@@ -937,18 +937,18 @@ export default function ManagerManager() {
 
                 {/* Row 1: NAMA | NIK */}
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA <span className="text-red-300">*</span></label>
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">NAMA <span className="text-rose-500">*</span></label>
                   <input
                     type="text"
                     disabled={!isEditing}
                     placeholder="Masukkan nama lengkap dengan gelar (contoh: H. Maman Suparman, S.Pd.)"
                     value={selectedManager.nama}
                     onChange={(e) => handleFieldChange("nama", e.target.value)}
-                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                    className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                   />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIK <span className="text-red-300">*</span></label>
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">NIK <span className="text-rose-500">*</span></label>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -957,37 +957,37 @@ export default function ManagerManager() {
                     placeholder="Masukkan 16 digit Nomor Induk Kependudukan"
                     value={selectedManager.nik}
                     onChange={(e) => handleFieldChange("nik", e.target.value.replace(/\D/g, "").slice(0, 16))}
-                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                    className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                   />
                 </div>
 
                 {/* Row 2: JABATAN | NIP */}
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">JABATAN <span className="text-red-300">*</span></label>
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">JABATAN <span className="text-rose-500">*</span></label>
                   <input
                     type="text"
                     disabled={!isEditing}
                     placeholder="Masukkan jabatan (contoh: Ketua PKBM, Bendahara)"
                     value={selectedManager.jabatan}
                     onChange={(e) => handleFieldChange("jabatan", e.target.value)}
-                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                    className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                   />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIP <span className="text-red-300">*</span></label>
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">NIP <span className="text-rose-500">*</span></label>
                   <input
                     type="text"
                     disabled={!isEditing}
                     placeholder="Masukkan Nomor Induk Pegawai"
                     value={selectedManager.nip}
                     onChange={(e) => handleFieldChange("nip", e.target.value)}
-                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                    className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                   />
                 </div>
 
                 {/* Row 3: TEMPAT/TGL.LAHIR | JK */}
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TEMPAT, TGL. LAHIR</label>
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">TEMPAT, TGL. LAHIR</label>
                   <input
                     type="text"
 
@@ -995,16 +995,16 @@ export default function ManagerManager() {
                     value={selectedManager.tempatTglLahir}
                     onChange={(e) => handleFieldChange("tempatTglLahir", e.target.value)}
                     disabled={!isEditing}
-                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                    className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                   />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">JENIS KELAMIN</label>
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">JENIS KELAMIN</label>
                   <select
                     value={selectedManager.jenisKelamin}
                     onChange={(e) => handleFieldChange("jenisKelamin", e.target.value)}
                     disabled={!isEditing}
-                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                    className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                   >
                     <option value="" disabled>Pilih Jenis Kelamin</option>
                     <option value="Laki-laki">Laki-laki</option>
@@ -1014,7 +1014,7 @@ export default function ManagerManager() {
 
                 {/* Row 4: AGAMA | PENDIDIKAN */}
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">AGAMA</label>
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">AGAMA</label>
                   <input
                     type="text"
 
@@ -1022,11 +1022,11 @@ export default function ManagerManager() {
                     value={selectedManager.agama}
                     onChange={(e) => handleFieldChange("agama", e.target.value)}
                     disabled={!isEditing}
-                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                    className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                   />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PENDIDIKAN</label>
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">PENDIDIKAN</label>
                   <input
                     type="text"
 
@@ -1034,13 +1034,13 @@ export default function ManagerManager() {
                     value={selectedManager.pendidikan}
                     onChange={(e) => handleFieldChange("pendidikan", e.target.value)}
                     disabled={!isEditing}
-                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                    className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                   />
                 </div>
 
                 {/* Row 5: EMAIL | TANGGAL MULAI TUGAS */}
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">EMAIL <span className="text-red-300">*</span></label>
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">EMAIL <span className="text-rose-500">*</span></label>
                   <input
                     type="email"
 
@@ -1048,11 +1048,11 @@ export default function ManagerManager() {
                     value={selectedManager.email}
                     onChange={(e) => handleFieldChange("email", e.target.value)}
                     disabled={!isEditing}
-                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                    className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                   />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TANGGAL MULAI TUGAS</label>
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">TANGGAL MULAI TUGAS</label>
                   <input
                     type="text"
 
@@ -1060,13 +1060,13 @@ export default function ManagerManager() {
                     value={selectedManager.tanggalMulaiTugas}
                     onChange={(e) => handleFieldChange("tanggalMulaiTugas", e.target.value)}
                     disabled={!isEditing}
-                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                    className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                   />
                 </div>
 
                 {/* Row 6: NOMOR SK PENGANGKATAN | LEMBAGA PENGANGKAT */}
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NOMOR SK PENGANGKATAN</label>
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">NOMOR SK PENGANGKATAN</label>
                   <input
                     type="text"
 
@@ -1074,11 +1074,11 @@ export default function ManagerManager() {
                     value={selectedManager.nomorSkPengangkatan}
                     onChange={(e) => handleFieldChange("nomorSkPengangkatan", e.target.value)}
                     disabled={!isEditing}
-                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                    className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                   />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">LEMBAGA PENGANGKAT</label>
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">LEMBAGA PENGANGKAT</label>
                   <input
                     type="text"
 
@@ -1086,13 +1086,13 @@ export default function ManagerManager() {
                     value={selectedManager.lembagaPengangkat}
                     onChange={(e) => handleFieldChange("lembagaPengangkat", e.target.value)}
                     disabled={!isEditing}
-                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                    className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                   />
                 </div>
 
                 {/* Row 7: NOMOR SK PENUGASAN | LEMBAGA PENUGAS */}
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NOMOR SK PENUGASAN</label>
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">NOMOR SK PENUGASAN</label>
                   <input
                     type="text"
 
@@ -1100,11 +1100,11 @@ export default function ManagerManager() {
                     value={selectedManager.nomorSkPenugasan}
                     onChange={(e) => handleFieldChange("nomorSkPenugasan", e.target.value)}
                     disabled={!isEditing}
-                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                    className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                   />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">LEMBAGA PENUGAS</label>
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">LEMBAGA PENUGAS</label>
                   <input
                     type="text"
 
@@ -1112,60 +1112,60 @@ export default function ManagerManager() {
                     value={selectedManager.lembagaPenugas}
                     onChange={(e) => handleFieldChange("lembagaPenugas", e.target.value)}
                     disabled={!isEditing}
-                    className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                    className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                   />
                 </div>
 
                 {/* Row 8: ALAMAT JALAN (full width) */}
                 <div className="sm:col-span-2 flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">ALAMAT JALAN</label>
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">ALAMAT JALAN</label>
                   <textarea
                     rows={2}
                     placeholder="Masukkan alamat domisili (nama jalan/dusun)"
                     value={selectedManager.alamat}
                     onChange={(e) => handleFieldChange("alamat", e.target.value)}
                     disabled={!isEditing}
-                    className="p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
+                    className="p-2.5 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
                   />
                 </div>
 
                 {/* Row 8b: RT, RW, Desa, Kecamatan, Kabupaten, Provinsi */}
                 <div className="sm:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-x-2 gap-y-1.5">
                   <div className="flex flex-col gap-0.5">
-                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">RT</label>
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-wide">RT</label>
                     <input type="text" maxLength={3} disabled={!isEditing} placeholder="001" value={selectedManager.rt || ""} onChange={(e) => handleFieldChange("rt", e.target.value)}
-                      className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">RW</label>
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-wide">RW</label>
                     <input type="text" maxLength={3} disabled={!isEditing} placeholder="002" value={selectedManager.rw || ""} onChange={(e) => handleFieldChange("rw", e.target.value)}
-                      className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">DESA/KELURAHAN</label>
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-wide">DESA/KELURAHAN</label>
                     <input type="text" disabled={!isEditing} placeholder="Nama desa/kelurahan" value={selectedManager.desa || ""} onChange={(e) => handleFieldChange("desa", e.target.value)}
-                      className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KECAMATAN</label>
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-wide">KECAMATAN</label>
                     <input type="text" disabled={!isEditing} placeholder="Nama kecamatan" value={selectedManager.kecamatan || ""} onChange={(e) => handleFieldChange("kecamatan", e.target.value)}
-                      className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KABUPATEN/KOTA</label>
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-wide">KABUPATEN/KOTA</label>
                     <input type="text" disabled={!isEditing} placeholder="Nama kabupaten/kota" value={selectedManager.kabupaten || ""} onChange={(e) => handleFieldChange("kabupaten", e.target.value)}
-                      className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PROVINSI</label>
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-wide">PROVINSI</label>
                     <input type="text" disabled={!isEditing} placeholder="Nama provinsi" value={selectedManager.provinsi || ""} onChange={(e) => handleFieldChange("provinsi", e.target.value)}
-                      className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                      className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                   </div>
                 </div>
 
                 {/* Row 9: PASSWORD (full width) */}
                 <div className="sm:col-span-2 flex flex-col gap-0.5">
-                  <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PASWORD</label>
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wide">PASWORD</label>
                   <div className="flex gap-2">
                     <input
                       type={showPassword ? "text" : "password"}
@@ -1174,12 +1174,12 @@ export default function ManagerManager() {
                       value={selectedManager.password}
                       onChange={(e) => handleFieldChange("password", e.target.value)}
                       disabled={!isEditing}
-                      className="flex-1 h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                      className="flex-1 h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="h-10 px-4 rounded-lg border-none bg-white/10 hover:bg-white/20 text-[10px] font-black text-white shrink-0 cursor-pointer"
+                      className="h-10 px-4 rounded-lg border-none bg-slate-100 hover:bg-slate-200 text-[10px] font-black text-slate-500 shrink-0 cursor-pointer"
                     >
                       {showPassword ? "SEMBUNYIKAN" : "LIHAT"}
                     </button>
@@ -1193,7 +1193,7 @@ export default function ManagerManager() {
 
                 {/* PHOTO UPLOAD */}
                 <div className="w-full text-center">
-                  <h4 className="text-[10px] font-black text-cyan-50 uppercase tracking-wider mb-1.5">
+                  <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
                     FOTO
                   </h4>
 
@@ -1256,12 +1256,12 @@ export default function ManagerManager() {
                       </>
                     )}
                   </div>
-                  <p className="text-[8px] font-medium text-white/70 mt-1 italic text-center">
+                  <p className="text-[8px] font-medium text-slate-400 mt-1 italic text-center">
                     * Maks 5MB
                   </p>
 
                   <div className="w-full mt-2 flex flex-col gap-0.5 text-left">
-                    <label className="text-[9px] font-black uppercase text-cyan-50">URL Foto</label>
+                    <label className="text-[9px] font-black uppercase text-slate-500">URL Foto</label>
                     <input
                       type="text"
 
@@ -1269,7 +1269,7 @@ export default function ManagerManager() {
                       value={selectedManager.foto || ""}
                       onChange={(e) => handleFieldChange("foto", e.target.value)}
                       disabled={!isEditing}
-                      className="w-full text-[11px] font-semibold border border-transparent rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-purple-400 focus:outline-none bg-white text-slate-800 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                      className="w-full text-[11px] font-semibold border border-slate-200 rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-purple-400 focus:outline-none bg-slate-50 text-slate-800 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                     />
                   </div>
 
@@ -1287,7 +1287,7 @@ export default function ManagerManager() {
             </div>
 
             {/* BUTTON PANEL */}
-            <div className="mt-3 pt-4 border-t border-white/10 flex flex-wrap items-center justify-end gap-3 shrink-0">
+            <div className="mt-3 pt-4 border-t border-slate-200 flex flex-wrap items-center justify-end gap-3 shrink-0">
               {isNew && isEditing ? (
                 <>
                   <Button
@@ -1375,10 +1375,10 @@ export default function ManagerManager() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setShowUploadDialog(false)} />
           <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
-            <div className="bg-[#00badb] p-6 relative text-white text-left">
+            <div className="bg-white p-6 relative text-left">
               <button
                 onClick={() => setShowUploadDialog(false)}
-                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1390,7 +1390,7 @@ export default function ManagerManager() {
               </div>
 
               <div className="space-y-4 text-slate-800">
-                <p className="text-xs font-semibold text-white/80 leading-normal">
+                <p className="text-xs font-semibold text-slate-500 leading-normal">
                   Upload data pengelola dari file Excel. Silakan download format terlebih dahulu.
                 </p>
 

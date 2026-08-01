@@ -330,11 +330,11 @@ export default function AnnouncementManager() {
           <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 border-4 border-cyan-400">
 
             {/* Form Column (Cyan Background) */}
-            <div className="bg-[#00badb] p-6 relative text-white">
+            <div className="bg-white p-6 relative">
               {/* Close Button */}
               <button
                 onClick={closeForm}
-                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -348,7 +348,7 @@ export default function AnnouncementManager() {
               <form onSubmit={handleSave} className="space-y-4 text-left">
                 {/* TEKS (Textarea) */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">
+                  <label className="text-xs font-black tracking-wider uppercase text-slate-500 block">
                     TEKS
                   </label>
                   <textarea
@@ -358,13 +358,13 @@ export default function AnnouncementManager() {
                     value={formText}
                     onChange={(e) => setFormText(e.target.value)}
                     disabled={!isEditing}
-                    className="w-full h-full p-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner resize-none leading-relaxed placeholder-slate-400 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full h-full p-4 text-sm rounded-lg bg-slate-50 border border-slate-200 font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner resize-none leading-relaxed placeholder-slate-400 disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
 
                 {/* TANGGAL (Calendar Picker) */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block flex items-center gap-1.5">
+                  <label className="text-xs font-black tracking-wider uppercase text-slate-500 block flex items-center gap-1.5">
                     <Calendar className="h-3.5 w-3.5" /> TANGGAL
                   </label>
                   <input
@@ -373,13 +373,13 @@ export default function AnnouncementManager() {
                     value={formDate}
                     onChange={(e) => setFormDate(e.target.value)}
                     disabled={!isEditing}
-                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-extrabold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full h-11 px-4 text-sm rounded-lg bg-slate-50 border border-slate-200 font-extrabold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
 
                 {/* PUBLIKASIKAN / STATUS (Select Dropdown) */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">
+                  <label className="text-xs font-black tracking-wider uppercase text-slate-500 block">
                     PUBLIKASIKAN
                   </label>
                   <select
@@ -394,7 +394,7 @@ export default function AnnouncementManager() {
                 </div>
 
                 {/* BUTTON PANEL */}
-                <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-3">
+                <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
                   {editId && !isEditing ? (
                     <>
                       <Button

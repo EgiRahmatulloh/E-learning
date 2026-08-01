@@ -412,11 +412,11 @@ export default function DownloadsManager() {
           {/* Form Container */}
           <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
             {/* Form Column (Cyan Background) */}
-            <div className="bg-[#00badb] p-6 relative text-white">
+            <div className="bg-white p-6 relative">
               {/* Close Button */}
               <button
                 onClick={() => { setFormOpen(false); setIsEditing(false); }}
-                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -429,7 +429,7 @@ export default function DownloadsManager() {
 
               <form onSubmit={handleSave} className="space-y-4 text-slate-800">
                 <div className="space-y-1.5 text-left">
-                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">NAMA FILE</label>
+                  <label className="text-xs font-black tracking-wider uppercase text-slate-500 block">NAMA FILE</label>
                   <input
                     type="text"
                     required
@@ -437,12 +437,12 @@ export default function DownloadsManager() {
                     value={namaFile}
                     onChange={(e) => setNamaFile(e.target.value)}
                     disabled={!isEditing}
-                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner placeholder-slate-400 disabled:opacity-60"
+                    className="w-full h-11 px-4 text-sm rounded-lg bg-slate-50 border border-slate-200 font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner placeholder-slate-400 disabled:opacity-60"
                   />
                 </div>
 
                 <div className="space-y-1.5 text-left">
-                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">KATEGORI DOKUMEN</label>
+                  <label className="text-xs font-black tracking-wider uppercase text-slate-500 block">KATEGORI DOKUMEN</label>
                   <select
                     value={kategori}
                     onChange={(e) => setKategori(e.target.value)}
@@ -459,12 +459,12 @@ export default function DownloadsManager() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5 text-left">
-                    <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">STATUS</label>
+                    <label className="text-xs font-black tracking-wider uppercase text-slate-500 block">STATUS</label>
                     <select
                       value={status}
                       onChange={(e) => setStatus(e.target.value)}
                       disabled={!isEditing}
-                      className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider disabled:opacity-60"
+                    className="w-full h-11 px-4 text-sm rounded-lg bg-slate-50 border border-slate-200 font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider disabled:opacity-60"
                     >
                       <option value="PUBLISH">PUBLISH</option>
                       <option value="DRAFT">DRAFT</option>
@@ -472,7 +472,7 @@ export default function DownloadsManager() {
                   </div>
 
                   <div className="space-y-1.5 text-left">
-                    <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">TANGGAL UPLOAD</label>
+                    <label className="text-xs font-black tracking-wider uppercase text-slate-500 block">TANGGAL UPLOAD</label>
                     <input
                       type="text"
                       required
@@ -480,39 +480,39 @@ export default function DownloadsManager() {
                       value={tanggalUpload}
                       onChange={(e) => setTanggalUpload(e.target.value)}
                       disabled={!isEditing}
-                      className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner placeholder-slate-400 uppercase tracking-wider disabled:opacity-60"
+                      className="w-full h-11 px-4 text-sm rounded-lg bg-slate-50 border border-slate-200 font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner placeholder-slate-400 uppercase tracking-wider disabled:opacity-60"
                     />
                   </div>
                 </div>
 
                 {/* Drag & Drop File Document Uploader */}
                 <div className="space-y-2 text-left">
-                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">BERKAS DOKUMEN (PDF/DOCX/ETC)</label>
+                  <label className="text-xs font-black tracking-wider uppercase text-slate-500 block">BERKAS DOKUMEN (PDF/DOCX/ETC)</label>
                   <div
                     onDragEnter={handleDrag}
                     onDragOver={handleDrag}
                     onDragLeave={handleDrag}
                     onDrop={handleDrop}
-                    className={`border-2 border-dashed rounded-xl p-4 text-center transition-all ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
+                    className={`border-2 border-dashed rounded-xl p-4 text-center transition-all ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-cyan-300 bg-cyan-50 hover:bg-cyan-100"
                       } h-36 flex flex-col justify-center items-center relative overflow-hidden ${!isEditing && "pointer-events-none opacity-60"}`}
                   >
                     {fileUrl ? (
-                      <div className="space-y-2 text-white">
-                        <FileText className="h-10 w-10 text-emerald-300 mx-auto" />
-                        <p className="text-[10px] font-black text-emerald-200 truncate max-w-sm">
+                      <div className="space-y-2 text-slate-500">
+                        <FileText className="h-10 w-10 text-emerald-600 mx-auto" />
+                        <p className="text-[10px] font-black text-emerald-700 truncate max-w-sm">
                           {fileUrl}
                         </p>
                         <button
                           type="button"
                           onClick={() => setFileUrl("")}
-                          className="text-[10px] font-bold text-red-200 hover:text-red-100 hover:underline cursor-pointer"
+                          className="text-[10px] font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer"
                         >
                           Hapus Berkas
                         </button>
                       </div>
                     ) : (
-                      <div className="space-y-2 text-white/85">
-                        {uploading ? <Loader2 className="h-8 w-8 text-white/60 animate-spin mx-auto" /> : <Upload className="h-8 w-8 text-white/60 mx-auto" />}
+                      <div className="space-y-2 text-slate-500">
+                        {uploading ? <Loader2 className="h-8 w-8 text-slate-400 animate-spin mx-auto" /> : <Upload className="h-8 w-8 text-slate-400 mx-auto" />}
                         <p className="text-[10px] font-bold">
                           {uploading ? "Mengupload..." : "Tarik berkas Anda ke sini, atau klik untuk memilih"}
                         </p>
@@ -525,7 +525,7 @@ export default function DownloadsManager() {
                       </div>
                     )}
                   </div>
-                  <p className="text-[10px] font-bold text-white/80 mt-1 italic">
+                  <p className="text-[10px] font-bold text-slate-500 mt-1 italic">
                     * Batas maksimal ukuran dokumen adalah 100MB.
                   </p>
                   <input
@@ -534,11 +534,11 @@ export default function DownloadsManager() {
                     value={fileUrl}
                     onChange={(e) => setFileUrl(e.target.value)}
                     disabled={!isEditing}
-                    className="w-full text-xs font-semibold border border-transparent rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white text-slate-800 mt-2 disabled:opacity-60"
+                    className="w-full text-xs font-semibold border border-slate-200 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-slate-50 text-slate-800 mt-2 disabled:opacity-60"
                   />
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
                   {isAdding ? (
                     <>
                       <Button

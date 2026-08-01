@@ -491,11 +491,11 @@ export function HeaderManager() {
           <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 border-4 border-cyan-400">
 
             {/* Actual Form Column */}
-            <div className="bg-[#00badb] p-6 relative text-white">
+            <div className="bg-white p-6 relative">
               {/* Close Button */}
               <button
                 onClick={closeForm}
-                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -509,7 +509,7 @@ export function HeaderManager() {
               <form onSubmit={handleSave} className="space-y-4 text-left">
                 {/* JUDUL */}
                 <div className="space-y-1">
-                  <label className="text-xs font-extrabold tracking-wider uppercase text-cyan-50 block">
+                  <label className="text-xs font-extrabold tracking-wider uppercase text-slate-500 block">
                     JUDUL
                   </label>
                   <input
@@ -519,13 +519,13 @@ export function HeaderManager() {
                     placeholder="Masukkan judul slider..."
                     value={formTitle}
                     onChange={(e) => setFormTitle(e.target.value)}
-                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-extrabold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full h-11 px-4 text-sm rounded-lg bg-slate-50 border border-slate-200 font-extrabold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
 
                 {/* STATUS */}
                 <div className="space-y-1">
-                  <label className="text-xs font-extrabold tracking-wider uppercase text-cyan-50 block">
+                  <label className="text-xs font-extrabold tracking-wider uppercase text-slate-500 block">
                     STATUS
                   </label>
                   <select
@@ -541,7 +541,7 @@ export function HeaderManager() {
 
                 {/* GAMBAR (DRAG AND DROP OR SELECT) */}
                 <div className="space-y-1">
-                  <label className="text-xs font-extrabold tracking-wider uppercase text-cyan-50 block">
+                  <label className="text-xs font-extrabold tracking-wider uppercase text-slate-500 block">
                     GAMBAR
                   </label>
 
@@ -551,9 +551,9 @@ export function HeaderManager() {
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                     onClick={() => { if (isEditing) document.getElementById("file-upload")?.click(); }}
-                    className={`${!isEditing ? "pointer-events-none opacity-60 " : ""}border-4 border-dashed rounded-xl p-5 text-center transition-all duration-200 cursor-pointer flex flex-col items-center justify-center relative overflow-hidden bg-white/5 ${dragOver
-                      ? "border-[#9c27b0] bg-white/20 scale-[0.99]"
-                      : "border-white/40 hover:border-white/80 hover:bg-white/10"
+                    className={`${!isEditing ? "pointer-events-none opacity-60 " : ""}border-4 border-dashed rounded-xl p-5 text-center transition-all duration-200 cursor-pointer flex flex-col items-center justify-center relative overflow-hidden bg-cyan-50 ${dragOver
+                      ? "border-[#9c27b0] bg-purple-50 scale-[0.99]"
+                      : "border-cyan-300 hover:border-cyan-400 hover:bg-cyan-100"
                       }`}
                   >
                     <input
@@ -567,8 +567,8 @@ export function HeaderManager() {
 
                     {uploading ? (
                       <div className="flex flex-col items-center justify-center py-4">
-                        <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-purple-600 mb-2" />
-                        <span className="text-xs font-black tracking-wider uppercase block text-white/90">
+                        <div className="animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-purple-600 mb-2" />
+                        <span className="text-xs font-black tracking-wider uppercase block text-slate-500">
                           SEDANG MENGUNGGAH...
                         </span>
                       </div>
@@ -577,7 +577,7 @@ export function HeaderManager() {
                         <img
                           src={formImage}
                           alt="preview"
-                          className="max-h-full max-w-full rounded-lg object-contain border border-white/20"
+                          className="max-h-full max-w-full rounded-lg object-contain border border-slate-200"
                         />
                         <button
                           type="button"
@@ -592,11 +592,11 @@ export function HeaderManager() {
                       </div>
                     ) : (
                       <>
-                        <UploadCloud className="h-10 w-10 text-white mb-2 animate-pulse" />
-                        <span className="text-xs font-black tracking-wider uppercase block text-white/90">
+                        <UploadCloud className="h-10 w-10 text-slate-400 mb-2 animate-pulse" />
+                        <span className="text-xs font-black tracking-wider uppercase block text-slate-600">
                           DRAG AND DROP A FILE HERE OR CLICK
                         </span>
-                        <span className="text-[10px] text-cyan-100 font-bold block mt-1">
+                        <span className="text-[10px] text-slate-400 font-bold block mt-1">
                           Max: 5000px | 5MB
                         </span>
                       </>
@@ -606,7 +606,7 @@ export function HeaderManager() {
 
                 {/* URL INPUT OPTION */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold tracking-wider uppercase text-cyan-100 block">
+                  <label className="text-[10px] font-extrabold tracking-wider uppercase text-slate-500 block">
                     Atau gunakan URL Gambar eksternal
                   </label>
                   <input
@@ -615,12 +615,12 @@ export function HeaderManager() {
                     placeholder="Masukkan URL gambar..."
                     value={formImage.startsWith("data:") ? "" : formImage}
                     onChange={(e) => setFormImage(e.target.value)}
-                    className="w-full h-9 px-3 text-xs border-0 rounded-lg bg-white/90 font-medium text-slate-800 focus:outline-none focus:bg-white transition-all shadow-inner disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg bg-slate-50 font-medium text-slate-800 focus:outline-none focus:bg-white transition-all shadow-inner disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
 
                 {/* BUTTON PANEL */}
-                <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-3">
+                <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
                   {editId && !isEditing ? (
                     <>
                       <Button

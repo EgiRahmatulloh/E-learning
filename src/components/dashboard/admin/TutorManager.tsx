@@ -790,10 +790,10 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setShowUploadDialog(false)} />
           <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
-            <div className="bg-[#00badb] p-6 relative text-white text-left">
+            <div className="bg-white p-6 relative text-left">
               <button
                 onClick={() => setShowUploadDialog(false)}
-                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -805,7 +805,7 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
               </div>
 
               <div className="space-y-4 text-slate-800">
-                <p className="text-xs font-semibold text-white/80 leading-normal">
+                <p className="text-xs font-semibold text-slate-500 leading-normal">
                   Upload data tutor dari file Excel. Silakan download format terlebih dahulu.
                 </p>
 
@@ -850,13 +850,13 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setFormOpen(false)} />
 
           {/* Form Container */}
-          <div className="relative bg-[#00badb] rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
+          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
             {/* Form Column (Cyan Background) */}
-            <div className="p-3 relative text-white flex flex-col flex-1 min-h-0">
+            <div className="p-3 relative flex flex-col flex-1 min-h-0">
               {/* Close Button */}
               <button
                 onClick={() => setFormOpen(false)}
-                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -875,7 +875,7 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
 
                     {/* Row 1: NAMA | NIK */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA <span className="text-red-300">*</span></label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">NAMA <span className="text-rose-400">*</span></label>
                       <input
                         type="text"
                         required
@@ -883,11 +883,11 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
                         placeholder="Masukkan nama lengkap tutor"
                         value={formData.nama || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, nama: e.target.value }))}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIK <span className="text-red-300">*</span></label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">NIK <span className="text-rose-400">*</span></label>
                       <input
                         type="text"
                         required
@@ -897,13 +897,13 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
                         placeholder="Masukkan 16 digit NIK tutor"
                         value={formData.nik || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, nik: e.target.value.replace(/\D/g, "").slice(0, 16) }))}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
                     {/* Row 2: PROGRAM/PAKET | KELAS */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PROGRAM / PAKET <span className="text-red-300">*</span></label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">PROGRAM / PAKET <span className="text-rose-400">*</span></label>
                       <select
                         required
                         disabled={!isEditing}
@@ -925,7 +925,7 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
                             };
                           });
                         }}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       >
                         <option value="Paket A">Paket A</option>
                         <option value="Paket B">Paket B</option>
@@ -933,7 +933,7 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
                       </select>
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KELAS (WALI KELAS)</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">KELAS (WALI KELAS)</label>
                       <select
                         disabled={!isEditing}
                         value={formData.kelas || ""}
@@ -947,7 +947,7 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
                             tutorMapel: ""
                           }));
                         }}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       >
                         <option value="">Tidak Jadi Wali Kelas (Kosong)</option>
                         {["Paket A", "Paket B", "Paket C"].map((progGroup) => {
@@ -980,7 +980,7 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
 
                     {/* Row 3: NIP | TEMPAT/TGL.LAHIR */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIP <span className="text-red-300">*</span></label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">NIP <span className="text-rose-400">*</span></label>
                       <input
                         type="text"
                         required
@@ -988,60 +988,60 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
                         placeholder="Masukkan NIP tutor"
                         value={formData.nip || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, nip: e.target.value }))}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TEMPAT, TGL. LAHIR</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">TEMPAT, TGL. LAHIR</label>
                       <input
                         type="text"
                         disabled={!isEditing}
                         placeholder="Contoh: Ciamis, 15-08-1988"
                         value={formData.tempatTglLahir || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, tempatTglLahir: e.target.value }))}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
                     {/* Row 4: JK | AGAMA */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">JENIS KELAMIN</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">JENIS KELAMIN</label>
                       <select
                         disabled={!isEditing}
                         value={formData.jenisKelamin || "Laki-laki"}
                         onChange={(e) => setFormData(prev => ({ ...prev, jenisKelamin: e.target.value }))}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       >
                         <option value="Laki-laki">Laki-laki</option>
                         <option value="Perempuan">Perempuan</option>
                       </select>
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">AGAMA</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">AGAMA</label>
                       <input
                         type="text"
                         disabled={!isEditing}
                         placeholder="Masukkan agama"
                         value={formData.agama || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, agama: e.target.value }))}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
                     {/* Row 5: PENDIDIKAN | EMAIL */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PENDIDIKAN</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">PENDIDIKAN</label>
                       <input
                         type="text"
                         disabled={!isEditing}
                         placeholder="Contoh: S1 Pendidikan Olahraga"
                         value={formData.pendidikan || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, pendidikan: e.target.value }))}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">EMAIL <span className="text-red-300">*</span></label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">EMAIL <span className="text-rose-400">*</span></label>
                       <input
                         type="email"
                         required
@@ -1049,79 +1049,79 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
                         placeholder="Masukkan alamat email tutor"
                         value={formData.email || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
                     {/* Row 6: TANGGAL MULAI TUGAS */}
                     <div className="sm:col-span-2 flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TANGGAL MULAI TUGAS</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">TANGGAL MULAI TUGAS</label>
                       <input
                         type="text"
                         disabled={!isEditing}
                         placeholder="Masukkan tanggal mulai tugas (contoh: YYYY-MM-DD)"
                         value={formData.tanggalMulaiTugas || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, tanggalMulaiTugas: e.target.value }))}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
                     {/* Row 7: NOMOR SK PENGANGKATAN | LEMBAGA PENGANGKAT */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NOMOR SK PENGANGKATAN</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">NOMOR SK PENGANGKATAN</label>
                       <input
                         type="text"
                         disabled={!isEditing}
                         placeholder="Masukkan nomor SK pengangkatan"
                         value={formData.nomorSkPengangkatan || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, nomorSkPengangkatan: e.target.value }))}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">LEMBAGA PENGANGKAT</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">LEMBAGA PENGANGKAT</label>
                       <input
                         type="text"
                         disabled={!isEditing}
                         placeholder="Masukkan nama lembaga yang mengeluarkan SK"
                         value={formData.lembagaPengangkat || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, lembagaPengangkat: e.target.value }))}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
                     {/* Row 8: NOMOR SK PENUGASAN | LEMBAGA PENUGAS */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NOMOR SK PENUGASAN</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">NOMOR SK PENUGASAN</label>
                       <input
                         type="text"
                         disabled={!isEditing}
                         placeholder="Masukkan nomor SK penugasan"
                         value={formData.nomorSkPenugasan || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, nomorSkPenugasan: e.target.value }))}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">LEMBAGA PENUGAS</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">LEMBAGA PENUGAS</label>
                       <input
                         type="text"
                         disabled={!isEditing}
                         placeholder="Masukkan nama lembaga yang menugaskan"
                         value={formData.lembagaPenugas || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, lembagaPenugas: e.target.value }))}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
                     {/* Row 9: ALAMAT JALAN (full width) */}
                     <div className="sm:col-span-2 flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">ALAMAT JALAN</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">ALAMAT JALAN</label>
                       <textarea
                         disabled={!isEditing}
                         placeholder="Alamat tempat tinggal tutor (nama jalan/dusun)"
                         value={formData.alamat || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, alamat: e.target.value }))}
-                        className="p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
+                        className="p-2.5 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
                         rows={2}
                       />
                     </div>
@@ -1129,40 +1129,40 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
                     {/* Row 9b: RT, RW, Desa, Kecamatan, Kabupaten, Provinsi */}
                     <div className="sm:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-x-2 gap-y-1.5">
                       <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">RT</label>
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-wide">RT</label>
                         <input type="text" maxLength={3} disabled={!isEditing} placeholder="001" value={formData.rt || ""} onChange={(e) => setFormData(prev => ({ ...prev, rt: e.target.value }))}
-                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                          className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">RW</label>
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-wide">RW</label>
                         <input type="text" maxLength={3} disabled={!isEditing} placeholder="002" value={formData.rw || ""} onChange={(e) => setFormData(prev => ({ ...prev, rw: e.target.value }))}
-                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                          className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">DESA/KELURAHAN</label>
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-wide">DESA/KELURAHAN</label>
                         <input type="text" disabled={!isEditing} placeholder="Nama desa/kelurahan" value={formData.desa || ""} onChange={(e) => setFormData(prev => ({ ...prev, desa: e.target.value }))}
-                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                          className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KECAMATAN</label>
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-wide">KECAMATAN</label>
                         <input type="text" disabled={!isEditing} placeholder="Nama kecamatan" value={formData.kecamatan || ""} onChange={(e) => setFormData(prev => ({ ...prev, kecamatan: e.target.value }))}
-                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                          className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KABUPATEN/KOTA</label>
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-wide">KABUPATEN/KOTA</label>
                         <input type="text" disabled={!isEditing} placeholder="Nama kabupaten/kota" value={formData.kabupaten || ""} onChange={(e) => setFormData(prev => ({ ...prev, kabupaten: e.target.value }))}
-                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                          className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PROVINSI</label>
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-wide">PROVINSI</label>
                         <input type="text" disabled={!isEditing} placeholder="Nama provinsi" value={formData.provinsi || ""} onChange={(e) => setFormData(prev => ({ ...prev, provinsi: e.target.value }))}
-                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                          className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                       </div>
                     </div>
 
                     {/* Row 10: PASSWORD (full width) */}
                     <div className="sm:col-span-2 flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">
                         PASSWORD {!isAdding && "(KOSONGKAN JIKA TIDAK INGIN MENGUBAH)"}
                       </label>
                       <div className="relative">
@@ -1172,7 +1172,7 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
                           placeholder={isAdding ? "Buat password login tutor" : "Masukkan password baru jika ingin diubah"}
                           value={formData.password || ""}
                           onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                          className="w-full h-9 pl-3 pr-10 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                          className="w-full h-9 pl-3 pr-10 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         />
                         <button
                           type="button"
@@ -1190,13 +1190,13 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
                   <div className="lg:w-[220px] lg:shrink-0 w-full flex flex-col gap-4">
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wider block">FOTO TUTOR</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">FOTO TUTOR</label>
                       <div
                         onDragEnter={handleDrag}
                         onDragOver={handleDrag}
                         onDragLeave={handleDrag}
                         onDrop={handleDrop}
-                        className={`border-2 border-dashed rounded-xl p-2.5 text-center transition-all ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
+                        className={`border-2 border-dashed rounded-xl p-2.5 text-center transition-all ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-slate-200 bg-slate-50 hover:bg-slate-100"
                           } h-44 flex flex-col justify-center items-center relative overflow-hidden ${!isEditing ? "pointer-events-none opacity-60" : ""}`}
                       >
                         {formData.foto ? (
@@ -1217,9 +1217,9 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
                           </div>
                         ) : (
                           <>
-                            <Upload className="h-6 w-6 text-white/50 mb-1" />
-                            <p className="text-[9px] font-black text-white uppercase tracking-wider">DRAG AND DROP</p>
-                            <p className="text-[8px] text-white/70 font-semibold uppercase mt-0.5">CLICK TO BROWSE</p>
+                            <Upload className="h-6 w-6 text-slate-400 mb-1" />
+                            <p className="text-[9px] font-black text-slate-600 uppercase tracking-wider">DRAG AND DROP</p>
+                            <p className="text-[8px] text-slate-500 font-semibold uppercase mt-0.5">CLICK TO BROWSE</p>
                             <input
                               type="file"
                               accept="image/*"
@@ -1235,14 +1235,14 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
                           </div>
                         )}
                       </div>
-                      <p className="text-[9px] font-medium text-white/70 italic text-center">
+                      <p className="text-[9px] font-medium text-slate-400 italic text-center">
                         * Maks 5MB
                       </p>
                       <input type="text" placeholder="atau masukkan URL foto..."
                         disabled={!isEditing}
                         value={formData.foto || ""}
                         onChange={(e) => setFormData((prev) => ({ ...prev, foto: e.target.value }))}
-                        className="w-full text-[11px] font-semibold border border-transparent rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-purple-400 focus:outline-none bg-white text-slate-800"
+                        className="w-full text-[11px] font-semibold border border-slate-200 rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-purple-400 focus:outline-none bg-slate-50 text-slate-800"
                       />
                     </div>
 
@@ -1259,7 +1259,7 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
                 </div>
 
                 {/* Footer with Action Buttons */}
-                <div className="border-t border-white/10 pt-4 mt-3 flex items-center justify-end gap-3 shrink-0">
+                <div className="border-t border-slate-200 pt-4 mt-3 flex items-center justify-end gap-3 shrink-0">
                   {isAdding ? (
                     <>
                       <Button

@@ -727,13 +727,13 @@ export default function AlumniManager() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={closeForm} />
 
           {/* Form Container */}
-          <div className="relative bg-[#00badb] rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
+          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
             {/* Form Column (Cyan Background) */}
-            <div className="p-3 relative text-white flex flex-col flex-1 min-h-0">
+            <div className="p-3 relative flex flex-col flex-1 min-h-0">
               {/* Close Button */}
               <button
                 onClick={closeForm}
-                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -750,7 +750,7 @@ export default function AlumniManager() {
                   <div className="flex-1 lg:min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1.5">
                     {/* Row 1: NAMA | NIK */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">NAMA</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">NAMA</label>
                       <input
                         type="text"
                         required
@@ -758,11 +758,11 @@ export default function AlumniManager() {
                         placeholder="Nama lengkap alumni"
                         value={nama}
                         onChange={(e) => setNama(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">NIK</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">NIK</label>
                       <input
                         type="text"
                         required
@@ -771,18 +771,18 @@ export default function AlumniManager() {
                         placeholder="Masukkan 16 digit NIK"
                         value={nik}
                         onChange={(e) => setNik(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
                     {/* Row 2: PROGRAM PENDIDIKAN | TAHUN LULUS */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">PROGRAM / PAKET</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">PROGRAM / PAKET</label>
                       <select
                         value={program}
                         disabled={!isEditing}
                         onChange={(e) => setProgram(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       >
                         <option value="PAKET A">PAKET A (Setara SD)</option>
                         <option value="PAKET B">PAKET B (Setara SMP)</option>
@@ -790,7 +790,7 @@ export default function AlumniManager() {
                       </select>
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">TAHUN LULUS</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">TAHUN LULUS</label>
                       <input
                         type="text"
                         required
@@ -798,13 +798,13 @@ export default function AlumniManager() {
                         placeholder="Contoh: 2020"
                         value={tahunLulus}
                         onChange={(e) => setTahunLulus(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
                     {/* Row 3: NISN | NIS */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">NISN</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">NISN</label>
                       <input
                         type="text"
                         required
@@ -812,11 +812,11 @@ export default function AlumniManager() {
                         placeholder="Masukkan NISN"
                         value={nisn}
                         onChange={(e) => setNisn(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">NIS</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">NIS</label>
                       <input
                         type="text"
                         required
@@ -824,13 +824,13 @@ export default function AlumniManager() {
                         placeholder="Masukkan NIS"
                         value={nis}
                         onChange={(e) => setNis(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
                     {/* Row 4: TEMPAT/TGL LAHIR | JK */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">TEMPAT, TGL. LAHIR</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">TEMPAT, TGL. LAHIR</label>
                       <input
                         type="text"
                         required
@@ -838,16 +838,16 @@ export default function AlumniManager() {
                         placeholder="Contoh: Ciamis, 15-08-2002"
                         value={tempatTglLahir}
                         onChange={(e) => setTempatTglLahir(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">JENIS KELAMIN</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">JENIS KELAMIN</label>
                       <select
                         value={jenisKelamin}
                         disabled={!isEditing}
                         onChange={(e) => setJenisKelamin(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       >
                         <option value="Laki-laki">Laki-laki</option>
                         <option value="Perempuan">Perempuan</option>
@@ -856,7 +856,7 @@ export default function AlumniManager() {
 
                     {/* Row 5: NO.HP/WA | AGAMA */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">NO. HP / WA</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">NO. HP / WA</label>
                       <input
                         type="text"
                         required
@@ -864,139 +864,139 @@ export default function AlumniManager() {
                         placeholder="Contoh: 0821..."
                         value={noHp}
                         onChange={(e) => setNoHp(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">AGAMA</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">AGAMA</label>
                       <input
                         type="text"
                         disabled={!isEditing}
                         placeholder="Contoh: Islam"
                         value={agama}
                         onChange={(e) => setAgama(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
                     {/* Row 6: EMAIL | NAMA AYAH */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">EMAIL</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">EMAIL</label>
                       <input
                         type="email"
                         disabled={!isEditing}
                         placeholder="Contoh: alumni@mail.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">NAMA AYAH</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">NAMA AYAH</label>
                       <input
                         type="text"
                         disabled={!isEditing}
                         placeholder="Nama ayah kandung"
                         value={namaAyah}
                         onChange={(e) => setNamaAyah(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
                     {/* Row 7: NAMA IBU */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">NAMA IBU</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">NAMA IBU</label>
                       <input
                         type="text"
                         disabled={!isEditing}
                         placeholder="Nama ibu kandung"
                         value={namaIbu}
                         onChange={(e) => setNamaIbu(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
                     {/* Row 8: ALAMAT JALAN (full width) */}
                     <div className="sm:col-span-2 flex flex-col gap-0.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">ALAMAT JALAN</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">ALAMAT JALAN</label>
                       <textarea
                         rows={2}
                         disabled={!isEditing}
                         placeholder="Tulis alamat rumah alumni (nama jalan/dusun)..."
                         value={alamat}
                         onChange={(e) => setAlamat(e.target.value)}
-                        className="p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
+                        className="p-2.5 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
                       />
                     </div>
 
                     {/* Row 8b: RT, RW, Desa, Kecamatan, Kabupaten, Provinsi */}
                     <div className="sm:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-x-2 gap-y-1.5">
                       <div className="flex flex-col gap-0.5">
-                        <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">RT</label>
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">RT</label>
                         <input type="text" maxLength={3} disabled={!isEditing} placeholder="001" value={rt} onChange={(e) => setRt(e.target.value)}
-                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                          className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">RW</label>
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">RW</label>
                         <input type="text" maxLength={3} disabled={!isEditing} placeholder="002" value={rw} onChange={(e) => setRw(e.target.value)}
-                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                          className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">DESA/KELURAHAN</label>
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">DESA/KELURAHAN</label>
                         <input type="text" disabled={!isEditing} placeholder="Nama desa/kelurahan" value={desa} onChange={(e) => setDesa(e.target.value)}
-                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                          className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">KECAMATAN</label>
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">KECAMATAN</label>
                         <input type="text" disabled={!isEditing} placeholder="Nama kecamatan" value={kecamatan} onChange={(e) => setKecamatan(e.target.value)}
-                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                          className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">KABUPATEN/KOTA</label>
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">KABUPATEN/KOTA</label>
                         <input type="text" disabled={!isEditing} placeholder="Nama kabupaten/kota" value={kabupaten} onChange={(e) => setKabupaten(e.target.value)}
-                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                          className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">PROVINSI</label>
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">PROVINSI</label>
                         <input type="text" disabled={!isEditing} placeholder="Nama provinsi" value={provinsi} onChange={(e) => setProvinsi(e.target.value)}
-                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                          className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                       </div>
                     </div>
 
                     {/* Row 9: MELANJUTKAN KE & PEKERJAAN */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">MELANJUTKAN KE</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">MELANJUTKAN KE</label>
                       <input
                         type="text"
                         disabled={!isEditing}
                         placeholder="Contoh: Perguruan Tinggi, Kursus, dll"
                         value={melanjutkanKe}
                         onChange={(e) => setMelanjutkanKe(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">PEKERJAAN</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">PEKERJAAN</label>
                       <input
                         type="text"
                         disabled={!isEditing}
                         placeholder="Contoh: Guru, Wiraswasta, dll"
                         value={pekerjaan}
                         onChange={(e) => setPekerjaan(e.target.value)}
-                        className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                       />
                     </div>
 
                     {/* Row 10: CERITA SUKSES ALUMNI (full width) */}
                     <div className="sm:col-span-2 flex flex-col gap-0.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wide">CERITA SUKSES ALUMNI</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wide">CERITA SUKSES ALUMNI</label>
                       <textarea
                         rows={3}
                         disabled={!isEditing}
                         placeholder="Bagikan cerita sukses, kesan pesan, atau kutipan motivasi dari alumni..."
                         value={cerita}
                         onChange={(e) => setCerita(e.target.value)}
-                        className="p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
+                        className="p-2.5 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
                       />
                     </div>
                   </div>
@@ -1005,13 +1005,13 @@ export default function AlumniManager() {
                   <div className="lg:w-[220px] lg:shrink-0 w-full flex flex-col gap-4">
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wider block">FOTO ALUMNI</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">FOTO ALUMNI</label>
                       <div
                         onDragEnter={handleDrag}
                         onDragOver={handleDrag}
                         onDragLeave={handleDrag}
                         onDrop={handleDrop}
-                        className={`border-2 border-dashed rounded-xl p-2.5 text-center transition-all ${!isEditing && "pointer-events-none opacity-60"} ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
+                        className={`border-2 border-dashed rounded-xl p-2.5 text-center transition-all ${!isEditing && "pointer-events-none opacity-60"} ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-slate-200 bg-slate-50 hover:bg-slate-100"
                           } h-44 flex flex-col justify-center items-center relative overflow-hidden`}
                       >
                         {foto ? (
@@ -1031,9 +1031,9 @@ export default function AlumniManager() {
                           </div>
                         ) : (
                           <>
-                            <Upload className="h-6 w-6 text-white/50 mb-1" />
-                            <p className="text-[9px] font-black text-white uppercase tracking-wider">DRAG AND DROP</p>
-                            <p className="text-[8px] text-white/70 font-semibold uppercase mt-0.5">CLICK TO BROWSE</p>
+                            <Upload className="h-6 w-6 text-slate-400 mb-1" />
+                            <p className="text-[9px] font-black text-slate-600 uppercase tracking-wider">DRAG AND DROP</p>
+                            <p className="text-[8px] text-slate-500 font-semibold uppercase mt-0.5">CLICK TO BROWSE</p>
                             <input
                               ref={fileInputRef}
                               type="file"
@@ -1055,14 +1055,14 @@ export default function AlumniManager() {
                           </div>
                         )}
                       </div>
-                      <p className="text-[9px] font-medium text-white/70 italic text-center">
+                      <p className="text-[9px] font-medium text-slate-400 italic text-center">
                         * Maks 5MB
                       </p>
                       <input type="text" placeholder="atau masukkan URL foto..."
                         value={foto || ""}
                         disabled={!isEditing}
                         onChange={(e) => setFoto(e.target.value)}
-                        className="w-full text-[11px] font-black border border-transparent rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-purple-400 focus:outline-none bg-white text-slate-800"
+                        className="w-full text-[11px] font-black border border-slate-200 rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-purple-400 focus:outline-none bg-slate-50 text-slate-800"
                       />
                     </div>
 
@@ -1078,7 +1078,7 @@ export default function AlumniManager() {
                 </div>
 
                 {/* Buttons Footer Form */}
-                <div className="col-span-1 md:col-span-4 pt-4 mt-3 border-t border-white/10 flex items-center justify-end gap-3 shrink-0">
+                <div className="col-span-1 md:col-span-4 pt-4 mt-3 border-t border-slate-200 flex items-center justify-end gap-3 shrink-0">
                   {isAdding ? (
                     <>
                       <Button
@@ -1159,10 +1159,10 @@ export default function AlumniManager() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setShowUploadDialog(false)} />
           <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
-            <div className="bg-[#00badb] p-6 relative text-white text-left">
+            <div className="bg-white p-6 relative text-left">
               <button
                 onClick={() => setShowUploadDialog(false)}
-                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1174,7 +1174,7 @@ export default function AlumniManager() {
               </div>
 
               <div className="space-y-4 text-slate-800">
-                <p className="text-xs font-semibold text-white/80 leading-normal">
+                <p className="text-xs font-semibold text-slate-500 leading-normal">
                   Upload data alumni dari file Excel. Silakan download format terlebih dahulu.
                 </p>
 

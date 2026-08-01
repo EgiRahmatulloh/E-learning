@@ -1082,13 +1082,13 @@ export default function WargaBelajarManager() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setFormOpen(false)} />
 
           {/* Form Container */}
-          <div className="relative bg-[#00badb] rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
+          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
             {/* Form Column (Cyan Background) */}
-            <div className="p-3 relative text-white flex flex-col flex-1 min-h-0">
+            <div className="p-3 relative flex flex-col flex-1 min-h-0">
               {/* Close Button */}
               <button
                 onClick={() => setFormOpen(false)}
-                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1101,7 +1101,7 @@ export default function WargaBelajarManager() {
 
               {/* Special Actions Menu for Promoting / Graduating / Continuing */}
               {!isAdding && selectedStudent && !isEditing && (
-                <div className="bg-white/10 p-4 rounded-2xl border border-white/10 flex flex-wrap gap-2.5 items-center justify-between mb-4 text-xs font-bold text-white">
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-wrap gap-2.5 items-center justify-between mb-4 text-xs font-bold text-slate-700">
                   <div>
                     Menu Aksi Tingkat Kelas & Program Belajar:
                   </div>
@@ -1144,19 +1144,19 @@ export default function WargaBelajarManager() {
 
                     {/* Row 1: NAMA | NIK */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA <span className="text-red-300">*</span></label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">NAMA <span className="text-rose-400">*</span></label>
                       <input
                         type="text"
                         required
                         placeholder="Nama lengkap warga belajar"
                         value={formData.nama || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, nama: e.target.value }))}
-                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIK <span className="text-red-300">*</span></label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">NIK <span className="text-rose-400">*</span></label>
                       <input
                         type="text"
                         required
@@ -1165,14 +1165,14 @@ export default function WargaBelajarManager() {
                         placeholder="Nomor Induk Kependudukan (16 digit)"
                         value={formData.nik || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, nik: e.target.value.replace(/\D/g, "").slice(0, 16) }))}
-                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
                       />
                     </div>
 
                     {/* Row 2: PROGRAM | KELAS */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PROGRAM <span className="text-red-300">*</span></label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">PROGRAM <span className="text-rose-400">*</span></label>
                       <select
                         value={(formData.program || "PAKET C").toUpperCase()}
                         onChange={(e) => {
@@ -1192,7 +1192,7 @@ export default function WargaBelajarManager() {
                             };
                           });
                         }}
-                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
                       >
                         <option value="PAKET A">PAKET A</option>
@@ -1201,7 +1201,7 @@ export default function WargaBelajarManager() {
                       </select>
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">ROMBEL</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">ROMBEL</label>
                       <select
                         value={formData.kelas || ""}
                         onChange={(e) => {
@@ -1213,7 +1213,7 @@ export default function WargaBelajarManager() {
                             program: derived || prev.program
                           }));
                         }}
-                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
                       >
                         <option value="">Pilih Rombel</option>
@@ -1247,7 +1247,7 @@ export default function WargaBelajarManager() {
 
                     {/* Row 3: NISN | NIS */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NISN <span className="text-red-300">*</span></label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">NISN <span className="text-rose-400">*</span></label>
                       <input
                         type="text"
                         required
@@ -1255,12 +1255,12 @@ export default function WargaBelajarManager() {
                         placeholder="Nomor Induk Siswa Nasional"
                         value={formData.nisn || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, nisn: e.target.value.replace(/\D/g, "") }))}
-                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NIS <span className="text-red-300">*</span></label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">NIS <span className="text-rose-400">*</span></label>
                       <input
                         type="text"
                         required
@@ -1268,29 +1268,29 @@ export default function WargaBelajarManager() {
                         placeholder="Nomor Induk Siswa"
                         value={formData.nis || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, nis: e.target.value.replace(/\D/g, "") }))}
-                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
                       />
                     </div>
 
                     {/* Row 4: TEMPAT, TGL. LAHIR | JENIS KELAMIN */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TEMPAT, TGL. LAHIR</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">TEMPAT, TGL. LAHIR</label>
                       <input
                         type="text"
                         placeholder="Contoh: Ciamis, 05-02-2008"
                         value={formData.tempatTglLahir || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, tempatTglLahir: e.target.value }))}
-                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">JENIS KELAMIN</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">JENIS KELAMIN</label>
                       <select
                         value={formData.jenisKelamin || "Laki-laki"}
                         onChange={(e) => setFormData(prev => ({ ...prev, jenisKelamin: e.target.value }))}
-                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
                       >
                         <option value="Laki-laki">Laki-laki</option>
@@ -1300,37 +1300,37 @@ export default function WargaBelajarManager() {
 
                     {/* Row 5: AGAMA | EMAIL */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">AGAMA</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">AGAMA</label>
                       <input
                         type="text"
                         placeholder="Agama"
                         value={formData.agama || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, agama: e.target.value }))}
-                        className="w-full h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-850 placeholder-slate-400 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="w-full h-9 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-850 placeholder-slate-400 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">EMAIL <span className="text-red-300">*</span></label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">EMAIL <span className="text-rose-400">*</span></label>
                       <input
                         type="email"
                         required
                         placeholder="Alamat email warga belajar"
                         value={formData.email || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                        className="w-full h-9 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-850 placeholder-slate-400 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="w-full h-9 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-850 placeholder-slate-400 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
                       />
                     </div>
 
                     {/* Row 6: ALAMAT JALAN (full width) */}
                     <div className="flex flex-col gap-0.5 sm:col-span-2">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">ALAMAT JALAN</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">ALAMAT JALAN</label>
                       <textarea
                         placeholder="Alamat tempat tinggal warga belajar (nama jalan/dusun)"
                         value={formData.alamat || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, alamat: e.target.value }))}
-                        className="w-full p-2.5 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
+                        className="w-full p-2.5 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 resize-none transition-colors"
                         rows={2}
                         disabled={!isEditing}
                       />
@@ -1339,88 +1339,88 @@ export default function WargaBelajarManager() {
                     {/* Row 6b: RT, RW, Desa, Kecamatan, Kabupaten, Provinsi */}
                     <div className="sm:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-x-2 gap-y-1.5">
                       <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">RT</label>
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-wide">RT</label>
                         <input type="text" maxLength={3} disabled={!isEditing} placeholder="001" value={formData.rt || ""} onChange={(e) => setFormData(prev => ({ ...prev, rt: e.target.value }))}
-                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                          className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">RW</label>
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-wide">RW</label>
                         <input type="text" maxLength={3} disabled={!isEditing} placeholder="002" value={formData.rw || ""} onChange={(e) => setFormData(prev => ({ ...prev, rw: e.target.value }))}
-                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                          className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">DESA/KELURAHAN</label>
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-wide">DESA/KELURAHAN</label>
                         <input type="text" disabled={!isEditing} placeholder="Nama desa/kelurahan" value={formData.desa || ""} onChange={(e) => setFormData(prev => ({ ...prev, desa: e.target.value }))}
-                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                          className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KECAMATAN</label>
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-wide">KECAMATAN</label>
                         <input type="text" disabled={!isEditing} placeholder="Nama kecamatan" value={formData.kecamatan || ""} onChange={(e) => setFormData(prev => ({ ...prev, kecamatan: e.target.value }))}
-                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                          className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">KABUPATEN/KOTA</label>
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-wide">KABUPATEN/KOTA</label>
                         <input type="text" disabled={!isEditing} placeholder="Nama kabupaten/kota" value={formData.kabupaten || ""} onChange={(e) => setFormData(prev => ({ ...prev, kabupaten: e.target.value }))}
-                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                          className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">PROVINSI</label>
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-wide">PROVINSI</label>
                         <input type="text" disabled={!isEditing} placeholder="Nama provinsi" value={formData.provinsi || ""} onChange={(e) => setFormData(prev => ({ ...prev, provinsi: e.target.value }))}
-                          className="h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
+                          className="h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors" />
                       </div>
                     </div>
 
                     {/* Row 7: TITIK LAYANAN | NO. HP */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">TITIK LAYANAN</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">TITIK LAYANAN</label>
                       <input
                         type="text"
                         placeholder="Titik layanan belajar"
                         value={formData.titikLayanan || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, titikLayanan: e.target.value }))}
-                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NO. HP</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">NO. HP</label>
                       <input
                         type="text"
                         placeholder="Nomor Handphone aktif"
                         value={formData.noHp || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, noHp: e.target.value }))}
-                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
                       />
                     </div>
 
                     {/* Row 8: NAMA AYAH | NAMA IBU */}
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA AYAH</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">NAMA AYAH</label>
                       <input
                         type="text"
                         placeholder="Nama lengkap ayah kandung"
                         value={formData.namaAyah || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, namaAyah: e.target.value }))}
-                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">NAMA IBU</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">NAMA IBU</label>
                       <input
                         type="text"
                         placeholder="Nama lengkap ibu kandung"
                         value={formData.namaIbu || ""}
                         onChange={(e) => setFormData(prev => ({ ...prev, namaIbu: e.target.value }))}
-                        className="w-full h-7 px-3 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                        className="w-full h-7 px-3 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                         disabled={!isEditing}
                       />
                     </div>
 
                     {/* Row 9: PASSWORD (full width) */}
                     <div className="flex flex-col gap-0.5 sm:col-span-2">
-                      <label className="text-xs font-black text-cyan-50 uppercase tracking-wide">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-wide">
                         PASSWORD AKUN LOGIN {!isAdding && "(KOSONGKAN JIKA TIDAK INGIN MENGUBAH)"}
                       </label>
                       <div className="relative">
@@ -1429,7 +1429,7 @@ export default function WargaBelajarManager() {
                           placeholder={isAdding ? "Buat password login warga belajar" : "Masukkan password baru jika ingin diubah"}
                           value={formData.password || ""}
                           onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                          className="w-full h-9 pl-3 pr-10 text-xs font-black border-2 border-white rounded-lg bg-white text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
+                          className="w-full h-9 pl-3 pr-10 text-xs font-black border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-purple-600 disabled:bg-slate-100 disabled:text-slate-500 transition-colors"
                           disabled={!isEditing}
                         />
                         <button
@@ -1449,13 +1449,13 @@ export default function WargaBelajarManager() {
 
                     {/* PHOTO UPLOADER */}
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-cyan-50 uppercase tracking-wider block">FOTO PROFIL WB</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">FOTO PROFIL WB</label>
                       <div
                         onDragEnter={handleDrag}
                         onDragOver={handleDrag}
                         onDragLeave={handleDrag}
                         onDrop={handleDrop}
-                        className={`border-2 border-dashed rounded-xl p-2.5 text-center transition-all ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
+                        className={`border-2 border-dashed rounded-xl p-2.5 text-center transition-all ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-slate-200 bg-slate-50 hover:bg-slate-100"
                           } h-44 flex flex-col justify-center items-center relative overflow-hidden ${!isEditing && "pointer-events-none opacity-60"}`}
                       >
                         {formData.foto ? (
@@ -1475,9 +1475,9 @@ export default function WargaBelajarManager() {
                           </div>
                         ) : (
                           <>
-                            <Upload className="h-6 w-6 text-white/50 mb-1" />
-                            <p className="text-[9px] font-black text-white uppercase tracking-wider">DRAG AND DROP</p>
-                            <p className="text-[8px] text-white/70 font-semibold uppercase mt-0.5">CLICK TO BROWSE</p>
+                            <Upload className="h-6 w-6 text-slate-400 mb-1" />
+                            <p className="text-[9px] font-black text-slate-600 uppercase tracking-wider">DRAG AND DROP</p>
+                            <p className="text-[8px] text-slate-500 font-semibold uppercase mt-0.5">CLICK TO BROWSE</p>
                             <input
                               type="file"
                               accept="image/*"
@@ -1493,13 +1493,13 @@ export default function WargaBelajarManager() {
                           </div>
                         )}
                       </div>
-                      <p className="text-[9px] font-medium text-white/70 italic text-center">
+                      <p className="text-[9px] font-medium text-slate-400 italic text-center">
                         * Maks 5MB
                       </p>
                       <input type="text" placeholder="atau masukkan URL foto..."
                         value={formData.foto || ""}
                         onChange={(e) => setFormData((prev) => ({ ...prev, foto: e.target.value }))}
-                        className="w-full text-[11px] font-semibold border border-transparent rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-purple-400 focus:outline-none bg-white text-slate-800"
+                        className="w-full text-[11px] font-semibold border border-slate-200 rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-purple-400 focus:outline-none bg-slate-50 text-slate-800"
                         disabled={!isEditing}
                       />
                     </div>
@@ -1513,15 +1513,15 @@ export default function WargaBelajarManager() {
                     />
 
                     {/* Additional Info / Status */}
-                    <div className="bg-white/10 p-3 rounded-xl border border-white/10 space-y-2.5 text-left text-white">
-                      <span className="block text-[9px] font-black text-yellow-300 tracking-wider uppercase border-b border-white/20 pb-1.5">Info Akademik & Status</span>
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2.5 text-left text-slate-700">
+                      <span className="block text-[9px] font-black text-amber-600 tracking-wider uppercase border-b border-slate-200 pb-1.5">Info Akademik & Status</span>
 
                       <div className="space-y-1">
-                        <label className="text-[8px] font-black text-cyan-100 uppercase">STATUS WARGA BELAJAR</label>
+                        <label className="text-[8px] font-black text-slate-500 uppercase">STATUS WARGA BELAJAR</label>
                         <select
                           value={formData.status || "AKTIF"}
                           onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                          className="w-full h-8 px-2 text-[11px] border-0 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-400 font-bold bg-white text-slate-800"
+                          className="w-full h-8 px-2 text-[11px] border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-400 font-bold bg-slate-50 text-slate-800"
                           disabled={!isEditing}
                         >
                           <option value="AKTIF">AKTIF</option>
@@ -1529,8 +1529,8 @@ export default function WargaBelajarManager() {
                         </select>
                       </div>
 
-                      <div className="text-[8px] text-cyan-100/85 leading-relaxed font-semibold pt-1 border-t border-white/15 space-y-1">
-                        <span className="block font-black text-[8px] text-yellow-300 uppercase tracking-wide">Catatan Penting:</span>
+                      <div className="text-[8px] text-slate-500 leading-relaxed font-semibold pt-1 border-t border-slate-200 space-y-1">
+                        <span className="block font-black text-[8px] text-amber-600 uppercase tracking-wide">Catatan Penting:</span>
                         <p>NIK, No. HP, dan Password hanya dapat dilihat di Admin Panel ini.</p>
                         <p>Status LULUS otomatis menyembunyikan warga belajar dari halaman publik sekolah.</p>
                       </div>
@@ -1541,7 +1541,7 @@ export default function WargaBelajarManager() {
                 </div>
 
                 {/* Footer buttons */}
-                <div className="border-t border-white/10 pt-4 mt-3 flex items-center justify-end gap-3 shrink-0">
+                <div className="border-t border-slate-200 pt-4 mt-3 flex items-center justify-end gap-3 shrink-0">
                   {isAdding ? (
                     <>
                       <Button
@@ -1626,11 +1626,11 @@ export default function WargaBelajarManager() {
           {/* Container */}
           <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
             {/* Column Header */}
-            <div className="bg-[#00badb] p-6 relative text-white text-left">
+            <div className="bg-white p-6 relative text-left">
               {/* Close Button */}
               <button
                 onClick={() => setContinueOpen(false)}
-                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1642,7 +1642,7 @@ export default function WargaBelajarManager() {
               </div>
 
               <form onSubmit={handleContinue} className="space-y-4 text-slate-800">
-                <p className="text-xs font-semibold text-white/80 leading-normal">
+                <p className="text-xs font-semibold text-slate-500 leading-normal">
                   Pindahkan warga belajar ini ke program yang lebih tinggi.
                 </p>
 
@@ -1651,19 +1651,19 @@ export default function WargaBelajarManager() {
                   const targetProg = NEXT_PROGRAM[currentProg];
                   const targetKelas = targetProg ? FIRST_KELAS[targetProg] : null;
                   return (
-                    <div className="bg-white/10 rounded-xl px-4 py-3 space-y-2 text-white">
+                    <div className="bg-slate-50 rounded-xl px-4 py-3 space-y-2 text-slate-700">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black text-cyan-50 uppercase">Program Saat Ini</span>
+                        <span className="text-[10px] font-black text-slate-500 uppercase">Program Saat Ini</span>
                         <span className="text-xs font-black">{currentProg}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <ArrowUpCircle className="h-4 w-4 text-emerald-400" />
-                        <span className="text-[10px] font-black text-cyan-50 uppercase">Program Baru</span>
-                        <span className="text-xs font-black text-emerald-300">{targetProg || "Maksimal"}</span>
+                        <ArrowUpCircle className="h-4 w-4 text-emerald-600" />
+                        <span className="text-[10px] font-black text-slate-500 uppercase">Program Baru</span>
+                        <span className="text-xs font-black text-emerald-700">{targetProg || "Maksimal"}</span>
                       </div>
                       {targetKelas && (
                         <div className="flex items-center gap-2 pl-6">
-                          <span className="text-[10px] font-black text-cyan-50 uppercase">Kelas Awal</span>
+                          <span className="text-[10px] font-black text-slate-500 uppercase">Kelas Awal</span>
                           <span className="text-xs font-black">{targetKelas}</span>
                         </div>
                       )}
@@ -1671,7 +1671,7 @@ export default function WargaBelajarManager() {
                   );
                 })()}
 
-                <div className="border-t border-white/20 pt-4 flex justify-end gap-2 mt-4">
+                <div className="border-t border-slate-200 pt-4 flex justify-end gap-2 mt-4">
                   <Button
                     type="submit"
                     className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white font-extrabold text-sm px-6 h-11 rounded-xl cursor-pointer shadow-md shadow-purple-900/30 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5"
@@ -1690,10 +1690,10 @@ export default function WargaBelajarManager() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setBulkContinueOpen(false)} />
           <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
-            <div className="bg-[#00badb] p-6 relative text-white text-left">
+            <div className="bg-white p-6 relative text-left">
               <button
                 onClick={() => setBulkContinueOpen(false)}
-                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1706,7 +1706,7 @@ export default function WargaBelajarManager() {
 
               <form onSubmit={handleBulkContinue} className="space-y-4 text-slate-800">
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-white/80 leading-normal">
+                  <p className="text-xs font-semibold text-slate-500 leading-normal">
                     Pindahkan warga belajar yang eligible ke program baru.
                   </p>
                   {(() => {
@@ -1716,12 +1716,12 @@ export default function WargaBelajarManager() {
                     }).length;
                     const skipped = selectedStudentIds.length - eligibleCount;
                     return (
-                      <div className="bg-white/10 rounded-xl px-3 py-2 space-y-1">
-                        <p className="text-[11px] font-bold text-emerald-300">
+                      <div className="bg-slate-50 rounded-xl px-3 py-2 space-y-1">
+                        <p className="text-[11px] font-bold text-emerald-700">
                           ✅ {eligibleCount} siswa eligible (di akhir program)
                         </p>
                         {skipped > 0 && (
-                          <p className="text-[11px] font-bold text-amber-300">
+                          <p className="text-[11px] font-bold text-amber-700">
                             ⚠️ {skipped} siswa dilewati (belum di akhir program)
                           </p>
                         )}
@@ -1739,25 +1739,25 @@ export default function WargaBelajarManager() {
                   const targetKelas = targetProgram ? FIRST_KELAS[targetProgram] : null;
 
                   return (
-                    <div className="space-y-3.5 text-white">
-                      <div className="bg-white/10 rounded-xl px-4 py-3 space-y-2">
+                    <div className="space-y-3.5 text-slate-700">
+                      <div className="bg-slate-50 rounded-xl px-4 py-3 space-y-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-black text-cyan-50 uppercase">Program Saat Ini</span>
-                          <span className="text-xs font-black text-white">
+                          <span className="text-[10px] font-black text-slate-500 uppercase">Program Saat Ini</span>
+                          <span className="text-xs font-black text-slate-800">
                             {programs.length === 1 ? programs[0] : programs.join(" / ")}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <ArrowUpCircle className="h-4 w-4 text-emerald-400" />
-                          <span className="text-[10px] font-black text-cyan-50 uppercase">Program Baru</span>
-                          <span className="text-xs font-black text-emerald-300">
+                          <ArrowUpCircle className="h-4 w-4 text-emerald-600" />
+                          <span className="text-[10px] font-black text-slate-500 uppercase">Program Baru</span>
+                          <span className="text-xs font-black text-emerald-700">
                             {targetProgram || "Campuran program"}
                           </span>
                         </div>
                         {targetKelas && (
                           <div className="flex items-center gap-2 pl-6">
-                            <span className="text-[10px] font-black text-cyan-50 uppercase">Kelas Awal</span>
-                            <span className="text-xs font-black text-white">{targetKelas}</span>
+                            <span className="text-[10px] font-black text-slate-500 uppercase">Kelas Awal</span>
+                            <span className="text-xs font-black text-slate-800">{targetKelas}</span>
                           </div>
                         )}
                       </div>
@@ -1765,7 +1765,7 @@ export default function WargaBelajarManager() {
                   );
                 })()}
 
-                <div className="border-t border-white/20 pt-4 flex justify-end gap-2 mt-4">
+                <div className="border-t border-slate-200 pt-4 flex justify-end gap-2 mt-4">
                   <Button
                     type="submit"
                     disabled={bulkActionLoading}
@@ -1785,10 +1785,10 @@ export default function WargaBelajarManager() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setShowUploadDialog(false)} />
           <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
-            <div className="bg-[#00badb] p-6 relative text-white text-left">
+            <div className="bg-white p-6 relative text-left">
               <button
                 onClick={() => setShowUploadDialog(false)}
-                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1800,7 +1800,7 @@ export default function WargaBelajarManager() {
               </div>
 
               <div className="space-y-4 text-slate-800">
-                <p className="text-xs font-semibold text-white/80 leading-normal">
+                <p className="text-xs font-semibold text-slate-500 leading-normal">
                   Upload data warga belajar dari file Excel. Silakan download format terlebih dahulu.
                 </p>
 

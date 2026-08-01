@@ -429,11 +429,11 @@ export default function GalleryManager() {
           {/* Form Container */}
           <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
             {/* Form Column (Cyan Background) */}
-            <div className="bg-[#00badb] p-6 relative text-white">
+            <div className="bg-white p-6 relative">
               {/* Close Button */}
               <button
                 onClick={closeForm}
-                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -447,12 +447,12 @@ export default function GalleryManager() {
               <form onSubmit={handleSave} className="space-y-4 text-left">
                 {/* Nama File */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">Nama File / Keterangan</label>
+                  <label className="text-xs font-black tracking-wider uppercase text-slate-500 block">Nama File / Keterangan</label>
                   <input
                     type="text"
                     required
                     disabled={!isEditing}
-                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner placeholder-slate-400 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full h-11 px-4 text-sm rounded-lg bg-slate-50 border border-slate-200 font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all shadow-inner placeholder-slate-400 disabled:opacity-60 disabled:cursor-not-allowed"
                     placeholder="Contoh: Dokumentasi Ujian CBT 2024"
                     value={namaFile}
                     onChange={(e) => setNamaFile(e.target.value)}
@@ -461,10 +461,10 @@ export default function GalleryManager() {
 
                 {/* Kategori */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">Kategori Kegiatan</label>
+                  <label className="text-xs font-black tracking-wider uppercase text-slate-500 block">Kategori Kegiatan</label>
                   <select
                     disabled={!isEditing}
-                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full h-11 px-4 text-sm rounded-lg bg-slate-50 border border-slate-200 font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed"
                     value={kategori}
                     onChange={(e) => setKategori(e.target.value)}
                   >
@@ -476,7 +476,7 @@ export default function GalleryManager() {
 
                 {/* Tanggal Posting */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">Tanggal Posting</label>
+                  <label className="text-xs font-black tracking-wider uppercase text-slate-500 block">Tanggal Posting</label>
                   <input
                     type="text"
                     required
@@ -490,10 +490,10 @@ export default function GalleryManager() {
 
                 {/* Status */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">Status</label>
+                  <label className="text-xs font-black tracking-wider uppercase text-slate-500 block">Status</label>
                   <select
                     disabled={!isEditing}
-                    className="w-full h-11 px-4 text-sm border-0 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full h-11 px-4 text-sm rounded-lg bg-slate-50 border border-slate-200 font-bold text-slate-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all cursor-pointer shadow-inner uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed"
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
                   >
@@ -504,7 +504,7 @@ export default function GalleryManager() {
 
                 {/* Foto Upload */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-black tracking-wider uppercase text-cyan-50 block">
+                  <label className="text-xs font-black tracking-wider uppercase text-slate-500 block">
                     Foto Kegiatan {fotoList.length > 0 && <span className="text-[#ffb300]">({fotoList.length})</span>}
                   </label>
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple onChange={(e) => e.target.files && handleImagesUpload(Array.from(e.target.files))} />
@@ -514,35 +514,35 @@ export default function GalleryManager() {
                     onDragOver={handleDrag}
                     onDrop={handleDrop}
                     onClick={() => fileInputRef.current?.click()}
-                    className={`relative w-full rounded-xl border-2 border-dashed cursor-pointer transition flex flex-col items-center justify-center text-center overflow-hidden min-h-[110px] ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-white/30 bg-white/10 hover:bg-white/20"
+                    className={`relative w-full rounded-xl border-2 border-dashed cursor-pointer transition flex flex-col items-center justify-center text-center overflow-hidden min-h-[110px] ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-cyan-300 bg-cyan-50 hover:bg-cyan-100"
                       } ${!isEditing && "pointer-events-none opacity-60"}`}
                   >
                     {uploading ? (
                       <div className="py-6 flex flex-col items-center gap-2">
-                        <Loader2 className="h-7 w-7 text-white animate-spin" />
-                        <span className="text-[10px] font-bold text-white">Mengunggah...</span>
+                        <Loader2 className="h-7 w-7 text-slate-400 animate-spin" />
+                        <span className="text-[10px] font-bold text-slate-500">Mengunggah...</span>
                       </div>
                     ) : fotoList.length > 0 ? (
                       <div className="w-full">
                         <img src={fotoList[0]} alt="Preview" className="w-full h-44 object-cover rounded-xl" />
-                        <p className="text-[9px] text-white/70 font-bold py-1.5">Klik untuk tambah/ganti foto</p>
+                        <p className="text-[9px] text-slate-400 font-bold py-1.5">Klik untuk tambah/ganti foto</p>
                       </div>
                     ) : (
                       <div className="py-6 space-y-2">
-                        <Image size={28} className="text-white/60 mx-auto" />
-                        <p className="text-[10px] font-bold text-white/80">Klik atau drag & drop foto di sini (bisa banyak)</p>
-                        <p className="text-[9px] text-white/50">JPG, PNG, WEBP</p>
+                        <Image size={28} className="text-slate-400 mx-auto" />
+                        <p className="text-[10px] font-bold text-slate-600">Klik atau drag & drop foto di sini (bisa banyak)</p>
+                        <p className="text-[9px] text-slate-400">JPG, PNG, WEBP</p>
                       </div>
                     )}
                   </div>
-                  <p className="text-[10px] font-bold text-white/80 mt-1 italic">
+                  <p className="text-[10px] font-bold text-slate-500 mt-1 italic">
                     * Bisa pilih banyak foto sekaligus. Batas maksimal per foto 5MB.
                   </p>
 
                   {fotoList.length > 0 && (
                     <div className="grid grid-cols-4 gap-2 mt-1">
                       {fotoList.map((src, idx) => (
-                        <div key={`${src}-${idx}`} className="relative group rounded-lg overflow-hidden border border-white/30 bg-white/20">
+                        <div key={`${src}-${idx}`} className="relative group rounded-lg overflow-hidden border border-slate-200 bg-slate-50">
                           <img src={src} alt={`Foto ${idx + 1}`} className="w-full h-14 object-cover" />
                           {isEditing && (
                             <button
@@ -566,7 +566,7 @@ export default function GalleryManager() {
                     <input
                       type="text"
                       disabled={!isEditing}
-                      className="flex-1 min-w-0 text-[10px] font-mono border border-transparent rounded-lg px-2.5 py-2 bg-white text-slate-800 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="flex-1 min-w-0 text-[10px] font-mono border border-slate-200 rounded-lg px-2.5 py-2 bg-slate-50 text-slate-800 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                       value={urlInput}
                       onChange={(e) => setUrlInput(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter" && isEditing) { e.preventDefault(); handleAddUrl(); } }}
@@ -584,7 +584,7 @@ export default function GalleryManager() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="border-t border-white/10 pt-4 flex items-center justify-end gap-3">
+                <div className="border-t border-slate-200 pt-4 flex items-center justify-end gap-3">
                   {isAdding ? (
                     <>
                       <Button

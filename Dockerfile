@@ -34,6 +34,9 @@ COPY --from=builder /app/dist ./dist
 # Salin kode backend Elysia
 COPY --from=builder /app/src ./src
 
+# Salin folder public (template XLSX untuk laporan, dll.) yang dibaca saat runtime
+COPY --from=builder /app/public ./public
+
 # Expose port yang digunakan aplikasi (default: 3000)
 EXPOSE 3000
 
