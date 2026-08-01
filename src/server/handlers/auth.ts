@@ -276,7 +276,7 @@ export const authHandlers = new Elysia()
       const role = payload.role as string;
       const id = Number(payload.id);
       const { 
-        name, email, password, noHp, alamat,
+        name, email, password, noHp, alamat, foto,
         nik, nip, tempatTglLahir, jenisKelamin, agama, pendidikan,
         tanggalMulaiTugas, nomorSkPengangkatan, lembagaPengangkat, nomorSkPenugasan, lembagaPenugas,
         nisn, nis, titikLayanan, namaAyah, namaIbu
@@ -287,6 +287,7 @@ export const authHandlers = new Elysia()
         if (name !== undefined) updateData.nama = name;
         if (email !== undefined) updateData.email = email;
         if (alamat !== undefined) updateData.alamat = alamat;
+        if (foto !== undefined) updateData.foto = foto;
         if (password) {
           updateData.password = await Bun.password.hash(password, { algorithm: "bcrypt" });
         }
@@ -450,6 +451,7 @@ export const authHandlers = new Elysia()
         titikLayanan: t.Optional(t.String()),
         namaAyah: t.Optional(t.String()),
         namaIbu: t.Optional(t.String()),
+        foto: t.Optional(t.String()),
       }),
     }
   )

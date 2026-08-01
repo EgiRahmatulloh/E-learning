@@ -6,7 +6,9 @@ import {
   X,
   LogOut,
   ChevronDown,
-  BookOpen
+  BookOpen,
+  Upload,
+  Trash2
 } from "lucide-react";
 import { AdminDashboard } from "./admin/AdminDashboard";
 import { ElearningSiswa } from "./siswa/ElearningSiswa";
@@ -76,6 +78,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
 
   // Profile Form States
   const [profileLoading, setProfileLoading] = useState(false);
+  const [uploadingFoto, setUploadingFoto] = useState(false);
   const [profileMsg, setProfileMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const [formData, setFormData] = useState({
@@ -83,6 +86,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
     email: user.email || user.username || "",
     password: "",
     confirmPassword: "",
+    foto: (user as any).foto || "",
     noHp: user.noHp || "",
     alamat: user.alamat || "",
     nik: user.nik || "",
@@ -109,6 +113,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
         email: user.email || user.username || "",
         password: "",
         confirmPassword: "",
+        foto: (user as any).foto || "",
         noHp: user.noHp || "",
         alamat: user.alamat || "",
         nik: user.nik || "",
@@ -152,6 +157,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
           name: formData.name,
           email: formData.email,
           password: formData.password || undefined,
+          foto: formData.foto,
           noHp: formData.noHp || undefined,
           alamat: formData.alamat || undefined,
           nik: formData.nik || undefined,
@@ -186,6 +192,42 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
       setProfileMsg({ type: "error", text: msg });
     } finally {
       setProfileLoading(false);
+    }
+  };
+
+  const handleFotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setProfileMsg({ type: "error", text: "Hanya file gambar yang diperbolehkan!" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setProfileMsg({ type: "error", text: "Ukuran foto maksimal 5MB!" });
+      return;
+    }
+    setUploadingFoto(true);
+    setProfileMsg(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        body: fd,
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        setFormData((prev) => ({ ...prev, foto: data.url }));
+        setProfileMsg({ type: "success", text: "Foto profil diunggah. Klik \"Simpan Perubahan\" untuk menyimpan." });
+      } else {
+        setProfileMsg({ type: "error", text: data.message || "Gagal mengunggah foto" });
+      }
+    } catch {
+      setProfileMsg({ type: "error", text: "Gagal mengunggah foto." });
+    } finally {
+      setUploadingFoto(false);
     }
   };
 
@@ -257,6 +299,48 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
             )}
 
             <form onSubmit={handleUpdateProfile} className="space-y-5">
+              {/* FOTO PROFIL */}
+              <div className="flex items-center gap-5 flex-wrap">
+                <div className="h-20 w-20 rounded-full overflow-hidden bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center text-white font-black text-2xl shadow-md shadow-cyan-500/20 shrink-0">
+                  {formData.foto ? (
+                    <img src={formData.foto} alt="Foto Profil" className="h-full w-full object-cover" />
+                  ) : (
+                    (user.name || "?").charAt(0).toUpperCase()
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Foto Profil</label>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <input
+                      id="profile-foto-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFotoChange}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => document.getElementById("profile-foto-input")?.click()}
+                      disabled={uploadingFoto}
+                      className="rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold text-xs px-4 py-2 cursor-pointer transition-colors disabled:opacity-60"
+                    >
+                      <Upload className="h-4 w-4 mr-1.5" />
+                      {uploadingFoto ? "Mengunggah..." : "UBAH FOTO"}
+                    </Button>
+                    {formData.foto && (
+                      <Button
+                        type="button"
+                        onClick={() => setFormData((prev) => ({ ...prev, foto: "" }))}
+                        className="rounded-xl bg-slate-200 hover:bg-rose-100 text-rose-600 font-bold text-xs px-4 py-2 cursor-pointer transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1.5" /> HAPUS
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-semibold">Format JPG/PNG/WebP/GIF, maksimal 5MB.</p>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 <div className="space-y-1.5">
                   <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Nama Lengkap</label>
@@ -909,8 +993,12 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                   </div>
 
                   {/* Avatar */}
-                  <div className="h-9 w-9 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center text-white font-black text-sm shadow-md shadow-cyan-500/20">
-                    {user.name.charAt(0).toUpperCase()}
+                  <div className="h-9 w-9 rounded-full overflow-hidden bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center text-white font-black text-sm shadow-md shadow-cyan-500/20">
+                    {(user as any).foto ? (
+                      <img src={(user as any).foto} alt={user.name} className="h-full w-full object-cover" />
+                    ) : (
+                      user.name.charAt(0).toUpperCase()
+                    )}
                   </div>
                 </div>
 

@@ -127,6 +127,81 @@ export const setupHandlers = new Elysia()
     }
   )
 
+  // POST copy seluruh setup dari semester lain (admin only)
+  .post(
+    "/setups/copy",
+    async (context: any) => {
+      const { headers, jwt, body, set } = context;
+      const authError = await verifyAdmin(headers, jwt, set);
+      if (authError) return authError;
+
+      try {
+        const { fromSemester, toSemester } = body;
+        if (!fromSemester || !toSemester) {
+          set.status = 400;
+          return { success: false, message: "Semester sumber dan tujuan wajib diisi" };
+        }
+        if (fromSemester === toSemester) {
+          set.status = 400;
+          return { success: false, message: "Semester sumber dan tujuan tidak boleh sama" };
+        }
+
+        const sourceSetups = await db
+          .select()
+          .from(elearningSetups)
+          .where(eq(elearningSetups.semester, fromSemester))
+          .all();
+
+        if (sourceSetups.length === 0) {
+          return { success: true, copied: 0, skipped: 0, message: `Tidak ada setup di semester ${fromSemester} untuk disalin` };
+        }
+
+        const targetSetups = await db
+          .select()
+          .from(elearningSetups)
+          .where(eq(elearningSetups.semester, toSemester))
+          .all();
+        const existingKeys = new Set(targetSetups.map((s) => `${s.kelas}|||${s.mapel}`));
+
+        let copied = 0;
+        let skipped = 0;
+        for (const s of sourceSetups) {
+          const key = `${s.kelas}|||${s.mapel}`;
+          if (existingKeys.has(key)) {
+            skipped++;
+            continue;
+          }
+          await db.insert(elearningSetups).values({
+            kelas: s.kelas,
+            mapel: s.mapel,
+            tutorId: s.tutorId,
+            skk: s.skk,
+            jumlahSesi: s.jumlahSesi,
+            semester: toSemester,
+          });
+          copied++;
+        }
+
+        return {
+          success: true,
+          copied,
+          skipped,
+          message: `Berhasil menyalin ${copied} setup dari semester ${fromSemester} ke ${toSemester}${skipped > 0 ? `, ${skipped} dilewati (sudah ada)` : ""}`,
+        };
+      } catch (error: any) {
+        set.status = 500;
+        console.error("Setup copy error:", error);
+        return { success: false, message: "Terjadi kesalahan server" };
+      }
+    },
+    {
+      body: t.Object({
+        fromSemester: t.String(),
+        toSemester: t.String(),
+      }),
+    }
+  )
+
   // PUT update setup (admin only)
   .put(
     "/setups/:id",

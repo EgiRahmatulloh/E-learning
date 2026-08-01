@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Settings, Plus, Save, Trash2, Edit, BookOpen, Clock, AlertTriangle, Search, GraduationCap, X } from "lucide-react";
+import { Settings, Plus, Save, Trash2, Edit, BookOpen, Clock, AlertTriangle, Search, GraduationCap, X, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { MASTER_MAPEL } from "./MasterMapel";
 import { extractLevel } from "@/lib/kelas-helper";
@@ -79,6 +79,10 @@ export default function KelolaElearning({ initialKelasId }: { initialKelasId?: s
     return bulan >= 7 ? "Ganjil" : "Genap";
   });
 
+  // State untuk salin setup antar semester
+  const [copying, setCopying] = useState(false);
+  const otherSemester = selectedSemester === "Ganjil" ? "Genap" : "Ganjil";
+
   // Form State
   const [formData, setFormData] = useState({
     id: "",
@@ -115,6 +119,37 @@ export default function KelolaElearning({ initialKelasId }: { initialKelasId?: s
       }
     } catch (err) {
       console.error("Failed to load elearning setups:", err);
+    }
+  };
+
+  const handleCopySemester = async () => {
+    if (copying) return;
+    if (!window.confirm(
+      `Salin seluruh setup mapel dari semester ${otherSemester} ke ${selectedSemester}?\n\n` +
+      `Setup yang sudah ada di semester ${selectedSemester} (kelas + mapel sama) tidak akan ditimpa.`
+    )) return;
+
+    setCopying(true);
+    try {
+      const res = await fetch("/api/elearning/setups/copy", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ fromSemester: otherSemester, toSemester: selectedSemester }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message || "Setup berhasil disalin!");
+        fetchSetups();
+      } else {
+        toast.error(data.message || "Gagal menyalin setup");
+      }
+    } catch (err: any) {
+      toast.error("Terjadi kesalahan: " + err.message);
+    } finally {
+      setCopying(false);
     }
   };
 
@@ -489,7 +524,7 @@ export default function KelolaElearning({ initialKelasId }: { initialKelasId?: s
               Konfigurasi mata pelajaran, tutor, SKK, dan sesi untuk setiap level kelas
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <label className="text-xs font-black text-slate-500 uppercase">Semester</label>
             <select
               value={selectedSemester}
@@ -502,6 +537,15 @@ export default function KelolaElearning({ initialKelasId }: { initialKelasId?: s
               <option value="Genap">Genap (Jan - Jun)</option>
               <option value="Ganjil">Ganjil (Jul - Des)</option>
             </select>
+            <Button
+              onClick={handleCopySemester}
+              disabled={copying}
+              title={`Salin seluruh setup dari semester ${otherSemester}`}
+              className="bg-[#ffb300] hover:bg-[#ffa000] text-black font-extrabold text-xs px-4 py-2.5 rounded-xl cursor-pointer flex items-center gap-1.5 disabled:opacity-50 transition-all whitespace-nowrap shadow-sm"
+            >
+              <Copy className="h-4 w-4" />
+              {copying ? "MENYALIN..." : `SALIN DARI ${otherSemester.toUpperCase()}`}
+            </Button>
           </div>
         </div>
       </div>
