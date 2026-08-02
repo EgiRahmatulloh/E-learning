@@ -87,8 +87,6 @@ export const buildAttendanceGrid = (
       if (hasActivity) {
         dayData["d" + d] = "H";
         rekap++;
-      } else if (sessionDates.has(d)) {
-        dayData["d" + d] = "A";
       } else {
         dayData["d" + d] = "-";
       }
