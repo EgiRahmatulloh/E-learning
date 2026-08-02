@@ -65,31 +65,48 @@ export const laporanHandlers = new Elysia()
         const currentYear = now.getFullYear();
         const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-        const tutorsData = filteredSetups.map((setup, idx) => {
-          const tutor = tutorsList.find(t => t.id === setup.tutorId);
-          const program = deriveProgram(setup.kelas);
-          const course = allCourses.find(c => c.namaMapel === setup.mapel && c.program === program);
+        // Kelompokkan setup per mapel (gabung semua sub-rombel dalam satu level menjadi satu baris)
+        const setupsByMapel = new Map<string, typeof filteredSetups>();
+        for (const s of filteredSetups) {
+          if (!setupsByMapel.has(s.mapel)) setupsByMapel.set(s.mapel, []);
+          setupsByMapel.get(s.mapel)!.push(s);
+        }
+
+        const tutorsData: any[] = [];
+        let rowNo = 0;
+        for (const [mapel, group] of setupsByMapel) {
+          const program = deriveProgram(group[0].kelas);
+          const course = allCourses.find(c => c.namaMapel === mapel && c.program === program);
           const courseSessions = course ? allSessions.filter(s => s.courseId === course.id) : [];
           const sessionIds = new Set(courseSessions.map(s => s.id));
 
-          // Filter postingan forum tutor pada mapel/course ini
-          const tutorPosts = allPosts.filter(p => p.authorId === setup.tutorId && p.sessionId && sessionIds.has(p.sessionId));
-          const tutorAtt = allTutorAttendances.filter(a => a.tutorId === setup.tutorId);
-
+          const tutorIds = new Set(group.map(g => g.tutorId));
+          // Gabung semua aktivitas tutor pada mapel ini (seluruh sub-rombel)
+          const tutorPosts = allPosts.filter(p => p.sessionId && sessionIds.has(p.sessionId) && tutorIds.has(p.authorId));
+          const tutorAtt = allTutorAttendances.filter(a => tutorIds.has(a.tutorId));
           const allActivities = [...tutorPosts, ...tutorAtt];
 
           const { dayData, rekap } = buildAttendanceGrid(
             allActivities, item => item.date || item.createdAt, currentMonth, currentYear, daysInMonth
           );
-          return {
-            no: idx + 1,
-            namaTutor: tutor ? tutor.nama : "-",
-            mapel: `${setup.mapel} (${setup.kelas})`,
-            kelas: setup.kelas,
+
+          const tutorNames = [...new Set(group.map(g => tutorsList.find(t => t.id === g.tutorId)?.nama).filter(Boolean))];
+          const namaTutor = tutorNames.length > 0 ? tutorNames.join(", ") : "-";
+
+          // Label kelas berupa tingkat saja (gabung sub-rombel), mis. "PAKET C 10"
+          const levelNum = extractLevel(group[0].kelas);
+          const paket = levelNum <= 6 ? "A" : levelNum <= 9 ? "B" : "C";
+          const kelasLabel = `PAKET ${paket} ${levelNum}`;
+
+          tutorsData.push({
+            no: ++rowNo,
+            namaTutor,
+            mapel,
+            kelas: kelasLabel,
             ...dayData,
             rekap
-          };
-        });
+          });
+        }
 
         // Derive program, semester from filtered setups
         const programCounts = new Map<string, number>();
