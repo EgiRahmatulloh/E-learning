@@ -479,6 +479,11 @@ try {
 } catch (e) {
 }
 
+try {
+  sqlite.exec("ALTER TABLE elearning_sessions ADD COLUMN updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'));");
+} catch (e) {
+}
+
 // Migration: rename nuptk → nip di tabel managers dan tutors
 try {
   sqlite.exec("ALTER TABLE managers RENAME COLUMN nuptk TO nip;");

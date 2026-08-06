@@ -29,6 +29,16 @@ import { verifyAdmin, verifyAdminOrTutor } from "../../middleware/auth";
 import { verifyUser, sanitizeFilename, deriveProgram, extractLevel, buildAttendanceGrid, calculateGrade, getTahunAjaran } from "./helpers";
 import { fillTemplate } from "../../utils/templateXlsx";
 
+const stripHtml = (input?: string | null): string =>
+  (input || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\s+/g, " ")
+    .trim();
+
   // ==========================================
   // LAPORAN TEMPLATE DOWNLOADS
   // ==========================================
@@ -814,24 +824,18 @@ export const laporanHandlers = new Elysia()
 
         const agendaData = sessionsList.map((s, idx) => {
           const sessMaterials = materialsList.filter(m => m.sessionId === s.id);
-          const materi = sessMaterials.length > 0
-            ? sessMaterials.map(m => m.title).filter(Boolean).join(", ")
-            : (s.title || "-");
+          const materiList = sessMaterials.map(m => m.title).map(stripHtml).filter(Boolean);
+          // Materi diambil dari isian "Materi yang diajarkan" tutor (description); fallback ke judul materi unggah; selain itu "-"
+          const materi = (stripHtml(s.description) || materiList.join(", ") || "-");
           const attendedIds = new Set(attendances.filter(a => a.sessionId === s.id).map(a => a.studentId));
           const hadir = attendedIds.size;
           const tidakHadir = Math.max(0, totalStudents - hadir);
           const absentNames = studentsList.filter(st => !attendedIds.has(st.id)).map(st => st.nama);
           const keterangan = tidakHadir > 0 ? absentNames.join(", ") : "-";
-          // Hari, Tanggal diisi otomatis dari waktu tutor PERTAMA KALI mengisi daftar hadir sesi (created_at paling awal)
-          const sessAttendances = attendances.filter(a => a.sessionId === s.id);
-          sessAttendances.sort((a, b) =>
-            (a.createdAt || a.attendedAt || "").localeCompare(b.createdAt || b.attendedAt || "")
-          );
-          const attendedAt = sessAttendances.length > 0
-            ? (sessAttendances[0].createdAt || sessAttendances[0].attendedAt)
-            : null;
-          const hariTanggal = attendedAt
-            ? new Date(attendedAt).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+          // Hari, Tanggal otomatis terisi tanggal terakhir sesi di-Simpan (updated_at) saat tutor simpan materi/tujuan/uraian; "-" jika belum ada isian
+          const adaIsian = Boolean(stripHtml(s.description) || stripHtml(s.tujuanPembelajaran) || stripHtml(s.uraianKegiatan));
+          const hariTanggal = adaIsian && s.updatedAt
+            ? new Date(s.updatedAt).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
             : "-";
           return {
             no: idx + 1,
