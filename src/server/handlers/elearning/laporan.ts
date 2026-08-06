@@ -822,8 +822,16 @@ export const laporanHandlers = new Elysia()
           const tidakHadir = Math.max(0, totalStudents - hadir);
           const absentNames = studentsList.filter(st => !attendedIds.has(st.id)).map(st => st.nama);
           const keterangan = tidakHadir > 0 ? absentNames.join(", ") : "-";
-          const hariTanggal = s.startDate
-            ? new Date(s.startDate).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+          // Hari, Tanggal diisi otomatis dari waktu tutor PERTAMA KALI mengisi daftar hadir sesi (created_at paling awal)
+          const sessAttendances = attendances.filter(a => a.sessionId === s.id);
+          sessAttendances.sort((a, b) =>
+            (a.createdAt || a.attendedAt || "").localeCompare(b.createdAt || b.attendedAt || "")
+          );
+          const attendedAt = sessAttendances.length > 0
+            ? (sessAttendances[0].createdAt || sessAttendances[0].attendedAt)
+            : null;
+          const hariTanggal = attendedAt
+            ? new Date(attendedAt).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
             : "-";
           return {
             no: idx + 1,
