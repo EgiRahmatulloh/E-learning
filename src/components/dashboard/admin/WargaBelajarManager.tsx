@@ -71,11 +71,12 @@ export default function WargaBelajarManager() {
   const confirm = useConfirm();
 
   const WB_BERKAS_TYPES: { label: string; key: string }[] = [
+    { label: "Formulir Pendaftaran", key: "formulir" },
+    { label: "Surat Pernyataan", key: "pernyataan" },
     { label: "KK (Kartu Keluarga)", key: "kk" },
-    { label: "KTP / Akta Kelahiran", key: "ktp" },
+    { label: "KTP", key: "ktp" },
+    { label: "Akta Lahir", key: "akta" },
     { label: "Ijazah Sebelumnya", key: "ijazah" },
-    { label: "SKHUN", key: "skhun" },
-    { label: "Pas Foto", key: "pasfoto" },
   ];
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
