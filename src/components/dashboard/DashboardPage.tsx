@@ -108,6 +108,13 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
     nis: (user as any).nis || "",
     namaAyah: (user as any).namaAyah || "",
     namaIbu: (user as any).namaIbu || "",
+    titikLayanan: (user as any).titikLayanan || "",
+    rt: (user as any).rt || "",
+    rw: (user as any).rw || "",
+    desa: (user as any).desa || "",
+    kecamatan: (user as any).kecamatan || "",
+    kabupaten: (user as any).kabupaten || "",
+    provinsi: (user as any).provinsi || "",
   });
 
   useEffect(() => {
@@ -135,6 +142,13 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
         nis: (user as any).nis || "",
         namaAyah: (user as any).namaAyah || "",
         namaIbu: (user as any).namaIbu || "",
+        titikLayanan: (user as any).titikLayanan || "",
+        rt: (user as any).rt || "",
+        rw: (user as any).rw || "",
+        desa: (user as any).desa || "",
+        kecamatan: (user as any).kecamatan || "",
+        kabupaten: (user as any).kabupaten || "",
+        provinsi: (user as any).provinsi || "",
       });
     }
   }, [user]);
@@ -179,6 +193,13 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
           nis: formData.nis || undefined,
           namaAyah: formData.namaAyah || undefined,
           namaIbu: formData.namaIbu || undefined,
+          titikLayanan: formData.titikLayanan || undefined,
+          rt: formData.rt || undefined,
+          rw: formData.rw || undefined,
+          desa: formData.desa || undefined,
+          kecamatan: formData.kecamatan || undefined,
+          kabupaten: formData.kabupaten || undefined,
+          provinsi: formData.provinsi || undefined,
         }),
       });
 
@@ -419,6 +440,15 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                         className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
                       />
                     </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Titik Layanan</label>
+                      <input
+                        type="text"
+                        value={formData.titikLayanan}
+                        onChange={(e) => setFormData({ ...formData, titikLayanan: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
                   </>
                 )}
 
@@ -452,6 +482,42 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                         className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
                       />
                     </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Nomor SK Pengangkatan</label>
+                      <input
+                        type="text"
+                        value={formData.nomorSkPengangkatan}
+                        onChange={(e) => setFormData({ ...formData, nomorSkPengangkatan: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Lembaga Pengangkat</label>
+                      <input
+                        type="text"
+                        value={formData.lembagaPengangkat}
+                        onChange={(e) => setFormData({ ...formData, lembagaPengangkat: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Nomor SK Penugasan</label>
+                      <input
+                        type="text"
+                        value={formData.nomorSkPenugasan}
+                        onChange={(e) => setFormData({ ...formData, nomorSkPenugasan: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Lembaga Penugas</label>
+                      <input
+                        type="text"
+                        value={formData.lembagaPenugas}
+                        onChange={(e) => setFormData({ ...formData, lembagaPenugas: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
                   </>
                 )}
 
@@ -475,7 +541,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                         className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
                       />
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 sm:col-span-2">
                       <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Jenis Kelamin</label>
                       <select
                         value={formData.jenisKelamin}
@@ -503,6 +569,62 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                         <option value="Konghucu">Konghucu</option>
                       </select>
                     </div>
+                    
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">RT</label>
+                      <input
+                        type="text"
+                        value={formData.rt}
+                        onChange={(e) => setFormData({ ...formData, rt: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">RW</label>
+                      <input
+                        type="text"
+                        value={formData.rw}
+                        onChange={(e) => setFormData({ ...formData, rw: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Desa / Kelurahan</label>
+                      <input
+                        type="text"
+                        value={formData.desa}
+                        onChange={(e) => setFormData({ ...formData, desa: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Kecamatan</label>
+                      <input
+                        type="text"
+                        value={formData.kecamatan}
+                        onChange={(e) => setFormData({ ...formData, kecamatan: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Kabupaten / Kota</label>
+                      <input
+                        type="text"
+                        value={formData.kabupaten}
+                        onChange={(e) => setFormData({ ...formData, kabupaten: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Provinsi</label>
+                      <input
+                        type="text"
+                        value={formData.provinsi}
+                        onChange={(e) => setFormData({ ...formData, provinsi: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                      />
+                    </div>
+
                   </>
                 )}
 
@@ -516,6 +638,54 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                   />
                 </div>
 
+                <div className="border-t border-slate-100 my-2 sm:col-span-2 lg:col-span-4" />
+
+                {/* BERKAS DOKUMEN READONLY */}
+                {(user.role === "siswa" || user.role === "tutor") && (
+                  <div className="space-y-3 sm:col-span-2 lg:col-span-4 pb-4">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Berkas Dokumen</label>
+                      <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 p-2 rounded-lg border border-slate-200 max-w-fit">
+                        Hubungi admin untuk memperbarui berkas.
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {[
+                        ...(user.role === "siswa" ? [
+                          { key: "formulir", label: "Formulir Pendaftaran" },
+                          { key: "pernyataan", label: "Surat Pernyataan" },
+                          { key: "kk", label: "KK" },
+                          { key: "ktp", label: "KTP" },
+                          { key: "akta", label: "Akta Lahir" },
+                          { key: "ijazah", label: "Ijazah Sebelumnya" },
+                        ] : []),
+                        ...(user.role === "tutor" ? [
+                          { key: "kk", label: "KK" },
+                          { key: "ktp", label: "KTP" },
+                          { key: "ijazah", label: "Ijazah" },
+                          { key: "sk_pengangkatan", label: "SK Pengangkatan" },
+                          { key: "sk_penugasan", label: "SK Penugasan" },
+                        ] : [])
+                      ].map((berkas) => {
+                        const userBerkas = (user as any).berkas || {};
+                        const fileUrl = userBerkas[berkas.key];
+                        return (
+                          <div key={berkas.key} className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
+                            <span className="text-xs font-bold text-slate-700">{berkas.label}</span>
+                            {fileUrl ? (
+                              <a href={fileUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[10px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
+                                <Upload className="h-3 w-3 rotate-180" /> Unduh
+                              </a>
+                            ) : (
+                              <span className="text-[10px] font-bold text-slate-400 bg-slate-200 px-2 py-1 rounded-md">Belum diunggah</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                
                 <div className="border-t border-slate-100 my-2 sm:col-span-2 lg:col-span-4" />
 
                 <div className="space-y-1.5">

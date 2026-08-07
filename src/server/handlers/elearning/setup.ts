@@ -65,8 +65,19 @@ export const setupHandlers = new Elysia()
         const condition = conditions.length > 0 ? and(...conditions) : undefined;
 
         const setups = await db
-          .select()
+          .select({
+            id: elearningSetups.id,
+            kelas: elearningSetups.kelas,
+            mapel: elearningSetups.mapel,
+            tutorId: elearningSetups.tutorId,
+            skk: elearningSetups.skk,
+            jumlahSesi: elearningSetups.jumlahSesi,
+            semester: elearningSetups.semester,
+            createdAt: elearningSetups.createdAt,
+            tutorNama: tutors.nama,
+          })
           .from(elearningSetups)
+          .leftJoin(tutors, eq(elearningSetups.tutorId, tutors.id))
           .where(condition)
           .all();
 

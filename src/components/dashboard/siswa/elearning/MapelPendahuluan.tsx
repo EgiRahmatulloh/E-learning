@@ -265,7 +265,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
                 <SectionCompleteButton sectionKey="pendahuluan_rat" completions={completions} handleMarkComplete={handleMarkComplete} className="m-0 h-8 text-xs px-3" />
               </div>
             </div>
-            <h4 className="font-bold text-emerald-900 mb-1">Rancangan Aktivitas Tutorial (RAT)</h4>
+            <h4 className="font-bold text-emerald-900 mb-1">Capaian Pembelajaran (CP)</h4>
             <p className="text-xs text-emerald-700/80 mb-3 line-clamp-2">Dokumen panduan aktivitas tutorial selama satu semester.</p>
             {ratUrl ? (
               <Button onClick={() => { handleMarkComplete("pendahuluan_rat"); window.open(ratUrl, "_blank"); }} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm font-semibold rounded-xl text-xs h-9">

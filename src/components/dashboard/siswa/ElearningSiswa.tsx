@@ -36,21 +36,10 @@ const getSubjectMeta = (index: number) => {
     "from-violet-500 to-purple-700",
     "from-amber-500 to-orange-600",
   ];
-  const tutors = [
-    "Bapak Ahmad Fauzi, S.Pd",
-    "Ibu Siti Rahayu, M.Pd",
-    "Bapak Dedi Kurniawan, S.Pd",
-    "Ibu Rina Agustina, M.Pd",
-    "Bapak Hendra Wijaya, S.Pd",
-    "Ibu Dewi Sartika, S.Pd",
-    "Bapak Rudi Hartono, M.Pd",
-    "Ibu Sri Wahyuni, S.Pd",
-  ];
   const progresses = [100, 75, 45, 30, 0, 60, 85, 20];
 
   return {
     gradient: colorGradients[index % colorGradients.length],
-    tutor: tutors[index % tutors.length],
     progress: progresses[index % progresses.length],
   };
 };
@@ -123,7 +112,7 @@ export function ElearningSiswa({ activeTab, user, setActiveTab }: ElearningSiswa
         id: `setup-${setup.id}-${slug}`,
         name: setup.mapel,
         slug,
-        tutor: meta.tutor,
+        tutor: setup.tutorNama || "Tutor",
         progress,
         status,
         gradient: meta.gradient,

@@ -209,6 +209,13 @@ export const authHandlers = new Elysia()
             lembagaPengangkat: tutor.lembagaPengangkat,
             nomorSkPenugasan: tutor.nomorSkPenugasan,
             lembagaPenugas: tutor.lembagaPenugas,
+            rt: tutor.rt,
+            rw: tutor.rw,
+            desa: tutor.desa,
+            kecamatan: tutor.kecamatan,
+            kabupaten: tutor.kabupaten,
+            provinsi: tutor.provinsi,
+            berkas: tutor.berkas,
           },
         };
       }
@@ -245,6 +252,13 @@ export const authHandlers = new Elysia()
             namaAyah: student.namaAyah,
             namaIbu: student.namaIbu,
             titikLayanan: student.titikLayanan,
+            rt: student.rt,
+            rw: student.rw,
+            desa: student.desa,
+            kecamatan: student.kecamatan,
+            kabupaten: student.kabupaten,
+            provinsi: student.provinsi,
+            berkas: student.berkas,
           },
         };
       }
@@ -279,7 +293,8 @@ export const authHandlers = new Elysia()
         name, email, password, noHp, alamat, foto,
         nik, nip, tempatTglLahir, jenisKelamin, agama, pendidikan,
         tanggalMulaiTugas, nomorSkPengangkatan, lembagaPengangkat, nomorSkPenugasan, lembagaPenugas,
-        nisn, nis, titikLayanan, namaAyah, namaIbu
+        nisn, nis, titikLayanan, namaAyah, namaIbu,
+        rt, rw, desa, kecamatan, kabupaten, provinsi
       } = body as any;
 
       try {
@@ -335,6 +350,12 @@ export const authHandlers = new Elysia()
           if (lembagaPengangkat !== undefined) updateData.lembagaPengangkat = lembagaPengangkat;
           if (nomorSkPenugasan !== undefined) updateData.nomorSkPenugasan = nomorSkPenugasan;
           if (lembagaPenugas !== undefined) updateData.lembagaPenugas = lembagaPenugas;
+          if (rt !== undefined) updateData.rt = rt;
+          if (rw !== undefined) updateData.rw = rw;
+          if (desa !== undefined) updateData.desa = desa;
+          if (kecamatan !== undefined) updateData.kecamatan = kecamatan;
+          if (kabupaten !== undefined) updateData.kabupaten = kabupaten;
+          if (provinsi !== undefined) updateData.provinsi = provinsi;
           
           const updated = await db
             .update(tutors)
@@ -369,6 +390,12 @@ export const authHandlers = new Elysia()
               lembagaPengangkat: updated.lembagaPengangkat,
               nomorSkPenugasan: updated.nomorSkPenugasan,
               lembagaPenugas: updated.lembagaPenugas,
+              rt: updated.rt,
+              rw: updated.rw,
+              desa: updated.desa,
+              kecamatan: updated.kecamatan,
+              kabupaten: updated.kabupaten,
+              provinsi: updated.provinsi,
             },
           };
         }
@@ -384,6 +411,12 @@ export const authHandlers = new Elysia()
           if (agama !== undefined) updateData.agama = agama;
           if (namaAyah !== undefined) updateData.namaAyah = namaAyah;
           if (namaIbu !== undefined) updateData.namaIbu = namaIbu;
+          if (rt !== undefined) updateData.rt = rt;
+          if (rw !== undefined) updateData.rw = rw;
+          if (desa !== undefined) updateData.desa = desa;
+          if (kecamatan !== undefined) updateData.kecamatan = kecamatan;
+          if (kabupaten !== undefined) updateData.kabupaten = kabupaten;
+          if (provinsi !== undefined) updateData.provinsi = provinsi;
           
           const updated = await db
             .update(students)
@@ -417,6 +450,12 @@ export const authHandlers = new Elysia()
               namaAyah: updated.namaAyah,
               namaIbu: updated.namaIbu,
               titikLayanan: updated.titikLayanan,
+              rt: updated.rt,
+              rw: updated.rw,
+              desa: updated.desa,
+              kecamatan: updated.kecamatan,
+              kabupaten: updated.kabupaten,
+              provinsi: updated.provinsi,
             },
           };
         }
@@ -451,6 +490,12 @@ export const authHandlers = new Elysia()
         titikLayanan: t.Optional(t.String()),
         namaAyah: t.Optional(t.String()),
         namaIbu: t.Optional(t.String()),
+        rt: t.Optional(t.String()),
+        rw: t.Optional(t.String()),
+        desa: t.Optional(t.String()),
+        kecamatan: t.Optional(t.String()),
+        kabupaten: t.Optional(t.String()),
+        provinsi: t.Optional(t.String()),
         foto: t.Optional(t.String()),
       }),
     }
