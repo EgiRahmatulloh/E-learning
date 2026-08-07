@@ -176,6 +176,21 @@ export const authHandlers = new Elysia()
             jenisKelamin: manager.jenisKelamin,
             agama: manager.agama,
             foto: manager.foto,
+            jabatan: manager.jabatan,
+            nip: manager.nip,
+            pendidikan: manager.pendidikan,
+            tanggalMulaiTugas: manager.tanggalMulaiTugas,
+            nomorSkPengangkatan: manager.nomorSkPengangkatan,
+            lembagaPengangkat: manager.lembagaPengangkat,
+            nomorSkPenugasan: manager.nomorSkPenugasan,
+            lembagaPenugas: manager.lembagaPenugas,
+            rt: manager.rt,
+            rw: manager.rw,
+            desa: manager.desa,
+            kecamatan: manager.kecamatan,
+            kabupaten: manager.kabupaten,
+            provinsi: manager.provinsi,
+            berkas: manager.berkas,
           },
         };
       }
@@ -293,7 +308,7 @@ export const authHandlers = new Elysia()
         name, email, password, noHp, alamat, foto,
         nik, nip, tempatTglLahir, jenisKelamin, agama, pendidikan,
         tanggalMulaiTugas, nomorSkPengangkatan, lembagaPengangkat, nomorSkPenugasan, lembagaPenugas,
-        nisn, nis, titikLayanan, namaAyah, namaIbu,
+        nisn, nis, titikLayanan, namaAyah, namaIbu, jabatan,
         rt, rw, desa, kecamatan, kabupaten, provinsi
       } = body as any;
 
@@ -309,6 +324,25 @@ export const authHandlers = new Elysia()
         updateData.updatedAt = new Date().toISOString();
 
         if (role === "admin" || role === "super_admin") {
+          if (jabatan !== undefined) updateData.jabatan = jabatan;
+          if (nik !== undefined) updateData.nik = nik;
+          if (nip !== undefined) updateData.nip = nip;
+          if (tempatTglLahir !== undefined) updateData.tempatTglLahir = tempatTglLahir;
+          if (jenisKelamin !== undefined) updateData.jenisKelamin = jenisKelamin;
+          if (agama !== undefined) updateData.agama = agama;
+          if (pendidikan !== undefined) updateData.pendidikan = pendidikan;
+          if (tanggalMulaiTugas !== undefined) updateData.tanggalMulaiTugas = tanggalMulaiTugas;
+          if (nomorSkPengangkatan !== undefined) updateData.nomorSkPengangkatan = nomorSkPengangkatan;
+          if (lembagaPengangkat !== undefined) updateData.lembagaPengangkat = lembagaPengangkat;
+          if (nomorSkPenugasan !== undefined) updateData.nomorSkPenugasan = nomorSkPenugasan;
+          if (lembagaPenugas !== undefined) updateData.lembagaPenugas = lembagaPenugas;
+          if (rt !== undefined) updateData.rt = rt;
+          if (rw !== undefined) updateData.rw = rw;
+          if (desa !== undefined) updateData.desa = desa;
+          if (kecamatan !== undefined) updateData.kecamatan = kecamatan;
+          if (kabupaten !== undefined) updateData.kabupaten = kabupaten;
+          if (provinsi !== undefined) updateData.provinsi = provinsi;
+
           const updated = await db
             .update(managers)
             .set(updateData)
@@ -333,6 +367,20 @@ export const authHandlers = new Elysia()
               jenisKelamin: updated.jenisKelamin,
               agama: updated.agama,
               foto: updated.foto,
+              jabatan: updated.jabatan,
+              nip: updated.nip,
+              pendidikan: updated.pendidikan,
+              tanggalMulaiTugas: updated.tanggalMulaiTugas,
+              nomorSkPengangkatan: updated.nomorSkPengangkatan,
+              lembagaPengangkat: updated.lembagaPengangkat,
+              nomorSkPenugasan: updated.nomorSkPenugasan,
+              lembagaPenugas: updated.lembagaPenugas,
+              rt: updated.rt,
+              rw: updated.rw,
+              desa: updated.desa,
+              kecamatan: updated.kecamatan,
+              kabupaten: updated.kabupaten,
+              provinsi: updated.provinsi,
             },
           };
         }

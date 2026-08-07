@@ -95,6 +95,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
     alamat: user.alamat || "",
     nik: user.nik || "",
     nip: (user as any).nip || "",
+    jabatan: (user as any).jabatan || "",
     tempatTglLahir: (user as any).tempatTglLahir || "",
     jenisKelamin: (user as any).jenisKelamin || "",
     agama: (user as any).agama || "",
@@ -129,6 +130,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
         alamat: user.alamat || "",
         nik: user.nik || "",
         nip: (user as any).nip || "",
+        jabatan: (user as any).jabatan || "",
         tempatTglLahir: (user as any).tempatTglLahir || "",
         jenisKelamin: (user as any).jenisKelamin || "",
         agama: (user as any).agama || "",
@@ -180,6 +182,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
           alamat: formData.alamat || undefined,
           nik: formData.nik || undefined,
           nip: formData.nip || undefined,
+          jabatan: formData.jabatan || undefined,
           tempatTglLahir: formData.tempatTglLahir || undefined,
           jenisKelamin: formData.jenisKelamin || undefined,
           agama: formData.agama || undefined,
@@ -453,7 +456,19 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                   </>
                 )}
 
-                {user.role === "tutor" && (
+                {user.role === "admin" && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Jabatan</label>
+                    <input
+                      type="text"
+                      value={formData.jabatan}
+                      onChange={(e) => setFormData({ ...formData, jabatan: e.target.value })}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
+                    />
+                  </div>
+                )}
+
+                {(user.role === "tutor" || user.role === "admin") && (
                   <>
                     <div className="space-y-1.5">
                       <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">NIP</label>
@@ -522,7 +537,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                   </>
                 )}
 
-                {(user.role === "siswa" || user.role === "tutor") && (
+                {(user.role === "siswa" || user.role === "tutor" || user.role === "admin") && (
                   <>
                     <div className="space-y-1.5">
                       <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">NIK</label>
@@ -690,20 +705,22 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                 </div>
               </div>
 
-              <div className="flex justify-end pt-4 pb-2">
+            </div>
+
+            <div className="w-full lg:w-80 shrink-0 space-y-6 lg:sticky lg:top-6">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-3">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Tindakan</p>
                 <Button
                   type="submit"
                   disabled={profileLoading}
-                  className="rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold text-sm px-6 py-2.5 cursor-pointer transition-colors"
+                  className="w-full rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold text-sm px-6 py-3 cursor-pointer transition-colors shadow-md shadow-[#280f91]/20"
                 >
                   {profileLoading ? "Menyimpan..." : "Simpan Perubahan"}
                 </Button>
               </div>
-            </div>
 
-            <div className="w-full lg:w-80 shrink-0 space-y-6">
               {/* BERKAS DOKUMEN READONLY */}
-              {(user.role === "siswa" || user.role === "tutor") && (
+              {(user.role === "siswa" || user.role === "tutor" || user.role === "admin") && (
                 <div className="space-y-3">
                   <div className="flex flex-col gap-1">
                     <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Berkas Dokumen</label>
@@ -721,7 +738,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                         { key: "akta", label: "Akta Lahir" },
                         { key: "ijazah", label: "Ijazah Sebelumnya" },
                       ] : []),
-                      ...(user.role === "tutor" ? [
+                      ...((user.role === "tutor" || user.role === "admin") ? [
                         { key: "kk", label: "KK" },
                         { key: "ktp", label: "KTP" },
                         { key: "ijazah", label: "Ijazah" },
