@@ -84,7 +84,7 @@ export const managersHandlers = new Elysia()
       if (authError) return authError;
 
       try {
-        const { password, ...otherFields } = body;
+        const { password, ...otherFields } = body as any;
         // Wajib password: hash kosong membuat login manager error (M8)
         const hashedPassword = await Bun.password.hash(
           password && password.trim() !== "" ? password : "password123"
@@ -149,7 +149,7 @@ export const managersHandlers = new Elysia()
       }
 
       try {
-        const { password, ...otherFields } = body;
+        const { password, ...otherFields } = body as any;
         const updateData: Record<string, any> = { ...otherFields };
         if (password && password.trim() !== "") {
           updateData.password = await Bun.password.hash(password);
