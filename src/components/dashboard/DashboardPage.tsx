@@ -307,7 +307,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
     }
     if (activeTab === "profil") {
       return (
-        <div className="max-w-5xl animate-in fade-in duration-300">
+        <div className="w-full animate-in fade-in duration-300">
           <div className="rounded-2xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-sm space-y-6">
             <div className="border-b border-slate-100 pb-4">
               <h3 className="text-lg font-black text-cyan-900">Profil Akun Saya</h3>
@@ -323,8 +323,9 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
               </div>
             )}
 
-            <form onSubmit={handleUpdateProfile} className="space-y-5">
-              {/* FOTO PROFIL */}
+            <form onSubmit={handleUpdateProfile} className="lg:flex lg:gap-8 lg:items-start space-y-8 lg:space-y-0">
+              <div className="flex-1 space-y-5">
+                {/* FOTO PROFIL */}
               <div className="flex items-center gap-5 flex-wrap">
                 <div className="h-20 w-20 rounded-full overflow-hidden bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center text-white font-black text-2xl shadow-md shadow-cyan-500/20 shrink-0">
                   {formData.foto ? (
@@ -541,7 +542,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                         className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] outline-none transition-all"
                       />
                     </div>
-                    <div className="space-y-1.5 sm:col-span-2">
+                    <div className="space-y-1.5">
                       <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Jenis Kelamin</label>
                       <select
                         value={formData.jenisKelamin}
@@ -640,54 +641,6 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
 
                 <div className="border-t border-slate-100 my-2 sm:col-span-2 lg:col-span-4" />
 
-                {/* BERKAS DOKUMEN READONLY */}
-                {(user.role === "siswa" || user.role === "tutor") && (
-                  <div className="space-y-3 sm:col-span-2 lg:col-span-4 pb-4">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Berkas Dokumen</label>
-                      <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 p-2 rounded-lg border border-slate-200 max-w-fit">
-                        Hubungi admin untuk memperbarui berkas.
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {[
-                        ...(user.role === "siswa" ? [
-                          { key: "formulir", label: "Formulir Pendaftaran" },
-                          { key: "pernyataan", label: "Surat Pernyataan" },
-                          { key: "kk", label: "KK" },
-                          { key: "ktp", label: "KTP" },
-                          { key: "akta", label: "Akta Lahir" },
-                          { key: "ijazah", label: "Ijazah Sebelumnya" },
-                        ] : []),
-                        ...(user.role === "tutor" ? [
-                          { key: "kk", label: "KK" },
-                          { key: "ktp", label: "KTP" },
-                          { key: "ijazah", label: "Ijazah" },
-                          { key: "sk_pengangkatan", label: "SK Pengangkatan" },
-                          { key: "sk_penugasan", label: "SK Penugasan" },
-                        ] : [])
-                      ].map((berkas) => {
-                        const userBerkas = (user as any).berkas || {};
-                        const fileUrl = userBerkas[berkas.key];
-                        return (
-                          <div key={berkas.key} className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
-                            <span className="text-xs font-bold text-slate-700">{berkas.label}</span>
-                            {fileUrl ? (
-                              <a href={fileUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[10px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
-                                <Upload className="h-3 w-3 rotate-180" /> Unduh
-                              </a>
-                            ) : (
-                              <span className="text-[10px] font-bold text-slate-400 bg-slate-200 px-2 py-1 rounded-md">Belum diunggah</span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                
-                <div className="border-t border-slate-100 my-2 sm:col-span-2 lg:col-span-4" />
-
                 <div className="space-y-1.5">
                   <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Password Baru (Opsional)</label>
                   <div className="relative">
@@ -737,6 +690,72 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                 </div>
               </div>
 
+              <div className="flex justify-end pt-4 pb-2">
+                <Button
+                  type="submit"
+                  disabled={profileLoading}
+                  className="rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold text-sm px-6 py-2.5 cursor-pointer transition-colors"
+                >
+                  {profileLoading ? "Menyimpan..." : "Simpan Perubahan"}
+                </Button>
+              </div>
+            </div>
+
+            <div className="w-full lg:w-80 shrink-0 space-y-6">
+              {/* BERKAS DOKUMEN READONLY */}
+              {(user.role === "siswa" || user.role === "tutor") && (
+                <div className="space-y-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest block">Berkas Dokumen</label>
+                    <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 p-2 rounded-lg border border-slate-200 max-w-fit">
+                      Hubungi admin untuk memperbarui berkas.
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3">
+                    {[
+                      ...(user.role === "siswa" ? [
+                        { key: "formulir", label: "Formulir Pendaftaran" },
+                        { key: "pernyataan", label: "Surat Pernyataan" },
+                        { key: "kk", label: "KK" },
+                        { key: "ktp", label: "KTP" },
+                        { key: "akta", label: "Akta Lahir" },
+                        { key: "ijazah", label: "Ijazah Sebelumnya" },
+                      ] : []),
+                      ...(user.role === "tutor" ? [
+                        { key: "kk", label: "KK" },
+                        { key: "ktp", label: "KTP" },
+                        { key: "ijazah", label: "Ijazah" },
+                        { key: "sk_pengangkatan", label: "SK Pengangkatan" },
+                        { key: "sk_penugasan", label: "SK Penugasan" },
+                      ] : [])
+                    ].map((berkas) => {
+                      const userBerkas = (user as any).berkas || {};
+                      const fileUrl = userBerkas[berkas.key];
+                      return (
+                        <div key={berkas.key} className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
+                          <span className="text-xs font-bold text-slate-700">{berkas.label}</span>
+                          {fileUrl ? (
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const token = localStorage.getItem("token");
+                                const url = `${fileUrl}${fileUrl.includes("?") ? "&" : "?"}token=${token}`;
+                                window.open(url, "_blank");
+                              }}
+                              className="flex items-center gap-1.5 text-[10px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-lg transition-colors shadow-sm cursor-pointer"
+                            >
+                              <Upload className="h-3 w-3 rotate-180" /> Unduh
+                            </button>
+                          ) : (
+                            <span className="text-[10px] font-bold text-slate-400 bg-slate-200 px-2 py-1 rounded-md">Belum diunggah</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Tampilkan detail statis lainnya */}
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 grid grid-cols-2 gap-4 text-xs font-semibold text-slate-600">
                 <div>
@@ -756,17 +775,8 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                   </div>
                 )}
               </div>
-
-              <div className="flex justify-end pt-2">
-                <Button
-                  type="submit"
-                  disabled={profileLoading}
-                  className="rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold text-sm px-6 py-2.5 cursor-pointer transition-colors"
-                >
-                  {profileLoading ? "Menyimpan..." : "Simpan Perubahan"}
-                </Button>
-              </div>
-            </form>
+            </div>
+          </form>
           </div>
         </div>
       );
