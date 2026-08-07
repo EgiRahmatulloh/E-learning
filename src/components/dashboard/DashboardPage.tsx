@@ -705,19 +705,18 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                 </div>
               </div>
 
-            </div>
-
-            <div className="w-full lg:w-80 shrink-0 space-y-6 lg:sticky lg:top-6">
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-3">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Tindakan</p>
+              <div className="sm:col-span-2 lg:col-span-2 flex flex-col justify-end pt-2 sm:pt-0 h-full">
                 <Button
                   type="submit"
                   disabled={profileLoading}
-                  className="w-full rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold text-sm px-6 py-3 cursor-pointer transition-colors shadow-md shadow-[#280f91]/20"
+                  className="w-full sm:w-auto sm:self-end rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold text-sm px-8 py-2.5 cursor-pointer transition-colors shadow-md shadow-[#280f91]/20 h-[42px]"
                 >
                   {profileLoading ? "Menyimpan..." : "Simpan Perubahan"}
                 </Button>
               </div>
+            </div>
+
+            <div className="w-full lg:w-80 shrink-0 space-y-6 lg:sticky lg:top-6">
 
               {/* BERKAS DOKUMEN READONLY */}
               {(user.role === "siswa" || user.role === "tutor" || user.role === "admin") && (

@@ -63,23 +63,12 @@ export const managersHandlers = new Elysia()
           .filter(Boolean)
           .join(", ");
 
-        return {
-          id: item.id,
-          nama: item.nama,
-          jabatan: item.jabatan,
-          nip: item.nip,
-          tempatTglLahir: item.tempatTglLahir,
-          jenisKelamin: item.jenisKelamin,
-          agama: item.agama,
-          pendidikan: item.pendidikan,
-          tanggalMulaiTugas: item.tanggalMulaiTugas,
-          nomorSkPengangkatan: item.nomorSkPengangkatan,
-          lembagaPengangkat: item.lembagaPengangkat,
-          nomorSkPenugasan: item.nomorSkPenugasan,
-          lembagaPenugas: item.lembagaPenugas,
-          alamat: alamatLengkap,
-          foto: item.foto,
-        };
+        const safeItem = { ...item };
+        delete (safeItem as any).password;
+        // Keep alamatLengkap for backward compatibility if frontend needs it,
+        // but frontend ManagerManager uses explicit fields (rt, rw, dst).
+        (safeItem as any).alamat = alamatLengkap;
+        return safeItem;
       });
       return { success: true, data: safeList };
     } catch {
