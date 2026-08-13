@@ -134,6 +134,12 @@ const server = Bun.serve({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any,
   fetch(req) {
+    const url = new URL(req.url);
+    if (!IS_PROD && html && url.pathname.startsWith("/dashboard/")) {
+      return new Response(html.default as any, {
+        headers: { "Content-Type": "text/html" },
+      });
+    }
     return app.fetch(req);
   },
 });

@@ -64,7 +64,7 @@ function App() {
   useEffect(() => {
     if (user && currentPath === "/") {
       navigate("/dashboard");
-    } else if (!user && currentPath === "/dashboard") {
+    } else if (!user && currentPath.startsWith("/dashboard")) {
       navigate("/");
     }
   }, [user, currentPath]);
@@ -122,7 +122,7 @@ function App() {
     navigate("/");
   };
 
-  if (user && currentPath === "/dashboard") {
+  if (user && currentPath.startsWith("/dashboard")) {
     return (
       <TooltipProvider>
         <Toaster />

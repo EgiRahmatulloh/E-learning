@@ -52,9 +52,39 @@ interface DashboardPageProps {
 }
 
 export default function DashboardPage({ user, handleLogout, setUser }: DashboardPageProps) {
-  const [activeTab, setActiveTab] = useState(user.role === "siswa" ? "elearning-dashboard" : "dashboard");
+  const getInitialTab = () => {
+    const pathParts = window.location.pathname.split("/");
+    const subPath = pathParts[2]; // misal /dashboard/berita -> "berita"
+    if (subPath) return subPath;
+    return user.role === "siswa" ? "elearning-dashboard" : "dashboard";
+  };
+  const [activeTab, setActiveTab] = useState(getInitialTab);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const newPath = activeTab === "dashboard" || activeTab === "elearning-dashboard" 
+      ? "/dashboard" 
+      : `/dashboard/${activeTab}`;
+    
+    if (window.location.pathname !== newPath) {
+      window.history.replaceState({}, "", newPath);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const pathParts = window.location.pathname.split("/");
+      const subPath = pathParts[2];
+      if (subPath) {
+        setActiveTab(subPath);
+      } else {
+        setActiveTab(user.role === "siswa" ? "elearning-dashboard" : "dashboard");
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [user.role]);
 
   // Siswa Overhaul states
   const [avatarDropdownOpen, setAvatarDropdownOpen] = useState(false);
