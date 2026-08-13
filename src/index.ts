@@ -129,17 +129,13 @@ const server = Bun.serve({
           "/produk-wb": html.default,
           "/alumni": html.default,
           "/galeri": html.default,
+          // Catch-all route for all dashboard sub-paths
+          "/dashboard/*": html.default,
         }
       : {}),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any,
   fetch(req) {
-    const url = new URL(req.url);
-    if (!IS_PROD && url.pathname.startsWith("/dashboard/")) {
-      return new Response(Bun.file("index.html"), {
-        headers: { "Content-Type": "text/html" },
-      });
-    }
     return app.fetch(req);
   },
 });

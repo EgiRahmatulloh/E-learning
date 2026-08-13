@@ -23,6 +23,17 @@ import Testimonials from "./components/landing/Testimonials";
 import Gallery from "./components/landing/Gallery";
 import Footer from "./components/landing/Footer";
 
+const LoadingScreen = () => (
+  <div className="min-h-screen bg-slate-50/50 flex flex-col items-center justify-center space-y-4">
+    <div className="relative flex items-center justify-center">
+      <div className="absolute h-16 w-16 rounded-full border-4 border-slate-200"></div>
+      <div className="h-16 w-16 rounded-full border-4 border-[#280f91] border-t-transparent animate-spin"></div>
+      <img src="/images/2c06b6fab7e6a9490c046e362160f2d0.png" alt="Logo" className="absolute h-6 w-6 object-contain" />
+    </div>
+    <div className="text-[#280f91] font-bold animate-pulse text-sm">Memuat sesi Anda...</div>
+  </div>
+);
+
 function App() {
 
   const [activeServiceDialog, setActiveServiceDialog] = useState<"e-spmb" | "e-learning" | "e-ujian" | null>(null);
@@ -41,7 +52,8 @@ function App() {
   };
 
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
-  const [user, setUser] = useState<{ id: number; name: string; username: string; role: string } | null>(getLocalStorageUser());
+  const [user, setUser] = useState<{ id: number; name: string; username: string; role: string; kelas?: string; program?: string } | null>(getLocalStorageUser());
+  const [isAuthChecking, setIsAuthChecking] = useState<boolean>(!!localStorage.getItem("token"));
 
   // URL Path State for SPA Routing
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -62,16 +74,20 @@ function App() {
 
   // Auth route guards to keep URL & login state in sync
   useEffect(() => {
+    if (isAuthChecking) return;
     if (user && currentPath === "/") {
       navigate("/dashboard");
     } else if (!user && currentPath.startsWith("/dashboard")) {
       navigate("/");
     }
-  }, [user, currentPath]);
+  }, [user, currentPath, isAuthChecking]);
 
   // Verify token on mount/change with AbortController cleanup
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      setIsAuthChecking(false);
+      return;
+    }
 
     const controller = new AbortController();
     fetch('/api/auth/me', {
@@ -97,6 +113,9 @@ function App() {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       navigate("/");
+    })
+    .finally(() => {
+      setIsAuthChecking(false);
     });
 
     return () => controller.abort();
@@ -121,6 +140,10 @@ function App() {
     localStorage.removeItem("user");
     navigate("/");
   };
+
+  if (isAuthChecking) {
+    return <LoadingScreen />;
+  }
 
   if (user && currentPath.startsWith("/dashboard")) {
     return (
