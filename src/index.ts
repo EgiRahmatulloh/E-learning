@@ -135,8 +135,8 @@ const server = Bun.serve({
   } as any,
   fetch(req) {
     const url = new URL(req.url);
-    if (!IS_PROD && html && url.pathname.startsWith("/dashboard/")) {
-      return new Response(html.default as any, {
+    if (!IS_PROD && url.pathname.startsWith("/dashboard/")) {
+      return new Response(Bun.file("index.html"), {
         headers: { "Content-Type": "text/html" },
       });
     }
