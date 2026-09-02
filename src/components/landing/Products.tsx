@@ -123,10 +123,10 @@ export default function Products() {
             )}
 
             <div
-              ref={scrollRef}
-              className={`flex gap-6 overflow-x-auto scrollbar-none snap-x snap-mandatory pt-4 pb-4 ${
-                products.length === 1 ? "justify-center" : ""
-              }`}
+                ref={scrollRef}
+                className={`flex gap-6 overflow-x-auto scrollbar-none snap-x snap-mandatory pt-4 pb-4 ${
+                  products.length <= 4 ? "justify-center" : ""
+                }`}
             >
               {products.map((product) => (
                 <Dialog key={product.id}>

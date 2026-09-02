@@ -169,12 +169,12 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
             </div>
           ) : currentTutors.length > 0 ? (
             <div className="space-y-10">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-7xl mx-auto">
+            <div className="flex flex-wrap justify-center gap-4 max-w-7xl mx-auto">
               {currentTutors.map((tutor) => (
                 <Dialog key={tutor.id}>
                   <DialogTrigger asChild>
                     <div 
-                      className="bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-200 group hover:-translate-y-1.5 hover:shadow-xl transition-all duration-300 cursor-pointer"
+                      className="w-[calc(50%-8px)] sm:w-[calc(33.333%-11px)] md:w-[calc(25%-12px)] lg:w-[calc(20%-13px)] max-w-[220px] bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-200 group hover:-translate-y-1.5 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col"
                     >
                       {/* Photo */}
                       <div className="aspect-[3/4] w-full overflow-hidden bg-slate-100">
@@ -417,7 +417,7 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
               <div
                 ref={scrollRef}
                 className={`flex gap-6 overflow-x-auto scrollbar-none snap-x snap-mandatory pt-4 pb-4 ${
-                  displayTutors.length === 1 ? "justify-center" : ""
+                  displayTutors.length <= 4 ? "justify-center" : ""
                 }`}
               >
                 {displayTutors.map((tutor) => (

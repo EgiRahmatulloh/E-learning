@@ -102,7 +102,7 @@ export default function Gallery(_props: GalleryProps) {
               <div
                 ref={scrollRef}
                 className={`flex gap-6 overflow-x-auto scrollbar-none snap-x snap-mandatory pt-4 pb-4 ${
-                  items.length === 1 ? "justify-center" : ""
+                  items.length <= 4 ? "justify-center" : ""
                 }`}
               >
                 {items.map((item) => (

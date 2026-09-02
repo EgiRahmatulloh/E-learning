@@ -181,13 +181,13 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
             </div>
           ) : currentNews.length > 0 ? (
             <div className="space-y-10">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            <div className="flex flex-wrap justify-center gap-6 max-w-7xl mx-auto">
               {currentNews.map((news) => (
                 <Dialog key={news.id}>
                   <DialogTrigger asChild>
                     <div 
                       onClick={() => incrementHits(news.id)}
-                      className="bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200 group hover:-translate-y-1.5 hover:shadow-xl transition-all duration-300 cursor-pointer"
+                      className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-sm bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200 group hover:-translate-y-1.5 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col"
                     >
                       {/* Image + Category overlay */}
                       <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
@@ -388,7 +388,7 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
               <div
                 ref={scrollRef}
                 className={`flex gap-6 overflow-x-auto scrollbar-none snap-x snap-mandatory pt-4 pb-4 ${
-                  displayNews.length === 1 ? "justify-center" : ""
+                  displayNews.length <= 4 ? "justify-center" : ""
                 }`}
               >
                 {displayNews.map((news) => (

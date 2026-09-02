@@ -96,7 +96,7 @@ export default function Testimonials(_props: TestimonialsProps) {
               <div
                 ref={scrollRef}
                 className={`flex gap-6 overflow-x-auto scrollbar-none snap-x snap-mandatory pt-4 pb-4 ${
-                  displayItems.length === 1 ? "justify-center" : ""
+                  displayItems.length <= 4 ? "justify-center" : ""
                 }`}
               >
                 {displayItems.map((t) => (

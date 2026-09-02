@@ -138,7 +138,7 @@ export default function ProductsPage() {
           </div>
         ) : (
           <div className="space-y-12">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            <div className="flex flex-wrap justify-center gap-6 max-w-7xl mx-auto">
               {paginatedProducts.map((product) => (
                 <div 
                   key={product.id} 
@@ -146,7 +146,7 @@ export default function ProductsPage() {
                     setSelectedProduct(product);
                     setDetailModalVisible(true);
                   }}
-                  className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 group hover:-translate-y-1 hover:shadow-md transition-all duration-300 flex flex-col cursor-pointer p-3"
+                  className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-sm bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 group hover:-translate-y-1 hover:shadow-md transition-all duration-300 flex flex-col cursor-pointer p-3"
                 >
                   
                   {/* Image Container */}

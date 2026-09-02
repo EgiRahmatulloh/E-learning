@@ -221,12 +221,12 @@ export default function GalleryPage(_props: GalleryPageProps) {
               </div>
             ) : (
               <div className="space-y-6">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-w-7xl mx-auto">
+                <div className="flex flex-wrap justify-center gap-4 max-w-7xl mx-auto">
                   {currentPhotos.map((item) => (
                     <div
                       key={item.id}
                       onClick={() => setLightboxPhoto(item)}
-                      className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 p-3 flex flex-col justify-between group hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer"
+                      className="w-[calc(50%-8px)] sm:w-[calc(33.333%-11px)] md:w-[calc(25%-12px)] max-w-[280px] bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 p-3 flex flex-col justify-between group hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer"
                     >
                       <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-slate-100 mb-2 border border-slate-100">
                         {parsePhotos(item.foto).length > 0 ? (

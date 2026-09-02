@@ -157,12 +157,12 @@ export default function WargaBelajar(_props: WargaBelajarProps) {
           </div>
         ) : currentStudents.length > 0 ? (
           <div className="space-y-12">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-7xl mx-auto">
+            <div className="flex flex-wrap justify-center gap-4 max-w-7xl mx-auto">
               {currentStudents.map((student) => (
                 <Dialog key={student.id}>
                   <DialogTrigger asChild>
                     <div
-                      className="bg-white rounded-2xl overflow-hidden shadow-sm p-3 flex flex-col justify-between border border-slate-200 group hover:-translate-y-1.5 hover:shadow-md transition-all duration-300 cursor-pointer"
+                      className="w-[calc(50%-8px)] sm:w-[calc(33.333%-11px)] md:w-[calc(25%-12px)] lg:w-[calc(20%-13px)] max-w-[220px] bg-white rounded-2xl overflow-hidden shadow-sm p-3 flex flex-col justify-between border border-slate-200 group hover:-translate-y-1.5 hover:shadow-md transition-all duration-300 cursor-pointer"
                     >
                       {/* Photo Frame */}
                       <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-slate-100 mb-3 border border-slate-100">
