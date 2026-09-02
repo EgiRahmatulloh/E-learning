@@ -177,7 +177,7 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                       className="w-[calc(50%-8px)] sm:w-[calc(33.333%-11px)] md:w-[calc(25%-12px)] lg:w-[calc(20%-13px)] max-w-[220px] bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-200 group hover:-translate-y-1.5 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col"
                     >
                       {/* Photo */}
-                      <div className="aspect-[3/4] w-full overflow-hidden bg-slate-100">
+                      <div className="aspect-[3/4] w-full relative overflow-hidden bg-slate-100">
                         {tutor.foto ? (
                           <img 
                             src={tutor.foto} 
@@ -191,6 +191,13 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                             </svg>
                           </div>
                         )}
+                        {tutor.program && (
+                          <div className="absolute top-3 left-3 z-10">
+                            <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[9px] px-2.5 py-1 rounded-full uppercase shadow-md tracking-wider">
+                              {tutor.program}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Name & mapel below photo */}
@@ -198,9 +205,6 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                         <h3 className="text-xs font-black text-slate-900 group-hover:text-[#280f91] transition-colors uppercase leading-tight line-clamp-2">
                           {tutor.nama}
                         </h3>
-                        <span className="inline-block text-[9px] font-black text-white bg-[#9c27b0] rounded-full px-2.5 py-0.5 uppercase tracking-wider truncate max-w-full">
-                          {tutor.tutorMapel || tutor.program || "-"}
-                        </span>
                       </div>
                     </div>
                   </DialogTrigger>
@@ -442,17 +446,19 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                               </svg>
                             </div>
                           )}
+                          {tutor.program && (
+                            <div className="absolute top-3 left-3 z-10">
+                              <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[9px] px-2.5 py-1 rounded-full uppercase shadow-md tracking-wider">
+                                {tutor.program}
+                              </span>
+                            </div>
+                          )}
                         </div>
 
                         <div className="p-4 flex-1 space-y-1.5 text-center">
                           <h3 className="text-sm font-black text-[#280f91] leading-tight uppercase line-clamp-2">
                             {tutor.nama}
                           </h3>
-                          <p className="text-[10px] font-black uppercase tracking-wider truncate">
-                            <span className="inline-block bg-[#9c27b0] text-white rounded-full px-2.5 py-0.5 max-w-full truncate">
-                              {tutor.tutorMapel || tutor.program || "Tutor"}
-                            </span>
-                          </p>
                         </div>
                       </div>
                     </DialogTrigger>
