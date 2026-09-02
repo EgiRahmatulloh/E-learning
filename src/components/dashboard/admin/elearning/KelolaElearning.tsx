@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Settings, Plus, Save, Trash2, Edit, BookOpen, Clock, AlertTriangle, Search, GraduationCap, X, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { MASTER_MAPEL } from "./MasterMapel";
 import { extractLevel } from "@/lib/kelas-helper";
 
@@ -66,6 +67,7 @@ const getTahunAjaran = (): string => {
 };
 
 export default function KelolaElearning({ initialKelasId }: { initialKelasId?: string } = {}) {
+  const confirm = useConfirm();
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [rombels, setRombels] = useState<RombelData[]>([]);
   const [items, setItems] = useState<ElearningItem[]>([]);
@@ -124,10 +126,14 @@ export default function KelolaElearning({ initialKelasId }: { initialKelasId?: s
 
   const handleCopySemester = async () => {
     if (copying) return;
-    if (!window.confirm(
-      `Salin seluruh setup mapel dari semester ${otherSemester} ke ${selectedSemester}?\n\n` +
-      `Setup yang sudah ada di semester ${selectedSemester} (kelas + mapel sama) tidak akan ditimpa.`
-    )) return;
+    const ok = await confirm({
+      title: `Salin Dari ${otherSemester}`,
+      message: `Salin seluruh setup mapel dari semester ${otherSemester} ke ${selectedSemester}? Setup yang sudah ada di semester ${selectedSemester} (kelas + mapel sama) tidak akan ditimpa.`,
+      variant: "info",
+      confirmText: "Salin",
+      cancelText: "Batal",
+    });
+    if (!ok) return;
 
     setCopying(true);
     try {
