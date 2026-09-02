@@ -72,21 +72,23 @@ export default function Testimonials(_props: TestimonialsProps) {
         ) : displayItems.length > 0 ? (
           <div className="space-y-8 max-w-7xl mx-auto">
             <div className="relative">
-              {displayItems.length > 1 && (
+              {displayItems.length >= 6 && (
                 <>
                   <button
                     onClick={() => handleScroll("left")}
                     aria-label="Geser kiri"
+                    type="button"
                     className="hidden sm:flex absolute -left-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-white border border-slate-200 shadow-lg text-[#280f91] hover:bg-[#280f91] hover:text-white transition-all cursor-pointer"
                   >
-                    <ChevronLeft className="h-5 w-5" />
+                    <ChevronLeft className="h-5 w-5 pointer-events-none" aria-hidden="true" />
                   </button>
                   <button
                     onClick={() => handleScroll("right")}
                     aria-label="Geser kanan"
+                    type="button"
                     className="hidden sm:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-white border border-slate-200 shadow-lg text-[#280f91] hover:bg-[#280f91] hover:text-white transition-all cursor-pointer"
                   >
-                    <ChevronRight className="h-5 w-5" />
+                    <ChevronRight className="h-5 w-5 pointer-events-none" aria-hidden="true" />
                   </button>
                 </>
               )}
