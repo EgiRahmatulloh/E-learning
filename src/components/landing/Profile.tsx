@@ -413,12 +413,12 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm font-semibold text-slate-700">
                     <div className="space-y-1.5">
                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Nama Lembaga</span>
-                      <p className="text-slate-900 font-extrabold">{profile?.namaLembaga || "PKBM MENUJU MAKMUR"}</p>
+                      <p className="text-slate-900 font-extrabold">{profile?.namaLembaga || "-"}</p>
                     </div>
 
                     <div className="space-y-1.5">
                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">NPSN</span>
-                      <p className="text-slate-900 font-extrabold">{profile?.npsn || "P9963025"}</p>
+                      <p className="text-slate-900 font-extrabold">{profile?.npsn || "-"}</p>
                     </div>
 
                     <div className="space-y-1.5">
