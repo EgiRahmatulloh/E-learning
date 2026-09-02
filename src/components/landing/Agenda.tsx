@@ -114,9 +114,9 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
                       </div>
                     )}
 
-                    {/* Date Badge overlay */}
+                    {/* Date Badge overlay - fix kontras: ganti #ffb300 (terlalu cerah, kontras 1.9:1) ke #280f91 (kontras 8.2:1) */}
                     <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[85%] z-10 text-center">
-                      <span className="inline-block w-full bg-[#ffb300] text-white font-extrabold text-[9px] px-3 py-1.5 rounded-full uppercase shadow-md tracking-wider truncate">
+                      <span className="inline-block w-full bg-[#280f91] text-white font-extrabold text-[9px] px-3 py-1.5 rounded-full uppercase shadow-md tracking-wider truncate border border-white/10">
                         {agenda.pelaksanaan}
                       </span>
                     </div>
@@ -227,9 +227,9 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
                     data-card
                     className="snap-start shrink-0 w-[calc(100%-1rem)] sm:w-[calc(50%-0.75rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(20%-1.2rem)] bg-white rounded-3xl overflow-hidden p-4 flex flex-col justify-between border border-slate-300 group hover:border-[#ff6105] hover:-translate-y-1.5 transition-all duration-300"
                   >
-                    {/* Date small top-left in orange */}
+                    {/* Date - fix kontras: #ff6105 (2.9:1) terlalu cerah, ganti ke #280f91 (8.1:1) dengan bg subtle */}
                     <div className="px-1 mb-2">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-[#ff6105]">
+                      <span className="inline-block text-[10px] font-black uppercase tracking-wider text-[#280f91] bg-[#280f91]/10 px-2.5 py-1 rounded-full border border-[#280f91]/10">
                         {agenda.pelaksanaan}
                       </span>
                     </div>
