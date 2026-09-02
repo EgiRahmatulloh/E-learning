@@ -551,10 +551,31 @@ export default function ProductsManager() {
                   </div>
                 </div>
 
+                {/* Preview Foto - tampil jika sudah ada gambar */}
+                {gambar && !uploading && (
+                  <div className={`relative w-full h-48 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm group ${!isEditing ? "opacity-90" : ""}`}>
+                    <img
+                      src={gambar}
+                      alt="Preview Produk"
+                      className="w-full h-full object-cover"
+                      onError={(e) => (e.currentTarget.style.display = "none")}
+                    />
+                    {isEditing && (
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      >
+                        <Upload className="text-white mb-1" size={20} />
+                        <span className="text-white text-xs font-bold">Klik untuk Ganti Foto</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Drag & Drop Upload Block */}
                 <div
                   className={`border-2 border-dashed rounded-xl p-3 text-center transition cursor-pointer text-xs ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-cyan-300 bg-cyan-50 hover:border-cyan-400 hover:bg-cyan-100"
-                    } ${!isEditing && "pointer-events-none opacity-60"}`}
+                    } ${!isEditing && "pointer-events-none opacity-60"} ${gambar && !uploading ? "mt-3" : ""}`}
                   onDragEnter={handleDrag}
                   onDragOver={handleDrag}
                   onDragLeave={handleDrag}
@@ -574,7 +595,7 @@ export default function ProductsManager() {
                   />
                   <Upload className="mx-auto text-cyan-600 mb-1" size={20} />
                   <span className="font-bold text-purple-950 block">
-                    {uploading ? "Mengunggah..." : "Tarik Foto / Klik di sini"}
+                    {uploading ? "Mengunggah..." : gambar ? "Tarik Foto Baru / Klik di sini untuk Ganti" : "Tarik Foto / Klik di sini"}
                   </span>
                   <span className="text-[10px] text-cyan-700 block mt-0.5">Mendukung format JPG, PNG, WEBP (Maksimal 5MB)</span>
                 </div>
