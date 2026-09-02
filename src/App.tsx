@@ -21,6 +21,7 @@ import GalleryPage from "./components/landing/GalleryPage";
 import Products from "./components/landing/Products";
 import Testimonials from "./components/landing/Testimonials";
 import Gallery from "./components/landing/Gallery";
+import Contact from "./components/landing/Contact";
 import Footer from "./components/landing/Footer";
 
 const LoadingScreen = () => (
@@ -223,6 +224,8 @@ function App() {
             <Testimonials />
             
             <Gallery />
+
+            <Contact />
           </>
         )}
         

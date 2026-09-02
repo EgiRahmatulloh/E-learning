@@ -223,6 +223,18 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
+    const handleContactClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.preventDefault();
+      const el = document.getElementById("kontak");
+      if (el) {
+        const header = document.querySelector("header") as HTMLElement | null;
+        const headerH = header?.offsetHeight ?? 80;
+        const top = el.getBoundingClientRect().top + window.scrollY - headerH - 16;
+        window.scrollTo({ top, behavior: "smooth" });
+        window.history.replaceState(null, "", "#kontak");
+      }
+    };
+
     return (
       <section id="profil" className="pt-8 pb-16 bg-white relative">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -310,7 +322,7 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                 >
                   Lihat Selengkapnya
                 </Button>
-                <a href="#kontak">
+                <a href="#kontak" onClick={handleContactClick}>
                   <Button variant="outline" className="rounded-full border-slate-200 text-slate-700 hover:bg-slate-50 font-bold px-8 h-12 cursor-pointer">
                     Hubungi Kami
                   </Button>

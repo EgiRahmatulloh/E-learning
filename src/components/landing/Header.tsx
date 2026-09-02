@@ -81,13 +81,48 @@ export default function Header({ currentPath = "/", onNavigate }: HeaderProps) {
           window.history.pushState({}, "", "/");
           window.dispatchEvent(new PopStateEvent("popstate"));
         }
-        setTimeout(() => {
+        // Tunggu Hero/section target mount setelah navigate (polling hingga 1s) + offset header
+        const scrollWithOffset = (el: HTMLElement) => {
+          if (targetId === "beranda") {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+          }
+          const header = document.querySelector("header") as HTMLElement | null;
+          const headerH = header?.offsetHeight ?? 80;
+          const top = el.getBoundingClientRect().top + window.scrollY - headerH - 12;
+          window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+        };
+        let attempts = 0;
+        const tryScroll = () => {
           const el = document.getElementById(targetId);
-          if (el) el.scrollIntoView({ behavior: "smooth" });
-        }, 150);
+          if (el) {
+            scrollWithOffset(el);
+            if (targetId) window.history.replaceState(null, "", `#${targetId}`);
+          } else if (attempts < 10) {
+            attempts++;
+            setTimeout(tryScroll, 100);
+          }
+          if (targetId === "beranda" && attempts === 0) {
+            // Fallback pastikan ke atas meski element belum ada
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        };
+        setTimeout(tryScroll, 100);
       } else {
         const el = document.getElementById(targetId);
-        if (el) el.scrollIntoView({ behavior: "smooth" });
+        if (el) {
+          if (targetId === "beranda") {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          } else {
+            const header = document.querySelector("header") as HTMLElement | null;
+            const headerH = header?.offsetHeight ?? 80;
+            const top = el.getBoundingClientRect().top + window.scrollY - headerH - 12;
+            window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+          }
+          if (targetId) window.history.replaceState(null, "", `#${targetId}`);
+        } else {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
       }
       setMobileMenuOpen(false);
     }
