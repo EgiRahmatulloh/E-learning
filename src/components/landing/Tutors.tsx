@@ -199,7 +199,7 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                           {tutor.nama}
                         </h3>
                         <span className="inline-block text-[9px] font-black text-white bg-[#9c27b0] rounded-full px-2.5 py-0.5 uppercase tracking-wider truncate max-w-full">
-                          {tutor.tutorMapel}
+                          {tutor.tutorMapel || tutor.program || "-"}
                         </span>
                       </div>
                     </div>
@@ -448,8 +448,10 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                           <h3 className="text-sm font-black text-[#280f91] leading-tight uppercase line-clamp-2">
                             {tutor.nama}
                           </h3>
-                          <p className="text-slate-500 text-[10px] font-black uppercase tracking-wider">
-                            Tutor
+                          <p className="text-[10px] font-black uppercase tracking-wider truncate">
+                            <span className="inline-block bg-[#9c27b0] text-white rounded-full px-2.5 py-0.5 max-w-full truncate">
+                              {tutor.tutorMapel || tutor.program || "Tutor"}
+                            </span>
                           </p>
                         </div>
                       </div>
@@ -488,7 +490,7 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                           <div className="border-b border-slate-100 pb-2">
                             <h2 className="text-xl font-black text-[#280f91] uppercase leading-tight">{tutor.nama}</h2>
                             <span className="inline-block bg-orange-100 text-[#ff6105] font-extrabold text-[10px] px-3.5 py-1 rounded-full uppercase tracking-wider mt-1.5 shadow-xs">
-                              {tutor.tutorMapel}
+                              {tutor.tutorMapel || tutor.program || "-"}
                             </span>
                           </div>
 
