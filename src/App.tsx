@@ -21,6 +21,7 @@ import GalleryPage from "./components/landing/GalleryPage";
 import Products from "./components/landing/Products";
 import Testimonials from "./components/landing/Testimonials";
 import Gallery from "./components/landing/Gallery";
+import Contact from "./components/landing/Contact";
 import Footer from "./components/landing/Footer";
 
 const LoadingScreen = () => (
@@ -130,6 +131,7 @@ function App() {
     setUser(newUser);
     localStorage.setItem("token", newToken);
     localStorage.setItem("user", JSON.stringify(newUser));
+    setActiveServiceDialog(null);
     navigate("/dashboard");
   }, [navigate]);
 
@@ -138,6 +140,7 @@ function App() {
     setUser(null);
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    setActiveServiceDialog(null);
     navigate("/");
   };
 
@@ -223,6 +226,8 @@ function App() {
             <Testimonials />
             
             <Gallery />
+
+            <Contact />
           </>
         )}
         

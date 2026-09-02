@@ -42,8 +42,8 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
     a.nama.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Limit shown items on the homepage to 5
-  const displayAgendas = agendas.slice(0, 5);
+  // Tampilkan 10 di homepage, per view tetap 5 (20%) agar bisa digeser
+  const displayAgendas = agendas.slice(0, 10);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const handleScroll = (direction: "left" | "right") => {
@@ -94,11 +94,11 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
             </div>
           ) : filteredAgendas.length > 0 ? (
             <div className="space-y-10">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            <div className="flex flex-wrap justify-center gap-6 max-w-7xl mx-auto">
               {filteredAgendas.map((agenda) => (
                 <div 
                   key={agenda.id} 
-                  className="bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200 group hover:-translate-y-1.5 hover:shadow-xl transition-all duration-300 text-left"
+                  className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-sm bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200 group hover:-translate-y-1.5 hover:shadow-xl transition-all duration-300 text-left flex flex-col"
                 >
                   {/* Image + Date overlay */}
                   <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
@@ -114,9 +114,9 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
                       </div>
                     )}
 
-                    {/* Date Badge overlay */}
+                    {/* Date Badge overlay - fix kontras: ganti #ffb300 (terlalu cerah, kontras 1.9:1) ke #280f91 (kontras 8.2:1) */}
                     <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[85%] z-10 text-center">
-                      <span className="inline-block w-full bg-[#ffb300] text-white font-extrabold text-[9px] px-3 py-1.5 rounded-full uppercase shadow-md tracking-wider truncate">
+                      <span className="inline-block w-full bg-[#280f91] text-white font-extrabold text-[9px] px-3 py-1.5 rounded-full uppercase shadow-md tracking-wider truncate border border-white/10">
                         {agenda.pelaksanaan}
                       </span>
                     </div>
@@ -195,22 +195,24 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
         ) : displayAgendas.length > 0 ? (
           <div className="space-y-8 max-w-7xl mx-auto">
             <div className="relative">
-              {/* Navigation arrows */}
-              {displayAgendas.length > 1 && (
+              {/* Navigation arrows - hanya tampil jika >=6 agar per view 5 ada yang bisa digeser */}
+              {displayAgendas.length >= 6 && (
                 <>
                   <button
                     onClick={() => handleScroll("left")}
                     aria-label="Geser kiri"
+                    type="button"
                     className="hidden sm:flex absolute -left-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-white border border-slate-200 shadow-lg text-[#280f91] hover:bg-[#280f91] hover:text-white transition-all cursor-pointer"
                   >
-                    <ChevronLeft className="h-5 w-5" />
+                    <ChevronLeft className="h-5 w-5 pointer-events-none" aria-hidden="true" />
                   </button>
                   <button
                     onClick={() => handleScroll("right")}
                     aria-label="Geser kanan"
+                    type="button"
                     className="hidden sm:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-white border border-slate-200 shadow-lg text-[#280f91] hover:bg-[#280f91] hover:text-white transition-all cursor-pointer"
                   >
-                    <ChevronRight className="h-5 w-5" />
+                    <ChevronRight className="h-5 w-5 pointer-events-none" aria-hidden="true" />
                   </button>
                 </>
               )}
@@ -218,7 +220,7 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
               <div
                 ref={scrollRef}
                 className={`flex gap-6 overflow-x-auto scrollbar-none snap-x snap-mandatory pt-4 pb-4 ${
-                  displayAgendas.length === 1 ? "justify-center" : ""
+                  displayAgendas.length <= 4 ? "justify-center" : ""
                 }`}
               >
                 {displayAgendas.map((agenda) => (
@@ -227,9 +229,9 @@ export default function Agenda({ isDetailed = false, onNavigate }: AgendaProps) 
                     data-card
                     className="snap-start shrink-0 w-[calc(100%-1rem)] sm:w-[calc(50%-0.75rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(20%-1.2rem)] bg-white rounded-3xl overflow-hidden p-4 flex flex-col justify-between border border-slate-300 group hover:border-[#ff6105] hover:-translate-y-1.5 transition-all duration-300"
                   >
-                    {/* Date small top-left in orange */}
+                    {/* Date - fix kontras: #ff6105 (2.9:1) terlalu cerah, ganti ke #280f91 (8.1:1) dengan bg subtle */}
                     <div className="px-1 mb-2">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-[#ff6105]">
+                      <span className="inline-block text-[10px] font-black uppercase tracking-wider text-[#280f91] bg-[#280f91]/10 px-2.5 py-1 rounded-full border border-[#280f91]/10">
                         {agenda.pelaksanaan}
                       </span>
                     </div>

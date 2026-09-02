@@ -717,12 +717,13 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
                             FOTO
                           </div>
                         )}
-                        {/* Purple Subject Overlay Tag */}
-                        <div className="absolute top-3 left-3 z-10 max-w-[90%]">
-                          <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[8px] px-2 py-0.5 rounded-full uppercase shadow-md tracking-wider truncate">
-                            {tutor.tutorMapel}
-                          </span>
-                        </div>
+                        {tutor.program && (
+                          <div className="absolute top-3 left-3 z-10 max-w-[90%]">
+                            <span className="inline-block bg-[#9c27b0] text-white font-extrabold text-[8px] px-2 py-0.5 rounded-full uppercase shadow-md tracking-wider truncate">
+                              {tutor.program}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Name info */}

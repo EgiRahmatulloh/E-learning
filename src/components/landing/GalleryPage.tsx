@@ -221,12 +221,12 @@ export default function GalleryPage(_props: GalleryPageProps) {
               </div>
             ) : (
               <div className="space-y-6">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-w-7xl mx-auto">
+                <div className="flex flex-wrap justify-center gap-4 max-w-7xl mx-auto">
                   {currentPhotos.map((item) => (
                     <div
                       key={item.id}
                       onClick={() => setLightboxPhoto(item)}
-                      className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 p-3 flex flex-col justify-between group hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer"
+                      className="w-[calc(50%-8px)] sm:w-[calc(33.333%-11px)] md:w-[calc(25%-12px)] max-w-[280px] bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 p-3 flex flex-col justify-between group hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer"
                     >
                       <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-slate-100 mb-2 border border-slate-100">
                         {parsePhotos(item.foto).length > 0 ? (
@@ -295,32 +295,34 @@ export default function GalleryPage(_props: GalleryPageProps) {
           </div>
         )}
 
-        {/* Photo Lightbox Dialog */}
+        {/* Photo Lightbox Dialog - konsisten bg-white seperti Tutor/News */}
         <Dialog open={lightboxPhoto !== null} onOpenChange={(open) => { if (!open) setLightboxPhoto(null); }}>
-          <DialogContent className="sm:max-w-3xl bg-slate-900 border border-slate-700 shadow-2xl p-4 rounded-3xl text-left overflow-y-auto max-h-[90vh]">
+          <DialogContent className="sm:max-w-3xl bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl text-left overflow-y-auto max-h-[90vh]">
             {lightboxPhoto && (
               <>
-                <DialogHeader className="border-b border-white/10 pb-3">
-                  <DialogTitle className="text-sm font-black text-white uppercase flex items-center gap-2">
-                    <span className="text-[#0ff60a]">{lightboxPhoto.kategori}</span>
+                <DialogHeader className="border-b border-slate-100 pb-3">
+                  <DialogTitle className="text-sm font-black text-[#280f91] uppercase flex items-center gap-2">
+                    <span className="text-[#ff6105]">{lightboxPhoto.kategori}</span>
                   </DialogTitle>
                 </DialogHeader>
-                <div className="py-3">
+                <div className="py-4 space-y-4">
                   {parsePhotos(lightboxPhoto.foto).length > 0 && (
-                    <PhotoCarousel
-                      photos={parsePhotos(lightboxPhoto.foto)}
-                      alt={lightboxPhoto.namaFile}
-                      imageClassName="max-h-[60vh] object-contain rounded-2xl bg-black"
-                    />
+                    <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100">
+                      <PhotoCarousel
+                        photos={parsePhotos(lightboxPhoto.foto)}
+                        alt={lightboxPhoto.namaFile}
+                        imageClassName="max-h-[60vh] object-contain rounded-2xl"
+                      />
+                    </div>
                   )}
-                  <div className="mt-4 space-y-1">
-                    <p className="text-sm font-black text-white">{lightboxPhoto.namaFile}</p>
-                    <p className="text-xs text-slate-400 font-semibold">{lightboxPhoto.tanggalPosting}</p>
+                  <div className="space-y-1">
+                    <p className="text-sm font-black text-slate-900">{lightboxPhoto.namaFile}</p>
+                    <p className="text-xs text-slate-500 font-semibold">{lightboxPhoto.tanggalPosting}</p>
                   </div>
                 </div>
-                <DialogFooter className="border-t border-white/10 pt-3 mt-1">
+                <DialogFooter className="border-t border-slate-100 pt-4 mt-2 flex justify-end">
                   <DialogClose asChild>
-                    <Button variant="outline" className="rounded-xl font-bold cursor-pointer text-xs text-white border-white/20 bg-white/10 hover:bg-white/20">
+                    <Button className="rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 px-6 cursor-pointer">
                       Tutup
                     </Button>
                   </DialogClose>

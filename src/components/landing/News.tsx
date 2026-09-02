@@ -98,8 +98,8 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
     }
   };
 
-  // Limit homepage news list to 5 items
-  const displayNews = isDetailed ? filteredNews : filteredNews.slice(0, 5);
+  // Limit homepage - 10 items, per view tetap 5 (20%) agar bisa digeser
+  const displayNews = isDetailed ? filteredNews : filteredNews.slice(0, 10);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const handleScroll = (direction: "left" | "right") => {
@@ -181,13 +181,13 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
             </div>
           ) : currentNews.length > 0 ? (
             <div className="space-y-10">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            <div className="flex flex-wrap justify-center gap-6 max-w-7xl mx-auto">
               {currentNews.map((news) => (
                 <Dialog key={news.id}>
                   <DialogTrigger asChild>
                     <div 
                       onClick={() => incrementHits(news.id)}
-                      className="bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200 group hover:-translate-y-1.5 hover:shadow-xl transition-all duration-300 cursor-pointer"
+                      className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-sm bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200 group hover:-translate-y-1.5 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col"
                     >
                       {/* Image + Category overlay */}
                       <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
@@ -364,21 +364,23 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
         ) : displayNews.length > 0 ? (
           <div className="space-y-8 max-w-7xl mx-auto">
             <div className="relative">
-              {displayNews.length > 1 && (
+              {displayNews.length >= 6 && (
                 <>
                   <button
                     onClick={() => handleScroll("left")}
                     aria-label="Geser kiri"
+                    type="button"
                     className="hidden sm:flex absolute -left-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-white border border-slate-200 shadow-lg text-[#280f91] hover:bg-[#280f91] hover:text-white transition-all cursor-pointer"
                   >
-                    <ChevronLeft className="h-5 w-5" />
+                    <ChevronLeft className="h-5 w-5 pointer-events-none" aria-hidden="true" />
                   </button>
                   <button
                     onClick={() => handleScroll("right")}
                     aria-label="Geser kanan"
+                    type="button"
                     className="hidden sm:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-white border border-slate-200 shadow-lg text-[#280f91] hover:bg-[#280f91] hover:text-white transition-all cursor-pointer"
                   >
-                    <ChevronRight className="h-5 w-5" />
+                    <ChevronRight className="h-5 w-5 pointer-events-none" aria-hidden="true" />
                   </button>
                 </>
               )}
@@ -386,7 +388,7 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
               <div
                 ref={scrollRef}
                 className={`flex gap-6 overflow-x-auto scrollbar-none snap-x snap-mandatory pt-4 pb-4 ${
-                  displayNews.length === 1 ? "justify-center" : ""
+                  displayNews.length <= 4 ? "justify-center" : ""
                 }`}
               >
                 {displayNews.map((news) => (

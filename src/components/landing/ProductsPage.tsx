@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Search, MessageCircle, Sparkles, ShoppingBag } from "lucide-react";
+import { parsePhotos } from "@/lib/photos";
+import PhotoCarousel from "@/components/ui/PhotoCarousel";
 import {
   Dialog,
   DialogContent,
@@ -138,7 +140,7 @@ export default function ProductsPage() {
           </div>
         ) : (
           <div className="space-y-12">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            <div className="flex flex-wrap justify-center gap-6 max-w-7xl mx-auto">
               {paginatedProducts.map((product) => (
                 <div 
                   key={product.id} 
@@ -146,14 +148,14 @@ export default function ProductsPage() {
                     setSelectedProduct(product);
                     setDetailModalVisible(true);
                   }}
-                  className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 group hover:-translate-y-1 hover:shadow-md transition-all duration-300 flex flex-col cursor-pointer p-3"
+                  className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-sm bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 group hover:-translate-y-1 hover:shadow-md transition-all duration-300 flex flex-col cursor-pointer p-3"
                 >
                   
                   {/* Image Container */}
                   <div className="h-52 w-full relative rounded-xl overflow-hidden bg-slate-100 border border-slate-100 mb-3">
-                    {product.gambar ? (
+                    {parsePhotos(product.gambar).length > 0 ? (
                       <img 
-                        src={product.gambar} 
+                        src={parsePhotos(product.gambar)[0]} 
                         alt={product.namaProduk}
                         loading="lazy"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
@@ -165,6 +167,12 @@ export default function ProductsPage() {
                       </div>
                     )}
                     
+                    {parsePhotos(product.gambar).length > 1 && (
+                      <span className="absolute top-2 right-2 z-10 rounded-full bg-black/50 px-2 py-0.5 text-[9px] font-black text-white">
+                        {parsePhotos(product.gambar).length} foto
+                      </span>
+                    )}
+
                     {/* Floating Price Tag */}
                     <span className="absolute bottom-3 right-3 inline-flex items-center rounded-lg bg-[#ff6105] px-2.5 py-1.5 text-[11px] font-black text-white shadow-md">
                       Rp {(product.harga || 0).toLocaleString("id-ID")}
@@ -244,12 +252,18 @@ export default function ProductsPage() {
                   </div>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
-                  <div className="h-56 w-full rounded-2xl relative overflow-hidden border border-slate-200">
-                    <img 
-                      src={selectedProduct.gambar} 
-                      alt={selectedProduct.namaProduk}
-                      className="w-full h-full object-cover" 
-                    />
+                  <div className="h-56 w-full rounded-2xl relative overflow-hidden border border-slate-200 bg-slate-100">
+                    {parsePhotos(selectedProduct.gambar).length > 0 ? (
+                      <PhotoCarousel
+                        photos={parsePhotos(selectedProduct.gambar)}
+                        alt={selectedProduct.namaProduk}
+                        imageClassName="h-56"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-400">
+                        <ShoppingBag className="h-10 w-10" />
+                      </div>
+                    )}
                   </div>
                   <p className="text-slate-600 text-sm font-semibold leading-relaxed">
                     {selectedProduct.deskripsi}

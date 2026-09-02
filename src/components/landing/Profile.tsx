@@ -223,6 +223,18 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
+    const handleContactClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.preventDefault();
+      const el = document.getElementById("kontak");
+      if (el) {
+        const header = document.querySelector("header") as HTMLElement | null;
+        const headerH = header?.offsetHeight ?? 80;
+        const top = el.getBoundingClientRect().top + window.scrollY - headerH - 16;
+        window.scrollTo({ top, behavior: "smooth" });
+        window.history.replaceState(null, "", "#kontak");
+      }
+    };
+
     return (
       <section id="profil" className="pt-8 pb-16 bg-white relative">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -310,7 +322,7 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                 >
                   Lihat Selengkapnya
                 </Button>
-                <a href="#kontak">
+                <a href="#kontak" onClick={handleContactClick}>
                   <Button variant="outline" className="rounded-full border-slate-200 text-slate-700 hover:bg-slate-50 font-bold px-8 h-12 cursor-pointer">
                     Hubungi Kami
                   </Button>
@@ -401,12 +413,12 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm font-semibold text-slate-700">
                     <div className="space-y-1.5">
                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Nama Lembaga</span>
-                      <p className="text-slate-900 font-extrabold">{profile?.namaLembaga || "PKBM MENUJU MAKMUR"}</p>
+                      <p className="text-slate-900 font-extrabold">{profile?.namaLembaga || "-"}</p>
                     </div>
 
                     <div className="space-y-1.5">
                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">NPSN</span>
-                      <p className="text-slate-900 font-extrabold">{profile?.npsn || "P9963025"}</p>
+                      <p className="text-slate-900 font-extrabold">{profile?.npsn || "-"}</p>
                     </div>
 
                     <div className="space-y-1.5">
@@ -680,9 +692,13 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                     <h4 className="text-lg font-black text-[#280f91] uppercase tracking-wider flex items-center gap-2">
                       <Target className="h-5 w-5" /> VISI
                     </h4>
-                    <p className="text-sm font-semibold text-slate-700 leading-relaxed text-justify">
-                      {visionMission?.visi || "TERWUJUDNYA MASYARAKAT YANG BERAKHLAK MULIA, CERDAS, KREATIF, INOVATIF, TERAMPIL, MANDIRI, DAN BERDAYA SAING"}
-                    </p>
+                    {visionMission?.visi ? (
+                      <p className="text-sm font-semibold text-slate-700 leading-relaxed text-justify">
+                        {visionMission.visi}
+                      </p>
+                    ) : (
+                      <p className="text-sm font-semibold text-slate-400 italic">Belum ada data visi.</p>
+                    )}
                   </div>
 
                   {/* Misi */}
@@ -698,12 +714,7 @@ export default function Profile({ isDetailed = false, onNavigate }: ProfileProps
                         })}
                       </ol>
                     ) : (
-                      <ol className="list-decimal pl-5 space-y-2.5 text-sm font-semibold text-slate-700 leading-relaxed">
-                        <li>MEWULJUDKAN PROGRAM PENDIDIKAN LUAR SEKOLAH YANG BERBASIS PADA MASYARAKAT DAN BERORIENTASI PADA KECAKAPAN HIDUP (LIFE SKILLS);</li>
-                        <li>MEMPERLUAS AKSES DAN PEMERATAAN PENINGKATAN PENDIDIKAN;</li>
-                        <li>MELAKSANAKAN PROGRAM PENDIDIKAN KEWIRAUSAHAAN DEMI TERWUJUDNYA MASYARAKAT MANDIRI;</li>
-                        <li>MELAKSANAKAN KERJA SAMA DENGAN STAKE HOLDER DEMI TERWUJUDNYA PROGRAM.</li>
-                      </ol>
+                      <p className="text-sm font-semibold text-slate-400 italic">Belum ada data misi.</p>
                     )}
                   </div>
                 </div>

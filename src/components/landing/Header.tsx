@@ -81,13 +81,48 @@ export default function Header({ currentPath = "/", onNavigate }: HeaderProps) {
           window.history.pushState({}, "", "/");
           window.dispatchEvent(new PopStateEvent("popstate"));
         }
-        setTimeout(() => {
+        // Tunggu Hero/section target mount setelah navigate (polling hingga 1s) + offset header
+        const scrollWithOffset = (el: HTMLElement) => {
+          if (targetId === "beranda") {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+          }
+          const header = document.querySelector("header") as HTMLElement | null;
+          const headerH = header?.offsetHeight ?? 80;
+          const top = el.getBoundingClientRect().top + window.scrollY - headerH - 12;
+          window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+        };
+        let attempts = 0;
+        const tryScroll = () => {
           const el = document.getElementById(targetId);
-          if (el) el.scrollIntoView({ behavior: "smooth" });
-        }, 150);
+          if (el) {
+            scrollWithOffset(el);
+            if (targetId) window.history.replaceState(null, "", `#${targetId}`);
+          } else if (attempts < 10) {
+            attempts++;
+            setTimeout(tryScroll, 100);
+          }
+          if (targetId === "beranda" && attempts === 0) {
+            // Fallback pastikan ke atas meski element belum ada
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        };
+        setTimeout(tryScroll, 100);
       } else {
         const el = document.getElementById(targetId);
-        if (el) el.scrollIntoView({ behavior: "smooth" });
+        if (el) {
+          if (targetId === "beranda") {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          } else {
+            const header = document.querySelector("header") as HTMLElement | null;
+            const headerH = header?.offsetHeight ?? 80;
+            const top = el.getBoundingClientRect().top + window.scrollY - headerH - 12;
+            window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+          }
+          if (targetId) window.history.replaceState(null, "", `#${targetId}`);
+        } else {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
       }
       setMobileMenuOpen(false);
     }
@@ -133,7 +168,7 @@ export default function Header({ currentPath = "/", onNavigate }: HeaderProps) {
 
         {/* Desktop Nav links */}
         <nav className="hidden lg:flex items-center gap-5 xl:gap-6">
-          <a href="#beranda" onClick={(e) => handleNavClick(e, "beranda")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-[#280f91] hover:text-[#ff6105]" : "text-white hover:text-orange-400"}`}>Beranda</a>
+          <a href="#beranda" onClick={(e) => handleNavClick(e, "beranda")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? (currentPath === "/" ? "text-[#ff6105]" : "text-slate-600 hover:text-[#280f91]") : "text-white/80 hover:text-white"}`}>Beranda</a>
           <a href="#profil" onClick={(e) => handleNavClick(e, "profil")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? (currentPath === "/profile" ? "text-[#ff6105]" : "text-slate-600 hover:text-[#280f91]") : "text-white/80 hover:text-white"}`}>Profil</a>
           <a href="#agenda" onClick={(e) => handleNavClick(e, "agenda")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? (currentPath === "/agenda" ? "text-[#ff6105]" : "text-slate-600 hover:text-[#280f91]") : "text-white/80 hover:text-white"}`}>Agenda</a>
           <a href="#berita" onClick={(e) => handleNavClick(e, "berita")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? (currentPath === "/news" ? "text-[#ff6105]" : "text-slate-600 hover:text-[#280f91]") : "text-white/80 hover:text-white"}`}>Berita</a>

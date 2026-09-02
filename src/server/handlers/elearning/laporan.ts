@@ -137,21 +137,27 @@ export const laporanHandlers = new Elysia()
           )
         ).get();
         const namaKepalaPkbm = kepalaPkbm?.nama || "-";
+        const nipKepalaPkbm = kepalaPkbm?.nip || "-";
 
         // Ambil wali kelas dari rombel
         let namaWaliKelas = "-";
+        let nipWaliKelas = "-";
         let waliKelasLabel = "-";
         if (filterKelas) {
           const rList = await db.select().from(rombels).where(eq(rombels.nama, filterKelas)).all();
           if (rList.length > 0 && rList[0].waliKelasId) {
-            namaWaliKelas = (await db.select().from(tutors).where(eq(tutors.id, rList[0].waliKelasId)).get())?.nama || "-";
+            const wali = await db.select().from(tutors).where(eq(tutors.id, rList[0].waliKelasId)).get();
+            namaWaliKelas = wali?.nama || "-";
+            nipWaliKelas = wali?.nip || "-";
           }
           waliKelasLabel = filterKelas;
         } else {
           const rList = await db.select().from(rombels).all();
           const rWithWali = rList.find(r => r.waliKelasId != null);
           if (rWithWali) {
-            namaWaliKelas = (await db.select().from(tutors).where(eq(tutors.id, rWithWali.waliKelasId!)).get())?.nama || "-";
+            const wali = await db.select().from(tutors).where(eq(tutors.id, rWithWali.waliKelasId!)).get();
+            namaWaliKelas = wali?.nama || "-";
+            nipWaliKelas = wali?.nip || "-";
           }
           waliKelasLabel = "SEMUA KELAS";
         }
@@ -171,7 +177,7 @@ export const laporanHandlers = new Elysia()
           waliKelas: namaWaliKelas.toUpperCase(), namaWaliKelas: namaWaliKelas.toUpperCase(),
           tanggalCetak: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }).toUpperCase(),
           kecamatan: "JATINAGARA", namaPkbm: "MENUJU MAKMUR",
-          nipPemilik: "-", nipKepalaPkbm: "-", nipWaliKelas: "-",
+          nipPemilik: "-", nipKepalaPkbm: nipKepalaPkbm, nipWaliKelas: nipWaliKelas,
           namaKepalaPkbm: namaKepalaPkbm.toUpperCase(), namaPemilik: "-",
           tutors: tutorsData.map(t => ({
             ...t,

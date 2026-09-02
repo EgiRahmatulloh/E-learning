@@ -105,11 +105,11 @@ export default function Services({ onLoginSuccess, activeDialog, onDialogClose }
               Silakan hubungi sekretariat panitia SPMB via WhatsApp untuk mendapatkan link formulir pendaftaran digital dan panduan pengisian berkas.
             </p>
           </div>
-          <DialogFooter className="flex sm:justify-between gap-2 border-t border-slate-100 pt-4">
+          <DialogFooter className="flex gap-2 border-t border-slate-100 pt-4">
             <DialogClose asChild>
-              <Button variant="outline" className="rounded-xl font-bold cursor-pointer">Tutup</Button>
+              <Button className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold h-11 border-0 ring-0 focus-visible:ring-0 focus-visible:border-transparent cursor-pointer">Tutup</Button>
             </DialogClose>
-            <Button asChild className="rounded-xl bg-purple-600 hover:bg-[#ff6105] text-white font-bold h-11 px-5 flex items-center gap-2 cursor-pointer">
+            <Button asChild className="flex-1 rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 flex items-center justify-center gap-2 border-0 ring-0 focus-visible:ring-0 focus-visible:border-transparent cursor-pointer">
               <a href="https://wa.me/6282128594025?text=Halo%20Admin%20PKBM%20Menuju%20Makmur,%20saya%20tertarik%20mendaftar%20sebagai%20siswa%20baru.%20Mohon%20panduan%20E-SPMB%20online." target="_blank" rel="noopener noreferrer">
                 <MessageCircle className="h-5 w-5" />
                 Daftar via WhatsApp
@@ -212,12 +212,12 @@ export default function Services({ onLoginSuccess, activeDialog, onDialogClose }
 
               <DialogFooter className="flex gap-2 border-t border-slate-100 pt-4">
                 <DialogClose asChild>
-                  <Button className="flex-1 rounded-xl bg-red-600 text-white hover:bg-red-700 font-bold h-11 shadow-xs cursor-pointer">Tutup</Button>
+                  <Button className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold h-11 border-0 ring-0 focus-visible:ring-0 focus-visible:border-transparent cursor-pointer">Tutup</Button>
                 </DialogClose>
                 <Button
                   type="submit"
                   disabled={elearningLoading}
-                  className="flex-1 rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 shadow-xs cursor-pointer"
+                  className="flex-1 rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 border-0 ring-0 focus-visible:ring-0 focus-visible:border-transparent cursor-pointer"
                 >
                   {elearningLoading ? "Memproses..." : "Masuk Kelas Belajar"}
                 </Button>
@@ -257,15 +257,15 @@ export default function Services({ onLoginSuccess, activeDialog, onDialogClose }
               Ujian sedang dinonaktifkan di luar jadwal kalender UPK. Untuk latihan soal mandiri, gunakan bank soal di portal E-Learning.
             </p>
           </div>
-          <DialogFooter className="flex sm:justify-between gap-2 border-t border-slate-100 pt-4">
+          <DialogFooter className="flex gap-2 border-t border-slate-100 pt-4">
             <DialogClose asChild>
-              <Button variant="outline" className="rounded-xl font-bold cursor-pointer">Tutup</Button>
+              <Button className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold h-11 border-0 ring-0 focus-visible:ring-0 focus-visible:border-transparent cursor-pointer">Tutup</Button>
             </DialogClose>
             <Button 
               onClick={() => {
                 setToast({ message: "Portal Ujian belum tersedia di luar jadwal UPK.", show: true });
               }}
-              className="rounded-xl bg-emerald-600 hover:bg-[#ff6105] text-white font-bold h-11 px-5 shadow-xs cursor-pointer"
+              className="flex-1 rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 border-0 ring-0 focus-visible:ring-0 focus-visible:border-transparent cursor-pointer"
             >
               Buka Ruang Ujian
             </Button>

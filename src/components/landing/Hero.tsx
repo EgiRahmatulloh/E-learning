@@ -325,17 +325,19 @@ export default function Hero({ onServiceClick }: HeroProps) {
         <>
           <button
             onClick={prevSlide}
+            type="button"
             className="hidden lg:flex absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md hover:bg-white/20 active:scale-90 transition-all cursor-pointer shadow-lg"
             aria-label="Previous slide"
           >
-            <ChevronLeft className="h-7 w-7" />
+            <ChevronLeft className="h-7 w-7 pointer-events-none" aria-hidden="true" />
           </button>
           <button
             onClick={nextSlide}
+            type="button"
             className="hidden lg:flex absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md hover:bg-white/20 active:scale-90 transition-all cursor-pointer shadow-lg"
             aria-label="Next slide"
           >
-            <ChevronRight className="h-7 w-7" />
+            <ChevronRight className="h-7 w-7 pointer-events-none" aria-hidden="true" />
           </button>
         </>
       )}
@@ -345,10 +347,11 @@ export default function Hero({ onServiceClick }: HeroProps) {
         <div className="lg:hidden absolute bottom-6 left-0 right-0 z-30 flex items-center justify-center gap-3 px-4">
           <button
             onClick={prevSlide}
+            type="button"
             className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md active:scale-90 transition-all cursor-pointer shadow-lg shrink-0"
             aria-label="Previous slide"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-5 w-5 pointer-events-none" aria-hidden="true" />
           </button>
 
           <div className="flex items-center gap-2">
@@ -368,10 +371,11 @@ export default function Hero({ onServiceClick }: HeroProps) {
 
           <button
             onClick={nextSlide}
+            type="button"
             className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md active:scale-90 transition-all cursor-pointer shadow-lg shrink-0"
             aria-label="Next slide"
           >
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-5 w-5 pointer-events-none" aria-hidden="true" />
           </button>
         </div>
       )}
