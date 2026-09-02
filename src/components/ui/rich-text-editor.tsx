@@ -1,5 +1,15 @@
 import { useRef, useEffect } from "react";
-import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered } from "lucide-react";
+import {
+  Bold,
+  Italic,
+  Underline,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  List,
+  ListOrdered,
+} from "lucide-react";
 
 interface RichTextEditorProps {
   value: string;
@@ -8,9 +18,14 @@ interface RichTextEditorProps {
   className?: string;
 }
 
-export function RichTextEditor({ value, onChange, placeholder = "Tulis sesuatu...", className = "" }: RichTextEditorProps) {
+export function RichTextEditor({
+  value,
+  onChange,
+  placeholder = "Tulis sesuatu...",
+  className = "",
+}: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
-  
+
   // Update content only when it's different to prevent cursor jumping
   useEffect(() => {
     if (editorRef.current && value !== editorRef.current.innerHTML) {
@@ -32,12 +47,44 @@ export function RichTextEditor({ value, onChange, placeholder = "Tulis sesuatu..
     }
   };
 
+  const executeAlignment = (align: string) => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) {
+      if (editorRef.current) {
+        editorRef.current.style.textAlign = align;
+        onChange(editorRef.current.innerHTML);
+      }
+      return;
+    }
+    const range = sel.getRangeAt(0);
+    let node: Node | null = range.startContainer;
+    // Find the closest block element
+    while (node && node !== editorRef.current) {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        (node as HTMLElement).style.textAlign = align;
+        break;
+      }
+      node = node.parentNode;
+    }
+    // Fallback: apply to the entire editor content if no inner block is found
+    if (node === editorRef.current) {
+      editorRef.current!.style.textAlign = align;
+    }
+
+    if (editorRef.current) {
+      editorRef.current.focus();
+      onChange(editorRef.current.innerHTML);
+    }
+  };
+
   return (
-    <div className={`relative flex flex-col border border-slate-200 rounded-xl overflow-hidden bg-white ${className}`}>
+    <div
+      className={`relative flex flex-col border border-slate-200 rounded-xl overflow-hidden bg-white ${className}`}
+    >
       {/* Toolbar */}
       <div className="flex items-center gap-1 p-2 border-b border-slate-100 bg-slate-50">
-        <select 
-          onChange={(e) => executeCommand('fontSize', e.target.value)}
+        <select
+          onChange={(e) => executeCommand("fontSize", e.target.value)}
           className="text-sm bg-transparent border border-slate-200 rounded-lg px-2 py-1 focus:outline-none text-slate-600 cursor-pointer"
         >
           <option value="3">Normal</option>
@@ -49,7 +96,10 @@ export function RichTextEditor({ value, onChange, placeholder = "Tulis sesuatu..
         <div className="w-[1px] h-4 bg-slate-300 mx-1"></div>
         <button
           type="button"
-          onMouseDown={(e) => { e.preventDefault(); executeCommand('bold'); }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            executeCommand("bold");
+          }}
           className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
           title="Bold"
         >
@@ -57,7 +107,10 @@ export function RichTextEditor({ value, onChange, placeholder = "Tulis sesuatu..
         </button>
         <button
           type="button"
-          onMouseDown={(e) => { e.preventDefault(); executeCommand('italic'); }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            executeCommand("italic");
+          }}
           className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
           title="Italic"
         >
@@ -65,7 +118,10 @@ export function RichTextEditor({ value, onChange, placeholder = "Tulis sesuatu..
         </button>
         <button
           type="button"
-          onMouseDown={(e) => { e.preventDefault(); executeCommand('underline'); }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            executeCommand("underline");
+          }}
           className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
           title="Underline"
         >
@@ -74,7 +130,10 @@ export function RichTextEditor({ value, onChange, placeholder = "Tulis sesuatu..
         <div className="w-[1px] h-4 bg-slate-300 mx-1"></div>
         <button
           type="button"
-          onMouseDown={(e) => { e.preventDefault(); executeCommand('justifyLeft'); }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            executeAlignment("left");
+          }}
           className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
           title="Rata Kiri"
         >
@@ -82,7 +141,10 @@ export function RichTextEditor({ value, onChange, placeholder = "Tulis sesuatu..
         </button>
         <button
           type="button"
-          onMouseDown={(e) => { e.preventDefault(); executeCommand('justifyCenter'); }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            executeAlignment("center");
+          }}
           className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
           title="Rata Tengah"
         >
@@ -90,7 +152,10 @@ export function RichTextEditor({ value, onChange, placeholder = "Tulis sesuatu..
         </button>
         <button
           type="button"
-          onMouseDown={(e) => { e.preventDefault(); executeCommand('justifyRight'); }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            executeAlignment("right");
+          }}
           className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
           title="Rata Kanan"
         >
@@ -98,7 +163,10 @@ export function RichTextEditor({ value, onChange, placeholder = "Tulis sesuatu..
         </button>
         <button
           type="button"
-          onMouseDown={(e) => { e.preventDefault(); executeCommand('justifyFull'); }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            executeAlignment("justify");
+          }}
           className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
           title="Rata Kiri Kanan"
         >
@@ -107,7 +175,10 @@ export function RichTextEditor({ value, onChange, placeholder = "Tulis sesuatu..
         <div className="w-[1px] h-4 bg-slate-300 mx-1"></div>
         <button
           type="button"
-          onMouseDown={(e) => { e.preventDefault(); executeCommand('insertUnorderedList'); }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            executeCommand("insertUnorderedList");
+          }}
           className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
           title="Bullet List"
         >
@@ -115,14 +186,17 @@ export function RichTextEditor({ value, onChange, placeholder = "Tulis sesuatu..
         </button>
         <button
           type="button"
-          onMouseDown={(e) => { e.preventDefault(); executeCommand('insertOrderedList'); }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            executeCommand("insertOrderedList");
+          }}
           className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
           title="Numbered List"
         >
           <ListOrdered className="w-4 h-4" />
         </button>
       </div>
-      
+
       {/* Editor Area */}
       <div
         ref={editorRef}
@@ -131,7 +205,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Tulis sesuatu..
         className="p-4 min-h-[40px] max-h-[300px] overflow-y-auto text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#280f91] focus:ring-inset prose prose-sm max-w-none"
         style={{
           whiteSpace: "pre-wrap",
-          wordBreak: "break-word"
+          wordBreak: "break-word",
         }}
       />
       {(!value || value === "<br>") && (

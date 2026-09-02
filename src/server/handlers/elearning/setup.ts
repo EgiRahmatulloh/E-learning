@@ -2,7 +2,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Elysia, t } from "elysia";
 import { db } from "../../config/db";
-import { eq, and, or, inArray, isNull, like, desc, asc, sql } from "drizzle-orm";
+import {
+  eq,
+  and,
+  or,
+  inArray,
+  isNull,
+  like,
+  desc,
+  asc,
+  sql,
+} from "drizzle-orm";
 import {
   elearningCourses,
   elearningSessions,
@@ -22,17 +32,23 @@ import {
   rombelStudents,
   managers,
   tutorAttendances,
-  elearningSessionAngkets
+  elearningSessionAngkets,
 } from "../../models";
 import { verifyAdmin, verifyAdminOrTutor } from "../../middleware/auth";
-import { verifyUser, sanitizeFilename, deriveProgram, buildAttendanceGrid, calculateGrade } from "./helpers";
+import {
+  verifyUser,
+  sanitizeFilename,
+  deriveProgram,
+  buildAttendanceGrid,
+  calculateGrade,
+} from "./helpers";
 import { fillTemplate } from "../../utils/templateXlsx";
 
-  // ==========================================
-  // ELEARNING SETUPS
-  // ==========================================
+// ==========================================
+// ELEARNING SETUPS
+// ==========================================
 
-  // GET all setups (admin) or filtered by tutorId (tutor) or kelas (siswa)
+// GET all setups (admin) or filtered by tutorId (tutor) or kelas (siswa)
 export const setupHandlers = new Elysia()
   .get(
     "/setups",
@@ -62,7 +78,8 @@ export const setupHandlers = new Elysia()
           conditions.push(eq(elearningSetups.semester, query.semester));
         }
 
-        const condition = conditions.length > 0 ? and(...conditions) : undefined;
+        const condition =
+          conditions.length > 0 ? and(...conditions) : undefined;
 
         const setups = await db
           .select({
@@ -94,7 +111,7 @@ export const setupHandlers = new Elysia()
         kelas: t.Optional(t.String()),
         semester: t.Optional(t.String()),
       }),
-    }
+    },
   )
 
   // POST new setup (admin only)
@@ -135,7 +152,7 @@ export const setupHandlers = new Elysia()
         jumlahSesi: t.Number(),
         semester: t.Optional(t.String()),
       }),
-    }
+    },
   )
 
   // POST copy seluruh setup dari semester lain (admin only)
@@ -150,11 +167,17 @@ export const setupHandlers = new Elysia()
         const { fromSemester, toSemester } = body;
         if (!fromSemester || !toSemester) {
           set.status = 400;
-          return { success: false, message: "Semester sumber dan tujuan wajib diisi" };
+          return {
+            success: false,
+            message: "Semester sumber dan tujuan wajib diisi",
+          };
         }
         if (fromSemester === toSemester) {
           set.status = 400;
-          return { success: false, message: "Semester sumber dan tujuan tidak boleh sama" };
+          return {
+            success: false,
+            message: "Semester sumber dan tujuan tidak boleh sama",
+          };
         }
 
         const sourceSetups = await db
@@ -164,7 +187,12 @@ export const setupHandlers = new Elysia()
           .all();
 
         if (sourceSetups.length === 0) {
-          return { success: true, copied: 0, skipped: 0, message: `Tidak ada setup di semester ${fromSemester} untuk disalin` };
+          return {
+            success: true,
+            copied: 0,
+            skipped: 0,
+            message: `Tidak ada setup di semester ${fromSemester} untuk disalin`,
+          };
         }
 
         const targetSetups = await db
@@ -172,7 +200,9 @@ export const setupHandlers = new Elysia()
           .from(elearningSetups)
           .where(eq(elearningSetups.semester, toSemester))
           .all();
-        const existingKeys = new Set(targetSetups.map((s) => `${s.kelas}|||${s.mapel}`));
+        const existingKeys = new Set(
+          targetSetups.map((s) => `${s.kelas}|||${s.mapel}`),
+        );
 
         let copied = 0;
         let skipped = 0;
@@ -210,14 +240,20 @@ export const setupHandlers = new Elysia()
         fromSemester: t.String(),
         toSemester: t.String(),
       }),
-    }
+    },
   )
 
   // PUT update setup (admin only)
   .put(
     "/setups/:id",
     async (context: any) => {
-      const { headers, jwt, params: { id }, body, set } = context;
+      const {
+        headers,
+        jwt,
+        params: { id },
+        body,
+        set,
+      } = context;
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
 
@@ -257,27 +293,72 @@ export const setupHandlers = new Elysia()
         jumlahSesi: t.Number(),
         semester: t.Optional(t.String()),
       }),
-    }
+    },
   )
 
-  // DELETE setup (admin only)
-  .delete(
-    "/setups/:id",
+  // PATCH approve angket
+  .patch(
+    "/setups/:id/approve-angket",
     async (context: any) => {
-      const { headers, jwt, params: { id }, set } = context;
+      const {
+        headers,
+        jwt,
+        params: { id },
+        body,
+        set,
+      } = context;
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
 
       try {
-        await db.delete(elearningSetups).where(eq(elearningSetups.id, parseInt(id)));
-        return { success: true, message: "Berhasil menghapus setup" };
+        const { isAngketApproved } = body as { isAngketApproved: boolean };
+        const updated = await db
+          .update(elearningSetups)
+          .set({ isAngketApproved })
+          .where(eq(elearningSetups.id, parseInt(id)))
+          .returning();
+
+        if (updated.length === 0) {
+          set.status = 404;
+          return { success: false, message: "Setup tidak ditemukan" };
+        }
+
+        return { success: true, data: updated[0] };
       } catch (error: any) {
         set.status = 500;
-        console.error("Setup error:", error);
+        console.error("Approve Angket error:", error);
         return { success: false, message: "Terjadi kesalahan server" };
       }
-    }
+    },
+    {
+      body: t.Object({
+        isAngketApproved: t.Boolean(),
+      }),
+    },
   )
+
+  // DELETE setup (admin only)
+  .delete("/setups/:id", async (context: any) => {
+    const {
+      headers,
+      jwt,
+      params: { id },
+      set,
+    } = context;
+    const authError = await verifyAdmin(headers, jwt, set);
+    if (authError) return authError;
+
+    try {
+      await db
+        .delete(elearningSetups)
+        .where(eq(elearningSetups.id, parseInt(id)));
+      return { success: true, message: "Berhasil menghapus setup" };
+    } catch (error: any) {
+      set.status = 500;
+      console.error("Setup error:", error);
+      return { success: false, message: "Terjadi kesalahan server" };
+    }
+  })
 
   // ==========================================
   // NEW ENDPOINTS FOR REFACTORING
@@ -287,7 +368,13 @@ export const setupHandlers = new Elysia()
   .put(
     "/session/:id/toggle",
     async (context: any) => {
-      const { headers, jwt, params: { id }, body, set } = context;
+      const {
+        headers,
+        jwt,
+        params: { id },
+        body,
+        set,
+      } = context;
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
 
@@ -307,92 +394,114 @@ export const setupHandlers = new Elysia()
       body: t.Object({
         isOpen: t.Boolean(),
       }),
-    }
+    },
   )
 
   // GET setups by student (dinamis berdasarkan rombel siswa)
-  .get(
-    "/setups/by-student/:studentId",
-    async (context: any) => {
-      const { headers, jwt, params: { studentId }, set } = context;
-      const authError = await verifyUser(headers, jwt, set);
-      if (authError) return authError;
+  .get("/setups/by-student/:studentId", async (context: any) => {
+    const {
+      headers,
+      jwt,
+      params: { studentId },
+      set,
+    } = context;
+    const authError = await verifyUser(headers, jwt, set);
+    if (authError) return authError;
 
-      try {
-        const authHeader = headers["authorization"];
-        const token = authHeader!.split(" ")[1];
-        const payload = await jwt.verify(token);
+    try {
+      const authHeader = headers["authorization"];
+      const token = authHeader!.split(" ")[1];
+      const payload = await jwt.verify(token);
 
-        let finalStudentId = parseInt(studentId);
-        if (payload && payload.role === "siswa") {
-          finalStudentId = payload.id as number;
-        }
-
-        // Cari siswa
-        const student = await db.select().from(students).where(eq(students.id, finalStudentId)).get();
-        if (!student) return { success: false, message: "Siswa tidak ditemukan" };
-
-        // Cari rombel siswa
-        const rombelRel = await db.select().from(rombelStudents).where(eq(rombelStudents.studentId, student.id)).get();
-        if (!rombelRel) return { success: true, data: [] }; // belum masuk rombel
-
-        const rombel = await db.select().from(rombels).where(eq(rombels.id, rombelRel.rombelId)).get();
-        if (!rombel) return { success: true, data: [] };
-
-        // Ambil setup berdasarkan kelas rombel
-        const setups = await db
-          .select({
-            setup: elearningSetups,
-            tutorName: tutors.nama,
-          })
-          .from(elearningSetups)
-          .leftJoin(tutors, eq(elearningSetups.tutorId, tutors.id))
-          .where(eq(elearningSetups.kelas, rombel.nama))
-          .all();
-
-        return { success: true, data: setups };
-      } catch (error: any) {
-        set.status = 500;
-        console.error("Setup error:", error);
-        return { success: false, message: "Terjadi kesalahan server" };
+      let finalStudentId = parseInt(studentId);
+      if (payload && payload.role === "siswa") {
+        finalStudentId = payload.id as number;
       }
+
+      // Cari siswa
+      const student = await db
+        .select()
+        .from(students)
+        .where(eq(students.id, finalStudentId))
+        .get();
+      if (!student) return { success: false, message: "Siswa tidak ditemukan" };
+
+      // Cari rombel siswa
+      const rombelRel = await db
+        .select()
+        .from(rombelStudents)
+        .where(eq(rombelStudents.studentId, student.id))
+        .get();
+      if (!rombelRel) return { success: true, data: [] }; // belum masuk rombel
+
+      const rombel = await db
+        .select()
+        .from(rombels)
+        .where(eq(rombels.id, rombelRel.rombelId))
+        .get();
+      if (!rombel) return { success: true, data: [] };
+
+      // Ambil setup berdasarkan kelas rombel
+      const setups = await db
+        .select({
+          setup: elearningSetups,
+          tutorName: tutors.nama,
+        })
+        .from(elearningSetups)
+        .leftJoin(tutors, eq(elearningSetups.tutorId, tutors.id))
+        .where(eq(elearningSetups.kelas, rombel.nama))
+        .all();
+
+      return { success: true, data: setups };
+    } catch (error: any) {
+      set.status = 500;
+      console.error("Setup error:", error);
+      return { success: false, message: "Terjadi kesalahan server" };
     }
-  )
+  })
 
   // GET students by setup (untuk tutor melihat murid di kelasnya)
-  .get(
-    "/students-by-setup/:setupId",
-    async (context: any) => {
-      const { headers, jwt, params: { setupId }, set } = context;
-      const authError = await verifyUser(headers, jwt, set);
-      if (authError) return authError;
+  .get("/students-by-setup/:setupId", async (context: any) => {
+    const {
+      headers,
+      jwt,
+      params: { setupId },
+      set,
+    } = context;
+    const authError = await verifyUser(headers, jwt, set);
+    if (authError) return authError;
 
-      try {
-        const setup = await db.select().from(elearningSetups).where(eq(elearningSetups.id, parseInt(setupId))).get();
-        if (!setup) return { success: false, message: "Setup tidak ditemukan" };
+    try {
+      const setup = await db
+        .select()
+        .from(elearningSetups)
+        .where(eq(elearningSetups.id, parseInt(setupId)))
+        .get();
+      if (!setup) return { success: false, message: "Setup tidak ditemukan" };
 
-        const rombelList = await db.select().from(rombels).where(eq(rombels.nama, setup.kelas)).all();
-        if (rombelList.length === 0) return { success: true, data: [] };
-        const rombelIds = rombelList.map((r) => r.id);
+      const rombelList = await db
+        .select()
+        .from(rombels)
+        .where(eq(rombels.nama, setup.kelas))
+        .all();
+      if (rombelList.length === 0) return { success: true, data: [] };
+      const rombelIds = rombelList.map((r) => r.id);
 
-        const studentsInRombel = await db
-          .select({
-            id: students.id,
-            nama: students.nama,
-            nis: students.nis,
-          })
-          .from(students)
-          .innerJoin(rombelStudents, eq(students.id, rombelStudents.studentId))
-          .where(inArray(rombelStudents.rombelId, rombelIds))
-          .all();
+      const studentsInRombel = await db
+        .select({
+          id: students.id,
+          nama: students.nama,
+          nis: students.nis,
+        })
+        .from(students)
+        .innerJoin(rombelStudents, eq(students.id, rombelStudents.studentId))
+        .where(inArray(rombelStudents.rombelId, rombelIds))
+        .all();
 
-        return { success: true, data: studentsInRombel };
-      } catch (error: any) {
-        set.status = 500;
-        console.error("Setup error:", error);
-        return { success: false, message: "Terjadi kesalahan server" };
-      }
+      return { success: true, data: studentsInRombel };
+    } catch (error: any) {
+      set.status = 500;
+      console.error("Setup error:", error);
+      return { success: false, message: "Terjadi kesalahan server" };
     }
-  )
-
-;
+  });
