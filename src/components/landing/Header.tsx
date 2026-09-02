@@ -168,7 +168,7 @@ export default function Header({ currentPath = "/", onNavigate }: HeaderProps) {
 
         {/* Desktop Nav links */}
         <nav className="hidden lg:flex items-center gap-5 xl:gap-6">
-          <a href="#beranda" onClick={(e) => handleNavClick(e, "beranda")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? "text-[#280f91] hover:text-[#ff6105]" : "text-white hover:text-orange-400"}`}>Beranda</a>
+          <a href="#beranda" onClick={(e) => handleNavClick(e, "beranda")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? (currentPath === "/" ? "text-[#ff6105]" : "text-slate-600 hover:text-[#280f91]") : "text-white/80 hover:text-white"}`}>Beranda</a>
           <a href="#profil" onClick={(e) => handleNavClick(e, "profil")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? (currentPath === "/profile" ? "text-[#ff6105]" : "text-slate-600 hover:text-[#280f91]") : "text-white/80 hover:text-white"}`}>Profil</a>
           <a href="#agenda" onClick={(e) => handleNavClick(e, "agenda")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? (currentPath === "/agenda" ? "text-[#ff6105]" : "text-slate-600 hover:text-[#280f91]") : "text-white/80 hover:text-white"}`}>Agenda</a>
           <a href="#berita" onClick={(e) => handleNavClick(e, "berita")} className={`text-sm font-bold transition-colors duration-300 ${isScrolled ? (currentPath === "/news" ? "text-[#ff6105]" : "text-slate-600 hover:text-[#280f91]") : "text-white/80 hover:text-white"}`}>Berita</a>
