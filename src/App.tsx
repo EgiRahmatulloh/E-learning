@@ -131,6 +131,7 @@ function App() {
     setUser(newUser);
     localStorage.setItem("token", newToken);
     localStorage.setItem("user", JSON.stringify(newUser));
+    setActiveServiceDialog(null);
     navigate("/dashboard");
   }, [navigate]);
 
@@ -139,6 +140,7 @@ function App() {
     setUser(null);
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    setActiveServiceDialog(null);
     navigate("/");
   };
 
