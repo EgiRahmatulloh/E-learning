@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Upload, Plus, Trash2, Edit3, Save, HelpCircle, Search, X, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
+import { parsePhotos, serializePhotos } from "@/lib/photos";
 
 interface ProductItem {
   id: number;
@@ -40,7 +41,8 @@ export default function ProductsManager() {
   const [satuan, setSatuan] = useState("Buah");
   const [harga, setHarga] = useState<number>(0);
   const [status, setStatus] = useState("AKTIF");
-  const [gambar, setGambar] = useState("");
+  const [fotoList, setFotoList] = useState<string[]>([]);
+  const [urlInput, setUrlInput] = useState("");
 
   const [, setOriginalProduct] = useState<ProductItem | null>(null);
 
@@ -90,7 +92,8 @@ export default function ProductsManager() {
     setSatuan("Buah");
     setHarga(0);
     setStatus("AKTIF");
-    setGambar("");
+    setFotoList([]);
+    setUrlInput("");
     setFormOpen(true);
   };
 
@@ -106,37 +109,61 @@ export default function ProductsManager() {
     setSatuan(item.satuan);
     setHarga(item.harga);
     setStatus(item.status);
-    setGambar(item.gambar);
+    setFotoList(parsePhotos(item.gambar));
+    setUrlInput("");
     setFormOpen(true);
   };
 
-  const handleImageUpload = async (file: File) => {
-    setUploading(true);
-    const body = new FormData();
-    body.append("file", file);
+  const handleImageUpload = async (files: File | File[]) => {
+    const fileArray = Array.isArray(files) ? files : [files];
+    const imageFiles = fileArray.filter((f) => f.type.startsWith("image/"));
+    if (imageFiles.length === 0) {
+      toast.error("Hanya file gambar yang diperbolehkan");
+      return;
+    }
+    const oversized = imageFiles.some((f) => f.size > 5 * 1024 * 1024);
+    if (oversized) {
+      toast.error("Ukuran gambar melebihi batas 5MB!");
+      return;
+    }
 
+    setUploading(true);
+    const token = localStorage.getItem("token");
+    let successCount = 0;
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body,
-      });
-      const data = await res.json();
-      if (data.success && data.url) {
-        setGambar(data.url);
-        toast.success("Gambar berhasil diunggah");
-      } else {
-        toast.error("Upload gagal: " + (data.message || "Error tidak diketahui"));
+      for (const file of imageFiles) {
+        const body = new FormData();
+        body.append("file", file);
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body,
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+          setFotoList((prev) => [...prev, data.url]);
+          successCount++;
+        } else {
+          toast.error("Upload gagal: " + (data.message || "Error tidak diketahui"));
+        }
       }
+      if (successCount > 0) toast.success(`${successCount} gambar berhasil diunggah`);
     } catch (e) {
       console.error(e);
       toast.error("Error mengunggah gambar");
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleAddUrl = () => {
+    const url = urlInput.trim();
+    if (!url) {
+      toast.error("Masukkan URL gambar terlebih dahulu!");
+      return;
+    }
+    setFotoList((prev) => [...prev, url]);
+    setUrlInput("");
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -154,10 +181,11 @@ export default function ProductsManager() {
     e.stopPropagation();
     setDragActive(false);
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      if (file.type.startsWith("image/")) {
-        await handleImageUpload(file);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const files = Array.from(e.dataTransfer.files);
+      const imageFiles = files.filter((f) => f.type.startsWith("image/"));
+      if (imageFiles.length > 0) {
+        await handleImageUpload(imageFiles);
       } else {
         toast.error("Hanya file gambar yang diperbolehkan");
       }
@@ -177,7 +205,7 @@ export default function ProductsManager() {
       satuan,
       harga: Number(harga),
       status,
-      gambar,
+      gambar: serializePhotos(fotoList),
     };
 
     try {
@@ -336,12 +364,19 @@ export default function ProductsManager() {
                       {indexOfFirstItem + idx + 1}
                     </td>
                     <td className="py-4 px-6 border-r border-slate-100 text-center">
-                      {item.gambar ? (
-                        <img
-                          src={item.gambar}
-                          alt={item.namaProduk}
-                          className="h-14 w-24 object-cover rounded mx-auto border border-slate-200 shadow-sm"
-                        />
+                      {parsePhotos(item.gambar).length > 0 ? (
+                        <div className="relative inline-block">
+                          <img
+                            src={parsePhotos(item.gambar)[0]}
+                            alt={item.namaProduk}
+                            className="h-14 w-24 object-cover rounded mx-auto border border-slate-200 shadow-sm"
+                          />
+                          {parsePhotos(item.gambar).length > 1 && (
+                            <span className="absolute -top-1.5 -right-1.5 bg-[#ff6105] text-white text-[9px] font-black rounded-full h-5 min-w-5 px-1 flex items-center justify-center shadow">
+                              {parsePhotos(item.gambar).length}+
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <div className="h-14 w-24 bg-gray-100 mx-auto rounded border border-gray-100 flex items-center justify-center text-gray-400 text-xs">
                           No Image
@@ -540,42 +575,82 @@ export default function ProductsManager() {
                   </div>
                   <div>
                     <label className="block text-xs font-black tracking-wider uppercase text-slate-500 mb-1">URL / Link Gambar</label>
-                    <input
-                      type="text"
-                      disabled={!isEditing}
-                      className="w-full text-xs font-semibold border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-60 disabled:cursor-not-allowed"
-                      placeholder="Masukkan URL gambar..."
-                      value={gambar}
-                      onChange={(e) => setGambar(e.target.value)}
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        disabled={!isEditing}
+                        className="flex-1 min-w-0 text-xs font-semibold border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-60 disabled:cursor-not-allowed"
+                        placeholder="Masukkan URL gambar..."
+                        value={urlInput}
+                        onChange={(e) => setUrlInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter" && isEditing) { e.preventDefault(); handleAddUrl(); } }}
+                      />
+                      <Button
+                        type="button"
+                        onClick={handleAddUrl}
+                        disabled={!isEditing}
+                        className="bg-[#9c27b0] hover:bg-[#7b1fa2] text-white text-xs font-black px-4 rounded-xl cursor-pointer disabled:opacity-50 shrink-0"
+                      >
+                        TAMBAH
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
-                {/* Preview Foto - tampil jika sudah ada gambar */}
-                {gambar && !uploading && (
+                {/* Preview Foto Multi */}
+                {fotoList.length > 0 && !uploading && (
                   <div className={`relative w-full h-48 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm group ${!isEditing ? "opacity-90" : ""}`}>
                     <img
-                      src={gambar}
+                      src={fotoList[0]}
                       alt="Preview Produk"
                       className="w-full h-full object-cover"
                       onError={(e) => (e.currentTarget.style.display = "none")}
                     />
+                    {fotoList.length > 1 && (
+                      <span className="absolute top-2 right-2 bg-black/50 text-white text-[10px] font-black rounded-full px-2 py-1">
+                        {fotoList.length} foto
+                      </span>
+                    )}
                     {isEditing && (
                       <div
                         onClick={() => fileInputRef.current?.click()}
                         className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                       >
                         <Upload className="text-white mb-1" size={20} />
-                        <span className="text-white text-xs font-bold">Klik untuk Ganti Foto</span>
+                        <span className="text-white text-xs font-bold">Klik untuk Tambah Foto</span>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* Thumbnail Grid */}
+                {fotoList.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2">
+                    {fotoList.map((src, idx) => (
+                      <div key={`${src}-${idx}`} className="relative group rounded-lg overflow-hidden border border-slate-200 bg-white">
+                        <img src={src} alt={`Foto ${idx + 1}`} className="w-full h-20 object-cover" />
+                        {isEditing && (
+                          <button
+                            type="button"
+                            onClick={() => setFotoList((prev) => prev.filter((_, i) => i !== idx))}
+                            className="absolute -top-1.5 -right-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-full h-5 w-5 flex items-center justify-center shadow cursor-pointer"
+                            title="Hapus foto"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        )}
+                        <span className="absolute bottom-0.5 left-0.5 bg-black/60 text-white text-[8px] font-black rounded px-1 py-px">
+                          {idx + 1}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 )}
 
                 {/* Drag & Drop Upload Block */}
                 <div
                   className={`border-2 border-dashed rounded-xl p-3 text-center transition cursor-pointer text-xs ${dragActive ? "border-yellow-300 bg-yellow-50/20" : "border-cyan-300 bg-cyan-50 hover:border-cyan-400 hover:bg-cyan-100"
-                    } ${!isEditing && "pointer-events-none opacity-60"} ${gambar && !uploading ? "mt-3" : ""}`}
+                    } ${!isEditing && "pointer-events-none opacity-60"} ${fotoList.length > 0 && !uploading ? "mt-1" : ""}`}
                   onDragEnter={handleDrag}
                   onDragOver={handleDrag}
                   onDragLeave={handleDrag}
@@ -587,17 +662,19 @@ export default function ProductsManager() {
                     type="file"
                     className="hidden"
                     accept="image/*"
+                    multiple
                     onChange={async (e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        await handleImageUpload(e.target.files[0]);
+                      if (e.target.files && e.target.files.length > 0) {
+                        await handleImageUpload(Array.from(e.target.files));
+                        e.target.value = "";
                       }
                     }}
                   />
                   <Upload className="mx-auto text-cyan-600 mb-1" size={20} />
                   <span className="font-bold text-purple-950 block">
-                    {uploading ? "Mengunggah..." : gambar ? "Tarik Foto Baru / Klik di sini untuk Ganti" : "Tarik Foto / Klik di sini"}
+                    {uploading ? "Mengunggah..." : fotoList.length > 0 ? "Tarik Foto Baru / Klik di sini untuk Tambah" : "Tarik Foto / Klik di sini (Bisa Banyak)"}
                   </span>
-                  <span className="text-[10px] text-cyan-700 block mt-0.5">Mendukung format JPG, PNG, WEBP (Maksimal 5MB)</span>
+                  <span className="text-[10px] text-cyan-700 block mt-0.5">Mendukung format JPG, PNG, WEBP (Maksimal 5MB per foto)</span>
                 </div>
               </div>
 

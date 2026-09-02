@@ -11,6 +11,8 @@ import {
   DialogClose
 } from "@/components/ui/dialog";
 import { MessageCircle, Sparkles, ChevronLeft, ChevronRight, ShieldAlert } from "lucide-react";
+import { parsePhotos } from "@/lib/photos";
+import PhotoCarousel from "@/components/ui/PhotoCarousel";
 
 interface ProductItem {
   id: number;
@@ -136,13 +138,25 @@ export default function Products() {
                       className="snap-start shrink-0 w-[calc(50%-0.75rem)] sm:w-[calc(50%-0.75rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(20%-1.2rem)] bg-white rounded-3xl overflow-hidden p-4 flex flex-col justify-between border border-slate-300 group hover:border-[#ff6105] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer text-left"
                     >
                       <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-slate-50 border border-slate-100 shadow-inner">
-                        <img
-                          src={product.gambar}
-                          alt={product.namaProduk}
-                          loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
+                        {parsePhotos(product.gambar).length > 0 ? (
+                          <img
+                            src={parsePhotos(product.gambar)[0]}
+                            alt={product.namaProduk}
+                            loading="lazy"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-300">
+                            <ShieldAlert className="h-8 w-8" />
+                          </div>
+                        )}
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent"></div>
+
+                        {parsePhotos(product.gambar).length > 1 && (
+                          <span className="absolute top-2 right-2 z-10 rounded-full bg-black/50 px-2 py-0.5 text-[9px] font-black text-white">
+                            {parsePhotos(product.gambar).length} foto
+                          </span>
+                        )}
 
                         <span className="absolute bottom-3 right-3 inline-block rounded-lg bg-[#ff6105] px-2.5 py-1 text-[11px] font-black text-white shadow-md">
                           {formatHarga(product.harga)}
@@ -178,13 +192,18 @@ export default function Products() {
                       <DialogDescription className="text-sm font-bold text-[#ff6105]">{formatHarga(product.harga)}</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
-                      <div className="h-56 w-full rounded-2xl relative overflow-hidden border border-slate-200">
-                        <img
-                          src={product.gambar}
-                          alt={product.namaProduk}
-                          loading="lazy"
-                          className="w-full h-full object-cover"
-                        />
+                      <div className="h-56 w-full rounded-2xl relative overflow-hidden border border-slate-200 bg-slate-100">
+                        {parsePhotos(product.gambar).length > 0 ? (
+                          <PhotoCarousel
+                            photos={parsePhotos(product.gambar)}
+                            alt={product.namaProduk}
+                            imageClassName="h-56"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-400">
+                            <ShieldAlert className="h-8 w-8" />
+                          </div>
+                        )}
                       </div>
                       <p className="text-slate-600 text-sm font-semibold leading-relaxed">
                         {product.deskripsi}
