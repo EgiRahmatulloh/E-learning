@@ -458,9 +458,14 @@ CREATE TABLE IF NOT EXISTS elearning_setups (
   skk INTEGER NOT NULL DEFAULT 1,
   jumlah_sesi INTEGER NOT NULL DEFAULT 8,
   semester TEXT NOT NULL DEFAULT 'Ganjil',
+  is_angket_approved INTEGER NOT NULL DEFAULT 0,
   created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 `);
+
+// Migration: tambah kolom semester dan is_angket_approved jika belum ada (untuk database existing)
+try { sqlite.exec(`ALTER TABLE elearning_setups ADD COLUMN semester TEXT NOT NULL DEFAULT 'Ganjil'`); } catch {}
+try { sqlite.exec(`ALTER TABLE elearning_setups ADD COLUMN is_angket_approved INTEGER NOT NULL DEFAULT 0`); } catch {}
 
 // Alter table untuk menambahkan is_open jika belum ada
 try {
