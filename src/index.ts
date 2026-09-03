@@ -2,7 +2,6 @@ import { Elysia } from "elysia";
 import { staticPlugin } from "@elysia/static";
 import { seedDatabase } from "./server/db/seed";
 import { IS_PROD } from "./server/config/jwt";
-import { MANIFEST_CONTENT_TYPE, MANIFEST_FILE, webManifest } from "./pwa/manifest";
 
 // Handlers
 import { authHandlers } from "./server/handlers/auth";

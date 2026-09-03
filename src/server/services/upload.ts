@@ -2,8 +2,6 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { finalJwtSecret } from "../config/jwt";
 import { verifyUser } from "../middleware/auth";
-import fs from "fs";
-import path from "path";
 import {
   isR2Enabled,
   r2PublicClient,
@@ -13,7 +11,11 @@ import {
   getR2PublicUrl,
 } from "../config/r2";
 
-const SECURE_UPLOAD_DIR = path.join(process.cwd(), "uploads");
+// Cloudflare R2 adalah satu-satunya storage berkas — tidak ada fallback ke
+// filesystem lokal. Bila R2 belum dikonfigurasi atau sedang bermasalah, upload
+// dan pengambilan berkas gagal terang-terangan, alih-alih menulis file ke disk
+// server yang tidak ikut ter-backup dan hilang saat redeploy.
+const STORAGE_UNAVAILABLE = "Layanan penyimpanan berkas tidak tersedia";
 
 // Ekstensi gambar — dipakai bersama oleh validasi upload DAN aturan akses publik
 // di /api/files/ agar keduanya tidak bisa lepas sinkron. SVG sengaja TIDAK di sini:
@@ -181,54 +183,47 @@ export const uploadServices = new Elysia()
 
       const contentType = getContentType(fileExt, file.type);
 
-      // ========== R2 MODE ==========
-      if (isR2Enabled) {
-        const { client, isPublic: isPublicBucket } = resolveBucketForUpload(
-          fileExt,
-          isPrivate,
-          isPublic
-        );
+      // ========== SIMPAN KE R2 ==========
+      if (!isR2Enabled) {
+        console.error("[R2] Upload ditolak: kredensial R2 belum dikonfigurasi");
+        set.status = 503;
+        return { success: false, message: STORAGE_UNAVAILABLE };
+      }
 
-        if (!client) {
-          console.error("[R2] Client tidak tersedia untuk upload:", fileName);
-          set.status = 500;
-          return { success: false, message: "Konfigurasi R2 tidak lengkap" };
-        }
+      const { client, isPublic: isPublicBucket } = resolveBucketForUpload(
+        fileExt,
+        isPrivate,
+        isPublic
+      );
 
-        try {
-          // Bun S3File write — pakai arrayBuffer agar tipe terjaga
-          const s3file = client.file(fileName);
-          // File dari Elysia adalah instance File/Blob — bisa langsung ditulis
-          // dengan opsi type untuk Content-Type yang benar di R2
-          await s3file.write(file, { type: contentType });
+      if (!client) {
+        console.error("[R2] Client tidak tersedia untuk upload:", fileName);
+        set.status = 503;
+        return { success: false, message: STORAGE_UNAVAILABLE };
+      }
 
-          // Untuk bucket public + R2_PUBLIC_URL valid → kembalikan URL CDN langsung
-          // agar frontend tidak perlu lewat /api/files/ (hemat bandwidth & lebih cepat)
-          // Jika R2_PUBLIC_URL tidak valid / sama dengan endpoint → fallback ke proxy
-          if (isPublicBucket) {
-            const publicUrl = getR2PublicUrl(fileName);
-            if (publicUrl) {
-              return { success: true, url: publicUrl };
-            }
+      try {
+        // Bun S3File write — File/Blob dari Elysia bisa langsung ditulis, opsi
+        // type menjaga Content-Type yang benar saat berkas disajikan dari R2
+        const s3file = client.file(fileName);
+        await s3file.write(file, { type: contentType });
+
+        // Bucket public + R2_PUBLIC_URL valid → kembalikan URL CDN langsung agar
+        // frontend tidak perlu lewat /api/files/ (hemat bandwidth & lebih cepat).
+        // Bila R2_PUBLIC_URL tidak valid → tetap lewat proxy.
+        if (isPublicBucket) {
+          const publicUrl = getR2PublicUrl(fileName);
+          if (publicUrl) {
+            return { success: true, url: publicUrl };
           }
-          // Private atau public tanpa public URL valid → tetap lewat proxy /api/files/
-          return { success: true, url: `/api/files/${fileName}` };
-        } catch (err) {
-          console.error("[R2] Upload gagal:", err);
-          set.status = 500;
-          return { success: false, message: "Gagal mengunggah ke storage" };
         }
+        // Private atau public tanpa public URL valid → tetap lewat proxy /api/files/
+        return { success: true, url: `/api/files/${fileName}` };
+      } catch (err) {
+        console.error("[R2] Upload gagal:", err);
+        set.status = 502;
+        return { success: false, message: "Gagal mengunggah berkas ke storage" };
       }
-
-      // ========== FALLBACK FILESYSTEM LOKAL (dev tanpa R2 atau R2 disabled) ==========
-      if (!fs.existsSync(SECURE_UPLOAD_DIR)) {
-        fs.mkdirSync(SECURE_UPLOAD_DIR, { recursive: true });
-      }
-
-      const filePath = path.join(SECURE_UPLOAD_DIR, fileName);
-      await Bun.write(filePath, file);
-
-      return { success: true, url: `/api/files/${fileName}` };
     },
     {
       body: t.Object({
@@ -292,73 +287,49 @@ export const uploadServices = new Elysia()
       }
 
       const contentType = ext && MIME_BY_EXT[ext] ? MIME_BY_EXT[ext] : "application/octet-stream";
+      const cacheControl = isPublicAccess ? "public, max-age=3600" : "private, no-cache";
 
-      // ========== R2 MODE ==========
-      if (isR2Enabled) {
-        const { client } = resolveBucketForDownload(params.filename);
+      // ========== AMBIL DARI R2 ==========
+      if (!isR2Enabled) {
+        console.error("[R2] Permintaan berkas ditolak: kredensial R2 belum dikonfigurasi");
+        set.status = 503;
+        return { success: false, message: STORAGE_UNAVAILABLE };
+      }
 
-        if (client) {
-          try {
-            const s3file = client.file(params.filename);
-            const exists = await s3file.exists();
-            if (exists) {
-              // Untuk file publik, kita bisa redirect ke R2_PUBLIC_URL jika ada
-              // tapi tetap proxy via stream agar header Content-Type terjaga
-              // dan tidak expose R2 endpoint ke publik.
-              // Gunakan stream agar tidak load seluruh file ke memory (penting untuk 100MB)
-              // S3File extends Blob → stream() tersedia
-              // Alternatif presign redirect: return new Response(s3file) → 302, tapi kita proxy
-              const stream = (s3file as any).stream
-                ? (s3file as any).stream()
-                : await s3file.arrayBuffer();
+      const { client } = resolveBucketForDownload(params.filename);
+      if (!client) {
+        console.error("[R2] Client tidak tersedia untuk berkas:", params.filename);
+        set.status = 503;
+        return { success: false, message: STORAGE_UNAVAILABLE };
+      }
 
-              // Jika stream adalah ReadableStream
-              if (stream instanceof ReadableStream || (stream && typeof stream.getReader === "function")) {
-                return new Response(stream as ReadableStream, {
-                  headers: {
-                    "Content-Type": contentType,
-                    // Cache public images 1 jam, private no-cache
-                    "Cache-Control": isPublicAccess ? "public, max-age=3600" : "private, no-cache",
-                  },
-                });
-              }
-              // Fallback arrayBuffer
-              return new Response(stream as ArrayBuffer, {
-                headers: {
-                  "Content-Type": contentType,
-                  "Cache-Control": isPublicAccess ? "public, max-age=3600" : "private, no-cache",
-                },
-              });
-            }
-            // File tidak ada di R2 → fallback cek filesystem lokal (untuk migrasi bertahap)
-          } catch (err) {
-            console.error("[R2] Get file error:", params.filename, err);
-            // Fallback ke local jika R2 error
-          }
+      try {
+        const s3file = client.file(params.filename);
+        if (!(await s3file.exists())) {
+          set.status = 404;
+          return { success: false, message: "Berkas tidak ditemukan" };
         }
+
+        // Di-proxy lewat stream, bukan redirect ke R2: header Content-Type
+        // terjaga, endpoint R2 tidak terekspos, dan berkas besar (hingga 100MB)
+        // tidak dimuat penuh ke memory. S3File extends Blob → stream() tersedia,
+        // arrayBuffer dipakai sebagai jaring aman bila tidak.
+        const stream = (s3file as any).stream
+          ? (s3file as any).stream()
+          : await s3file.arrayBuffer();
+
+        if (stream instanceof ReadableStream || (stream && typeof stream.getReader === "function")) {
+          return new Response(stream as ReadableStream, {
+            headers: { "Content-Type": contentType, "Cache-Control": cacheControl },
+          });
+        }
+        return new Response(stream as ArrayBuffer, {
+          headers: { "Content-Type": contentType, "Cache-Control": cacheControl },
+        });
+      } catch (err) {
+        console.error("[R2] Get file error:", params.filename, err);
+        set.status = 502;
+        return { success: false, message: "Gagal mengambil berkas dari storage" };
       }
-
-      // ========== FALLBACK FILESYSTEM LOKAL ==========
-      const filePath = path.join(SECURE_UPLOAD_DIR, params.filename);
-
-      const resolved = path.resolve(filePath);
-      const relative = path.relative(SECURE_UPLOAD_DIR, resolved);
-      if (relative.startsWith("..")) {
-        set.status = 403;
-        return { success: false, message: "Akses ditolak" };
-      }
-
-      if (!fs.existsSync(filePath)) {
-        set.status = 404;
-        return { success: false, message: "Berkas tidak ditemukan" };
-      }
-
-      const file = Bun.file(filePath);
-      return new Response(file, {
-        headers: {
-          "Content-Type": contentType,
-          "Cache-Control": isPublicAccess ? "public, max-age=3600" : "private, no-cache",
-        },
-      });
     }
   );
