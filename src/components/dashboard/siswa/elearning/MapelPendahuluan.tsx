@@ -11,7 +11,7 @@ interface MapelPendahuluanProps {
 }
 
 export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahuluanProps) {
-  const [messages, setMessages] = useState<{ id: number; sender: string; text: string; isSelf: boolean; initial: string; color: string }[]>([]);
+  const [messages, setMessages] = useState<{ id: number; sender: string; text: string; isSelf: boolean; initial: string; color: string; authorFoto?: string | null }[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [editInputValue, setEditInputValue] = useState("");
@@ -164,7 +164,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
           const sender = isTutor ? `Tutor (${senderName})` : isSelf ? "Siswa (Anda)" : `Siswa (${senderName})`;
           const initial = isTutor ? "T" : (isSelf ? "S" : senderName.charAt(0).toUpperCase());
           const color = isTutor ? "bg-[#280f91]" : isSelf ? "bg-cyan-600" : "bg-slate-500";
-          return { id: post.id, sender, text: post.content, isSelf, initial, color };
+          return { id: post.id, sender, text: post.content, isSelf, initial, color, authorFoto: post.authorFoto };
         });
         setMessages(loadedMessages);
       }
@@ -329,9 +329,13 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
 
           {messages.map((msg) => (
             <div key={msg.id} className="flex gap-3 mt-4">
-              <div className={`h-8 w-8 rounded-full ${msg.color} text-white flex items-center justify-center font-bold text-xs shrink-0`}>
-                {msg.initial}
-              </div>
+              {msg.authorFoto ? (
+                <img src={msg.authorFoto} alt={msg.sender} className="h-8 w-8 rounded-full object-cover shrink-0 border border-slate-200" />
+              ) : (
+                <div className={`h-8 w-8 rounded-full ${msg.color} text-white flex items-center justify-center font-bold text-xs shrink-0`}>
+                  {msg.initial}
+                </div>
+              )}
               <div className={`p-3 rounded-lg border shadow-sm flex-1 ${msg.isSelf ? 'bg-cyan-50/30 border-cyan-100' : 'bg-white border-slate-200'}`}>
                 <div className="flex justify-between items-start mb-1">
                   <p className={`text-xs font-bold ${msg.isSelf ? 'text-cyan-700' : 'text-slate-600'}`}>{msg.sender}</p>
