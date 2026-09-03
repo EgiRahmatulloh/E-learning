@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { FileText, Download, Users, FileSignature, Pencil, Trash2, X, CheckCircle2 } from "lucide-react";
+import { FileText, Download, Users, FileSignature, Pencil, Trash2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { safeHtml } from "@/lib/sanitize";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface MapelPendahuluanProps {
   subjectName: string;
@@ -15,7 +16,14 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
   const [inputValue, setInputValue] = useState("");
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [editInputValue, setEditInputValue] = useState("");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [completions, setCompletions] = useState<Set<string>>(new Set());
+
+  const openFileWithAuth = (url: string) => {
+    const token = localStorage.getItem("token") || "";
+    const fullUrl = url.includes("?") ? `${url}&token=${token}` : `${url}?token=${token}`;
+    window.open(fullUrl, "_blank");
+  };
 
   const fetchCompletions = async () => {
     if (!setupId) return;
@@ -108,7 +116,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
             const sender = isTutor ? `Tutor (${senderName})` : isSelf ? "Siswa (Anda)" : `Siswa (${senderName})`;
             const initial = isTutor ? "T" : (isSelf ? "S" : senderName.charAt(0).toUpperCase());
             const color = isTutor ? "bg-[#280f91]" : isSelf ? "bg-cyan-600" : "bg-slate-500";
-            return { id: post.id, sender, text: post.content, isSelf, initial, color };
+            return { id: post.id, sender, text: post.content, isSelf, initial, color, authorFoto: post.authorFoto };
           });
           setMessages(loadedMessages);
         }
@@ -195,10 +203,14 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
     }
   };
 
-  const handleDeleteMessage = async (msgId: number) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus pesan ini?")) return;
+  const handleDeleteMessage = (msgId: number) => {
+    setDeleteConfirmId(msgId);
+  };
+
+  const executeDeleteMessage = async () => {
+    if (deleteConfirmId === null) return;
     try {
-      const res = await fetch(`/api/elearning/forum/${msgId}`, {
+      const res = await fetch(`/api/elearning/forum/${deleteConfirmId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`
@@ -213,6 +225,8 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
       }
     } catch (err) {
       toast.error("Terjadi kesalahan saat menghapus pesan");
+    } finally {
+      setDeleteConfirmId(null);
     }
   };
 
@@ -256,7 +270,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
                   <Button
                     onClick={() => {
                       handleMarkComplete("pendahuluan_rat");
-                      window.open(ratUrl, "_blank");
+                      openFileWithAuth(ratUrl);
                     }}
                     size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full text-emerald-600 hover:bg-emerald-100">
                     <Download className="h-4 w-4" />
@@ -268,7 +282,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
             <h4 className="font-bold text-emerald-900 mb-1">Capaian Pembelajaran (CP)</h4>
             <p className="text-xs text-emerald-700/80 mb-3 line-clamp-2">Dokumen panduan aktivitas tutorial selama satu semester.</p>
             {ratUrl ? (
-              <Button onClick={() => { handleMarkComplete("pendahuluan_rat"); window.open(ratUrl, "_blank"); }} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm font-semibold rounded-xl text-xs h-9">
+              <Button onClick={() => { handleMarkComplete("pendahuluan_rat"); openFileWithAuth(ratUrl); }} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm font-semibold rounded-xl text-xs h-9">
                 Unduh Dokumen
               </Button>
             ) : (
@@ -285,7 +299,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
               </div>
               <div className="flex gap-2 items-center">
                 {tertibUrl && (
-                  <Button onClick={() => { handleMarkComplete("pendahuluan_tertib"); window.open(tertibUrl, "_blank"); }} size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full text-amber-600 hover:bg-amber-100">
+                  <Button onClick={() => { handleMarkComplete("pendahuluan_tertib"); openFileWithAuth(tertibUrl); }} size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full text-amber-600 hover:bg-amber-100">
                     <Download className="h-4 w-4" />
                   </Button>
                 )}
@@ -295,7 +309,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
             <h4 className="font-bold text-amber-900 mb-1">Tata Tertib</h4>
             <p className="text-xs text-amber-700/80 mb-3 line-clamp-2">Peraturan yang harus ditaati selama mengikuti pembelajaran.</p>
             {tertibUrl ? (
-              <Button onClick={() => { handleMarkComplete("pendahuluan_tertib"); window.open(tertibUrl, "_blank"); }} className="w-full bg-amber-600 hover:bg-amber-700 text-white shadow-sm font-semibold rounded-xl text-xs h-9">
+              <Button onClick={() => { handleMarkComplete("pendahuluan_tertib"); openFileWithAuth(tertibUrl); }} className="w-full bg-amber-600 hover:bg-amber-700 text-white shadow-sm font-semibold rounded-xl text-xs h-9">
                 Unduh Tata Tertib
               </Button>
             ) : (
@@ -362,17 +376,17 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
                   )}
                 </div>
                 {editingMessageId === msg.id ? (
-                  <div className="flex gap-2 mt-2">
-                    <input
-                      type="text"
+                  <div className="flex flex-col gap-2 mt-2">
+                    <textarea
                       value={editInputValue}
                       onChange={(e) => setEditInputValue(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleEditSubmit(msg.id)}
-                      className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:border-cyan-500"
-                      autoFocus
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 min-h-[80px] resize-y"
+                      placeholder="Edit perkenalan..."
                     />
-                    <Button onClick={() => handleEditSubmit(msg.id)} size="sm" className="bg-cyan-600 hover:bg-cyan-700 h-8">Simpan</Button>
-                    <Button onClick={() => setEditingMessageId(null)} size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-500 hover:text-slate-700"><X className="w-4 h-4" /></Button>
+                    <div className="flex justify-end gap-2">
+                      <Button onClick={() => setEditingMessageId(null)} size="sm" variant="ghost" className="h-8">Batal</Button>
+                      <Button onClick={() => handleEditSubmit(msg.id)} size="sm" className="bg-cyan-600 hover:bg-cyan-700 h-8">Simpan</Button>
+                    </div>
                   </div>
                 ) : (
                   <div className="text-sm text-slate-700 prose max-w-none" dangerouslySetInnerHTML={{ __html: safeHtml(msg.text) }} />
@@ -381,20 +395,28 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
             </div>
           ))}
 
-          <div className="flex flex-col sm:flex-row gap-3 mt-4">
-            <input
-              type="text"
-              placeholder="Tulis perkenalan Anda di sini..."
+          <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-slate-200">
+            <h4 className="text-sm font-bold text-slate-700">Perkenalkan diri Anda</h4>
+            <textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-              className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:border-[#280f91] focus:ring-1 focus:ring-[#280f91] w-full"
+              placeholder="Tulis perkenalan Anda di sini..."
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:border-[#280f91] focus:outline-none focus:ring-1 focus:ring-[#280f91] min-h-[50px] resize-y"
             />
-            <Button onClick={handleSendMessage} className="rounded-xl bg-[#280f91] hover:bg-[#3a1bca] text-white font-bold px-6 w-full sm:w-auto">Kirim</Button>
+            <div className="flex justify-end">
+              <Button onClick={handleSendMessage} className="rounded-xl bg-[#280f91] hover:bg-[#3a1bca] text-white font-bold px-6">Kirim</Button>
+            </div>
           </div>
         </div>
       </div>
 
+      <ConfirmDialog
+        open={deleteConfirmId !== null}
+        onConfirm={executeDeleteMessage}
+        onCancel={() => setDeleteConfirmId(null)}
+        title="Hapus Pesan"
+        description="Apakah Anda yakin ingin menghapus pesan ini? Aksi ini tidak dapat dibatalkan."
+      />
     </div>
   );
 }
