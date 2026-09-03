@@ -64,16 +64,24 @@ export const forumHandlers = new Elysia()
 
         const enrichedPosts = posts.map(post => {
           let authorName = "Unknown";
+          let authorFoto = null;
           if (post.authorRole === "tutor") {
             const tutor = allTutors.find(t => t.id === post.authorId);
-            if (tutor) authorName = tutor.nama;
+            if (tutor) {
+              authorName = tutor.nama;
+              authorFoto = tutor.foto;
+            }
           } else {
             const student = allStudents.find(s => s.id === post.authorId);
-            if (student) authorName = student.nama;
+            if (student) {
+              authorName = student.nama;
+              authorFoto = student.foto;
+            }
           }
           return {
             ...post,
-            authorName
+            authorName,
+            authorFoto
           };
         });
 
@@ -106,7 +114,7 @@ export const forumHandlers = new Elysia()
           allowedAttributes: {
             ...sanitizeHtml.defaults.allowedAttributes,
             'font': ['size', 'color', 'face'],
-            '*': ['class']
+            '*': ['class', 'style', 'align']
           }
         });
 
@@ -173,7 +181,7 @@ export const forumHandlers = new Elysia()
           allowedAttributes: {
             ...sanitizeHtml.defaults.allowedAttributes,
             'font': ['size', 'color', 'face'],
-            '*': ['class']
+            '*': ['class', 'style', 'align']
           }
         });
 

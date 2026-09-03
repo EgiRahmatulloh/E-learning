@@ -312,7 +312,7 @@ export default function AngketEvaluasiTutor() {
           <h4 className="font-bold text-slate-800">Daftar Pertanyaan Angket</h4>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
           {questions.map((q, index) => (
             <div key={q.id} className="flex items-start gap-3">
               <div className="bg-slate-100 text-slate-500 font-bold w-8 h-8 rounded-lg flex items-center justify-center shrink-0">

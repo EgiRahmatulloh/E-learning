@@ -3,7 +3,7 @@ import { GraduationCap, MapPin, Mail, Phone } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-slate-950 text-slate-400 py-16 border-t border-slate-900 relative overflow-hidden">
+    <footer id="kontak" className="bg-slate-950 text-slate-400 py-16 border-t border-slate-900 relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
 
         {/* MAIN: 5 COLUMNS - PKBM | Kontak | Program | Layanan | Maps */}

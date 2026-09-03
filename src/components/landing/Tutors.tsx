@@ -244,7 +244,7 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                         <div className="border-b border-slate-100 pb-2">
                           <h2 className="text-xl font-black text-[#280f91] uppercase leading-tight">{tutor.nama}</h2>
                           <span className="inline-block bg-orange-100 text-[#ff6105] font-extrabold text-[10px] px-3.5 py-1 rounded-full uppercase tracking-wider mt-1.5 shadow-xs">
-                            {tutor.tutorMapel}
+                            Program: {tutor.program || "-"}
                           </span>
                         </div>
 
@@ -496,7 +496,7 @@ export default function Tutors({ isDetailed = false, onNavigate }: TutorsProps) 
                           <div className="border-b border-slate-100 pb-2">
                             <h2 className="text-xl font-black text-[#280f91] uppercase leading-tight">{tutor.nama}</h2>
                             <span className="inline-block bg-orange-100 text-[#ff6105] font-extrabold text-[10px] px-3.5 py-1 rounded-full uppercase tracking-wider mt-1.5 shadow-xs">
-                              {tutor.tutorMapel || tutor.program || "-"}
+                              Program: {tutor.program || "-"}
                             </span>
                           </div>
 

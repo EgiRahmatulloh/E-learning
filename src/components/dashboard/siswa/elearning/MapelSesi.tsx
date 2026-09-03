@@ -579,9 +579,13 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
 
               return (
                 <div key={msg.id} className="flex gap-3">
-                  <div className={`h-8 w-8 rounded-full ${color} text-white flex items-center justify-center font-bold text-xs shrink-0`}>
-                    {initial}
-                  </div>
+                  {msg.authorFoto ? (
+                    <img src={msg.authorFoto} alt={displayName} className="h-8 w-8 rounded-full object-cover shrink-0 border border-slate-200" />
+                  ) : (
+                    <div className={`h-8 w-8 rounded-full ${color} text-white flex items-center justify-center font-bold text-xs shrink-0`}>
+                      {initial}
+                    </div>
+                  )}
                   <div className={`p-3 rounded-lg border shadow-sm flex-1 ${isSelf ? 'bg-blue-50/30 border-blue-100' : 'bg-slate-50 border-slate-200'}`}>
                     <div className="flex justify-between items-start mb-1">
                       <p className={`text-xs font-bold flex items-center gap-2 ${isSelf ? 'text-blue-700' : 'text-slate-600'}`}>
@@ -640,9 +644,13 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
 
                       return (
                         <div key={reply.id} className="mt-3 pl-4 border-l-2 border-slate-200 flex gap-2 group">
-                          <div className={`h-6 w-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 text-white ${replyColor}`}>
-                            {replyInitial}
-                          </div>
+                          {reply.authorFoto ? (
+                            <img src={reply.authorFoto} alt={replyDisplayName} className="h-6 w-6 rounded-full object-cover shrink-0 border border-slate-200" />
+                          ) : (
+                            <div className={`h-6 w-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 text-white ${replyColor}`}>
+                              {replyInitial}
+                            </div>
+                          )}
                           <div className="flex-1">
                             <div className="flex justify-between items-start">
                               <h5 className="font-bold text-slate-700 text-xs flex items-center gap-2">

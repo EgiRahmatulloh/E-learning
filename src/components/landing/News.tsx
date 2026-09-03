@@ -220,10 +220,10 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
                       {/* Title + Excerpt + link */}
                       <div className="p-4 space-y-3 text-left flex-1 flex flex-col justify-between">
                         <div className="space-y-2">
-                          <h3 className="text-sm font-black text-slate-900 group-hover:text-[#280f91] transition-colors leading-tight uppercase line-clamp-2">
+                          <h3 className="text-sm font-black text-slate-900 group-hover:text-[#280f91] transition-colors leading-tight uppercase line-clamp-2 break-words">
                             {news.judul}
                           </h3>
-                          <p className="text-slate-600 text-xs font-semibold leading-relaxed line-clamp-3">
+                          <p className="text-slate-600 text-xs font-semibold leading-relaxed line-clamp-3 break-words">
                             {news.konten}
                           </p>
                         </div>
@@ -238,18 +238,18 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
                   </DialogTrigger>
 
                   {/* READ NEWS FULL POP-UP */}
-                  <DialogContent className="sm:max-w-lg bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl text-left">
-                    <DialogHeader>
+                  <DialogContent className="w-[90vw] max-w-[90vw] sm:max-w-lg bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl text-left overflow-hidden flex flex-col">
+                    <DialogHeader className="min-w-0 w-full overflow-hidden shrink-0">
                       <div className="flex items-center gap-2 text-xs font-extrabold text-[#9c27b0] uppercase tracking-wider mb-2">
                         <span>{news.kategori}</span>
                         <span>•</span>
                         <span>{news.tanggalPosting}</span>
                       </div>
-                      <DialogTitle className="text-xl sm:text-2xl font-black text-[#280f91] leading-tight uppercase">
+                      <DialogTitle className="text-xl sm:text-2xl font-black text-[#280f91] leading-tight uppercase break-words">
                         {news.judul}
                       </DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4 py-2">
+                    <div className="space-y-4 py-2 min-w-0 w-full overflow-hidden flex-1">
                       <div className="h-56 w-full rounded-2xl relative overflow-hidden border border-slate-200">
                         {parsePhotos(news.foto).length > 0 ? (
                           <PhotoCarousel
@@ -263,7 +263,7 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
                           </div>
                         )}
                       </div>
-                      <p className="text-slate-700 text-sm sm:text-base font-bold leading-relaxed whitespace-pre-line max-h-60 overflow-y-auto pr-1">
+                      <p className="text-slate-700 text-sm sm:text-base font-bold leading-relaxed whitespace-pre-wrap break-all max-h-60 overflow-y-auto pr-1">
                         {news.konten}
                       </p>
                       <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-between pt-2 border-t border-slate-100">
@@ -271,7 +271,7 @@ export default function News({ isDetailed = false, onNavigate }: NewsProps) {
                         <span>Dilihat: {news.hits} kali</span>
                       </div>
                     </div>
-                    <DialogFooter className="flex justify-end gap-2 border-t border-slate-100 pt-4 mt-2">
+                    <DialogFooter className="flex justify-end gap-2 border-t border-slate-100 pt-4 mt-2 w-full shrink-0">
                       <DialogClose asChild>
                         <Button className="rounded-xl bg-[#280f91] hover:bg-[#ff6105] text-white font-bold h-11 px-6 cursor-pointer">
                           Tutup Bacaan

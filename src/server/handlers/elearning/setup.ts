@@ -90,6 +90,7 @@ export const setupHandlers = new Elysia()
             skk: elearningSetups.skk,
             jumlahSesi: elearningSetups.jumlahSesi,
             semester: elearningSetups.semester,
+            isAngketApproved: elearningSetups.isAngketApproved,
             createdAt: elearningSetups.createdAt,
             tutorNama: tutors.nama,
           })
