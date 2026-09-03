@@ -21,6 +21,9 @@ WORKDIR /app
 # Atur environment ke production
 ENV NODE_ENV=production
 ENV PORT=3000
+# Di dalam container app harus bind ke semua interface agar port bisa dipublikasikan.
+# Di luar container (deploy langsung + nginx) default-nya 127.0.0.1.
+ENV HOST=0.0.0.0
 
 # Salin package.json, lockfile, tsconfig, dan drizzle config
 COPY package.json bun.lock tsconfig.json drizzle.config.ts ./

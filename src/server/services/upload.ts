@@ -4,6 +4,14 @@ import { finalJwtSecret } from "../config/jwt";
 import { verifyUser } from "../middleware/auth";
 import fs from "fs";
 import path from "path";
+import {
+  isR2Enabled,
+  r2PublicClient,
+  r2PrivateClient,
+  R2_PUBLIC_BUCKET_NAME,
+  R2_PRIVATE_BUCKET_NAME,
+  getR2PublicUrl,
+} from "../config/r2";
 
 const SECURE_UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
@@ -44,6 +52,46 @@ const MIME_BY_EXT: Record<string, string> = {
   txt: "text/plain; charset=utf-8",
 };
 
+function getContentType(ext: string | undefined, fallback: string): string {
+  if (ext && MIME_BY_EXT[ext]) return MIME_BY_EXT[ext];
+  return fallback || "application/octet-stream";
+}
+
+function resolveBucketForUpload(
+  ext: string,
+  isPrivate: boolean,
+  isPublic: boolean
+) {
+  // Prioritas: private > public flag > image public > default private
+  if (isPrivate) {
+    return { client: r2PrivateClient, bucket: R2_PRIVATE_BUCKET_NAME, isPublic: false };
+  }
+  if (isPublic) {
+    return { client: r2PublicClient, bucket: R2_PUBLIC_BUCKET_NAME, isPublic: true };
+  }
+  const isImage = IMAGE_EXTENSIONS.includes(ext);
+  if (isImage) {
+    return { client: r2PublicClient, bucket: R2_PUBLIC_BUCKET_NAME, isPublic: true };
+  }
+  return { client: r2PrivateClient, bucket: R2_PRIVATE_BUCKET_NAME, isPublic: false };
+}
+
+function resolveBucketForDownload(filename: string) {
+  const ext = filename.split(".").pop()?.toLowerCase() ?? "";
+  const isPrivate = filename.startsWith(PRIVATE_PREFIX);
+  const isPublicFile = filename.startsWith(PUBLIC_PREFIX);
+  const isPublicImage = !isPrivate && IMAGE_EXTENSIONS.includes(ext);
+  const isPublicAccess = isPublicFile || isPublicImage;
+
+  if (isPrivate) {
+    return { client: r2PrivateClient, bucket: R2_PRIVATE_BUCKET_NAME, isPublicAccess };
+  }
+  if (isPublicAccess) {
+    return { client: r2PublicClient, bucket: R2_PUBLIC_BUCKET_NAME, isPublicAccess };
+  }
+  return { client: r2PrivateClient, bucket: R2_PRIVATE_BUCKET_NAME, isPublicAccess };
+}
+
 export const uploadServices = new Elysia()
   .use(
     jwt({
@@ -58,7 +106,7 @@ export const uploadServices = new Elysia()
       }),
     })
   )
-  // Endpoint untuk Unggah Berkas (Aman — simpan di luar public/)
+  // Endpoint untuk Unggah Berkas
   .post(
     "/api/upload",
     async ({ body, headers, jwt, set }) => {
@@ -67,11 +115,7 @@ export const uploadServices = new Elysia()
 
       const bodyData = body as { file?: any; public?: string; private?: string };
       const { file } = bodyData;
-      // Flag "public": file yang dimaksudkan diakses pengunjung tanpa login
-      // (mis. Pusat Unduhan) disimpan ke public/uploads yang di-serve statis tanpa auth.
       const isPublic = bodyData.public === "true" || bodyData.public === "1";
-      // Flag "private": dokumen sensitif (scan KK/KTP/Ijazah). Diberi prefix agar
-      // /api/files/ selalu meminta auth walau ekstensinya gambar.
       const isPrivate = bodyData.private === "true" || bodyData.private === "1";
       if (!file || !(file instanceof File)) {
         set.status = 400;
@@ -135,15 +179,53 @@ export const uploadServices = new Elysia()
       const prefix = isPrivate ? PRIVATE_PREFIX : isPublic ? PUBLIC_PREFIX : "";
       const fileName = `${prefix}${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
 
-      // Semua file disimpan di folder aman & disajikan lewat endpoint dinamis /api/files/.
-      // Ini penting di produksi (mis. Render): staticPlugin hanya meng-index folder saat
-      // startup, jadi file yang diupload saat runtime tidak terbaca via /uploads/ → 404.
+      const contentType = getContentType(fileExt, file.type);
+
+      // ========== R2 MODE ==========
+      if (isR2Enabled) {
+        const { client, isPublic: isPublicBucket } = resolveBucketForUpload(
+          fileExt,
+          isPrivate,
+          isPublic
+        );
+
+        if (!client) {
+          console.error("[R2] Client tidak tersedia untuk upload:", fileName);
+          set.status = 500;
+          return { success: false, message: "Konfigurasi R2 tidak lengkap" };
+        }
+
+        try {
+          // Bun S3File write — pakai arrayBuffer agar tipe terjaga
+          const s3file = client.file(fileName);
+          // File dari Elysia adalah instance File/Blob — bisa langsung ditulis
+          // dengan opsi type untuk Content-Type yang benar di R2
+          await s3file.write(file, { type: contentType });
+
+          // Untuk bucket public + R2_PUBLIC_URL valid → kembalikan URL CDN langsung
+          // agar frontend tidak perlu lewat /api/files/ (hemat bandwidth & lebih cepat)
+          // Jika R2_PUBLIC_URL tidak valid / sama dengan endpoint → fallback ke proxy
+          if (isPublicBucket) {
+            const publicUrl = getR2PublicUrl(fileName);
+            if (publicUrl) {
+              return { success: true, url: publicUrl };
+            }
+          }
+          // Private atau public tanpa public URL valid → tetap lewat proxy /api/files/
+          return { success: true, url: `/api/files/${fileName}` };
+        } catch (err) {
+          console.error("[R2] Upload gagal:", err);
+          set.status = 500;
+          return { success: false, message: "Gagal mengunggah ke storage" };
+        }
+      }
+
+      // ========== FALLBACK FILESYSTEM LOKAL (dev tanpa R2 atau R2 disabled) ==========
       if (!fs.existsSync(SECURE_UPLOAD_DIR)) {
         fs.mkdirSync(SECURE_UPLOAD_DIR, { recursive: true });
       }
 
       const filePath = path.join(SECURE_UPLOAD_DIR, fileName);
-
       await Bun.write(filePath, file);
 
       return { success: true, url: `/api/files/${fileName}` };
@@ -160,6 +242,12 @@ export const uploadServices = new Elysia()
   .get(
     "/api/files/:filename",
     async ({ params, headers, query, jwt, set }) => {
+      // Validasi path traversal dasar — cegah ../../
+      if (params.filename.includes("/") || params.filename.includes("\\") || params.filename.includes("..")) {
+        set.status = 403;
+        return { success: false, message: "Akses ditolak" };
+      }
+
       // Gambar boleh diakses publik (dipakai <img src> di landing page & kartu dashboard
       // yang tidak bisa mengirim header Authorization). Dokumen tetap butuh auth.
       // KECUALI file ber-prefix privat (scan KK/KTP/Ijazah) — selalu butuh auth walau
@@ -203,6 +291,54 @@ export const uploadServices = new Elysia()
         }
       }
 
+      const contentType = ext && MIME_BY_EXT[ext] ? MIME_BY_EXT[ext] : "application/octet-stream";
+
+      // ========== R2 MODE ==========
+      if (isR2Enabled) {
+        const { client } = resolveBucketForDownload(params.filename);
+
+        if (client) {
+          try {
+            const s3file = client.file(params.filename);
+            const exists = await s3file.exists();
+            if (exists) {
+              // Untuk file publik, kita bisa redirect ke R2_PUBLIC_URL jika ada
+              // tapi tetap proxy via stream agar header Content-Type terjaga
+              // dan tidak expose R2 endpoint ke publik.
+              // Gunakan stream agar tidak load seluruh file ke memory (penting untuk 100MB)
+              // S3File extends Blob → stream() tersedia
+              // Alternatif presign redirect: return new Response(s3file) → 302, tapi kita proxy
+              const stream = (s3file as any).stream
+                ? (s3file as any).stream()
+                : await s3file.arrayBuffer();
+
+              // Jika stream adalah ReadableStream
+              if (stream instanceof ReadableStream || (stream && typeof stream.getReader === "function")) {
+                return new Response(stream as ReadableStream, {
+                  headers: {
+                    "Content-Type": contentType,
+                    // Cache public images 1 jam, private no-cache
+                    "Cache-Control": isPublicAccess ? "public, max-age=3600" : "private, no-cache",
+                  },
+                });
+              }
+              // Fallback arrayBuffer
+              return new Response(stream as ArrayBuffer, {
+                headers: {
+                  "Content-Type": contentType,
+                  "Cache-Control": isPublicAccess ? "public, max-age=3600" : "private, no-cache",
+                },
+              });
+            }
+            // File tidak ada di R2 → fallback cek filesystem lokal (untuk migrasi bertahap)
+          } catch (err) {
+            console.error("[R2] Get file error:", params.filename, err);
+            // Fallback ke local jika R2 error
+          }
+        }
+      }
+
+      // ========== FALLBACK FILESYSTEM LOKAL ==========
       const filePath = path.join(SECURE_UPLOAD_DIR, params.filename);
 
       const resolved = path.resolve(filePath);
@@ -218,9 +354,11 @@ export const uploadServices = new Elysia()
       }
 
       const file = Bun.file(filePath);
-      const contentType = ext && MIME_BY_EXT[ext] ? MIME_BY_EXT[ext] : "application/octet-stream";
       return new Response(file, {
-        headers: { "Content-Type": contentType },
+        headers: {
+          "Content-Type": contentType,
+          "Cache-Control": isPublicAccess ? "public, max-age=3600" : "private, no-cache",
+        },
       });
     }
   );

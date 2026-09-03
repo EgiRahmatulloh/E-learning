@@ -2,6 +2,7 @@ import { Elysia } from "elysia";
 import { staticPlugin } from "@elysia/static";
 import { seedDatabase } from "./server/db/seed";
 import { IS_PROD } from "./server/config/jwt";
+import { MANIFEST_CONTENT_TYPE, MANIFEST_FILE, webManifest } from "./pwa/manifest";
 
 // Handlers
 import { authHandlers } from "./server/handlers/auth";
@@ -24,8 +25,40 @@ const html = !IS_PROD ? await import("../index.html") : null;
 
 import { cors } from "@elysiajs/cors";
 
+// CORS: di produksi frontend dan API disajikan dari origin yang sama (di belakang
+// nginx), jadi tidak ada permintaan lintas origin yang perlu diizinkan. Plugin
+// hanya dipasang bila memang dibutuhkan, supaya tidak ada header
+// Access-Control-* yang bocor ke situs lain.
+//
+// CORS_ORIGIN = daftar origin yang diizinkan, dipisah koma. Kosongkan bila
+// frontend satu domain dengan API. Contoh untuk frontend di domain terpisah:
+//   CORS_ORIGIN=https://elearning.contoh.sch.id,https://admin.contoh.sch.id
+const corsOrigins = (Bun.env.CORS_ORIGIN ?? "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const corsGuard = new Elysia({ name: "cors-guard" });
+// Development: izinkan semua origin agar mudah dites dari perangkat/port lain.
+// Produksi: hanya origin terdaftar; bila kosong, tidak ada plugin CORS sama sekali.
+if (!IS_PROD || corsOrigins.length > 0) {
+  corsGuard.use(
+    cors({
+      origin: IS_PROD ? corsOrigins : true,
+      // Autentikasi memakai Bearer token (localStorage), bukan cookie, jadi
+      // Access-Control-Allow-Credentials tidak diperlukan.
+      credentials: false,
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+      // Agar unduhan laporan XLSX bisa membaca nama berkas dari respons.
+      exposeHeaders: ["Content-Disposition"],
+      maxAge: 600,
+    })
+  );
+}
+
 const app = new Elysia()
-  .use(cors())
+  .use(corsGuard)
   .onRequest(({ set, request }) => {
     // File unggahan (mis. PDF) perlu tampil di <iframe> aplikasi sendiri untuk preview,
     // jadi jangan kirim X-Frame-Options: DENY untuk endpoint /api/files/.
@@ -105,7 +138,11 @@ if (IS_PROD) {
 
 // Jalankan Server
 const port = process.env.PORT || 3000;
-const hostname = IS_PROD ? "0.0.0.0" : "localhost";
+// Di produksi app berjalan di belakang reverse proxy (nginx) pada host yang sama,
+// jadi cukup bind ke loopback: port ini tidak boleh bisa diakses langsung dari
+// internet karena akan melewati TLS, rate limit, dan header keamanan nginx.
+// Set HOST=0.0.0.0 bila app perlu dijangkau dari luar host (container/PaaS).
+const hostname = process.env.HOST || (IS_PROD ? "127.0.0.1" : "localhost");
 
 const server = Bun.serve({
   port,
