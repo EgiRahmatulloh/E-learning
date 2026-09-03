@@ -493,6 +493,7 @@ export const setupHandlers = new Elysia()
           id: students.id,
           nama: students.nama,
           nis: students.nis,
+          foto: students.foto,
         })
         .from(students)
         .innerJoin(rombelStudents, eq(students.id, rombelStudents.studentId))

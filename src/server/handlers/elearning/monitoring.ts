@@ -236,7 +236,7 @@ export const monitoringHandlers = new Elysia()
 
         if (courseId) {
           const sessions = await db.select().from(elearningSessions).where(eq(elearningSessions.courseId, courseId)).all();
-          const realSessions = sessions.filter(s => s.sessionNumber >= 1);
+          const realSessions = sessions.filter(s => s.sessionNumber >= 1 && s.sessionNumber <= defaultSessions);
           allSessionIds = realSessions.map(s => s.id);
           session0Ids = new Set(sessions.filter(s => s.sessionNumber === 0).map(s => s.id));
           realSessions.forEach(s => {
@@ -277,7 +277,7 @@ export const monitoringHandlers = new Elysia()
           const detailKehadiran: any[] = [];
           const detailDiskusi: any[] = [];
           const detailTugas: any[] = [];
-          const sessionsCount = allSessionIds.length > 0 ? allSessionIds.length : defaultSessions;
+          const sessionsCount = defaultSessions;
 
           if (courseId && allSessionIds.length > 0) {
             // Exclude session 0 (Pendahuluan) from numerator — session 0 is not counted in sessionsCount
