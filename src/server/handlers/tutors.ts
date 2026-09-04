@@ -6,6 +6,7 @@ import { tutors } from "../models";
 import { eq } from "drizzle-orm";
 import { verifyAdmin, verifyUser } from "../middleware/auth";
 import { finalJwtSecret } from "../config/jwt";
+import { cleanupReplacedFiles, cleanupRowFiles } from "../services/storage";
 
 export const tutorsHandlers = new Elysia()
   .use(
@@ -300,6 +301,8 @@ export const tutorsHandlers = new Elysia()
           .returning()
           .get();
 
+        await cleanupReplacedFiles(existing, updated, ["foto", "berkas"]);
+
         const safeData = { ...updated };
         delete (safeData as any).password;
         return { success: true, data: safeData };
@@ -350,7 +353,9 @@ export const tutorsHandlers = new Elysia()
     }
 
     try {
+      const existing = await db.select().from(tutors).where(eq(tutors.id, id)).get();
       await db.delete(tutors).where(eq(tutors.id, id)).run();
+      await cleanupRowFiles(existing, ["foto", "berkas"]);
       return { success: true, message: "Data tutor berhasil dihapus" };
     } catch {
       set.status = 500;

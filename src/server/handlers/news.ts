@@ -6,6 +6,7 @@ import { news, newsCategories } from "../models";
 import { eq, sql } from "drizzle-orm";
 import { verifyAdmin, getAdminPayload } from "../middleware/auth";
 import { finalJwtSecret } from "../config/jwt";
+import { cleanupReplacedFiles, cleanupRowFiles } from "../services/storage";
 
 export const newsHandlers = new Elysia()
   .use(
@@ -194,6 +195,10 @@ export const newsHandlers = new Elysia()
           .returning()
           .get();
 
+        // Kolom foto berisi JSON array (lihat lib/photos.ts) — foto yang dihapus
+        // dari daftar ikut lepas dari storage.
+        await cleanupReplacedFiles(existing, updated, ["foto"]);
+
         return { success: true, data: updated };
       } catch {
         set.status = 500;
@@ -224,7 +229,9 @@ export const newsHandlers = new Elysia()
     }
 
     try {
+      const existing = await db.select().from(news).where(eq(news.id, id)).get();
       await db.delete(news).where(eq(news.id, id)).run();
+      await cleanupRowFiles(existing, ["foto"]);
       return { success: true, message: "Berita berhasil dihapus" };
     } catch {
       set.status = 500;

@@ -2,10 +2,11 @@
 import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { db } from "../config/db";
-import { managers, tutors, students } from "../models";
+import { managers, tutors, students, alumni } from "../models";
 import { eq } from "drizzle-orm";
 import { DUMMY_HASH } from "../utils/password";
 import { finalJwtSecret } from "../config/jwt";
+import { cleanupReplacedFiles } from "../services/storage";
 
 export const authHandlers = new Elysia()
   .use(
@@ -343,6 +344,12 @@ export const authHandlers = new Elysia()
           if (kabupaten !== undefined) updateData.kabupaten = kabupaten;
           if (provinsi !== undefined) updateData.provinsi = provinsi;
 
+          const previous = await db
+            .select({ foto: managers.foto })
+            .from(managers)
+            .where(eq(managers.id, id))
+            .get();
+
           const updated = await db
             .update(managers)
             .set(updateData)
@@ -353,6 +360,8 @@ export const authHandlers = new Elysia()
             set.status = 404;
             return { success: false, message: "Akun tidak ditemukan" };
           }
+          // Foto profil lama dilepas dari storage setelah yang baru tersimpan
+          await cleanupReplacedFiles(previous, updated, ["foto"]);
           return {
             success: true,
             user: {
@@ -405,6 +414,12 @@ export const authHandlers = new Elysia()
           if (kabupaten !== undefined) updateData.kabupaten = kabupaten;
           if (provinsi !== undefined) updateData.provinsi = provinsi;
           
+          const previous = await db
+            .select({ foto: tutors.foto })
+            .from(tutors)
+            .where(eq(tutors.id, id))
+            .get();
+
           const updated = await db
             .update(tutors)
             .set(updateData)
@@ -415,6 +430,7 @@ export const authHandlers = new Elysia()
             set.status = 404;
             return { success: false, message: "Akun tidak ditemukan" };
           }
+          await cleanupReplacedFiles(previous, updated, ["foto"]);
           return {
             success: true,
             user: {
@@ -466,6 +482,12 @@ export const authHandlers = new Elysia()
           if (kabupaten !== undefined) updateData.kabupaten = kabupaten;
           if (provinsi !== undefined) updateData.provinsi = provinsi;
           
+          const previous = await db
+            .select({ foto: students.foto })
+            .from(students)
+            .where(eq(students.id, id))
+            .get();
+
           const updated = await db
             .update(students)
             .set(updateData)
@@ -476,6 +498,18 @@ export const authHandlers = new Elysia()
             set.status = 404;
             return { success: false, message: "Akun tidak ditemukan" };
           }
+          // Kelulusan menyalin URL foto siswa ke baris alumni (bukan berkasnya),
+          // jadi foto yang masih dipakai alumni tidak boleh ikut terhapus.
+          const fotoAlumni = previous?.foto
+            ? await db
+                .select({ foto: alumni.foto })
+                .from(alumni)
+                .where(eq(alumni.foto, previous.foto))
+                .get()
+            : undefined;
+          await cleanupReplacedFiles(previous, updated, ["foto"], {
+            keep: fotoAlumni ? [fotoAlumni.foto] : [],
+          });
           return {
             success: true,
             user: {

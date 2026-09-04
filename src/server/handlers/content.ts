@@ -16,10 +16,27 @@ import {
   products,
   alumni,
   gallery,
+  students,
 } from "../models";
 import { eq, sql } from "drizzle-orm";
 import { verifyAdmin, getAdminPayload } from "../middleware/auth";
 import { finalJwtSecret } from "../config/jwt";
+import { cleanupReplacedFiles, cleanupRowFiles } from "../services/storage";
+
+/**
+ * Foto alumni yang juga tercatat di tabel students. Proses kelulusan menyalin
+ * URL foto warga belajar ke baris alumni — bukan berkasnya — jadi baris alumni
+ * melepas foto tidak berarti berkasnya boleh hilang.
+ */
+const fotoDipakaiStudent = async (foto: unknown): Promise<unknown[]> => {
+  if (typeof foto !== "string" || !foto.trim()) return [];
+  const row = await db
+    .select({ foto: students.foto })
+    .from(students)
+    .where(eq(students.foto, foto))
+    .get();
+  return row ? [row.foto] : [];
+};
 
 export const contentHandlers = new Elysia()
   .use(
@@ -98,6 +115,8 @@ export const contentHandlers = new Elysia()
 
       const { title, image, status } = body as any;
       try {
+        const existing = await db.select().from(sliders).where(eq(sliders.id, id)).get();
+
         const updated = await db
           .update(sliders)
           .set({
@@ -114,6 +133,10 @@ export const contentHandlers = new Elysia()
           set.status = 404;
           return { success: false, message: "Slider tidak ditemukan" };
         }
+
+        // Gambar yang tergantikan dilepas dari storage, kalau tidak setiap kali
+        // slider diedit bucket menyimpan satu gambar yatim tambahan.
+        await cleanupReplacedFiles(existing, updated, ["image"]);
 
         return { success: true, data: updated };
       } catch (err) { console.error("CMS error:", err);
@@ -140,7 +163,9 @@ export const contentHandlers = new Elysia()
     }
 
     try {
+      const existing = await db.select().from(sliders).where(eq(sliders.id, id)).get();
       await db.delete(sliders).where(eq(sliders.id, id)).run();
+      await cleanupRowFiles(existing, ["image"]);
       return { success: true, message: "Slider berhasil dihapus" };
     } catch (err) { console.error("CMS error:", err);
       set.status = 500;
@@ -288,6 +313,7 @@ export const contentHandlers = new Elysia()
             .where(eq(institutionProfile.id, existing.id))
             .returning()
             .get();
+          await cleanupReplacedFiles(existing, updated, ["foto", "gambar"]);
           return { success: true, data: updated };
         } else {
           const inserted = await db.insert(institutionProfile).values(body as any).returning().get();
@@ -426,6 +452,12 @@ export const contentHandlers = new Elysia()
 
       const { program, penjab, keterangan, foto } = body as any;
       try {
+        const existing = await db
+          .select()
+          .from(educationPrograms)
+          .where(eq(educationPrograms.id, id))
+          .get();
+
         const updated = await db
           .update(educationPrograms)
           .set({
@@ -443,6 +475,8 @@ export const contentHandlers = new Elysia()
           set.status = 404;
           return { success: false, message: "Program pendidikan tidak ditemukan" };
         }
+
+        await cleanupReplacedFiles(existing, updated, ["foto"]);
 
         return { success: true, data: updated };
       } catch (err) { console.error("CMS error:", err);
@@ -480,6 +514,7 @@ export const contentHandlers = new Elysia()
         return { success: false, message: "Program pendidikan tidak ditemukan" };
       }
       await db.delete(educationPrograms).where(eq(educationPrograms.id, id)).run();
+      await cleanupRowFiles(existing, ["foto"]);
       return { success: true, message: "Program pendidikan berhasil dihapus" };
     } catch (err) { console.error("CMS error:", err);
       set.status = 500;
@@ -560,6 +595,8 @@ export const contentHandlers = new Elysia()
           .returning()
           .get();
 
+        await cleanupReplacedFiles(existing, updated, ["foto"]);
+
         return { success: true, data: updated };
       } catch (err) { console.error("CMS error:", err);
         set.status = 500;
@@ -592,6 +629,7 @@ export const contentHandlers = new Elysia()
       }
 
       await db.delete(facilities).where(eq(facilities.id, id)).run();
+      await cleanupRowFiles(existing, ["foto"]);
       return { success: true, message: "Sarana dan fasilitas berhasil dihapus" };
     } catch (err) { console.error("CMS error:", err);
       set.status = 500;
@@ -757,6 +795,8 @@ export const contentHandlers = new Elysia()
           .returning()
           .get();
 
+        await cleanupReplacedFiles(existing, updated, ["foto"]);
+
         return { success: true, data: updated };
       } catch (err) { console.error("CMS error:", err);
         set.status = 500;
@@ -797,6 +837,7 @@ export const contentHandlers = new Elysia()
       }
 
       await db.delete(achievements).where(eq(achievements.id, id)).run();
+      await cleanupRowFiles(existing, ["foto"]);
       return { success: true, message: "Data prestasi berhasil dihapus" };
     } catch (err) { console.error("CMS error:", err);
       set.status = 500;
@@ -964,6 +1005,8 @@ export const contentHandlers = new Elysia()
           .returning()
           .get();
 
+        await cleanupReplacedFiles(existing, updated, ["foto"]);
+
         return { success: true, data: updated };
       } catch (err) { console.error("CMS error:", err);
         set.status = 500;
@@ -1004,6 +1047,7 @@ export const contentHandlers = new Elysia()
       }
 
       await db.delete(servicePoints).where(eq(servicePoints.id, id)).run();
+      await cleanupRowFiles(existing, ["foto"]);
       return { success: true, message: "Data titik layanan berhasil dihapus" };
     } catch (err) { console.error("CMS error:", err);
       set.status = 500;
@@ -1194,6 +1238,8 @@ export const contentHandlers = new Elysia()
           .returning()
           .get();
 
+        await cleanupReplacedFiles(existing, updated, ["foto"]);
+
         return { success: true, data: updated };
       } catch (err) { console.error("CMS error:", err);
         set.status = 500;
@@ -1232,6 +1278,7 @@ export const contentHandlers = new Elysia()
       }
 
       await db.delete(agendas).where(eq(agendas.id, id)).run();
+      await cleanupRowFiles(existing, ["foto"]);
       return { success: true, message: "Data agenda berhasil dihapus" };
     } catch (err) { console.error("CMS error:", err);
       set.status = 500;
@@ -1405,6 +1452,8 @@ export const contentHandlers = new Elysia()
 
       const { namaFile, kategori, fileUrl, status, tanggalUpload } = body as any;
       try {
+        const existing = await db.select().from(downloads).where(eq(downloads.id, id)).get();
+
         const updated = await db
           .update(downloads)
           .set({
@@ -1423,6 +1472,8 @@ export const contentHandlers = new Elysia()
           set.status = 404;
           return { success: false, message: "Data download tidak ditemukan" };
         }
+
+        await cleanupReplacedFiles(existing, updated, ["fileUrl"]);
 
         return { success: true, data: updated };
       } catch (err) { console.error("CMS error:", err);
@@ -1480,7 +1531,9 @@ export const contentHandlers = new Elysia()
     }
 
     try {
+      const existing = await db.select().from(downloads).where(eq(downloads.id, id)).get();
       await db.delete(downloads).where(eq(downloads.id, id)).run();
+      await cleanupRowFiles(existing, ["fileUrl"]);
       return { success: true, message: "Data download berhasil dihapus" };
     } catch (err) { console.error("CMS error:", err);
       set.status = 500;
@@ -1580,6 +1633,8 @@ export const contentHandlers = new Elysia()
       }
 
       try {
+        const existing = await db.select().from(products).where(eq(products.id, id)).get();
+
         const updated = await db
           .update(products)
           .set({
@@ -1601,6 +1656,8 @@ export const contentHandlers = new Elysia()
           set.status = 404;
           return { success: false, message: "Data produk tidak ditemukan" };
         }
+
+        await cleanupReplacedFiles(existing, updated, ["gambar"]);
 
         return { success: true, data: updated };
       } catch (err) { console.error("CMS error:", err);
@@ -1632,7 +1689,9 @@ export const contentHandlers = new Elysia()
     }
 
     try {
+      const existing = await db.select().from(products).where(eq(products.id, id)).get();
       await db.delete(products).where(eq(products.id, id)).run();
+      await cleanupRowFiles(existing, ["gambar"]);
       return { success: true, message: "Data produk berhasil dihapus" };
     } catch (err) { console.error("CMS error:", err);
       set.status = 500;
@@ -1951,6 +2010,10 @@ export const contentHandlers = new Elysia()
           return { success: false, message: "Data alumni tidak ditemukan" };
         }
 
+        await cleanupReplacedFiles(existing, updated, ["foto", "berkas"], {
+          keep: await fotoDipakaiStudent(existing.foto),
+        });
+
         return { success: true, data: updated };
       } catch (err) { console.error("CMS error:", err);
         set.status = 500;
@@ -1998,7 +2061,10 @@ export const contentHandlers = new Elysia()
     }
 
     try {
+      const existing = await db.select().from(alumni).where(eq(alumni.id, id)).get();
+      const keep = await fotoDipakaiStudent(existing?.foto);
       await db.delete(alumni).where(eq(alumni.id, id)).run();
+      await cleanupRowFiles(existing, ["foto", "berkas"], { keep });
       return { success: true, message: "Data alumni berhasil dihapus" };
     } catch (err) { console.error("CMS error:", err);
       set.status = 500;
@@ -2083,6 +2149,8 @@ export const contentHandlers = new Elysia()
       const { namaFile, kategori, tanggalPosting, foto, status } = body as any;
 
       try {
+        const existing = await db.select().from(gallery).where(eq(gallery.id, id)).get();
+
         const updated = await db
           .update(gallery)
           .set({
@@ -2101,6 +2169,9 @@ export const contentHandlers = new Elysia()
           set.status = 404;
           return { success: false, message: "Data galeri tidak ditemukan" };
         }
+
+        await cleanupReplacedFiles(existing, updated, ["foto"]);
+
         return { success: true, data: updated };
       } catch (err) { console.error("CMS error:", err);
         set.status = 500;
@@ -2128,7 +2199,9 @@ export const contentHandlers = new Elysia()
     }
 
     try {
+      const existing = await db.select().from(gallery).where(eq(gallery.id, id)).get();
       await db.delete(gallery).where(eq(gallery.id, id)).run();
+      await cleanupRowFiles(existing, ["foto"]);
       return { success: true, message: "Data galeri berhasil dihapus" };
     } catch (err) { console.error("CMS error:", err);
       set.status = 500;

@@ -6,6 +6,7 @@ import { managers } from "../models";
 import { eq } from "drizzle-orm";
 import { verifyAdmin } from "../middleware/auth";
 import { finalJwtSecret } from "../config/jwt";
+import { cleanupReplacedFiles, cleanupRowFiles } from "../services/storage";
 
 export const managersHandlers = new Elysia()
   .use(
@@ -155,6 +156,8 @@ export const managersHandlers = new Elysia()
           updateData.password = await Bun.password.hash(password);
         }
 
+        const existing = await db.select().from(managers).where(eq(managers.id, id)).get();
+
         const updated = await db
           .update(managers)
           .set({
@@ -169,6 +172,8 @@ export const managersHandlers = new Elysia()
           set.status = 404;
           return { success: false, message: "Pengelola tidak ditemukan" };
         }
+
+        await cleanupReplacedFiles(existing, updated, ["foto", "berkas"]);
 
         const safeData = { ...updated };
         delete (safeData as any).password;
@@ -219,7 +224,9 @@ export const managersHandlers = new Elysia()
     }
 
     try {
+      const existing = await db.select().from(managers).where(eq(managers.id, id)).get();
       await db.delete(managers).where(eq(managers.id, id)).run();
+      await cleanupRowFiles(existing, ["foto", "berkas"]);
       return { success: true, message: "Pengelola berhasil dihapus" };
     } catch {
       set.status = 500;

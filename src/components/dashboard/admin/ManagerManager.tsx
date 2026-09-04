@@ -17,6 +17,7 @@ import {
 X,
 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { commitUploads, discardUpload, discardUploads, isNetworkError, uploadFile, validateImageFile } from "@/lib/upload";
 import { toast } from "sonner";
 import BerkasUpload, { type BerkasItem } from "@/components/ui/BerkasUpload";
 
@@ -247,12 +248,22 @@ export default function ManagerManager() {
     fetchManagers();
   }, []);
 
+  // Foto/berkas yang sedang ada di form. Dipakai untuk membuang unggahan yang
+  // batal dipakai, dan untuk menandai unggahan yang sudah tersimpan.
+  const formUploadUrls = () => [
+    selectedManager.foto,
+    ...Object.values(selectedManager.berkas || {}),
+  ];
+
   const handleCloseForm = async () => {
     if (isFormDirty && !await confirm({
       title: "Perubahan Belum Disimpan",
       message: "Ada perubahan yang belum disimpan. Yakin ingin menutup?",
       variant: "danger"
     })) return;
+    // Unggahan yang belum tersimpan dibuang dari storage; yang sudah tersimpan
+    // di DB dilewati discardUploads.
+    void discardUploads(formUploadUrls());
     setIsFormOpen(false);
     setIsEditing(false);
     setIsNew(false);
@@ -328,6 +339,7 @@ export default function ManagerManager() {
       const data = await res.json();
       if (data.success) {
         toast.success(isNew ? "Pengelola baru berhasil ditambahkan!" : "Profil pengelola berhasil disimpan!");
+        commitUploads(formUploadUrls());
         setIsFormDirty(false);
         setIsEditing(false);
         setIsNew(false);
@@ -368,6 +380,8 @@ export default function ManagerManager() {
         setHasUnsyncedOfflineData(true);
         setIsFormDirty(false);
         toast.success("Disimpan secara lokal (Offline)!");
+        // Data tersimpan lokal masih memakai unggahannya — jangan dibuang
+        commitUploads(formUploadUrls());
         setIsEditing(false);
         setIsNew(false);
       } catch (e: any) {
@@ -383,6 +397,8 @@ export default function ManagerManager() {
         message: "Ada perubahan yang belum disimpan. Yakin ingin menutup?",
         variant: "danger"
       })) return;
+      // Form "tambah data" dibatalkan — unggahannya belum masuk DB sama sekali
+      void discardUploads(formUploadUrls());
       if (managersList.length > 0) {
         setSelectedManager(managersList[0]);
       } else {
@@ -418,6 +434,8 @@ export default function ManagerManager() {
       const data = await res.json();
       if (data.success) {
         toast.success("Data pengelola berhasil dihapus!");
+        // Berkasnya sudah dilepas server saat barisnya dihapus
+        commitUploads(formUploadUrls());
         const remaining = managersList.filter((m) => m.id !== selectedManager.id);
         setManagersList(remaining);
         if (remaining.length > 0) {
@@ -455,6 +473,8 @@ export default function ManagerManager() {
         setSafeItem(STORAGE_KEY, JSON.stringify(remaining));
         setManagersList(remaining);
         toast.success("Dihapus secara lokal (Offline)!");
+        // Barisnya masih ada di server sampai sinkronisasi berikutnya
+        commitUploads(formUploadUrls());
         if (remaining.length > 0) {
           setSelectedManager(remaining[0]);
         } else {
@@ -469,37 +489,22 @@ export default function ManagerManager() {
   };
 
   const processUpload = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      toast.error("Hanya berkas gambar yang diperbolehkan!");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Ukuran gambar melebihi batas 5MB!");
+    const invalid = validateImageFile(file);
+    if (invalid) {
+      toast.error(invalid);
       return;
     }
 
     setUploadingFoto(true);
-    const token = getSafeItem("token");
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.success && data.url) {
-        handleFieldChange("foto", data.url);
-        toast.success("Foto berhasil diunggah!");
-      } else {
-        throw new Error(data.message || "Gagal mengunggah foto");
-      }
-    } catch (err: any) {
-      if (err instanceof TypeError) {
+      const previous = selectedManager.foto;
+      handleFieldChange("foto", await uploadFile(file));
+      // Ganti foto sebelum disimpan: unggahan sebelumnya tidak akan dipakai lagi
+      void discardUpload(previous);
+      toast.success("Foto berhasil diunggah!");
+    } catch (err) {
+      // Fallback lokal: simpan sebagai Base64 HANYA saat koneksi gagal (offline)
+      if (isNetworkError(err)) {
         const reader = new FileReader();
         reader.onloadend = () => {
           const base64Data = reader.result as string;
@@ -512,7 +517,7 @@ export default function ManagerManager() {
         };
         reader.readAsDataURL(file);
       } else {
-        toast.error(err.message || "Gagal mengunggah foto.");
+        toast.error(err instanceof Error ? err.message : "Gagal mengunggah foto.");
       }
     } finally {
       setUploadingFoto(false);

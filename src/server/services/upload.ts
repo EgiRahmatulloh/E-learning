@@ -10,6 +10,7 @@ import {
   R2_PRIVATE_BUCKET_NAME,
   getR2PublicUrl,
 } from "../config/r2";
+import { createDeleteToken, verifyDeleteToken } from "./storage";
 
 // Cloudflare R2 adalah satu-satunya storage berkas — tidak ada fallback ke
 // filesystem lokal. Bila R2 belum dikonfigurasi atau sedang bermasalah, upload
@@ -208,17 +209,23 @@ export const uploadServices = new Elysia()
         const s3file = client.file(fileName);
         await s3file.write(file, { type: contentType });
 
+        // Token hapus dikembalikan bersama URL: form yang mengunggah berkas lalu
+        // dibatalkan memakainya untuk membersihkan berkasnya sendiri lewat
+        // DELETE /api/files/:filename, tanpa memberi siapa pun kemampuan
+        // menghapus berkas lain.
+        const deleteToken = createDeleteToken(fileName);
+
         // Bucket public + R2_PUBLIC_URL valid → kembalikan URL CDN langsung agar
         // frontend tidak perlu lewat /api/files/ (hemat bandwidth & lebih cepat).
         // Bila R2_PUBLIC_URL tidak valid → tetap lewat proxy.
         if (isPublicBucket) {
           const publicUrl = getR2PublicUrl(fileName);
           if (publicUrl) {
-            return { success: true, url: publicUrl };
+            return { success: true, url: publicUrl, deleteToken };
           }
         }
         // Private atau public tanpa public URL valid → tetap lewat proxy /api/files/
-        return { success: true, url: `/api/files/${fileName}` };
+        return { success: true, url: `/api/files/${fileName}`, deleteToken };
       } catch (err) {
         console.error("[R2] Upload gagal:", err);
         set.status = 502;
@@ -331,5 +338,58 @@ export const uploadServices = new Elysia()
         set.status = 502;
         return { success: false, message: "Gagal mengambil berkas dari storage" };
       }
+    }
+  )
+  // Endpoint untuk membuang berkas yang sudah terunggah tapi batal dipakai —
+  // mis. form edit yang mengunggah gambar baru lalu ditutup lewat tombol BATAL.
+  // Berkas yang sudah tersimpan di DB TIDAK dibersihkan dari sini; itu urusan
+  // handler UPDATE/DELETE masing-masing entitas (lihat services/storage.ts).
+  .delete(
+    "/api/files/:filename",
+    async ({ params, headers, query, jwt, set }) => {
+      const authError = await verifyUser(headers, jwt, set);
+      if (authError) return authError;
+
+      if (
+        params.filename.includes("/") ||
+        params.filename.includes("\\") ||
+        params.filename.includes("..")
+      ) {
+        set.status = 403;
+        return { success: false, message: "Akses ditolak" };
+      }
+
+      // Login saja tidak cukup: URL berkas publik bisa dilihat siapa pun, jadi
+      // tanpa token ini warga belajar mana pun bisa menghapus gambar landing
+      // page. Token hanya dipegang pengunggahnya, hasil dari POST /api/upload.
+      if (!verifyDeleteToken(params.filename, query.deleteToken)) {
+        set.status = 403;
+        return { success: false, message: "Token hapus berkas tidak valid atau kedaluwarsa" };
+      }
+
+      if (!isR2Enabled) {
+        set.status = 503;
+        return { success: false, message: STORAGE_UNAVAILABLE };
+      }
+
+      const { client } = resolveBucketForDownload(params.filename);
+      if (!client) {
+        set.status = 503;
+        return { success: false, message: STORAGE_UNAVAILABLE };
+      }
+
+      try {
+        await client.file(params.filename).delete();
+        return { success: true, message: "Berkas dibatalkan" };
+      } catch (err) {
+        console.error("[R2] Delete file error:", params.filename, err);
+        set.status = 502;
+        return { success: false, message: "Gagal menghapus berkas dari storage" };
+      }
+    },
+    {
+      query: t.Object({
+        deleteToken: t.Optional(t.String()),
+      }),
     }
   );

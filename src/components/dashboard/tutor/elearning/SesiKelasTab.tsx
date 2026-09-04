@@ -18,6 +18,7 @@ import {
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { toast } from "sonner";
 import { safeHtml } from "@/lib/sanitize";
+import { commitUploads, discardUpload, uploadFile } from "@/lib/upload";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 // Removed getSubjectsSiswa import
 
@@ -612,25 +613,13 @@ function SesiContent({
     } catch (err) {}
   };
 
-  const uploadFileAPI = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      body: formData,
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message);
-    return data.url;
-  };
-
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !sessionId) return;
     const file = e.target.files[0];
     const toastId = toast.loading(`Mengunggah ${file.name}...`);
+    let fileUrl = "";
     try {
-      const fileUrl = await uploadFileAPI(file);
+      fileUrl = await uploadFile(file);
       await fetch("/api/elearning/material", {
         method: "POST",
         headers: {
@@ -644,9 +633,14 @@ function SesiContent({
           fileUrl,
         }),
       });
+      // Berkas PPT lama dilepas server saat materialnya ditimpa
+      commitUploads(fileUrl);
       setPptFile({ title: file.name, url: fileUrl });
       toast.success("File PPT berhasil diunggah!", { id: toastId });
     } catch (err: any) {
+      // Berkas sudah masuk storage tapi materialnya gagal disimpan — buang
+      // unggahannya supaya tidak menumpuk tanpa ada yang mereferensikannya.
+      void discardUpload(fileUrl);
       toast.error("Gagal", { description: err.message, id: toastId });
     }
   };
@@ -970,7 +964,7 @@ function SesiContent({
                   `Mengunggah Tugas: ${file.name}...`,
                 );
                 try {
-                  const fileUrl = await uploadFileAPI(file);
+                  const fileUrl = await uploadFile(file);
                   await fetch("/api/elearning/material", {
                     method: "POST",
                     headers: {
@@ -984,6 +978,8 @@ function SesiContent({
                       fileUrl,
                     }),
                   });
+                  // Berkas tugas lama dilepas server saat materialnya ditimpa
+                  commitUploads(fileUrl);
                   setTugasFile({ title: file.name, url: fileUrl });
                   toast.success("File Tugas berhasil diunggah!", {
                     id: toastId,

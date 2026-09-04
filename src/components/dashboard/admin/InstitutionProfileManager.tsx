@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Edit3, Save, UploadCloud, Loader2 } from "lucide-react";
+import { commitUploads, discardUploads, isNetworkError, uploadFile, validateImageFile } from "@/lib/upload";
 import { toast } from "sonner";
 
 interface InstitutionProfileData {
@@ -124,6 +125,7 @@ export default function InstitutionProfileManager() {
       const data = await res.json();
       if (data.success) {
         toast.success("Identitas Lembaga berhasil disimpan!");
+        commitUploads(profile.foto, profile.gambar);
         setIsEditing(false);
         fetchProfile();
         return;
@@ -145,6 +147,8 @@ export default function InstitutionProfileManager() {
       try {
         setSafeItem(STORAGE_KEY, JSON.stringify(profile));
         toast.info("Identitas Lembaga disimpan secara lokal (Offline)!");
+        // Profil tersimpan lokal masih memakai gambarnya — jangan dibuang
+        commitUploads(profile.foto, profile.gambar);
         setIsEditing(false);
       } catch (e: any) {
         if (e.name === "QuotaExceededError" || e.name === "NS_ERROR_DOM_QUOTA_REACHED") {
@@ -158,38 +162,23 @@ export default function InstitutionProfileManager() {
   };
 
   const processUpload = async (file: File, type: "foto" | "gambar") => {
-    if (!file.type.startsWith("image/")) {
-      toast.error("Hanya berkas gambar yang diperbolehkan!");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Ukuran gambar melebihi batas 5MB!");
+    const invalid = validateImageFile(file);
+    if (invalid) {
+      toast.error(invalid);
       return;
     }
 
     if (type === "foto") setUploadingFoto(true);
 
-    const token = getSafeItem("token");
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.success && data.url) {
-        handleFieldChange(type, data.url);
-        toast.success(`${type === "foto" ? "Foto" : "Gambar"} berhasil diunggah!`);
-      } else {
-        throw new Error(data.message || "Gagal mengunggah gambar");
-      }
-    } catch (err: any) {
-      if (err instanceof TypeError) {
+      const previous = profile[type];
+      handleFieldChange(type, await uploadFile(file));
+      // Ganti gambar sebelum disimpan: unggahan sebelumnya tidak akan dipakai lagi
+      void discardUploads([previous]);
+      toast.success(`${type === "foto" ? "Foto" : "Gambar"} berhasil diunggah!`);
+    } catch (err) {
+      // Fallback lokal: simpan sebagai Base64 HANYA saat koneksi gagal (offline)
+      if (isNetworkError(err)) {
         const reader = new FileReader();
         reader.onloadend = () => {
           handleFieldChange(type, reader.result as string);
@@ -197,7 +186,7 @@ export default function InstitutionProfileManager() {
         };
         reader.readAsDataURL(file);
       } else {
-        toast.error(err.message || "Gagal mengunggah gambar.");
+        toast.error(err instanceof Error ? err.message : "Gagal mengunggah gambar.");
       }
     } finally {
       if (type === "foto") setUploadingFoto(false);
@@ -560,6 +549,9 @@ export default function InstitutionProfileManager() {
                 <Button
                   type="button"
                   onClick={() => {
+                    // Gambar yang sudah terunggah tapi batal disimpan dibuang
+                    // dari storage; yang sudah tersimpan di DB dilewati.
+                    void discardUploads([profile.foto, profile.gambar]);
                     fetchProfile();
                     setIsEditing(false);
                   }}

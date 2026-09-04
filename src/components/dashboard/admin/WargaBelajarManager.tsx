@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
 import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, GraduationCap, ArrowUpCircle, RefreshCw, List, LayoutGrid, Filter, Loader2, Edit3 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { commitUploads, discardUpload, discardUploads, uploadFile } from "@/lib/upload";
 import { toast } from "sonner";
 import BerkasUpload from "@/components/ui/BerkasUpload";
 
@@ -398,31 +399,28 @@ export default function WargaBelajarManager() {
 
   const uploadPhotoFile = async (file: File) => {
     setUploading(true);
-    const body = new FormData();
-    body.append("file", file);
-
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body,
-      });
-      const data = await res.json();
-      if (data.success && data.url) {
-        setFormData((prev) => ({ ...prev, foto: data.url }));
-        toast.success("Foto berhasil diunggah");
-      } else {
-        toast.error("Upload gagal: " + (data.message || "Error tidak diketahui"));
-      }
-    } catch (e) {
-      console.error(e);
-      toast.error("Error mengupload file");
+      const url = await uploadFile(file);
+      const previous = formData.foto;
+      setFormData((prev) => ({ ...prev, foto: url }));
+      // Ganti foto sebelum disimpan: unggahan sebelumnya tidak akan dipakai lagi
+      void discardUpload(previous);
+      toast.success("Foto berhasil diunggah");
+    } catch (err) {
+      toast.error("Upload gagal: " + (err instanceof Error ? err.message : "Error tidak diketahui"));
     } finally {
       setUploading(false);
     }
+  };
+
+  const formUploadUrls = () => [formData.foto, ...Object.values(formData.berkas || {})];
+
+  // Menutup form tanpa menyimpan: foto/berkas yang sudah terunggah dibuang dari
+  // storage. Yang sudah tersimpan di DB dilewati discardUploads, sementara jalur
+  // simpan/hapus/luluskan memanggil commitUploads dulu sebelum menutup form.
+  const closeForm = () => {
+    void discardUploads(formUploadUrls());
+    setFormOpen(false);
   };
 
   const handleDrop = async (e: React.DragEvent) => {
@@ -482,6 +480,7 @@ export default function WargaBelajarManager() {
       const data = await res.json();
       if (data.success) {
         toast.success(isAdding ? "Warga belajar berhasil ditambahkan" : "Data warga belajar berhasil diperbarui");
+        commitUploads(formUploadUrls());
         setFormOpen(false);
         fetchStudents();
       } else {
@@ -514,6 +513,8 @@ export default function WargaBelajarManager() {
       const data = await res.json();
       if (data.success) {
         toast.success("Data warga belajar berhasil dihapus");
+        // Berkasnya sudah dilepas server saat barisnya dihapus
+        commitUploads(formUploadUrls());
         setFormOpen(false);
         fetchStudents();
       } else {
@@ -543,6 +544,7 @@ export default function WargaBelajarManager() {
       const data = await res.json();
       if (data.success) {
         toast.success("Tingkat kelas berhasil dinaikkan!");
+        commitUploads(formUploadUrls());
         setFormOpen(false);
         fetchStudents();
       } else {
@@ -572,6 +574,7 @@ export default function WargaBelajarManager() {
       const data = await res.json();
       if (data.success) {
         toast.success("Warga belajar telah dinyatakan lulus!");
+        commitUploads(formUploadUrls());
         setFormOpen(false);
         fetchStudents();
       } else {
@@ -612,6 +615,7 @@ export default function WargaBelajarManager() {
       const data = await res.json();
       if (data.success) {
         toast.success("Warga belajar berhasil dipindahkan ke program baru!");
+        commitUploads(formUploadUrls());
         setContinueOpen(false);
         setFormOpen(false);
         fetchStudents();
@@ -1080,7 +1084,7 @@ export default function WargaBelajarManager() {
       {formOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setFormOpen(false)} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={closeForm} />
 
           {/* Form Container */}
           <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
@@ -1088,7 +1092,7 @@ export default function WargaBelajarManager() {
             <div className="p-3 relative flex flex-col flex-1 min-h-0">
               {/* Close Button */}
               <button
-                onClick={() => setFormOpen(false)}
+                onClick={closeForm}
                 className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
@@ -1468,7 +1472,12 @@ export default function WargaBelajarManager() {
                             />
                             <button
                               type="button"
-                              onClick={() => setFormData((prev) => ({ ...prev, foto: "" }))}
+                              onClick={() => {
+                                // No-op untuk foto yang sudah tersimpan di DB —
+                                // itu dilepas server saat perubahan disimpan.
+                                void discardUpload(formData.foto);
+                                setFormData((prev) => ({ ...prev, foto: "" }));
+                              }}
                               className="absolute top-1.5 right-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full p-0.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                             >
                               <X className="h-3 w-3" />
@@ -1547,7 +1556,7 @@ export default function WargaBelajarManager() {
                     <>
                       <Button
                         type="button"
-                        onClick={() => setFormOpen(false)}
+                        onClick={closeForm}
                         className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                       >
                         BATAL
@@ -1572,7 +1581,7 @@ export default function WargaBelajarManager() {
                     <>
                       <Button
                         type="button"
-                        onClick={() => setFormOpen(false)}
+                        onClick={closeForm}
                         className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                       >
                         BATAL

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
 import { Edit3, Trash2, Search, UploadCloud, Plus, Save, X, Upload, Download, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { commitUploads, discardUpload, uploadFile, validateImageFile } from "@/lib/upload";
 import { toast } from "sonner";
 
 interface Achievement {
@@ -95,6 +96,14 @@ export function AchievementsManager() {
     setFormVisible(false);
   };
 
+  // Batal menutup form: foto yang sudah terunggah tapi belum tersimpan dibuang
+  // dari storage. discardUpload melewati foto yang sudah tersimpan di DB, jadi
+  // aman dipanggil juga saat form dibuka dalam mode lihat.
+  const handleCancel = () => {
+    void discardUpload(foto);
+    resetForm();
+  };
+
   const handleEditClick = (item: Achievement) => {
     setEditId(item.id);
     setOriginalData({ nama: item.nama, tahun: item.tahun || "", tingkat: item.tingkat || "", penyelenggara: item.penyelenggara || "", peserta: item.peserta || "", keterangan: item.keterangan || "", foto: item.foto || "" });
@@ -136,37 +145,21 @@ export function AchievementsManager() {
   };
 
   const processUpload = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      toast.error("Hanya berkas gambar yang diperbolehkan!");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Ukuran gambar melebihi batas 5MB!");
+    const invalid = validateImageFile(file);
+    if (invalid) {
+      toast.error(invalid);
       return;
     }
 
     setUploading(true);
-    const token = getSafeItem("token");
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.success && data.url) {
-        setFoto(data.url);
-        toast.success("Foto berhasil diunggah!");
-      } else {
-        throw new Error(data.message || "Gagal mengunggah gambar");
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Gagal mengunggah gambar.");
+      const previous = foto;
+      setFoto(await uploadFile(file));
+      // Ganti foto sebelum disimpan: unggahan sebelumnya tidak akan dipakai lagi
+      void discardUpload(previous);
+      toast.success("Foto berhasil diunggah!");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Gagal mengunggah gambar.");
     } finally {
       setUploading(false);
     }
@@ -223,6 +216,7 @@ export function AchievementsManager() {
       const resData = await res.json();
       if (resData.success) {
         toast.success(editId !== null ? "Data prestasi berhasil diperbarui!" : "Data prestasi baru berhasil ditambahkan!");
+        commitUploads(foto);
         resetForm();
         fetchAchievements();
       } else {
@@ -542,14 +536,14 @@ export function AchievementsManager() {
       {formVisible && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           {/* Backdrop overlay */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={resetForm} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={handleCancel} />
 
           {/* Form Container */}
           <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col border-4 border-cyan-400 animate-in zoom-in-95 duration-200">
 
             {/* Close button */}
             <button
-              onClick={resetForm}
+              onClick={handleCancel}
               className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer z-10"
             >
               <X className="h-5 w-5" />
@@ -745,7 +739,7 @@ export function AchievementsManager() {
                   <>
                     <Button
                       type="button"
-                      onClick={resetForm}
+                      onClick={handleCancel}
                       className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                     >
                       BATAL

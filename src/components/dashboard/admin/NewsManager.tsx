@@ -4,6 +4,7 @@ import { Search, UploadCloud, Plus, Save, Edit3, Trash2, X, ChevronLeft, Chevron
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
 import { parsePhotos, serializePhotos } from "@/lib/photos";
+import { commitUploads, discardUpload, discardUploads, pickImageFiles, uploadFiles } from "@/lib/upload";
 
 interface News {
   id: number;
@@ -144,6 +145,14 @@ export default function NewsManager() {
     setNewsModalVisible(false);
   };
 
+  // Batal menutup form: foto yang sudah terunggah tapi belum tersimpan dibuang
+  // dari storage. discardUploads melewati foto yang sudah tersimpan di DB, jadi
+  // aman dipanggil juga saat form dibuka dalam mode lihat.
+  const handleCancelNewsForm = () => {
+    void discardUploads(fotoList);
+    resetNewsForm();
+  };
+
   const handleEditClick = (item: News) => {
     setEditId(item.id);
     setOriginalData({ judul: item.judul, kategori: item.kategori, tanggalPosting: item.tanggalPosting, status: item.status, foto: item.foto, konten: item.konten });
@@ -186,46 +195,23 @@ export default function NewsManager() {
   };
 
   const processUpload = async (files: File[]) => {
-    const imageFiles = files.filter((f) => f.type.startsWith("image/"));
-    if (imageFiles.length === 0) {
-      toast.error("Hanya berkas gambar yang diperbolehkan!");
-      return;
-    }
-    const oversized = imageFiles.some((f) => f.size > 5 * 1024 * 1024);
-    if (oversized) {
-      toast.error("Ukuran gambar melebihi batas 5MB!");
+    const { images, error } = pickImageFiles(files);
+    if (error) {
+      toast.error(error);
       return;
     }
 
     setUploading(true);
-    const token = getSafeItem("token");
-    let successCount = 0;
-
     try {
-      for (const file of imageFiles) {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-          },
-          body: formData,
-        });
-        const data = await res.json();
-        if (data.success && data.url) {
-          setFotoList((prev) => [...prev, data.url]);
-          successCount++;
-        } else {
-          toast.error(data.message || "Gagal mengunggah gambar");
-        }
-      }
-      if (successCount > 0) {
-        toast.success(`${successCount} foto berhasil diunggah!`);
+      const urls = await uploadFiles(images, {
+        onUploaded: (url) => setFotoList((prev) => [...prev, url]),
+        onFailed: (message) => toast.error(message),
+      });
+      if (urls.length > 0) {
+        toast.success(`${urls.length} foto berhasil diunggah!`);
       }
     } catch (err) {
-      toast.error("Gagal mengunggah gambar.");
+      toast.error(err instanceof Error ? err.message : "Gagal mengunggah gambar.");
     } finally {
       setUploading(false);
     }
@@ -291,6 +277,7 @@ export default function NewsManager() {
       const resData = await res.json();
       if (resData.success) {
         toast.success(editId !== null ? "Berita berhasil diperbarui!" : "Berita baru berhasil ditambahkan!");
+        commitUploads(fotoList);
         resetNewsForm();
         fetchNews();
       } else {
@@ -558,12 +545,12 @@ export default function NewsManager() {
       {/* POPUP / MODAL FORM DIALOG: TAMBAH/EDIT BERITA */}
       {newsModalVisible && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={resetNewsForm} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={handleCancelNewsForm} />
 
           <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col border-4 border-cyan-400 animate-in zoom-in-95 duration-200">
 
             <button
-              onClick={resetNewsForm}
+              onClick={handleCancelNewsForm}
               className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer z-10"
             >
               <X className="h-5 w-5" />
@@ -738,7 +725,12 @@ export default function NewsManager() {
                           {isEditing && (
                             <button
                               type="button"
-                              onClick={() => setFotoList((prev) => prev.filter((_, i) => i !== idx))}
+                              onClick={() => {
+                                setFotoList((prev) => prev.filter((_, i) => i !== idx));
+                                // No-op untuk foto yang sudah tersimpan di DB —
+                                // itu dilepas server saat perubahan disimpan.
+                                void discardUpload(src);
+                              }}
                               className="absolute -top-1.5 -right-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-full h-5 w-5 flex items-center justify-center shadow cursor-pointer transition-colors"
                               title="Hapus foto"
                             >
@@ -786,7 +778,7 @@ export default function NewsManager() {
                   <>
                     <Button
                       type="button"
-                      onClick={resetNewsForm}
+                      onClick={handleCancelNewsForm}
                       className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                     >
                       BATAL
