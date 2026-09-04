@@ -12,7 +12,6 @@ import {
   Eye,
   EyeOff
 } from "lucide-react";
-import { AdminDashboard } from "./admin/AdminDashboard";
 import { ElearningSiswa } from "./siswa/ElearningSiswa";
 import { HeaderManager } from "./admin/HeaderManager";
 import AnnouncementManager from "./admin/AnnouncementManager";
@@ -287,13 +286,6 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
         <div className="space-y-6 animate-in fade-in duration-500">
           <WelcomeBanner userName={user.name} userRole={user.role} />
           <RoleStatsGrid userRole={user.role} />
-        </div>
-      );
-    }
-    if (activeTab === "kelola-nilai") {
-      return (
-        <div className="space-y-6">
-          {user.role === "admin" && <AdminDashboard />}
         </div>
       );
     }

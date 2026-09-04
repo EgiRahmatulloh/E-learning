@@ -19,7 +19,6 @@ export const TAB_LABELS: Record<string, string> = {
   "visi-misi": "VISI DAN MISI",
   "identitas-lembaga": "IDENTITAS LEMBAGA",
   "data-pengelola": "DATA PENGELOLA",
-  "kelola-nilai": "KELOLA NILAI & KELAS",
   profil: "PROFIL SAYA",
   prestasi: "PRESTASI",
   "titik-layanan": "TITIK LAYANAN",

@@ -17,7 +17,6 @@ export default function RoleStatsGrid({ userRole }: RoleStatsGridProps) {
     mapelAktif?: number;
     tugas?: number;
     tugasMasuk?: number;
-    ip?: string;
   } | null>(null);
 
   useEffect(() => {
@@ -57,35 +56,30 @@ export default function RoleStatsGrid({ userRole }: RoleStatsGridProps) {
   let roleStats: { label: string; value: string; color: string; status?: string }[] = [];
   if (userRole === "admin" || userRole === "super_admin") {
     roleStats = [
-      { label: "JUMLAH TUTOR", value: stats ? String(stats.tutors) : "12", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
-      { label: "JUMLAH WARGA BELAJAR", value: stats ? String(stats.students) : "350", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
-      { label: "JUMLAH ROMBEL", value: stats ? String(stats.rombel) : "9", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
+      { label: "JUMLAH TUTOR", value: stats ? String(stats.tutors) : "–", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
+      { label: "JUMLAH WARGA BELAJAR", value: stats ? String(stats.students) : "–", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
+      { label: "JUMLAH ROMBEL", value: stats ? String(stats.rombel) : "–", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
       { label: "MAPEL AKTIF", value: stats ? String(stats.mapelAktif || 0) : "0", color: "from-cyan-400 to-cyan-500", status: "E-Learning" },
       { label: "TUGAS DIBERIKAN", value: stats ? String(stats.tugas || 0) : "0", color: "from-amber-400 to-amber-500", status: "E-Learning" },
-      { label: "INDEKS PRESTASI GLOBAL", value: stats ? String(stats.ip || "0.0") : "0.0", color: "from-teal-400 to-teal-500", status: "Rata-rata" },
-      { label: "JUMLAH PRODUK WB", value: stats ? String(stats.products) : "24", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
-      { label: "JUMLAH WB PAKET A", value: stats ? String(stats.paketA) : "85", color: "from-cyan-400 to-teal-500", status: "Siswa" },
-      { label: "JUMLAH WB PAKET B", value: stats ? String(stats.paketB) : "120", color: "from-cyan-400 to-teal-500", status: "Siswa" },
-      { label: "JUMLAH WB PAKET C", value: stats ? String(stats.paketC) : "145", color: "from-cyan-400 to-teal-500", status: "Siswa" },
-      { label: "JUMLAH ALUMNI", value: stats ? String(stats.alumni) : "580", color: "from-cyan-400 to-teal-500", status: "Lulus" },
+      { label: "JUMLAH PRODUK WB", value: stats ? String(stats.products) : "–", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
+      { label: "JUMLAH WB PAKET A", value: stats ? String(stats.paketA) : "–", color: "from-cyan-400 to-teal-500", status: "Siswa" },
+      { label: "JUMLAH WB PAKET B", value: stats ? String(stats.paketB) : "–", color: "from-cyan-400 to-teal-500", status: "Siswa" },
+      { label: "JUMLAH WB PAKET C", value: stats ? String(stats.paketC) : "–", color: "from-cyan-400 to-teal-500", status: "Siswa" },
+      { label: "JUMLAH ALUMNI", value: stats ? String(stats.alumni) : "–", color: "from-cyan-400 to-teal-500", status: "Lulus" },
       { label: "E-LEARNING", value: stats ? String(stats.mapelAktif || 0) : "0", color: "from-indigo-400 to-indigo-500", status: "Aktif" },
-      { label: "E-UJIAN", value: "0", color: "from-orange-400 to-orange-500", status: "Siap" },
-      { label: "E-SPMB", value: "0", color: "from-rose-400 to-rose-500", status: "Buka" },
-      { label: "JUMLAH PENGUNJUNG", value: "1.247", color: "from-cyan-500 to-sky-500", status: "Hari Ini" },
+      { label: "E-UJIAN", value: "0", color: "from-orange-400 to-orange-500", status: "Segera hadir" },
+      { label: "E-SPMB", value: "0", color: "from-rose-400 to-rose-500", status: "Segera hadir" },
     ];
   } else if (userRole === "tutor") {
     roleStats = [
       { label: "KELAS PENGAJARAN", value: stats ? `${stats.mapelAktif} Kelas` : "0 Kelas", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
       { label: "TUGAS MASUK", value: stats ? `${stats.tugasMasuk} Tugas` : "0 Tugas", color: "from-amber-400 to-amber-500", status: "Perlu Review" },
-      { label: "RATA-RATA PRESENSI", value: "0%", color: "from-teal-400 to-teal-500", status: "Sangat Baik" },
-      { label: "INDEKS PRESTASI KELAS", value: stats ? String(stats.ip || "0.0") : "0.0", color: "from-teal-400 to-teal-500", status: "Rata-rata" },
     ];
   } else {
     // siswa
     roleStats = [
       { label: "MATA PELAJARAN", value: stats ? `${stats.mapelAktif} MAPEL` : "0 MAPEL", color: "from-cyan-400 to-cyan-500", status: "Aktif" },
       { label: "TUGAS AKTIF", value: stats ? `${stats.tugasMasuk} TUGAS` : "0 TUGAS", color: "from-amber-400 to-amber-500", status: "Belum Selesai" },
-      { label: "INDEKS PRESTASI", value: stats ? String(stats.ip || "0.0") : "0.0", color: "from-teal-400 to-teal-500", status: "Sangat Baik" },
     ];
   }
 
