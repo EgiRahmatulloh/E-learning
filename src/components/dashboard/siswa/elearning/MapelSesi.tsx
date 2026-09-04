@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { safeHtml } from "@/lib/sanitize";
 import { commitUploads, discardUpload, uploadFile } from "@/lib/upload";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 interface MapelSesiProps {
   subjectName: string;
@@ -22,6 +24,14 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
   const [editInputValue, setEditInputValue] = useState("");
   const [activeReplyId, setActiveReplyId] = useState<number | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [cancelTaskConfirmId, setCancelTaskConfirmId] = useState<number | null>(null);
+
+  const openFileWithAuth = (url: string) => {
+    const token = localStorage.getItem("token") || "";
+    const fullUrl = url.includes("?") ? `${url}&token=${token}` : `${url}?token=${token}`;
+    window.open(fullUrl, "_blank");
+  };
 
   const [isHadir, setIsHadir] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -47,6 +57,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
   const [correctCount, setCorrectCount] = useState<number | null>(null);
   const [isLatihanLoading, setIsLatihanLoading] = useState(false);
   const [completions, setCompletions] = useState<Set<string>>(new Set());
+  const [submissionData, setSubmissionData] = useState<any>(null);
 
   const fetchCompletions = async () => {
     if (!setupId) return;
@@ -218,6 +229,17 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
           setDiscussions(Array.isArray(forumData.data) ? forumData.data : []);
         }
 
+        if (user?.id) {
+          const subRes = await fetch(`/api/elearning/submissions/${session.id}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+          });
+          const subData = await subRes.json();
+          if (subData.success && Array.isArray(subData.data)) {
+            const mySub = subData.data.find((s: any) => s.studentId === user.id);
+            setSubmissionData(mySub || null);
+          }
+        }
+
       } catch (err) { }
       finally {
         setLoading(false);
@@ -330,10 +352,14 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
     }
   };
 
-  const handleDeleteMessage = async (msgId: number) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus pesan ini?")) return;
+  const handleDeleteMessage = (msgId: number) => {
+    setDeleteConfirmId(msgId);
+  };
+
+  const executeDeleteMessage = async () => {
+    if (deleteConfirmId === null) return;
     try {
-      const res = await fetch(`/api/elearning/forum/${msgId}`, {
+      const res = await fetch(`/api/elearning/forum/${deleteConfirmId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`
@@ -348,6 +374,8 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
       }
     } catch (err) {
       toast.error("Terjadi kesalahan saat menghapus pesan");
+    } finally {
+      setDeleteConfirmId(null);
     }
   };
 
@@ -358,7 +386,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
       });
       return;
     }
-    window.open(url, "_blank");
+    openFileWithAuth(url);
   };
 
   const handleKehadiran = async () => {
@@ -421,6 +449,36 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
     }
   };
 
+  const executeCancelTask = async () => {
+    if (cancelTaskConfirmId === null) return;
+    
+    const toastId = toast.loading("Membatalkan tugas...");
+    try {
+      const res = await fetch(`/api/elearning/submissions/${sessionId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ studentId: user?.id, fileUrl: "" })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Pengiriman tugas berhasil dibatalkan", { id: toastId });
+        setSubmissionData(null);
+        const newComps = new Set(completions);
+        newComps.delete(`sesi_${sessionNumber}_tugas`);
+        setCompletions(newComps);
+      } else {
+        toast.error(data.message, { id: toastId });
+      }
+    } catch (err: any) {
+      toast.error("Gagal membatalkan tugas", { description: err.message, id: toastId });
+    } finally {
+      setCancelTaskConfirmId(null);
+    }
+  };
+
 
   if (loading) {
     return <div className="p-10 text-center text-slate-500 animate-pulse">Memuat data sesi...</div>;
@@ -466,7 +524,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
             <h3 className="font-bold text-[#280f91]">Materi yang diajarkan Sesi {sessionNumber}</h3>
           </div>
           {teksPembuka ? (
-            <div dangerouslySetInnerHTML={{ __html: safeHtml(teksPembuka) }} />
+            <div className="break-words" dangerouslySetInnerHTML={{ __html: safeHtml(teksPembuka) }} />
           ) : (
             <p className="text-slate-500 italic">Tutor belum menambahkan materi yang diajarkan untuk sesi ini.</p>
           )}
@@ -478,7 +536,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
             <h3 className="font-bold text-[#280f91]">Tujuan Pembelajaran Sesi {sessionNumber}</h3>
           </div>
           {tujuanPembelajaran ? (
-            <div dangerouslySetInnerHTML={{ __html: safeHtml(tujuanPembelajaran) }} />
+            <div className="break-words" dangerouslySetInnerHTML={{ __html: safeHtml(tujuanPembelajaran) }} />
           ) : (
             <p className="text-slate-500 italic">Tutor belum menambahkan tujuan pembelajaran untuk sesi ini.</p>
           )}
@@ -490,7 +548,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
             <h3 className="font-bold text-[#280f91]">Uraian Kegiatan Pembelajaran Sesi {sessionNumber}</h3>
           </div>
           {uraianKegiatan ? (
-            <div dangerouslySetInnerHTML={{ __html: safeHtml(uraianKegiatan) }} />
+            <div className="break-words" dangerouslySetInnerHTML={{ __html: safeHtml(uraianKegiatan) }} />
           ) : (
             <p className="text-slate-500 italic">Tutor belum menambahkan uraian kegiatan pembelajaran untuk sesi ini.</p>
           )}
@@ -564,6 +622,84 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
               <p className="text-center text-slate-400 text-sm italic py-4">Belum ada diskusi. Jadilah yang pertama menyapa!</p>
             )}
             {discussions.filter(d => !d.parentId).map((msg) => {
+              const renderReplies = (parentId: number, depth: number = 0) => {
+                const replies = discussions.filter(r => r.parentId === parentId);
+                if (replies.length === 0) return null;
+
+                return replies.map(reply => {
+                  const replyIsSelf = reply.authorId === user?.id && reply.authorRole === user?.role;
+                  const replyIsTutor = reply.authorRole === "tutor";
+                  const replySenderName = reply.authorName || "Unknown";
+                  const replyDisplayName = replyIsTutor ? `Tutor (${replySenderName})` : replyIsSelf ? "Siswa (Anda)" : `Siswa (${replySenderName})`;
+                  const replyInitial = replyIsTutor ? "T" : (replyIsSelf ? "S" : replySenderName.charAt(0).toUpperCase());
+                  const replyColor = replyIsTutor ? "bg-[#280f91]" : replyIsSelf ? "bg-blue-600" : "bg-slate-500";
+                  const maxDepth = 4; // visual indent limit
+                  const visualDepth = depth > maxDepth ? maxDepth : depth;
+
+                  return (
+                    <div key={reply.id} className={`mt-3 border-l-2 border-slate-200 flex gap-2 group ${visualDepth > 0 ? 'pl-2 sm:pl-4' : 'pl-4'}`}>
+                      {reply.authorFoto ? (
+                        <img src={reply.authorFoto} alt={replyDisplayName} className="h-6 w-6 rounded-full object-cover shrink-0 border border-slate-200" />
+                      ) : (
+                        <div className={`h-6 w-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 text-white ${replyColor}`}>
+                          {replyInitial}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start flex-wrap gap-2">
+                          <h5 className="font-bold text-slate-700 text-xs flex items-center gap-2">
+                            {replyDisplayName}
+                          </h5>
+                          <div className="flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                            {replyIsSelf && (
+                              <>
+                                <button onClick={() => { setEditingMessageId(reply.id); setEditInputValue(new DOMParser().parseFromString(reply.content, "text/html").body.textContent || ''); }} className="text-slate-400 hover:text-blue-600" title="Edit pesan"><Pencil className="w-3 h-3" /></button>
+                                <button onClick={() => handleDeleteMessage(reply.id)} className="text-slate-400 hover:text-red-600" title="Hapus pesan"><Trash2 className="w-3 h-3" /></button>
+                              </>
+                            )}
+                            {!replyIsSelf && (
+                              <button onClick={() => setActiveReplyId(activeReplyId === reply.id ? null : reply.id)} className="text-xs text-blue-600 hover:underline">Balas</button>
+                            )}
+                          </div>
+                        </div>
+
+                        {editingMessageId === reply.id ? (
+                          <div className="mt-2 space-y-2 w-full">
+                            <RichTextEditor
+                              value={editInputValue}
+                              onChange={setEditInputValue}
+                              placeholder="Edit pesan..."
+                            />
+                            <div className="flex gap-2 justify-end">
+                              <Button onClick={() => setEditingMessageId(null)} size="sm" variant="outline" className="h-7 text-xs">Batal</Button>
+                              <Button onClick={() => handleEditSubmit(reply.id)} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white h-7 text-xs">Simpan</Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-slate-600 prose mt-1 max-w-none break-words" dangerouslySetInnerHTML={{ __html: safeHtml(reply.content) }} />
+                        )}
+
+                        {activeReplyId === reply.id && (
+                          <div className="mt-4 flex flex-col gap-2 w-full pr-2">
+                            <RichTextEditor
+                              value={replyText}
+                              onChange={setReplyText}
+                              placeholder="Ketik balasan Anda..."
+                              className="min-h-[80px]"
+                            />
+                            <div className="flex justify-end">
+                              <Button size="sm" onClick={() => submitReply(reply.id)} className="h-8 bg-blue-600 hover:bg-blue-700 text-white px-3 text-xs">Kirim Balasan</Button>
+                            </div>
+                          </div>
+                        )}
+
+                        {renderReplies(reply.id, depth + 1)}
+                      </div>
+                    </div>
+                  );
+                });
+              };
+
               const isSelf = msg.authorId === user?.id && msg.authorRole === user?.role;
               const isTutor = msg.authorRole === "tutor";
               const senderName = msg.authorName || "Unknown";
@@ -573,11 +709,15 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
 
               return (
                 <div key={msg.id} className="flex gap-3">
-                  <div className={`h-8 w-8 rounded-full ${color} text-white flex items-center justify-center font-bold text-xs shrink-0`}>
-                    {initial}
-                  </div>
-                  <div className={`p-3 rounded-lg border shadow-sm flex-1 ${isSelf ? 'bg-blue-50/30 border-blue-100' : 'bg-slate-50 border-slate-200'}`}>
-                    <div className="flex justify-between items-start mb-1">
+                  {msg.authorFoto ? (
+                    <img src={msg.authorFoto} alt={displayName} className="h-8 w-8 rounded-full object-cover shrink-0 border border-slate-200" />
+                  ) : (
+                    <div className={`h-8 w-8 rounded-full ${color} text-white flex items-center justify-center font-bold text-xs shrink-0`}>
+                      {initial}
+                    </div>
+                  )}
+                  <div className={`p-3 rounded-lg border shadow-sm flex-1 min-w-0 ${isSelf ? 'bg-blue-50/30 border-blue-100' : 'bg-slate-50 border-slate-200'}`}>
+                    <div className="flex justify-between items-start mb-1 flex-wrap gap-2">
                       <p className={`text-xs font-bold flex items-center gap-2 ${isSelf ? 'text-blue-700' : 'text-slate-600'}`}>
                         {displayName}
                       </p>
@@ -603,104 +743,60 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
                             </button>
                           </>
                         )}
-                        <button onClick={() => setActiveReplyId(activeReplyId === msg.id ? null : msg.id)} className="text-xs text-blue-600 hover:underline">Balas</button>
+                        {!isSelf && (
+                          <button onClick={() => setActiveReplyId(activeReplyId === msg.id ? null : msg.id)} className="text-xs text-blue-600 hover:underline">Balas</button>
+                        )}
                       </div>
                     </div>
                     {editingMessageId === msg.id ? (
-                      <div className="flex gap-2 mt-2">
-                        <input
-                          type="text"
+                      <div className="flex flex-col gap-2 mt-2 w-full">
+                        <RichTextEditor
                           value={editInputValue}
-                          onChange={(e) => setEditInputValue(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && handleEditSubmit(msg.id)}
-                          className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500"
-                          autoFocus
+                          onChange={setEditInputValue}
+                          placeholder="Edit pesan..."
                         />
-                        <Button onClick={() => handleEditSubmit(msg.id)} size="sm" className="bg-blue-600 hover:bg-blue-700 h-8">Simpan</Button>
-                        <Button onClick={() => setEditingMessageId(null)} size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-500 hover:text-slate-700"><X className="w-4 h-4" /></Button>
+                        <div className="flex justify-end gap-2">
+                          <Button onClick={() => setEditingMessageId(null)} size="sm" variant="outline" className="h-8">Batal</Button>
+                          <Button onClick={() => handleEditSubmit(msg.id)} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white h-8">Simpan</Button>
+                        </div>
                       </div>
                     ) : (
-                      <div className="text-sm text-slate-700 prose max-w-none mt-1" dangerouslySetInnerHTML={{ __html: safeHtml(msg.content) }} />
+                      <div className="text-sm text-slate-700 prose max-w-none mt-1 break-words" dangerouslySetInnerHTML={{ __html: safeHtml(msg.content) }} />
                     )}
 
-                    {/* Replies */}
-                    {discussions.filter(r => r.parentId === msg.id).map(reply => {
-                      const replyIsSelf = reply.authorId === user?.id && reply.authorRole === user?.role;
-                      const replyIsTutor = reply.authorRole === "tutor";
-                      const replySenderName = reply.authorName || "Unknown";
-                      const replyDisplayName = replyIsTutor ? `Tutor (${replySenderName})` : replyIsSelf ? "Siswa (Anda)" : `Siswa (${replySenderName})`;
-                      const replyInitial = replyIsTutor ? "T" : (replyIsSelf ? "S" : replySenderName.charAt(0).toUpperCase());
-                      const replyColor = replyIsTutor ? "bg-[#280f91]" : replyIsSelf ? "bg-blue-600" : "bg-slate-500";
-
-                      return (
-                        <div key={reply.id} className="mt-3 pl-4 border-l-2 border-slate-200 flex gap-2 group">
-                          <div className={`h-6 w-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 text-white ${replyColor}`}>
-                            {replyInitial}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex justify-between items-start">
-                              <h5 className="font-bold text-slate-700 text-xs flex items-center gap-2">
-                                {replyDisplayName}
-                              </h5>
-                              {replyIsSelf && (
-                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button onClick={() => { setEditingMessageId(reply.id); setEditInputValue(new DOMParser().parseFromString(reply.content, "text/html").body.textContent || ''); }} className="text-slate-400 hover:text-blue-600"><Pencil className="w-3 h-3" /></button>
-                                  <button onClick={() => handleDeleteMessage(reply.id)} className="text-slate-400 hover:text-red-600"><Trash2 className="w-3 h-3" /></button>
-                                </div>
-                              )}
-                            </div>
-
-                            {editingMessageId === reply.id ? (
-                              <div className="mt-2 space-y-2">
-                                <input
-                                  type="text"
-                                  value={editInputValue}
-                                  onChange={(e) => setEditInputValue(e.target.value)}
-                                  className="flex-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500"
-                                />
-                                <div className="flex gap-2 justify-end">
-                                  <Button onClick={() => setEditingMessageId(null)} size="sm" variant="outline" className="h-7 text-xs">Batal</Button>
-                                  <Button onClick={() => handleEditSubmit(reply.id)} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white h-7 text-xs">Simpan</Button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="text-xs text-slate-600 prose mt-1" dangerouslySetInnerHTML={{ __html: safeHtml(reply.content) }} />
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    {/* Reply Input */}
                     {activeReplyId === msg.id && (
-                      <div className="mt-4 flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="Ketik balasan Anda..."
+                      <div className="mt-4 flex flex-col gap-2 w-full">
+                        <RichTextEditor
                           value={replyText}
-                          onChange={(e) => setReplyText(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && submitReply(msg.id)}
-                          className="flex-1 h-8 rounded border border-slate-200 px-3 text-xs focus:outline-none focus:border-blue-500"
+                          onChange={setReplyText}
+                          placeholder="Ketik balasan Anda..."
+                          className="min-h-[100px]"
                         />
-                        <Button size="sm" onClick={() => submitReply(msg.id)} className="h-8 bg-blue-600 hover:bg-blue-700 text-white px-3 text-xs">Kirim</Button>
+                        <div className="flex justify-end">
+                          <Button size="sm" onClick={() => submitReply(msg.id)} className="h-8 bg-blue-600 hover:bg-blue-700 text-white px-4 text-xs">Kirim Balasan</Button>
+                        </div>
                       </div>
                     )}
+
+                    {/* Nested Replies */}
+                    {renderReplies(msg.id)}
 
                   </div>
                 </div>
               );
             })}
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 border-t border-slate-100 pt-4">
-            <input
-              type="text"
-              placeholder="Tulis tanggapan Anda..."
+          <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 mt-4">
+            <h4 className="text-sm font-bold text-slate-700">Tulis Tanggapan Baru</h4>
+            <RichTextEditor
               value={discussionInput}
-              onChange={(e) => setDiscussionInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendDiscussion()}
-              className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 w-full"
+              onChange={setDiscussionInput}
+              placeholder="Tulis tanggapan Anda..."
+              className="min-h-[100px]"
             />
-            <Button onClick={handleSendDiscussion} className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 w-full sm:w-auto">Kirim</Button>
+            <div className="flex justify-end">
+              <Button onClick={handleSendDiscussion} className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold px-6">Kirim</Button>
+            </div>
           </div>
         </div>
 
@@ -736,8 +832,8 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
             </div>
             <SectionCompleteButton completions={completions} handleMarkComplete={handleMarkComplete} sectionKey={`sesi_${sessionNumber}_tugas`} className="m-0" />
           </div>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Button onClick={() => handleDownload(tugasUrl)} variant="outline" className="flex-1 bg-white hover:bg-orange-50 border-orange-200 text-orange-700 font-bold h-12">
+          <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
+            <Button onClick={() => handleDownload(tugasUrl)} variant="outline" className="flex-1 bg-white hover:bg-orange-50 border-orange-200 text-orange-700 font-bold h-12 min-w-[200px]">
               Unduh Soal Tugas
             </Button>
             <input
@@ -747,9 +843,21 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
               accept=".pdf,.docx,.doc"
               onChange={handleUploadJawaban}
             />
-            <Button onClick={() => tugasUploadRef.current?.click()} className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold h-12">
-              Kirim Jawaban
+            <Button 
+              onClick={() => tugasUploadRef.current?.click()} 
+              className={`flex-1 font-bold h-12 min-w-[200px] ${submissionData && submissionData.fileUrl ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-orange-600 hover:bg-orange-700 text-white'}`}
+            >
+              {submissionData && submissionData.fileUrl ? 'Tugas Terkirim (Unggah Ulang)' : 'Kirim Jawaban'}
             </Button>
+            {submissionData && submissionData.fileUrl && (
+              <Button 
+                onClick={() => setCancelTaskConfirmId(submissionData.id)} 
+                variant="outline" 
+                className="flex-1 h-12 text-sm text-rose-600 hover:bg-rose-50 hover:text-rose-700 border-rose-200 font-bold min-w-[200px]"
+              >
+                Batalkan Pengiriman
+              </Button>
+            )}
           </div>
         </div>
 
@@ -793,17 +901,17 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
               {angketQuestions.map((q, idx) => (
                 <div key={q.id !== undefined && q.id !== null ? `q-${q.id}` : `idx-${idx}`} className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
                   <p className="font-bold text-slate-800 text-sm mb-4">{idx + 1}. {q.question}</p>
-                  <div className="flex justify-between items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-4">
                     {["Sangat Kurang", "Kurang", "Cukup", "Baik", "Sangat Baik"].map((label, i) => (
-                      <label key={i} className="flex flex-col items-center gap-2 cursor-pointer group">
+                      <label key={i} className="flex flex-row sm:flex-col items-center gap-3 sm:gap-2 cursor-pointer group">
                         <input
                           type="radio"
                           name={`q_${q.id}`}
                           checked={angketAnswers[q.id] === label}
                           onChange={() => setAngketAnswers(prev => ({ ...prev, [q.id]: label }))}
-                          className="w-4 h-4 text-rose-600 accent-rose-600 focus:ring-rose-500"
+                          className="w-5 h-5 sm:w-4 sm:h-4 text-rose-600 accent-rose-600 focus:ring-rose-500"
                         />
-                        <span className="text-[10px] sm:text-xs font-bold text-slate-500 group-hover:text-rose-600 text-center leading-tight">
+                        <span className="text-sm sm:text-[10px] md:text-xs font-bold text-slate-600 group-hover:text-rose-600 text-left sm:text-center leading-tight">
                           {label}
                         </span>
                       </label>
@@ -909,7 +1017,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
                         <div className="space-y-2">
                           {q.options.map((opt: string, optIdx: number) => {
                             const isSelected = answers[qIdx] === optIdx;
-                            const isCorrect = q.correctAnswer === optIdx;
+                            const isCorrect = Number(q.correctAnswer) === optIdx;
                             let labelClass = "bg-slate-50 border-slate-200";
 
                             if (isCorrect && isSelected) {
@@ -1016,6 +1124,23 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
           </div>
         </div>
       )}
+
+      {/* Dialog Konfirmasi Hapus Forum */}
+      <ConfirmDialog
+        open={deleteConfirmId !== null}
+        onConfirm={executeDeleteMessage}
+        onCancel={() => setDeleteConfirmId(null)}
+        title="Hapus Pesan"
+        description="Apakah Anda yakin ingin menghapus pesan ini? Aksi ini tidak dapat dibatalkan."
+      />
+
+      <ConfirmDialog
+        open={cancelTaskConfirmId !== null}
+        onConfirm={executeCancelTask}
+        onCancel={() => setCancelTaskConfirmId(null)}
+        title="Batalkan Tugas"
+        description="Apakah Anda yakin ingin membatalkan pengiriman tugas ini? Data nilai dan masukan dari tutor mungkin akan hilang."
+      />
 
     </div>
   );

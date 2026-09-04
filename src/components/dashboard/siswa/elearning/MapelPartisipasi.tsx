@@ -65,8 +65,12 @@ export function MapelPartisipasi({ subjectName, tutorName, setupId }: MapelParti
         ) : (
           currentStudents.map((student, index) => (
             <div key={student.id || index} className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:shadow-sm transition-all">
-              <div className="h-10 w-10 shrink-0 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-                {student.nama ? student.nama.charAt(0).toUpperCase() : 'S'}
+              <div className="h-10 w-10 shrink-0 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm overflow-hidden">
+                {student.foto ? (
+                  <img src={student.foto} alt={student.nama} className="h-full w-full object-cover" />
+                ) : (
+                  student.nama ? student.nama.charAt(0).toUpperCase() : 'S'
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-slate-700 truncate">{student.nama}</p>

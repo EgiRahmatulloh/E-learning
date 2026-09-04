@@ -8,6 +8,6 @@ export const safeHtml = (dirty: string | null | undefined): string => {
   if (!dirty) return "";
   return DOMPurify.sanitize(dirty, {
     ADD_TAGS: ["font", "u", "span"],
-    ADD_ATTR: ["class", "size", "color", "face"],
+    ADD_ATTR: ["class", "size", "color", "face", "style", "align"],
   });
 };

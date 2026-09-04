@@ -21,7 +21,6 @@ import GalleryPage from "./components/landing/GalleryPage";
 import Products from "./components/landing/Products";
 import Testimonials from "./components/landing/Testimonials";
 import Gallery from "./components/landing/Gallery";
-import Contact from "./components/landing/Contact";
 import Footer from "./components/landing/Footer";
 
 const LoadingScreen = () => (
@@ -97,27 +96,27 @@ function App() {
       },
       signal: controller.signal
     })
-    .then(res => {
-      if (!res.ok) throw new Error("Expired session");
-      return res.json();
-    })
-    .then(data => {
-      if (data.success) {
-        setUser(data.user);
-        localStorage.setItem("user", JSON.stringify(data.user));
-      }
-    })
-    .catch((err) => {
-      if (err.name === 'AbortError') return;
-      setToken(null);
-      setUser(null);
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      navigate("/");
-    })
-    .finally(() => {
-      setIsAuthChecking(false);
-    });
+      .then(res => {
+        if (!res.ok) throw new Error("Expired session");
+        return res.json();
+      })
+      .then(data => {
+        if (data.success) {
+          setUser(data.user);
+          localStorage.setItem("user", JSON.stringify(data.user));
+        }
+      })
+      .catch((err) => {
+        if (err.name === 'AbortError') return;
+        setToken(null);
+        setUser(null);
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/");
+      })
+      .finally(() => {
+        setIsAuthChecking(false);
+      });
 
     return () => controller.abort();
   }, [token]);
@@ -160,11 +159,10 @@ function App() {
   return (
     <TooltipProvider>
       <Toaster />
-      <div className={`min-h-screen bg-slate-50/50 text-slate-900 font-sans selection:bg-[#280f91] selection:text-white ${
-        currentPath === "/profile" ? "animate-in fade-in duration-300" : ""
-      }`}>
+      <div className={`min-h-screen bg-slate-50/50 text-slate-900 font-sans selection:bg-[#280f91] selection:text-white ${currentPath === "/profile" ? "animate-in fade-in duration-300" : ""
+        }`}>
         <Header currentPath={currentPath} onNavigate={navigate} />
-        
+
         {currentPath === "/profile" ? (
           <div className="pt-20">
             <Profile isDetailed={true} onNavigate={navigate} />
@@ -204,33 +202,31 @@ function App() {
         ) : (
           <>
             <Hero onServiceClick={(service) => setActiveServiceDialog(service)} />
-            
+
             <Services
               onLoginSuccess={handleAuthSuccess}
               activeDialog={activeServiceDialog}
               onDialogClose={() => setActiveServiceDialog(null)}
             />
-            
-            <Ticker />
-            
-            <Profile isDetailed={false} onNavigate={navigate} />
-            
-            <Agenda isDetailed={false} onNavigate={navigate} />
-            
-            <News isDetailed={false} onNavigate={navigate} />
-            
-            <Tutors isDetailed={false} onNavigate={navigate} />
-            
-            <Products />
-            
-            <Testimonials />
-            
-            <Gallery />
 
-            <Contact />
+            <Ticker />
+
+            <Profile isDetailed={false} onNavigate={navigate} />
+
+            <Agenda isDetailed={false} onNavigate={navigate} />
+
+            <News isDetailed={false} onNavigate={navigate} />
+
+            <Tutors isDetailed={false} onNavigate={navigate} />
+
+            <Products />
+
+            <Testimonials />
+
+            <Gallery />
           </>
         )}
-        
+
         <Footer />
       </div>
     </TooltipProvider>

@@ -232,11 +232,15 @@ function SesiContent({
           className="mt-3 pl-4 border-l-2 border-slate-200 group"
         >
           <div className="flex gap-2">
-            <div
-              className={`h-6 w-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${replyAvatarColorClass}`}
-            >
-              {replyAvatarLetter}
-            </div>
+            {reply.authorFoto ? (
+              <img src={reply.authorFoto} alt={replyDisplayName} className="h-6 w-6 rounded-full object-cover shrink-0 border border-slate-200" />
+            ) : (
+              <div
+                className={`h-6 w-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${replyAvatarColorClass}`}
+              >
+                {replyAvatarLetter}
+              </div>
+            )}
             <div className="flex-1">
               <div className="flex justify-between items-start">
                 <h5 className="font-bold text-slate-700 text-xs flex items-center gap-2">
@@ -268,16 +272,18 @@ function SesiContent({
                         </button>
                       </div>
                     )}
-                  <button
-                    onClick={() =>
-                      setActiveReplyId(
-                        activeReplyId === reply.id ? null : reply.id,
-                      )
-                    }
-                    className="text-slate-400 hover:text-cyan-600 text-xs font-semibold ml-2"
-                  >
-                    Balas
-                  </button>
+                  { (reply.authorId !== user?.id || reply.authorRole !== user?.role) && (
+                    <button
+                      onClick={() =>
+                        setActiveReplyId(
+                          activeReplyId === reply.id ? null : reply.id,
+                        )
+                      }
+                      className="text-slate-400 hover:text-cyan-600 text-xs font-semibold ml-2"
+                    >
+                      Balas
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -636,21 +642,6 @@ function SesiContent({
       // unggahannya supaya tidak menumpuk tanpa ada yang mereferensikannya.
       void discardUpload(fileUrl);
       toast.error("Gagal", { description: err.message, id: toastId });
-    }
-  };
-
-  const handleViewFile = async (url: string) => {
-    try {
-      toast.info("Sedang membuka berkas...");
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      if (!res.ok) throw new Error("Gagal mengambil file");
-      const blob = await res.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      window.open(objectUrl, "_blank");
-    } catch (err: any) {
-      toast.error("Gagal membuka file", { description: err.message });
     }
   };
 
@@ -1038,8 +1029,7 @@ function SesiContent({
                   }
                   className="w-full text-sm border-slate-200 rounded-lg p-2 bg-slate-50"
                 />
-                <input
-                  type="time"
+                <select
                   value={
                     dueDate && dueDate.includes("T")
                       ? dueDate.split("T")[1].substring(0, 5)
@@ -1051,7 +1041,16 @@ function SesiContent({
                     )
                   }
                   className="w-full text-sm border-slate-200 rounded-lg p-2 bg-slate-50"
-                />
+                >
+                  <option value="">Waktu</option>
+                  {Array.from({ length: 24 * 4 }).map((_, i) => {
+                    const h = Math.floor(i / 4).toString().padStart(2, "0");
+                    const m = ((i % 4) * 15).toString().padStart(2, "0");
+                    const val = `${h}:${m}`;
+                    return <option key={val} value={val}>{val}</option>;
+                  })}
+                  <option value="23:59">23:59</option>
+                </select>
               </div>
             </div>
             <div>
@@ -1071,8 +1070,7 @@ function SesiContent({
                   }
                   className="w-full text-sm border-slate-200 rounded-lg p-2 bg-slate-50"
                 />
-                <input
-                  type="time"
+                <select
                   value={
                     cutoffDate && cutoffDate.includes("T")
                       ? cutoffDate.split("T")[1].substring(0, 5)
@@ -1084,7 +1082,16 @@ function SesiContent({
                     )
                   }
                   className="w-full text-sm border-slate-200 rounded-lg p-2 bg-slate-50"
-                />
+                >
+                  <option value="">Waktu</option>
+                  {Array.from({ length: 24 * 4 }).map((_, i) => {
+                    const h = Math.floor(i / 4).toString().padStart(2, "0");
+                    const m = ((i % 4) * 15).toString().padStart(2, "0");
+                    const val = `${h}:${m}`;
+                    return <option key={val} value={val}>{val}</option>;
+                  })}
+                  <option value="23:59">23:59</option>
+                </select>
               </div>
             </div>
           </div>
@@ -1154,12 +1161,18 @@ function SesiContent({
                         </td>
                         <td className="py-3 px-4">
                           {sub.fileUrl ? (
-                            <button
-                              onClick={() => handleViewFile(sub.fileUrl)}
-                              className="text-emerald-600 underline text-xs font-bold bg-emerald-50 px-2 py-1 rounded cursor-pointer"
+                            <a
+                              href={
+                                sub.fileUrl.startsWith("http")
+                                  ? sub.fileUrl
+                                  : `${sub.fileUrl}${sub.fileUrl.includes("?") ? "&" : "?"}token=${localStorage.getItem("token") || ""}`
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-block text-emerald-600 underline text-xs font-bold bg-emerald-50 px-2 py-1 rounded cursor-pointer"
                             >
                               Lihat Berkas
-                            </button>
+                            </a>
                           ) : (
                             <span className="text-slate-400 text-xs italic">
                               Belum mengumpulkan
@@ -1324,11 +1337,15 @@ function SesiContent({
                         className="bg-slate-50 border border-slate-100 rounded-xl p-4"
                       >
                         <div className="flex gap-3">
-                          <div
-                            className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${avatarColorClass}`}
-                          >
-                            {avatarLetter}
-                          </div>
+                          {post.authorFoto ? (
+                            <img src={post.authorFoto} alt={displayName} className="h-10 w-10 rounded-full object-cover shrink-0 border border-slate-200" />
+                          ) : (
+                            <div
+                              className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${avatarColorClass}`}
+                            >
+                              {avatarLetter}
+                            </div>
+                          )}
                           <div className="flex-1">
                             <div className="flex justify-between items-start">
                               <div>
@@ -1376,20 +1393,22 @@ function SesiContent({
                                       </Button>
                                     </>
                                   )}
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 text-xs text-cyan-600 hover:bg-cyan-50"
-                                  onClick={() =>
-                                    setActiveReplyId(
-                                      activeReplyId === post.id
-                                        ? null
-                                        : post.id,
-                                    )
-                                  }
-                                >
-                                  Balas
-                                </Button>
+                                { (post.authorId !== user?.id || post.authorRole !== user?.role) && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 text-xs text-cyan-600 hover:bg-cyan-50"
+                                    onClick={() =>
+                                      setActiveReplyId(
+                                        activeReplyId === post.id
+                                          ? null
+                                          : post.id,
+                                      )
+                                    }
+                                  >
+                                    Balas
+                                  </Button>
+                                )}
                               </div>
                             </div>
 

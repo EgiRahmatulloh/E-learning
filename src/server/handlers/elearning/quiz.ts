@@ -70,7 +70,7 @@ export const quizHandlers = new Elysia()
           payload?.role === "super_admin" ||
           payload?.role === "tutor";
 
-        const safeQuestions = isAuthorizedToSeeAnswers
+        const safeQuestions = (isAuthorizedToSeeAnswers || submission)
           ? questions
           : questions.map(({ correctAnswer, ...rest }: any) => rest);
 

@@ -252,11 +252,15 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
           className="mt-3 pl-4 border-l-2 border-slate-200 group"
         >
           <div className="flex gap-2">
-            <div
-              className={`h-6 w-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${replyAvatarColorClass}`}
-            >
-              {replyAvatarLetter}
-            </div>
+            {reply.authorFoto ? (
+              <img src={reply.authorFoto} alt={replyDisplayName} className="h-6 w-6 rounded-full object-cover shrink-0 border border-slate-200" />
+            ) : (
+              <div
+                className={`h-6 w-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${replyAvatarColorClass}`}
+              >
+                {replyAvatarLetter}
+              </div>
+            )}
             <div className="flex-1">
               <div className="flex justify-between items-start">
                 <h5 className="font-bold text-slate-700 text-xs flex items-center gap-2">
@@ -288,16 +292,18 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
                         </button>
                       </div>
                     )}
-                  <button
-                    onClick={() =>
-                      setActiveReplyId(
-                        activeReplyId === reply.id ? null : reply.id,
-                      )
-                    }
-                    className="text-slate-400 hover:text-cyan-600 text-xs font-semibold ml-2"
-                  >
-                    Balas
-                  </button>
+                  { (reply.authorId !== user?.id || reply.authorRole !== user?.role) && (
+                    <button
+                      onClick={() =>
+                        setActiveReplyId(
+                          activeReplyId === reply.id ? null : reply.id,
+                        )
+                      }
+                      className="text-slate-400 hover:text-cyan-600 text-xs font-semibold ml-2"
+                    >
+                      Balas
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -619,11 +625,15 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
                       className="bg-slate-50 border border-slate-100 rounded-xl p-4"
                     >
                       <div className="flex gap-3">
-                        <div
-                          className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${avatarColorClass}`}
-                        >
-                          {avatarLetter}
-                        </div>
+                        {post.authorFoto ? (
+                          <img src={post.authorFoto} alt={displayName} className="h-10 w-10 rounded-full object-cover shrink-0 border border-slate-200" />
+                        ) : (
+                          <div
+                            className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${avatarColorClass}`}
+                          >
+                            {avatarLetter}
+                          </div>
+                        )}
                         <div className="flex-1">
                           <div className="flex justify-between items-start">
                             <div>
@@ -665,18 +675,20 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
                                     </Button>
                                   </>
                                 )}
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 text-xs text-cyan-600 hover:bg-cyan-50"
-                                onClick={() =>
-                                  setActiveReplyId(
-                                    activeReplyId === post.id ? null : post.id,
-                                  )
-                                }
-                              >
-                                Balas
-                              </Button>
+                              { (post.authorId !== user?.id || post.authorRole !== user?.role) && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-xs text-cyan-600 hover:bg-cyan-50"
+                                  onClick={() =>
+                                    setActiveReplyId(
+                                      activeReplyId === post.id ? null : post.id,
+                                    )
+                                  }
+                                >
+                                  Balas
+                                </Button>
+                              )}
                             </div>
                           </div>
 

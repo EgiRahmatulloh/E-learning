@@ -346,11 +346,12 @@ export const submissionsHandlers = new Elysia()
             if (!res.ok) continue;
             fileData = await res.arrayBuffer();
           } else {
+            // extract filename from url, e.g. /api/files/file.pdf -> file.pdf
+            const fileName = sub.fileUrl.split("/").pop();
+            if (!fileName) continue;
+            
             // local file
-            const filePath = sub.fileUrl.startsWith("/")
-              ? `.${sub.fileUrl}`
-              : sub.fileUrl;
-            const file = Bun.file(filePath);
+            const file = Bun.file(`./uploads/${fileName}`);
             if (!(await file.exists())) continue;
             fileData = await file.arrayBuffer();
           }

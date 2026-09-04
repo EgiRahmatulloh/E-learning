@@ -189,7 +189,7 @@ export const courseHandlers = new Elysia()
           allowedAttributes: {
             ...sanitizeHtml.defaults.allowedAttributes,
             'font': ['size', 'color', 'face'],
-            '*': ['class']
+            '*': ['class', 'style', 'align']
           }
         };
 

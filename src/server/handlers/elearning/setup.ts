@@ -90,6 +90,7 @@ export const setupHandlers = new Elysia()
             skk: elearningSetups.skk,
             jumlahSesi: elearningSetups.jumlahSesi,
             semester: elearningSetups.semester,
+            isAngketApproved: elearningSetups.isAngketApproved,
             createdAt: elearningSetups.createdAt,
             tutorNama: tutors.nama,
           })
@@ -492,6 +493,7 @@ export const setupHandlers = new Elysia()
           id: students.id,
           nama: students.nama,
           nis: students.nis,
+          foto: students.foto,
         })
         .from(students)
         .innerJoin(rombelStudents, eq(students.id, rombelStudents.studentId))

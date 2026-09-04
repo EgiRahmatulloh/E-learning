@@ -47,34 +47,20 @@ export function RichTextEditor({
     }
   };
 
-  const executeAlignment = (align: string) => {
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) {
-      if (editorRef.current) {
-        editorRef.current.style.textAlign = align;
-        onChange(editorRef.current.innerHTML);
-      }
-      return;
-    }
-    const range = sel.getRangeAt(0);
-    let node: Node | null = range.startContainer;
-    // Find the closest block element
-    while (node && node !== editorRef.current) {
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        (node as HTMLElement).style.textAlign = align;
-        break;
-      }
-      node = node.parentNode;
-    }
-    // Fallback: apply to the entire editor content if no inner block is found
-    if (node === editorRef.current) {
-      editorRef.current!.style.textAlign = align;
-    }
-
-    if (editorRef.current) {
-      editorRef.current.focus();
-      onChange(editorRef.current.innerHTML);
-    }
+  const executeAlignment = (align: "left" | "center" | "right" | "justify") => {
+    document.execCommand("styleWithCSS", false, "true");
+    
+    const commandMap: Record<string, string> = {
+      left: "justifyLeft",
+      center: "justifyCenter",
+      right: "justifyRight",
+      justify: "justifyFull",
+    };
+    
+    // Some browsers have issues with justifyCenter directly on plain text nodes,
+    // so we format block as div first if it's not already in a block
+    document.execCommand("formatBlock", false, "DIV");
+    executeCommand(commandMap[align]);
   };
 
   return (

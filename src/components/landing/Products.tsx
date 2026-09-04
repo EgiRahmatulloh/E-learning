@@ -135,7 +135,7 @@ export default function Products() {
                   <DialogTrigger asChild>
                     <div
                       data-card
-                      className="snap-start shrink-0 w-[calc(50%-0.75rem)] sm:w-[calc(50%-0.75rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(20%-1.2rem)] bg-white rounded-3xl overflow-hidden p-4 flex flex-col justify-between border border-slate-300 group hover:border-[#ff6105] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer text-left"
+                      className="snap-start shrink-0 w-[calc(50%-0.75rem)] sm:w-[calc(50%-0.75rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(20%-1.2rem)] bg-white rounded-3xl overflow-hidden p-4 flex flex-col justify-between border border-slate-300 group hover:border-[#ff6105] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer text-left min-h-[320px]"
                     >
                       <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-slate-50 border border-slate-100 shadow-inner">
                         {parsePhotos(product.gambar).length > 0 ? (
@@ -163,17 +163,17 @@ export default function Products() {
                         </span>
                       </div>
 
-                      <div className="space-y-3 text-left px-1 flex-1 flex flex-col justify-between">
+                      <div className="space-y-3 text-left px-1 flex-1 flex flex-col justify-start">
                         <div className="space-y-2">
-                          <h3 className="text-sm font-black text-[#280f91] group-hover:text-[#ff6105] transition-colors leading-tight line-clamp-2 uppercase">
+                          <h3 className="text-sm font-black text-[#280f91] group-hover:text-[#ff6105] transition-colors leading-tight line-clamp-2 uppercase break-words">
                             {product.namaProduk}
                           </h3>
-                          <p className="text-slate-600 text-[10px] font-semibold leading-relaxed line-clamp-2">
+                          <p className="text-slate-600 text-[10px] font-semibold leading-relaxed line-clamp-2 break-words">
                             {product.deskripsi}
                           </p>
                         </div>
 
-                        <div className="pt-3 border-t border-slate-50 flex items-center justify-between mt-2" onClick={(e) => e.stopPropagation()}>
+                        <div className="pt-3 border-t border-slate-50 flex items-center justify-between mt-auto" onClick={(e) => e.stopPropagation()}>
                           <a
                             href={getWaLink(product)}
                             target="_blank"
@@ -186,12 +186,12 @@ export default function Products() {
                       </div>
                     </div>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-md bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl">
-                    <DialogHeader>
-                      <DialogTitle className="text-2xl font-black text-[#280f91]">{product.namaProduk}</DialogTitle>
+                  <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl flex flex-col">
+                    <DialogHeader className="min-w-0 w-full shrink-0">
+                      <DialogTitle className="text-2xl font-black text-[#280f91] break-words">{product.namaProduk}</DialogTitle>
                       <DialogDescription className="text-sm font-bold text-[#ff6105]">{formatHarga(product.harga)}</DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
+                    <div className="space-y-4 py-4 min-w-0 w-full overflow-hidden flex-1">
                       <div className="h-56 w-full rounded-2xl relative overflow-hidden border border-slate-200 bg-slate-100">
                         {parsePhotos(product.gambar).length > 0 ? (
                           <PhotoCarousel
@@ -205,7 +205,7 @@ export default function Products() {
                           </div>
                         )}
                       </div>
-                      <p className="text-slate-600 text-sm font-semibold leading-relaxed">
+                      <p className="text-slate-600 text-sm font-semibold leading-relaxed whitespace-pre-wrap break-all max-h-60 overflow-y-auto pr-1">
                         {product.deskripsi}
                       </p>
                       <div className="bg-orange-50 rounded-xl p-3 border border-orange-100 flex items-start gap-2.5">
@@ -215,9 +215,9 @@ export default function Products() {
                         </span>
                       </div>
                     </div>
-                    <DialogFooter className="flex sm:justify-between items-center gap-2 border-t border-slate-100 pt-4 mt-2">
+                    <DialogFooter className="flex flex-row justify-end gap-2 border-t border-slate-100 pt-4 mt-2 w-full shrink-0 min-w-0">
                       <DialogClose asChild>
-                        <Button variant="outline" className="rounded-xl font-bold cursor-pointer">Tutup</Button>
+                        <Button variant="outline" className="rounded-xl font-bold h-11 px-5 cursor-pointer">Tutup</Button>
                       </DialogClose>
                       <a href={getWaLink(product)} target="_blank" rel="noopener noreferrer">
                         <Button className="rounded-xl bg-emerald-600 hover:bg-[#ff6105] text-white font-bold h-11 px-5 flex items-center gap-2 cursor-pointer">
