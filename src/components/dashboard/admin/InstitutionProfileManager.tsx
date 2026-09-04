@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Edit3, Save, UploadCloud, Loader2 } from "lucide-react";
-import { isNetworkError, uploadFile, validateImageFile } from "@/lib/upload";
+import { commitUploads, discardUploads, isNetworkError, uploadFile, validateImageFile } from "@/lib/upload";
 import { toast } from "sonner";
 
 interface InstitutionProfileData {
@@ -125,6 +125,7 @@ export default function InstitutionProfileManager() {
       const data = await res.json();
       if (data.success) {
         toast.success("Identitas Lembaga berhasil disimpan!");
+        commitUploads(profile.foto, profile.gambar);
         setIsEditing(false);
         fetchProfile();
         return;
@@ -146,6 +147,8 @@ export default function InstitutionProfileManager() {
       try {
         setSafeItem(STORAGE_KEY, JSON.stringify(profile));
         toast.info("Identitas Lembaga disimpan secara lokal (Offline)!");
+        // Profil tersimpan lokal masih memakai gambarnya — jangan dibuang
+        commitUploads(profile.foto, profile.gambar);
         setIsEditing(false);
       } catch (e: any) {
         if (e.name === "QuotaExceededError" || e.name === "NS_ERROR_DOM_QUOTA_REACHED") {
@@ -168,7 +171,10 @@ export default function InstitutionProfileManager() {
     if (type === "foto") setUploadingFoto(true);
 
     try {
+      const previous = profile[type];
       handleFieldChange(type, await uploadFile(file));
+      // Ganti gambar sebelum disimpan: unggahan sebelumnya tidak akan dipakai lagi
+      void discardUploads([previous]);
       toast.success(`${type === "foto" ? "Foto" : "Gambar"} berhasil diunggah!`);
     } catch (err) {
       // Fallback lokal: simpan sebagai Base64 HANYA saat koneksi gagal (offline)
@@ -543,6 +549,9 @@ export default function InstitutionProfileManager() {
                 <Button
                   type="button"
                   onClick={() => {
+                    // Gambar yang sudah terunggah tapi batal disimpan dibuang
+                    // dari storage; yang sudah tersimpan di DB dilewati.
+                    void discardUploads([profile.foto, profile.gambar]);
                     fetchProfile();
                     setIsEditing(false);
                   }}

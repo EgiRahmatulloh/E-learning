@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Trash2, Edit3, Plus, Search, UploadCloud, X, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
-import { isNetworkError, uploadFile, validateImageFile } from "@/lib/upload";
+import { commitUploads, discardUpload, isNetworkError, uploadFile, validateImageFile } from "@/lib/upload";
 import { toast } from "sonner";
 
 interface SlideData {
@@ -151,6 +151,8 @@ export function HeaderManager() {
       }
 
       if (apiSuccess) {
+        // Gambar sudah tercatat di DB — jangan pernah dibuang handleCancel
+        commitUploads(formImage);
         fetchSliders();
         closeForm();
         return;
@@ -197,6 +199,8 @@ export function HeaderManager() {
       }
       setSlides(updatedSlides);
       setSafeItem(STORAGE_KEY, JSON.stringify(updatedSlides));
+      // Slider tersimpan lokal masih memakai gambarnya — jangan dibuang
+      commitUploads(formImage);
       closeForm();
     }
   };
@@ -215,6 +219,7 @@ export function HeaderManager() {
         setSlides(updated);
         setSafeItem(STORAGE_KEY, JSON.stringify(updated));
         toast.success("Slider berhasil dihapus secara lokal!");
+        commitUploads(formImage);
         closeForm();
         return;
       }
@@ -230,6 +235,8 @@ export function HeaderManager() {
         const data = await res.json();
         if (data.success) {
           toast.success("Slider berhasil dihapus!");
+          // Berkasnya sudah dilepas server saat barisnya dihapus
+          commitUploads(formImage);
           fetchSliders();
           closeForm();
         } else {
@@ -242,6 +249,7 @@ export function HeaderManager() {
           setSlides(updated);
           setSafeItem(STORAGE_KEY, JSON.stringify(updated));
           toast.success("Slider berhasil dihapus secara lokal!");
+          commitUploads(formImage);
           closeForm();
         } else {
           toast.error("Terjadi kesalahan saat menghapus.");
@@ -276,6 +284,14 @@ export function HeaderManager() {
     setEditId(null);
   };
 
+  // Batal menutup form: gambar yang sudah terunggah tapi belum tersimpan dibuang
+  // dari storage. discardUpload melewati gambar yang sudah tersimpan (termasuk
+  // Base64 fallback offline), jadi aman dipanggil dari mode lihat juga.
+  const handleCancel = () => {
+    void discardUpload(formImage);
+    closeForm();
+  };
+
   // Image Upload helper (converts to Base64)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -293,7 +309,10 @@ export function HeaderManager() {
 
     setUploading(true);
     try {
+      const previous = formImage;
       setFormImage(await uploadFile(file));
+      // Ganti gambar sebelum disimpan: unggahan sebelumnya tidak akan dipakai lagi
+      void discardUpload(previous);
       toast.success("Gambar berhasil diunggah!");
     } catch (err) {
       // Fallback lokal: simpan sebagai Base64 HANYA saat koneksi gagal (offline)
@@ -466,7 +485,7 @@ export function HeaderManager() {
       {isFormOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={closeForm} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={handleCancel} />
 
           {/* Form Container */}
           <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 border-4 border-cyan-400">
@@ -475,7 +494,7 @@ export function HeaderManager() {
             <div className="bg-white p-6 relative">
               {/* Close Button */}
               <button
-                onClick={closeForm}
+                onClick={handleCancel}
                 className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
@@ -623,7 +642,7 @@ export function HeaderManager() {
                     <>
                       <Button
                         type="button"
-                        onClick={closeForm}
+                        onClick={handleCancel}
                         className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                       >
                         BATAL

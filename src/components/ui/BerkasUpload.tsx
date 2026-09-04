@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { X, Eye, Loader2, CheckCircle2, FileUp } from "lucide-react";
-import { uploadFile } from "@/lib/upload";
+import { discardUpload, uploadFile } from "@/lib/upload";
 import { toast } from "sonner";
 import FilePreviewModal from "./FilePreviewModal";
 
@@ -34,7 +34,12 @@ export default function BerkasUpload({
       // Berkas dokumen (KK/KTP/Ijazah dll) bersifat sensitif — tandai privat agar
       // server selalu meminta auth saat diakses, walau file-nya berupa gambar.
       const url = await uploadFile(file, { visibility: "private" });
+      const previous = value[key];
       onChange({ ...value, [key]: url });
+      // Berkas yang tergantikan sebelum form disimpan tidak akan dipakai lagi.
+      // discardUpload melewati berkas yang sudah tersimpan di DB — itu dilepas
+      // server saat perubahannya disimpan.
+      void discardUpload(previous);
       toast.success(`${berkasTypes.find((b) => b.key === key)?.label || "Berkas"} berhasil diunggah!`);
     } catch (err) {
       toast.error("Upload gagal: " + (err instanceof Error ? err.message : "Error tidak diketahui"));
@@ -47,6 +52,7 @@ export default function BerkasUpload({
     const newData = { ...value };
     delete newData[key];
     onChange(newData);
+    void discardUpload(value[key]);
   };
 
   const handlePreview = (url: string, e: React.MouseEvent) => {

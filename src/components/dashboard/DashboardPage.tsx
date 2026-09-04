@@ -44,7 +44,7 @@ import PendahuluanTab from "./tutor/elearning/PendahuluanTab";
 import SesiKelasTab from "./tutor/elearning/SesiKelasTab";
 import LaporanNilaiTab from "./tutor/elearning/LaporanNilaiTab";
 import KehadiranTab from "./tutor/elearning/KehadiranTab";
-import { uploadFile, validateImageFile } from "@/lib/upload";
+import { commitUploads, discardUpload, uploadFile, validateImageFile } from "@/lib/upload";
 
 interface DashboardPageProps {
   user: { id: number; name: string; username: string; role: string; email?: string; noHp?: string; alamat?: string; nik?: string; program?: string; kelas?: string };
@@ -242,6 +242,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
 
       if (data.success) {
         setProfileMsg({ type: "success", text: "Profil Anda berhasil diperbarui!" });
+        commitUploads(formData.foto);
         setUser(data.user);
         localStorage.setItem("user", JSON.stringify(data.user));
         setFormData(prev => ({ ...prev, password: "", confirmPassword: "" }));
@@ -267,7 +268,10 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
     setProfileMsg(null);
     try {
       const url = await uploadFile(file);
+      const previous = formData.foto;
       setFormData((prev) => ({ ...prev, foto: url }));
+      // Ganti foto sebelum disimpan: unggahan sebelumnya tidak akan dipakai lagi
+      void discardUpload(previous);
       setProfileMsg({ type: "success", text: "Foto profil diunggah. Klik \"Simpan Perubahan\" untuk menyimpan." });
     } catch (err) {
       setProfileMsg({ type: "error", text: err instanceof Error ? err.message : "Gagal mengunggah foto." });
@@ -376,7 +380,12 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                     {formData.foto && (
                       <Button
                         type="button"
-                        onClick={() => setFormData((prev) => ({ ...prev, foto: "" }))}
+                        onClick={() => {
+                          // No-op untuk foto yang sudah tersimpan di DB — itu
+                          // dilepas server saat perubahan disimpan.
+                          void discardUpload(formData.foto);
+                          setFormData((prev) => ({ ...prev, foto: "" }));
+                        }}
                         className="rounded-xl bg-slate-200 hover:bg-rose-100 text-rose-600 font-bold text-xs px-4 py-2 cursor-pointer transition-colors"
                       >
                         <Trash2 className="h-4 w-4 mr-1.5" /> HAPUS

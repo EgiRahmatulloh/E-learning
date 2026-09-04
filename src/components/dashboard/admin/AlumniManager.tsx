@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
 import { Upload, Plus, Trash2, Save, HelpCircle, Download, LayoutGrid, List, Search, X, Loader2, ChevronLeft, ChevronRight, Edit3 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
-import { uploadFile } from "@/lib/upload";
+import { commitUploads, discardUpload, discardUploads, uploadFile } from "@/lib/upload";
 import { toast } from "sonner";
 import BerkasUpload, { type BerkasItem } from "@/components/ui/BerkasUpload";
 
@@ -200,6 +200,10 @@ export default function AlumniManager() {
   };
 
   const closeForm = () => {
+    // Foto/berkas yang sudah terunggah tapi form-nya ditutup tanpa disimpan
+    // dibuang dari storage. Yang sudah tersimpan di DB dilewati discardUploads,
+    // dan handleSave/handleDelete memanggil commitUploads dulu.
+    void discardUploads([foto, ...Object.values(berkas)]);
     setIsFormOpen(false);
     setSelectedId(null);
     setIsAdding(false);
@@ -209,7 +213,10 @@ export default function AlumniManager() {
   const handleImageUpload = async (file: File) => {
     setUploading(true);
     try {
+      const previous = foto;
       setFoto(await uploadFile(file));
+      // Ganti foto sebelum disimpan: unggahan sebelumnya tidak akan dipakai lagi
+      void discardUpload(previous);
       toast.success("Foto berhasil diunggah!");
     } catch (err) {
       toast.error("Upload gagal: " + (err instanceof Error ? err.message : "Error tidak diketahui"));
@@ -283,6 +290,7 @@ export default function AlumniManager() {
       const data = await res.json();
       if (data.success) {
         toast.success(isAdding ? "Alumni berhasil ditambahkan!" : "Data alumni berhasil diperbarui!");
+        commitUploads(foto, Object.values(berkas));
         closeForm();
         fetchAlumni();
       } else {
@@ -316,6 +324,8 @@ export default function AlumniManager() {
       const data = await res.json();
       if (data.success) {
         toast.success("Data alumni berhasil dihapus!");
+        // Berkasnya sudah dilepas server saat barisnya dihapus
+        commitUploads(foto, Object.values(berkas));
         closeForm();
         fetchAlumni();
       } else {
@@ -1008,7 +1018,12 @@ export default function AlumniManager() {
                             />
                             <button
                               type="button"
-                              onClick={() => setFoto("")}
+                              onClick={() => {
+                                // No-op untuk foto yang sudah tersimpan di DB —
+                                // itu dilepas server saat perubahan disimpan.
+                                void discardUpload(foto);
+                                setFoto("");
+                              }}
                               className="absolute top-1.5 right-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full p-0.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                             >
                               <X className="h-3 w-3" />

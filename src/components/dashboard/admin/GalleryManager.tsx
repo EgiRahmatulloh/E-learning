@@ -4,7 +4,7 @@ import { Plus, Trash2, Save, HelpCircle, Image, X, Edit3, Loader2, ChevronLeft, 
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
 import { parsePhotos, serializePhotos } from "@/lib/photos";
-import { pickImageFiles, uploadFiles } from "@/lib/upload";
+import { commitUploads, discardUpload, discardUploads, pickImageFiles, uploadFiles } from "@/lib/upload";
 
 const GALLERY_CATEGORIES = [
   "KEGIATAN PEMBELAJARAN",
@@ -109,6 +109,10 @@ export default function GalleryManager() {
   };
 
   const closeForm = () => {
+    // Foto yang sudah terunggah tapi form-nya ditutup tanpa disimpan dibuang dari
+    // storage. Foto yang sudah tersimpan di DB dilewati discardUploads, dan
+    // handleSave/handleDelete memanggil commitUploads dulu sebelum menutup form.
+    void discardUploads(fotoList);
     setIsEditing(false);
     setIsFormOpen(false);
     setSelectedId(null);
@@ -188,6 +192,7 @@ export default function GalleryManager() {
       const data = await res.json();
       if (data.success) {
         toast.success(isAdding ? "Foto galeri berhasil ditambahkan!" : "Foto galeri berhasil diperbarui!");
+        commitUploads(fotoList);
         closeForm();
         fetchGallery();
       } else {
@@ -217,6 +222,8 @@ export default function GalleryManager() {
       const data = await res.json();
       if (data.success) {
         toast.success("Foto galeri berhasil dihapus!");
+        // Berkasnya sudah dilepas server saat barisnya dihapus
+        commitUploads(fotoList);
         closeForm();
         fetchGallery();
       } else {
@@ -529,7 +536,12 @@ export default function GalleryManager() {
                           {isEditing && (
                             <button
                               type="button"
-                              onClick={() => setFotoList((prev) => prev.filter((_, i) => i !== idx))}
+                              onClick={() => {
+                                setFotoList((prev) => prev.filter((_, i) => i !== idx));
+                                // No-op untuk foto yang sudah tersimpan di DB —
+                                // itu dilepas server saat perubahan disimpan.
+                                void discardUpload(src);
+                              }}
                               className="absolute -top-1.5 -right-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-full h-5 w-5 flex items-center justify-center shadow cursor-pointer transition-colors"
                               title="Hapus foto"
                             >

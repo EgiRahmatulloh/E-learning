@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ShieldAlert, Upload, Plus, Trash2, Edit3, Save, FileText, Download, X, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
-import { uploadFile } from "@/lib/upload";
+import { commitUploads, discardUpload, uploadFile } from "@/lib/upload";
 import { toast } from "sonner";
 
 interface DownloadItem {
@@ -102,13 +102,25 @@ export default function DownloadsManager() {
     setUploading(true);
     try {
       // File Pusat Unduhan harus bisa diunduh pengunjung publik tanpa login
+      const previous = fileUrl;
       setFileUrl(await uploadFile(file, { visibility: "public" }));
+      // Ganti berkas sebelum disimpan: unggahan sebelumnya tidak akan dipakai lagi
+      void discardUpload(previous);
       toast.success("File berhasil diunggah!");
     } catch (err) {
       toast.error("Upload gagal: " + (err instanceof Error ? err.message : "Error tidak diketahui"));
     } finally {
       setUploading(false);
     }
+  };
+
+  // Menutup form tanpa menyimpan: berkas yang sudah terunggah dibuang dari
+  // storage. discardUpload melewati berkas yang sudah tersimpan di DB, dan
+  // handleSave/handleDelete memanggil commitUploads dulu sebelum menutup form.
+  const closeForm = () => {
+    void discardUpload(fileUrl);
+    setFormOpen(false);
+    setIsEditing(false);
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -168,6 +180,7 @@ export default function DownloadsManager() {
       const data = await res.json();
       if (data.success) {
         toast.success(isAdding ? "Dokumen berhasil ditambahkan!" : "Dokumen berhasil diperbarui!");
+        commitUploads(fileUrl);
         setFormOpen(false);
         fetchDownloads();
       } else {
@@ -200,6 +213,8 @@ export default function DownloadsManager() {
       const data = await res.json();
       if (data.success) {
         toast.success("File berhasil dihapus!");
+        // Berkasnya sudah dilepas server saat barisnya dihapus
+        commitUploads(fileUrl);
         setFormOpen(false);
         fetchDownloads();
       } else {
@@ -390,7 +405,7 @@ export default function DownloadsManager() {
       {formOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => { setFormOpen(false); setIsEditing(false); }} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={closeForm} />
 
           {/* Form Container */}
           <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 border-4 border-cyan-400 z-10">
@@ -398,7 +413,7 @@ export default function DownloadsManager() {
             <div className="bg-white p-6 relative">
               {/* Close Button */}
               <button
-                onClick={() => { setFormOpen(false); setIsEditing(false); }}
+                onClick={closeForm}
                 className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full p-1.5 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
@@ -487,7 +502,12 @@ export default function DownloadsManager() {
                         </p>
                         <button
                           type="button"
-                          onClick={() => setFileUrl("")}
+                          onClick={() => {
+                            // No-op untuk berkas yang sudah tersimpan di DB —
+                            // itu dilepas server saat perubahan disimpan.
+                            void discardUpload(fileUrl);
+                            setFileUrl("");
+                          }}
                           className="text-[10px] font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer"
                         >
                           Hapus Berkas
@@ -526,7 +546,7 @@ export default function DownloadsManager() {
                     <>
                       <Button
                         type="button"
-                        onClick={() => { setFormOpen(false); setIsEditing(false); }}
+                        onClick={closeForm}
                         className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                       >
                         BATAL
@@ -551,7 +571,7 @@ export default function DownloadsManager() {
                     <>
                       <Button
                         type="button"
-                        onClick={() => { setFormOpen(false); setIsEditing(false); }}
+                        onClick={closeForm}
                         className="bg-slate-500 hover:bg-slate-650 text-white font-extrabold text-xs px-8 h-11 rounded-xl cursor-pointer uppercase tracking-widest transition-all"
                       >
                         BATAL

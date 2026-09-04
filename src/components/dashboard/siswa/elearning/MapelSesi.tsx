@@ -3,7 +3,7 @@ import { FileText, PlayCircle, PenTool, CheckCircle2, Download, MessageCircle, X
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { safeHtml } from "@/lib/sanitize";
-import { uploadFile } from "@/lib/upload";
+import { commitUploads, discardUpload, uploadFile } from "@/lib/upload";
 
 interface MapelSesiProps {
   subjectName: string;
@@ -391,8 +391,9 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
     }
     const file = e.target.files[0];
     const toastId = toast.loading(`Mengunggah jawaban: ${file.name}...`);
+    let fileUrl = "";
     try {
-      const fileUrl = await uploadFile(file);
+      fileUrl = await uploadFile(file);
 
       const res = await fetch(`/api/elearning/submissions/${sessionId}`, {
         method: "POST",
@@ -405,12 +406,17 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
       const data = await res.json();
 
       if (data.success) {
+        // Berkas kumpulan sebelumnnya dilepas server saat submission ditimpa
+        commitUploads(fileUrl);
         toast.success("Tugas berhasil diunggah!", { id: toastId });
         handleMarkComplete(`sesi_${sessionNumber}_tugas`);
       } else {
+        // Berkas sudah masuk storage tapi digagalkan server — buang unggahannya
+        void discardUpload(fileUrl);
         toast.error(data.message, { id: toastId });
       }
     } catch (err: any) {
+      void discardUpload(fileUrl);
       toast.error("Gagal mengunggah jawaban", { description: err.message, id: toastId });
     }
   };

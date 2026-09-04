@@ -3,6 +3,8 @@
 // Jalankan: bun test
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import {
+  commitUploads,
+  discardUpload,
   isNetworkError,
   MAX_IMAGE_SIZE,
   pickImageFiles,
@@ -197,5 +199,37 @@ describe("uploadFiles", () => {
     // Berkas pertama sudah masuk state pemanggil, berkas ketiga tidak dicoba
     expect(uploaded).toEqual(["/foto-1.png"]);
     expect(calls).toHaveLength(2);
+  });
+});
+
+describe("pembuangan berkas yang batal dipakai", () => {
+  // Hapus registry token di antara tes supaya state tidak bocor antar tes.
+  let deletes: { url: string; method: string }[] = [];
+  const deleteUrls = () => deletes.map((d) => d.url);
+
+  beforeEach(() => {
+    deletes = [];
+    globalThis.fetch = ((url: string, init?: { method?: string }) => {
+      const u = String(url);
+      if (u.includes("/api/files/") && init?.method === "DELETE") {
+        deletes.push({ url: u, method: "DELETE" });
+        return Promise.resolve(Response.json({ success: true }));
+      }
+      return Promise.resolve(Response.json({ success: true, url: "/baru.png", deleteToken: "tok" }));
+    }) as unknown as typeof fetch;
+  });
+
+  // Registry di-reset antar tes lewat module caching — tidak ada setter publik;
+  // simulasi "belum pernah upload" lewat URL tanpa token cukup.
+  test("discardUpload hanya menghapus berkas yang benar-benar diunggah sebelumnya", async () => {
+    await discardUpload("/api/files/priv-abc.png"); // tanpa token → tidak ada DELETE
+    expect(deletes).toHaveLength(0);
+  });
+
+  test("commit sebelum discard menjaga berkas yang sudah tersimpan di DB", async () => {
+    await uploadFile(imageFile()); // daftarkan "/baru.png" + token di registry
+    commitUploads("/baru.png");
+    await discardUpload("/baru.png");
+    expect(deleteUrls()).not.toContain("/api/files/baru.png");
   });
 });

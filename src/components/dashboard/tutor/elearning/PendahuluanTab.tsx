@@ -13,7 +13,7 @@ import {
 import { toast } from "sonner";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { safeHtml } from "@/lib/sanitize";
-import { uploadFile } from "@/lib/upload";
+import { commitUploads, discardUpload, uploadFile } from "@/lib/upload";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 // Removed getSubjectsSiswa
 
@@ -395,8 +395,9 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
     const file = e.target.files[0];
 
     const toastId = toast.loading(`Mengunggah file ${file.name}...`);
+    let fileUrl = "";
     try {
-      const fileUrl = await uploadFile(file);
+      fileUrl = await uploadFile(file);
 
       // Save material
       const res = await fetch("/api/elearning/material", {
@@ -415,6 +416,8 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
       const data = await res.json();
       if (!data.success) throw new Error(data.message);
 
+      // Berkas lama (RAT/Tata Tertib) dilepas server saat materialnya ditimpa
+      commitUploads(fileUrl);
       if (type === "rat") {
         setRatFile({ title: file.name, url: fileUrl });
       } else {
@@ -424,6 +427,9 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
         id: toastId,
       });
     } catch (error: any) {
+      // Berkas sudah masuk storage tapi materialnya gagal disimpan — buang
+      // unggahannya supaya tidak menumpuk tanpa ada yang mereferensikannya.
+      void discardUpload(fileUrl);
       toast.error("Gagal mengunggah file", {
         description: error.message,
         id: toastId,

@@ -80,6 +80,7 @@ function readToken(): string | null {
 interface UploadResponse {
   success?: boolean;
   url?: string;
+  deleteToken?: string;
   message?: string;
 }
 
@@ -95,9 +96,24 @@ async function readBody(res: Response): Promise<UploadResponse | null> {
 }
 
 /**
+ * Token hapus per URL hasil upload di sesi tab ini. Ini yang membuat
+ * `discardUpload` aman dipanggil dengan URL apa pun: URL yang sudah tersimpan di
+ * DB tidak ada di sini, jadi otomatis dilewati. Pemanggil tidak perlu mencatat
+ * sendiri berkas mana yang baru diunggah.
+ *
+ * Sengaja hanya di memory: token hilang saat refresh, dan berkas yang belum
+ * tersimpan akan tertinggal di storage. Bersihkan lewat pembersihan berkala di
+ * sisi server bila itu jadi masalah.
+ */
+const deleteTokens = new Map<string, string>();
+
+/**
  * Unggah satu berkas, kembalikan URL-nya. Melempar UploadError bila gagal —
  * pemanggil yang menentukan cara menampilkannya (toast, pesan inline, fallback
  * offline), karena tiap form punya UX berbeda.
+ *
+ * Berkas yang diunggah tapi batal dipakai wajib dibuang lewat `discardUpload`,
+ * kalau tidak ia menumpuk di storage tanpa ada yang mereferensikannya.
  */
 export async function uploadFile(file: File, options: UploadOptions = {}): Promise<string> {
   const token = readToken();
@@ -134,7 +150,65 @@ export async function uploadFile(file: File, options: UploadOptions = {}): Promi
     throw new UploadError(message, kind, res.status);
   }
 
+  if (data.deleteToken) deleteTokens.set(data.url, data.deleteToken);
+
   return data.url;
+}
+
+/**
+ * Buang berkas yang sudah terunggah tapi tidak dipakai — dipanggil saat form
+ * ditutup lewat BATAL, dan saat gambar diganti lagi sebelum disimpan.
+ *
+ * Aman dipanggil dengan URL apa pun. URL yang bukan hasil upload di sesi ini
+ * (gambar tersimpan, URL eksternal yang diketik manual, string kosong) dilewati,
+ * jadi pemanggil tidak perlu memeriksa dulu. Gagal menghapus tidak dilempar:
+ * ini pembersihan latar, bukan bagian dari alur yang dilihat pengguna.
+ */
+export async function discardUpload(url: string | null | undefined): Promise<void> {
+  if (!url) return;
+
+  const deleteToken = deleteTokens.get(url);
+  if (!deleteToken) return;
+
+  // Hapus dari registry lebih dulu supaya penutupan form berkali-kali (mis. klik
+  // BATAL lalu backdrop) tidak mengirim DELETE berulang.
+  deleteTokens.delete(url);
+
+  const fileName = url.split(/[?#]/)[0].split("/").pop();
+  if (!fileName) return;
+
+  const token = readToken();
+  if (!token) return;
+
+  try {
+    await fetch(
+      `/api/files/${encodeURIComponent(fileName)}?deleteToken=${encodeURIComponent(deleteToken)}`,
+      { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },
+    );
+  } catch {
+    // Offline atau server mati — berkasnya tertinggal di storage. Tidak ada yang
+    // bisa dilakukan pengguna soal ini, jadi jangan tampilkan error.
+  }
+}
+
+/** discardUpload untuk beberapa URL sekaligus. */
+export async function discardUploads(
+  urls: (string | null | undefined)[],
+): Promise<void> {
+  await Promise.all(urls.map((url) => discardUpload(url)));
+}
+
+/**
+ * Tandai URL sudah tersimpan permanen di DB — panggil setelah simpan berhasil.
+ * Tanpa ini token-nya masih tersimpan, dan membuka lagi form yang sama lalu
+ * menekan BATAL akan menghapus berkas yang sebenarnya masih dipakai.
+ */
+export function commitUploads(
+  ...urls: (string | null | undefined | (string | null | undefined)[])[]
+): void {
+  for (const url of urls.flat()) {
+    if (url) deleteTokens.delete(url);
+  }
 }
 
 export interface UploadManyOptions extends UploadOptions {

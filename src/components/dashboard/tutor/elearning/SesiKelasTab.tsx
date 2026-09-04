@@ -18,7 +18,7 @@ import {
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { toast } from "sonner";
 import { safeHtml } from "@/lib/sanitize";
-import { uploadFile } from "@/lib/upload";
+import { commitUploads, discardUpload, uploadFile } from "@/lib/upload";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 // Removed getSubjectsSiswa import
 
@@ -611,8 +611,9 @@ function SesiContent({
     if (!e.target.files || e.target.files.length === 0 || !sessionId) return;
     const file = e.target.files[0];
     const toastId = toast.loading(`Mengunggah ${file.name}...`);
+    let fileUrl = "";
     try {
-      const fileUrl = await uploadFile(file);
+      fileUrl = await uploadFile(file);
       await fetch("/api/elearning/material", {
         method: "POST",
         headers: {
@@ -626,9 +627,14 @@ function SesiContent({
           fileUrl,
         }),
       });
+      // Berkas PPT lama dilepas server saat materialnya ditimpa
+      commitUploads(fileUrl);
       setPptFile({ title: file.name, url: fileUrl });
       toast.success("File PPT berhasil diunggah!", { id: toastId });
     } catch (err: any) {
+      // Berkas sudah masuk storage tapi materialnya gagal disimpan — buang
+      // unggahannya supaya tidak menumpuk tanpa ada yang mereferensikannya.
+      void discardUpload(fileUrl);
       toast.error("Gagal", { description: err.message, id: toastId });
     }
   };
@@ -981,6 +987,8 @@ function SesiContent({
                       fileUrl,
                     }),
                   });
+                  // Berkas tugas lama dilepas server saat materialnya ditimpa
+                  commitUploads(fileUrl);
                   setTugasFile({ title: file.name, url: fileUrl });
                   toast.success("File Tugas berhasil diunggah!", {
                     id: toastId,

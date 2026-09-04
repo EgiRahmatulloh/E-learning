@@ -6,6 +6,19 @@ import { students, alumni, rombels, rombelStudents } from "../models";
 import { eq, and, inArray, sql } from "drizzle-orm";
 import { verifyAdmin, verifyUser } from "../middleware/auth";
 import { finalJwtSecret } from "../config/jwt";
+import { cleanupReplacedFiles, cleanupRowFiles } from "../services/storage";
+
+/**
+ * Foto warga belajar yang juga tercatat di tabel alumni. Proses kelulusan
+ * menyalin URL fotonya ke baris alumni — bukan berkasnya — jadi foto yang masih
+ * dipakai alumni tidak boleh dilepas dari storage saat baris students berubah
+ * atau dihapus.
+ */
+const fotoDipakaiAlumni = async (foto: unknown): Promise<unknown[]> => {
+  if (typeof foto !== "string" || !foto.trim()) return [];
+  const row = await db.select({ foto: alumni.foto }).from(alumni).where(eq(alumni.foto, foto)).get();
+  return row ? [row.foto] : [];
+};
 
 // Ekstrak huruf section dari nama rombel (mis. "PAKET C 10 A" → "A").
 const extractSectionLetter = (rombelName: string): string => {
@@ -383,6 +396,10 @@ export const studentsHandlers = new Elysia()
           }
         }
 
+        await cleanupReplacedFiles(existing, updated, ["foto", "berkas"], {
+          keep: await fotoDipakaiAlumni(existing.foto),
+        });
+
         const safeData = { ...updated };
         delete (safeData as any).password;
         return { success: true, data: safeData };
@@ -714,7 +731,10 @@ export const studentsHandlers = new Elysia()
     }
 
     try {
+      const existing = await db.select().from(students).where(eq(students.id, id)).get();
+      const keep = await fotoDipakaiAlumni(existing?.foto);
       await db.delete(students).where(eq(students.id, id)).run();
+      await cleanupRowFiles(existing, ["foto", "berkas"], { keep });
       return { success: true, message: "Warga belajar berhasil dihapus" };
     } catch {
       set.status = 500;

@@ -28,6 +28,7 @@ import { verifyAdmin, verifyAdminOrTutor } from "../../middleware/auth";
 import sanitizeHtml from "sanitize-html";
 import { verifyUser, sanitizeFilename, deriveProgram, buildAttendanceGrid, calculateGrade } from "./helpers";
 import { fillTemplate } from "../../utils/templateXlsx";
+import { cleanupReplacedFiles } from "../../services/storage";
 
   // Ambil Mapel berdasarkan nama dan program (akan buat otomatis jika belum ada)
 export const courseHandlers = new Elysia()
@@ -258,6 +259,9 @@ export const courseHandlers = new Elysia()
             .update(elearningMaterials)
             .set({ title, fileUrl })
             .where(eq(elearningMaterials.id, existing.id));
+          // Unggah ulang material menggantikan berkas lama — lepas dari storage
+          // supaya bucket tidak menyimpan tiap versi yang pernah diunggah.
+          await cleanupReplacedFiles(existing, { fileUrl }, ["fileUrl"]);
         } else {
           await db
             .insert(elearningMaterials)

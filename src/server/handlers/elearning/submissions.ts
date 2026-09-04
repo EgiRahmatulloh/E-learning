@@ -48,6 +48,7 @@ import {
   calculateGrade,
 } from "./helpers";
 import { fillTemplate } from "../../utils/templateXlsx";
+import { cleanupReplacedFiles } from "../../services/storage";
 
 // GET Submissions
 export const submissionsHandlers = new Elysia()
@@ -191,6 +192,9 @@ export const submissionsHandlers = new Elysia()
             gradedAt: null,
           })
           .where(eq(elearningSubmissions.id, existing.id));
+        // Kumpul ulang menggantikan berkas sebelumnya — berkas lama tidak bisa
+        // diakses lagi dari mana pun, jadi lepas dari storage.
+        await cleanupReplacedFiles(existing, { fileUrl }, ["fileUrl"]);
       } else {
         await db.insert(elearningSubmissions).values({
           assignmentId: assignment.id,
