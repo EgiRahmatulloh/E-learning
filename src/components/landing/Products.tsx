@@ -173,7 +173,7 @@ export default function Products() {
                           </p>
                         </div>
 
-                        <div className="pt-3 border-t border-slate-50 flex items-center justify-between mt-3" onClick={(e) => e.stopPropagation()}>
+                        <div className="pt-3 border-t border-slate-50 flex items-center justify-between mt-auto" onClick={(e) => e.stopPropagation()}>
                           <a
                             href={getWaLink(product)}
                             target="_blank"
@@ -186,8 +186,8 @@ export default function Products() {
                       </div>
                     </div>
                   </DialogTrigger>
-                  <DialogContent className="w-[90vw] max-w-[90vw] sm:max-w-md bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl overflow-hidden flex flex-col">
-                    <DialogHeader className="min-w-0 w-full overflow-hidden shrink-0">
+                  <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl flex flex-col">
+                    <DialogHeader className="min-w-0 w-full shrink-0">
                       <DialogTitle className="text-2xl font-black text-[#280f91] break-words">{product.namaProduk}</DialogTitle>
                       <DialogDescription className="text-sm font-bold text-[#ff6105]">{formatHarga(product.harga)}</DialogDescription>
                     </DialogHeader>
@@ -215,7 +215,7 @@ export default function Products() {
                         </span>
                       </div>
                     </div>
-                    <DialogFooter className="flex justify-end gap-2 border-t border-slate-100 pt-4 mt-2 w-full shrink-0">
+                    <DialogFooter className="flex flex-row justify-end gap-2 border-t border-slate-100 pt-4 mt-2 w-full shrink-0 min-w-0">
                       <DialogClose asChild>
                         <Button variant="outline" className="rounded-xl font-bold h-11 px-5 cursor-pointer">Tutup</Button>
                       </DialogClose>
