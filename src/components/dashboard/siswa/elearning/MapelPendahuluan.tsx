@@ -251,7 +251,7 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
           </div>
           {teksPembuka ? (
             <div
-              className="text-slate-600 leading-relaxed text-sm relative prose max-w-none"
+              className="text-slate-600 leading-relaxed text-sm prose max-w-none break-words"
               dangerouslySetInnerHTML={{ __html: safeHtml(teksPembuka) }}
             />
           ) : (

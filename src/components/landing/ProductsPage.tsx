@@ -240,7 +240,7 @@ export default function ProductsPage() {
 
         {/* Product Detail Modal */}
         <Dialog open={detailModalVisible} onOpenChange={setDetailModalVisible}>
-          <DialogContent className="sm:max-w-md bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl">
+          <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden bg-white border border-slate-200 shadow-2xl p-6 rounded-3xl">
             {selectedProduct && (
               <>
                 <DialogHeader>
@@ -265,7 +265,7 @@ export default function ProductsPage() {
                       </div>
                     )}
                   </div>
-                  <p className="text-slate-600 text-sm font-semibold leading-relaxed">
+                  <p className="text-slate-600 text-sm font-semibold leading-relaxed break-words">
                     {selectedProduct.deskripsi}
                   </p>
                   <div className="bg-cyan-50 rounded-xl p-3 border border-cyan-100 flex items-start gap-2.5">
@@ -278,7 +278,7 @@ export default function ProductsPage() {
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Penjual: {selectedProduct.penjual}</span>
                   </div>
                 </div>
-                <DialogFooter className="flex sm:justify-between items-center gap-2 border-t border-slate-100 pt-4 mt-2">
+                <DialogFooter className="flex flex-row sm:justify-between items-center gap-2 border-t border-slate-100 pt-4 mt-2 w-full shrink-0">
                   <DialogClose asChild>
                     <Button variant="outline" className="rounded-xl font-bold cursor-pointer h-11 px-6">Tutup</Button>
                   </DialogClose>

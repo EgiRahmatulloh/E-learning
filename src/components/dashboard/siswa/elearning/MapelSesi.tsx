@@ -530,7 +530,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
             <h3 className="font-bold text-[#280f91]">Materi yang diajarkan Sesi {sessionNumber}</h3>
           </div>
           {teksPembuka ? (
-            <div dangerouslySetInnerHTML={{ __html: safeHtml(teksPembuka) }} />
+            <div className="break-words" dangerouslySetInnerHTML={{ __html: safeHtml(teksPembuka) }} />
           ) : (
             <p className="text-slate-500 italic">Tutor belum menambahkan materi yang diajarkan untuk sesi ini.</p>
           )}
@@ -542,7 +542,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
             <h3 className="font-bold text-[#280f91]">Tujuan Pembelajaran Sesi {sessionNumber}</h3>
           </div>
           {tujuanPembelajaran ? (
-            <div dangerouslySetInnerHTML={{ __html: safeHtml(tujuanPembelajaran) }} />
+            <div className="break-words" dangerouslySetInnerHTML={{ __html: safeHtml(tujuanPembelajaran) }} />
           ) : (
             <p className="text-slate-500 italic">Tutor belum menambahkan tujuan pembelajaran untuk sesi ini.</p>
           )}
@@ -554,7 +554,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
             <h3 className="font-bold text-[#280f91]">Uraian Kegiatan Pembelajaran Sesi {sessionNumber}</h3>
           </div>
           {uraianKegiatan ? (
-            <div dangerouslySetInnerHTML={{ __html: safeHtml(uraianKegiatan) }} />
+            <div className="break-words" dangerouslySetInnerHTML={{ __html: safeHtml(uraianKegiatan) }} />
           ) : (
             <p className="text-slate-500 italic">Tutor belum menambahkan uraian kegiatan pembelajaran untuk sesi ini.</p>
           )}
