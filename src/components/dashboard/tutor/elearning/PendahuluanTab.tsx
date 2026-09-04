@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { safeHtml } from "@/lib/sanitize";
+import { uploadFile } from "@/lib/upload";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 // Removed getSubjectsSiswa
 
@@ -386,19 +387,6 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
     }
   };
 
-  const uploadFileAPI = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      body: formData,
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message);
-    return data.url;
-  };
-
   const handleFileChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
     type: "rat" | "tertib",
@@ -408,7 +396,7 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
 
     const toastId = toast.loading(`Mengunggah file ${file.name}...`);
     try {
-      const fileUrl = await uploadFileAPI(file);
+      const fileUrl = await uploadFile(file);
 
       // Save material
       const res = await fetch("/api/elearning/material", {

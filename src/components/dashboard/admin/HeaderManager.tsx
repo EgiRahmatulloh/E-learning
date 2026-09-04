@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Trash2, Edit3, Plus, Search, UploadCloud, X, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { isNetworkError, uploadFile, validateImageFile } from "@/lib/upload";
 import { toast } from "sonner";
 
 interface SlideData {
@@ -284,39 +285,19 @@ export function HeaderManager() {
   };
 
   const processFile = async (file: File) => {
-    // Validasi tipe berkas di sisi klien
-    if (!file.type.startsWith("image/")) {
-      toast.error("Hanya berkas gambar yang diperbolehkan!");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Ukuran gambar melebihi batas 5MB!");
+    const invalid = validateImageFile(file);
+    if (invalid) {
+      toast.error(invalid);
       return;
     }
 
     setUploading(true);
-    const token = localStorage.getItem("token");
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        },
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.success && data.url) {
-        setFormImage(data.url);
-        toast.success("Gambar berhasil diunggah!");
-      } else {
-        throw new Error(data.message || "Gagal mengunggah gambar");
-      }
-    } catch (err: any) {
-      // Local fallback: convert to Base64 ONLY on offline/TypeError network errors
-      if (err instanceof TypeError) {
+      setFormImage(await uploadFile(file));
+      toast.success("Gambar berhasil diunggah!");
+    } catch (err) {
+      // Fallback lokal: simpan sebagai Base64 HANYA saat koneksi gagal (offline)
+      if (isNetworkError(err)) {
         const reader = new FileReader();
         reader.onloadend = () => {
           setFormImage(reader.result as string);
@@ -324,7 +305,7 @@ export function HeaderManager() {
         };
         reader.readAsDataURL(file);
       } else {
-        toast.error(err.message || "Gagal mengunggah gambar.");
+        toast.error(err instanceof Error ? err.message : "Gagal mengunggah gambar.");
       }
     } finally {
       setUploading(false);

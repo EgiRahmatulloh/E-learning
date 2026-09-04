@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { X, Eye, Loader2, CheckCircle2, FileUp } from "lucide-react";
+import { uploadFile } from "@/lib/upload";
 import { toast } from "sonner";
 import FilePreviewModal from "./FilePreviewModal";
 
@@ -29,28 +30,14 @@ export default function BerkasUpload({
 
   const handleUpload = async (file: File, key: string) => {
     setUploadingKey(key);
-    const body = new FormData();
-    body.append("file", file);
-    // Berkas dokumen (KK/KTP/Ijazah dll) bersifat sensitif — tandai privat agar
-    // server selalu meminta auth saat diakses, walau file-nya berupa gambar.
-    body.append("private", "true");
-
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body,
-      });
-      const data = await res.json();
-      if (data.success && data.url) {
-        onChange({ ...value, [key]: data.url });
-        toast.success(`${berkasTypes.find((b) => b.key === key)?.label || "Berkas"} berhasil diunggah!`);
-      } else {
-        toast.error("Upload gagal: " + (data.message || "Error tidak diketahui"));
-      }
-    } catch {
-      toast.error("Error mengunggah berkas");
+      // Berkas dokumen (KK/KTP/Ijazah dll) bersifat sensitif — tandai privat agar
+      // server selalu meminta auth saat diakses, walau file-nya berupa gambar.
+      const url = await uploadFile(file, { visibility: "private" });
+      onChange({ ...value, [key]: url });
+      toast.success(`${berkasTypes.find((b) => b.key === key)?.label || "Berkas"} berhasil diunggah!`);
+    } catch (err) {
+      toast.error("Upload gagal: " + (err instanceof Error ? err.message : "Error tidak diketahui"));
     } finally {
       setUploadingKey(null);
     }

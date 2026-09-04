@@ -17,6 +17,7 @@ import {
 X,
 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { isNetworkError, uploadFile, validateImageFile } from "@/lib/upload";
 import { toast } from "sonner";
 import BerkasUpload, { type BerkasItem } from "@/components/ui/BerkasUpload";
 
@@ -469,37 +470,19 @@ export default function ManagerManager() {
   };
 
   const processUpload = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      toast.error("Hanya berkas gambar yang diperbolehkan!");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Ukuran gambar melebihi batas 5MB!");
+    const invalid = validateImageFile(file);
+    if (invalid) {
+      toast.error(invalid);
       return;
     }
 
     setUploadingFoto(true);
-    const token = getSafeItem("token");
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.success && data.url) {
-        handleFieldChange("foto", data.url);
-        toast.success("Foto berhasil diunggah!");
-      } else {
-        throw new Error(data.message || "Gagal mengunggah foto");
-      }
-    } catch (err: any) {
-      if (err instanceof TypeError) {
+      handleFieldChange("foto", await uploadFile(file));
+      toast.success("Foto berhasil diunggah!");
+    } catch (err) {
+      // Fallback lokal: simpan sebagai Base64 HANYA saat koneksi gagal (offline)
+      if (isNetworkError(err)) {
         const reader = new FileReader();
         reader.onloadend = () => {
           const base64Data = reader.result as string;
@@ -512,7 +495,7 @@ export default function ManagerManager() {
         };
         reader.readAsDataURL(file);
       } else {
-        toast.error(err.message || "Gagal mengunggah foto.");
+        toast.error(err instanceof Error ? err.message : "Gagal mengunggah foto.");
       }
     } finally {
       setUploadingFoto(false);

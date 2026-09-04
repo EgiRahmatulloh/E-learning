@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ShieldAlert, Upload, Plus, Trash2, Edit3, Save, FileText, Download, X, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { uploadFile } from "@/lib/upload";
 import { toast } from "sonner";
 
 interface DownloadItem {
@@ -99,30 +100,12 @@ export default function DownloadsManager() {
 
   const handleFileUpload = async (file: File) => {
     setUploading(true);
-    const body = new FormData();
-    body.append("file", file);
-    // File Pusat Unduhan harus bisa diunduh pengunjung publik tanpa login
-    body.append("public", "true");
-
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body,
-      });
-      const data = await res.json();
-      if (data.success && data.url) {
-        setFileUrl(data.url);
-        toast.success("File berhasil diunggah!");
-      } else {
-        toast.error("Upload gagal: " + (data.message || "Error tidak diketahui"));
-      }
-    } catch (e) {
-      console.error(e);
-      toast.error("Error mengupload file");
+      // File Pusat Unduhan harus bisa diunduh pengunjung publik tanpa login
+      setFileUrl(await uploadFile(file, { visibility: "public" }));
+      toast.success("File berhasil diunggah!");
+    } catch (err) {
+      toast.error("Upload gagal: " + (err instanceof Error ? err.message : "Error tidak diketahui"));
     } finally {
       setUploading(false);
     }

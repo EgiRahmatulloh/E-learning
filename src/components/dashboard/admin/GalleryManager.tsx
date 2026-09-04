@@ -4,6 +4,7 @@ import { Plus, Trash2, Save, HelpCircle, Image, X, Edit3, Loader2, ChevronLeft, 
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { toast } from "sonner";
 import { parsePhotos, serializePhotos } from "@/lib/photos";
+import { pickImageFiles, uploadFiles } from "@/lib/upload";
 
 const GALLERY_CATEGORIES = [
   "KEGIATAN PEMBELAJARAN",
@@ -115,42 +116,23 @@ export default function GalleryManager() {
   };
 
   const handleImagesUpload = async (files: File[]) => {
-    const imageFiles = files.filter((f) => f.type.startsWith("image/"));
-    if (imageFiles.length === 0) {
-      toast.error("Hanya file gambar yang diperbolehkan");
-      return;
-    }
-    const oversized = imageFiles.some((f) => f.size > 5 * 1024 * 1024);
-    if (oversized) {
-      toast.error("Ukuran foto melebihi batas 5MB");
+    const { images, error } = pickImageFiles(files);
+    if (error) {
+      toast.error(error);
       return;
     }
 
     setUploading(true);
-    let successCount = 0;
     try {
-      const token = localStorage.getItem("token");
-      for (const file of imageFiles) {
-        const body = new FormData();
-        body.append("file", file);
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body,
-        });
-        const data = await res.json();
-        if (data.success && data.url) {
-          setFotoList((prev) => [...prev, data.url]);
-          successCount++;
-        } else {
-          toast.error("Upload gagal: " + (data.message || "Error tidak diketahui"));
-        }
+      const urls = await uploadFiles(images, {
+        onUploaded: (url) => setFotoList((prev) => [...prev, url]),
+        onFailed: (message) => toast.error("Upload gagal: " + message),
+      });
+      if (urls.length > 0) {
+        toast.success(`${urls.length} foto berhasil diunggah!`);
       }
-      if (successCount > 0) {
-        toast.success(`${successCount} foto berhasil diunggah!`);
-      }
-    } catch (e) {
-      toast.error("Error mengunggah foto");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error mengunggah foto");
     } finally {
       setUploading(false);
     }

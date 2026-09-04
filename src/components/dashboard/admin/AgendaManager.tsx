@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Search, UploadCloud, Plus, Save, Edit3, Trash2, X, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { uploadFile, validateImageFile } from "@/lib/upload";
 import { toast } from "sonner";
 
 interface Agenda {
@@ -142,37 +143,18 @@ export default function AgendaManager() {
   };
 
   const processUpload = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      toast.error("Hanya berkas gambar yang diperbolehkan!");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Ukuran gambar melebihi batas 5MB!");
+    const invalid = validateImageFile(file);
+    if (invalid) {
+      toast.error(invalid);
       return;
     }
 
     setUploading(true);
-    const token = getSafeItem("token");
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.success && data.url) {
-        setFoto(data.url);
-        toast.success("Foto agenda berhasil diunggah!");
-      } else {
-        throw new Error(data.message || "Gagal mengunggah gambar");
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Gagal mengunggah gambar.");
+      setFoto(await uploadFile(file));
+      toast.success("Foto agenda berhasil diunggah!");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Gagal mengunggah gambar.");
     } finally {
       setUploading(false);
     }

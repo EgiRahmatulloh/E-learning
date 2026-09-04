@@ -18,6 +18,7 @@ import {
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { toast } from "sonner";
 import { safeHtml } from "@/lib/sanitize";
+import { uploadFile } from "@/lib/upload";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 // Removed getSubjectsSiswa import
 
@@ -606,25 +607,12 @@ function SesiContent({
     } catch (err) {}
   };
 
-  const uploadFileAPI = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      body: formData,
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message);
-    return data.url;
-  };
-
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !sessionId) return;
     const file = e.target.files[0];
     const toastId = toast.loading(`Mengunggah ${file.name}...`);
     try {
-      const fileUrl = await uploadFileAPI(file);
+      const fileUrl = await uploadFile(file);
       await fetch("/api/elearning/material", {
         method: "POST",
         headers: {
@@ -979,7 +967,7 @@ function SesiContent({
                   `Mengunggah Tugas: ${file.name}...`,
                 );
                 try {
-                  const fileUrl = await uploadFileAPI(file);
+                  const fileUrl = await uploadFile(file);
                   await fetch("/api/elearning/material", {
                     method: "POST",
                     headers: {

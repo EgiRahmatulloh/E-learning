@@ -7,6 +7,7 @@
     "dev": "bun --hot src/index.ts",
     "build": "tsc -b && vite build",
     "start": "bun src/index.ts",
+    "test": "bun test",
     "lint": "eslint .",
     "preview": "vite preview",
     "db:generate": "drizzle-kit generate",

@@ -3,6 +3,7 @@ import { FileText, PlayCircle, PenTool, CheckCircle2, Download, MessageCircle, X
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { safeHtml } from "@/lib/sanitize";
+import { uploadFile } from "@/lib/upload";
 
 interface MapelSesiProps {
   subjectName: string;
@@ -382,19 +383,6 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
     }
   };
 
-  const uploadFileAPI = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      body: formData
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message);
-    return data.url;
-  };
-
   const handleUploadJawaban = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !sessionId) return;
     if (!user?.id) {
@@ -404,7 +392,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
     const file = e.target.files[0];
     const toastId = toast.loading(`Mengunggah jawaban: ${file.name}...`);
     try {
-      const fileUrl = await uploadFileAPI(file);
+      const fileUrl = await uploadFile(file);
 
       const res = await fetch(`/api/elearning/submissions/${sessionId}`, {
         method: "POST",

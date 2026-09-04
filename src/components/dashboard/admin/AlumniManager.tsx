@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
 import { Upload, Plus, Trash2, Save, HelpCircle, Download, LayoutGrid, List, Search, X, Loader2, ChevronLeft, ChevronRight, Edit3 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { uploadFile } from "@/lib/upload";
 import { toast } from "sonner";
 import BerkasUpload, { type BerkasItem } from "@/components/ui/BerkasUpload";
 
@@ -207,27 +208,11 @@ export default function AlumniManager() {
 
   const handleImageUpload = async (file: File) => {
     setUploading(true);
-    const body = new FormData();
-    body.append("file", file);
-
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body,
-      });
-      const data = await res.json();
-      if (data.success && data.url) {
-        setFoto(data.url);
-        toast.success("Foto berhasil diunggah!");
-      } else {
-        toast.error("Upload gagal: " + (data.message || "Error tidak diketahui"));
-      }
-    } catch (e) {
-      toast.error("Error mengunggah foto");
+      setFoto(await uploadFile(file));
+      toast.success("Foto berhasil diunggah!");
+    } catch (err) {
+      toast.error("Upload gagal: " + (err instanceof Error ? err.message : "Error tidak diketahui"));
     } finally {
       setUploading(false);
     }

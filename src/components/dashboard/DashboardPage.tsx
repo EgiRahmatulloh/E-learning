@@ -44,6 +44,7 @@ import PendahuluanTab from "./tutor/elearning/PendahuluanTab";
 import SesiKelasTab from "./tutor/elearning/SesiKelasTab";
 import LaporanNilaiTab from "./tutor/elearning/LaporanNilaiTab";
 import KehadiranTab from "./tutor/elearning/KehadiranTab";
+import { uploadFile, validateImageFile } from "@/lib/upload";
 
 interface DashboardPageProps {
   user: { id: number; name: string; username: string; role: string; email?: string; noHp?: string; alamat?: string; nik?: string; program?: string; kelas?: string };
@@ -257,33 +258,19 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setProfileMsg({ type: "error", text: "Hanya file gambar yang diperbolehkan!" });
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setProfileMsg({ type: "error", text: "Ukuran foto maksimal 5MB!" });
+    const invalid = validateImageFile(file);
+    if (invalid) {
+      setProfileMsg({ type: "error", text: invalid });
       return;
     }
     setUploadingFoto(true);
     setProfileMsg(null);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        body: fd,
-      });
-      const data = await res.json();
-      if (data.success && data.url) {
-        setFormData((prev) => ({ ...prev, foto: data.url }));
-        setProfileMsg({ type: "success", text: "Foto profil diunggah. Klik \"Simpan Perubahan\" untuk menyimpan." });
-      } else {
-        setProfileMsg({ type: "error", text: data.message || "Gagal mengunggah foto" });
-      }
-    } catch {
-      setProfileMsg({ type: "error", text: "Gagal mengunggah foto." });
+      const url = await uploadFile(file);
+      setFormData((prev) => ({ ...prev, foto: url }));
+      setProfileMsg({ type: "success", text: "Foto profil diunggah. Klik \"Simpan Perubahan\" untuk menyimpan." });
+    } catch (err) {
+      setProfileMsg({ type: "error", text: err instanceof Error ? err.message : "Gagal mengunggah foto." });
     } finally {
       setUploadingFoto(false);
     }

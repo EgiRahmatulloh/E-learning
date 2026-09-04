@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { downloadExcel, mapCsvRows, parseExcel } from "@/lib/utils";
 import { ShieldAlert, Search, Upload, Download, Plus, Trash2, Save, X, Eye, EyeOff, GraduationCap, ArrowUpCircle, RefreshCw, List, LayoutGrid, Filter, Loader2, Edit3 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { uploadFile } from "@/lib/upload";
 import { toast } from "sonner";
 import BerkasUpload from "@/components/ui/BerkasUpload";
 
@@ -398,28 +399,12 @@ export default function WargaBelajarManager() {
 
   const uploadPhotoFile = async (file: File) => {
     setUploading(true);
-    const body = new FormData();
-    body.append("file", file);
-
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body,
-      });
-      const data = await res.json();
-      if (data.success && data.url) {
-        setFormData((prev) => ({ ...prev, foto: data.url }));
-        toast.success("Foto berhasil diunggah");
-      } else {
-        toast.error("Upload gagal: " + (data.message || "Error tidak diketahui"));
-      }
-    } catch (e) {
-      console.error(e);
-      toast.error("Error mengupload file");
+      const url = await uploadFile(file);
+      setFormData((prev) => ({ ...prev, foto: url }));
+      toast.success("Foto berhasil diunggah");
+    } catch (err) {
+      toast.error("Upload gagal: " + (err instanceof Error ? err.message : "Error tidak diketahui"));
     } finally {
       setUploading(false);
     }
