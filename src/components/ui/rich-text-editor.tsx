@@ -48,7 +48,7 @@ export function RichTextEditor({
   };
 
   const executeAlignment = (align: "left" | "center" | "right" | "justify") => {
-    document.execCommand("styleWithCSS", false, "true");
+    document.execCommand("styleWithCSS", false, true as any);
     
     const commandMap: Record<string, string> = {
       left: "justifyLeft",
@@ -57,9 +57,8 @@ export function RichTextEditor({
       justify: "justifyFull",
     };
     
-    // Some browsers have issues with justifyCenter directly on plain text nodes,
-    // so we format block as div first if it's not already in a block
-    document.execCommand("formatBlock", false, "DIV");
+    // Some browsers have issues with justifyCenter directly on plain text nodes
+    document.execCommand("formatBlock", false, "P");
     executeCommand(commandMap[align]);
   };
 

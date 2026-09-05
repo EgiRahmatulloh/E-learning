@@ -382,8 +382,8 @@ export const submissionsHandlers = new Elysia()
             /[^a-zA-Z0-9]/g,
             "_",
           );
-          const fileName = `${safeName}_Tugas.${ext}`;
-          zipObj[fileName] = new Uint8Array(fileData);
+          const zipFileName = `${safeName}_Tugas.${ext}`;
+          zipObj[zipFileName] = new Uint8Array(fileData);
           successCount++;
         } catch (err) {
           console.error("Failed to read file:", sub.fileUrl, err);
