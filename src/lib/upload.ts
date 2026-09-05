@@ -24,11 +24,11 @@ export interface CompressSettings {
   quality?: number;
 }
 
-// Menentukan bucket & aturan akses di server:
 // - "private" → selalu butuh auth walau berupa gambar (scan KK/KTP/ijazah)
 // - "public"  → non-gambar yang boleh diunduh tanpa login (Pusat Unduhan)
+// - "submission" → berkas khusus tugas/submission ke bucket terpisah
 // - "auto"    → server yang memutuskan: gambar publik, dokumen privat
-export type UploadVisibility = "auto" | "public" | "private";
+export type UploadVisibility = "auto" | "public" | "private" | "submission";
 
 export type UploadErrorKind = "network" | "auth" | "server";
 
@@ -225,6 +225,7 @@ export async function uploadFile(file: File, options: UploadOptions = {}): Promi
   body.append("file", payload);
   if (options.visibility === "private") body.append("private", "true");
   else if (options.visibility === "public") body.append("public", "true");
+  else if (options.visibility === "submission") body.append("submission", "true");
 
   let res: Response;
   try {

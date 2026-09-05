@@ -49,6 +49,7 @@ import {
 } from "./helpers";
 import { fillTemplate } from "../../utils/templateXlsx";
 import { cleanupReplacedFiles } from "../../services/storage";
+import { resolveR2Bucket, isR2Enabled } from "../../config/r2";
 
 // GET Submissions
 export const submissionsHandlers = new Elysia()
@@ -338,22 +339,42 @@ export const submissionsHandlers = new Elysia()
       for (const sub of submissionsList) {
         if (!sub.fileUrl) continue;
         try {
-          // Kita asumsikan file berada di domain yang sama (localhost/production URL).
-          // Dalam environment Elysia, kita bisa mengambilnya langsung dari sistem file atau via host asli
-          let fileData: ArrayBuffer;
-          if (sub.fileUrl.startsWith("http")) {
-            const res = await fetch(sub.fileUrl);
-            if (!res.ok) continue;
-            fileData = await res.arrayBuffer();
-          } else {
-            // extract filename from url, e.g. /api/files/file.pdf -> file.pdf
-            const fileName = sub.fileUrl.split("/").pop();
-            if (!fileName) continue;
-            
-            // local file
-            const file = Bun.file(`./uploads/${fileName}`);
-            if (!(await file.exists())) continue;
-            fileData = await file.arrayBuffer();
+          // Ekstrak nama file asli dari URL (misal: /api/files/subm-123.pdf -> subm-123.pdf)
+          const fileName = sub.fileUrl.split("/").pop();
+          if (!fileName) continue;
+
+          let fileData: ArrayBuffer | null = null;
+
+          if (isR2Enabled) {
+            // Jika R2 diaktifkan, ambil langsung dari bucket S3
+            const { client } = resolveR2Bucket(fileName);
+            if (client) {
+              const s3file = client.file(fileName);
+              if (await s3file.exists()) {
+                fileData = await s3file.arrayBuffer();
+              }
+            }
+          }
+
+          if (!fileData) {
+            // Fallback: jika file URL adalah external HTTP, atau ambil dari R2 gagal
+            if (sub.fileUrl.startsWith("http")) {
+              const res = await fetch(sub.fileUrl);
+              if (res.ok) {
+                fileData = await res.arrayBuffer();
+              }
+            } else {
+              // Terakhir coba lokal jika masih menggunakan filesystem lama
+              const file = Bun.file(`./uploads/${fileName}`);
+              if (await file.exists()) {
+                fileData = await file.arrayBuffer();
+              }
+            }
+          }
+
+          if (!fileData) {
+            console.error("Gagal menemukan file untuk di-zip:", fileName);
+            continue;
           }
 
           const ext = sub.fileUrl.split(".").pop() || "pdf";

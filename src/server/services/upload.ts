@@ -6,8 +6,10 @@ import {
   isR2Enabled,
   r2PublicClient,
   r2PrivateClient,
+  r2SubmissionsClient,
   R2_PUBLIC_BUCKET_NAME,
   R2_PRIVATE_BUCKET_NAME,
+  R2_SUBMISSIONS_BUCKET_NAME,
   getR2PublicUrl,
 } from "../config/r2";
 import { createDeleteToken, verifyDeleteToken } from "./storage";
@@ -63,9 +65,13 @@ function getContentType(ext: string | undefined, fallback: string): string {
 function resolveBucketForUpload(
   ext: string,
   isPrivate: boolean,
-  isPublic: boolean
+  isPublic: boolean,
+  isSubmission: boolean
 ) {
-  // Prioritas: private > public flag > image public > default private
+  // Prioritas: submission > private > public flag > image public > default private
+  if (isSubmission) {
+    return { client: r2SubmissionsClient, bucket: R2_SUBMISSIONS_BUCKET_NAME, isPublic: false };
+  }
   if (isPrivate) {
     return { client: r2PrivateClient, bucket: R2_PRIVATE_BUCKET_NAME, isPublic: false };
   }
@@ -82,10 +88,14 @@ function resolveBucketForUpload(
 function resolveBucketForDownload(filename: string) {
   const ext = filename.split(".").pop()?.toLowerCase() ?? "";
   const isPrivate = filename.startsWith(PRIVATE_PREFIX);
+  const isSubmission = filename.startsWith("subm-");
   const isPublicFile = filename.startsWith(PUBLIC_PREFIX);
-  const isPublicImage = !isPrivate && IMAGE_EXTENSIONS.includes(ext);
+  const isPublicImage = !isPrivate && !isSubmission && IMAGE_EXTENSIONS.includes(ext);
   const isPublicAccess = isPublicFile || isPublicImage;
 
+  if (isSubmission) {
+    return { client: r2SubmissionsClient, bucket: R2_SUBMISSIONS_BUCKET_NAME, isPublicAccess: false };
+  }
   if (isPrivate) {
     return { client: r2PrivateClient, bucket: R2_PRIVATE_BUCKET_NAME, isPublicAccess };
   }
@@ -116,10 +126,11 @@ export const uploadServices = new Elysia()
       const authError = await verifyUser(headers, jwt, set);
       if (authError) return authError;
 
-      const bodyData = body as { file?: any; public?: string; private?: string };
+      const bodyData = body as { file?: any; public?: string; private?: string; submission?: string };
       const { file } = bodyData;
       const isPublic = bodyData.public === "true" || bodyData.public === "1";
       const isPrivate = bodyData.private === "true" || bodyData.private === "1";
+      const isSubmission = bodyData.submission === "true" || bodyData.submission === "1";
       if (!file || !(file instanceof File)) {
         set.status = 400;
         return { success: false, message: "Berkas tidak valid" };
@@ -177,9 +188,9 @@ export const uploadServices = new Elysia()
         };
       }
 
-      // Tentukan prefix: privat (wajib auth) atau publik non-gambar (tanpa auth).
-      // isPrivate diprioritaskan bila keduanya ter-set.
-      const prefix = isPrivate ? PRIVATE_PREFIX : isPublic ? PUBLIC_PREFIX : "";
+      // Tentukan prefix: submission, privat (wajib auth) atau publik non-gambar (tanpa auth).
+      // isSubmission diprioritaskan, disusul isPrivate bila keduanya ter-set.
+      const prefix = isSubmission ? "subm-" : isPrivate ? PRIVATE_PREFIX : isPublic ? PUBLIC_PREFIX : "";
       const fileName = `${prefix}${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
 
       const contentType = getContentType(fileExt, file.type);
@@ -194,7 +205,8 @@ export const uploadServices = new Elysia()
       const { client, isPublic: isPublicBucket } = resolveBucketForUpload(
         fileExt,
         isPrivate,
-        isPublic
+        isPublic,
+        isSubmission
       );
 
       if (!client) {
@@ -237,6 +249,7 @@ export const uploadServices = new Elysia()
         file: t.File(),
         public: t.Optional(t.String()),
         private: t.Optional(t.String()),
+        submission: t.Optional(t.String()),
       }),
     }
   )

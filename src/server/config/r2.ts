@@ -6,6 +6,7 @@ const R2_ACCESS_KEY_ID = Bun.env.R2_ACCESS_KEY_ID ?? "";
 const R2_SECRET_ACCESS_KEY = Bun.env.R2_SECRET_ACCESS_KEY ?? "";
 const R2_PUBLIC_BUCKET = Bun.env.R2_PUBLIC_BUCKET ?? "public";
 const R2_PRIVATE_BUCKET = Bun.env.R2_PRIVATE_BUCKET ?? "private";
+const R2_SUBMISSIONS_BUCKET = Bun.env.R2_SUBMISSIONS_BUCKET ?? "submissions";
 // R2_PUBLIC_URL: domain publik untuk bucket public (mis. https://pub-xxxxx.r2.dev atau custom domain)
 // Hapus trailing slash agar konsisten saat join dengan filename
 const rawPublicUrl = Bun.env.R2_PUBLIC_URL ?? "";
@@ -44,8 +45,19 @@ export const r2PrivateClient: S3Client | null = isR2Enabled
     })
   : null;
 
+// Client untuk bucket submissions — dipakai khusus untuk file hasil kumpul tugas siswa
+export const r2SubmissionsClient: S3Client | null = isR2Enabled
+  ? new S3Client({
+      accessKeyId: R2_ACCESS_KEY_ID,
+      secretAccessKey: R2_SECRET_ACCESS_KEY,
+      bucket: R2_SUBMISSIONS_BUCKET,
+      endpoint: r2Endpoint!,
+    })
+  : null;
+
 export const R2_PUBLIC_BUCKET_NAME = R2_PUBLIC_BUCKET;
 export const R2_PRIVATE_BUCKET_NAME = R2_PRIVATE_BUCKET;
+export const R2_SUBMISSIONS_BUCKET_NAME = R2_SUBMISSIONS_BUCKET;
 
 /**
  * Tentukan bucket & client yang tepat berdasarkan nama file + flag.
@@ -58,6 +70,7 @@ export function resolveR2Bucket(filename: string): {
 } {
   const ext = filename.split(".").pop()?.toLowerCase() ?? "";
   const isPrivate = filename.startsWith("priv-");
+  const isSubmission = filename.startsWith("subm-");
   const isPublicFile = filename.startsWith("pub-");
   const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "gif"];
   const isPublicImage = !isPrivate && IMAGE_EXTENSIONS.includes(ext);
@@ -65,6 +78,9 @@ export function resolveR2Bucket(filename: string): {
 
   if (isPrivate) {
     return { bucket: R2_PRIVATE_BUCKET_NAME, client: r2PrivateClient, isPublic: false };
+  }
+  if (isSubmission) {
+    return { bucket: R2_SUBMISSIONS_BUCKET_NAME, client: r2SubmissionsClient, isPublic: false };
   }
   if (isPublicAccess) {
     return { bucket: R2_PUBLIC_BUCKET_NAME, client: r2PublicClient, isPublic: true };
@@ -83,7 +99,7 @@ export function getR2PublicUrl(filename: string): string | null {
 }
 
 if (isR2Enabled) {
-  console.log(`[R2] Enabled — public bucket: ${R2_PUBLIC_BUCKET_NAME}, private bucket: ${R2_PRIVATE_BUCKET_NAME}, endpoint: ${r2Endpoint}`);
+  console.log(`[R2] Enabled — public bucket: ${R2_PUBLIC_BUCKET_NAME}, private bucket: ${R2_PRIVATE_BUCKET_NAME}, submissions bucket: ${R2_SUBMISSIONS_BUCKET_NAME}, endpoint: ${r2Endpoint}`);
   if (R2_PUBLIC_URL) {
     if (isR2PublicUrlValid) {
       console.log(`[R2] Public URL: ${R2_PUBLIC_URL}`);

@@ -421,7 +421,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
     const toastId = toast.loading(`Mengunggah jawaban: ${file.name}...`);
     let fileUrl = "";
     try {
-      fileUrl = await uploadFile(file);
+      fileUrl = await uploadFile(file, { visibility: "submission" });
 
       const res = await fetch(`/api/elearning/submissions/${sessionId}`, {
         method: "POST",
