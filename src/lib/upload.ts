@@ -1,12 +1,28 @@
 // Satu-satunya jalur upload berkas dari client ke POST /api/upload.
 // Sebelumnya logika ini disalin di ~20 komponen dengan validasi, penanganan
 // error, dan pesan yang sedikit beda-beda. Dipusatkan di sini supaya perubahan
-// berikutnya (mis. kompresi gambar sebelum kirim, upload paralel, progress bar)
-// cukup dikerjakan sekali.
+// berikutnya (mis. upload paralel, progress bar) cukup dikerjakan sekali.
 
 // Mengikuti batas server di src/server/services/upload.ts. Divalidasi juga di
 // client agar berkas besar tidak dikirim penuh dulu baru ditolak.
 export const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
+// Kompresi client-side: foto HP (8-15MB) diperkecil sebelum dikirim agar lolos
+// batas 5MB server sekaligus hemat bandwidth & storage R2. Bonusnya metadata
+// EXIF (termasuk lokasi GPS) ikut terbuang karena jalur
+// decode → canvas → toBlob tidak membawa metadata.
+export const MAX_IMAGE_DIMENSION = 1920;
+export const COMPRESS_QUALITY = 0.82;
+// Di bawah ukuran ini kompresi dilewati — decode bitmap boros CPU untuk hasil
+// yang nyaris sama.
+const COMPRESS_SKIP_BELOW = 512 * 1024;
+
+export interface CompressSettings {
+  /** Sisi terpanjang maksimum dalam px. Default MAX_IMAGE_DIMENSION. */
+  maxDimension?: number;
+  /** Kualitas WebP 0-1. Default COMPRESS_QUALITY. */
+  quality?: number;
+}
 
 // Menentukan bucket & aturan akses di server:
 // - "private" → selalu butuh auth walau berupa gambar (scan KK/KTP/ijazah)
@@ -19,6 +35,15 @@ export type UploadErrorKind = "network" | "auth" | "server";
 export interface UploadOptions {
   visibility?: UploadVisibility;
   signal?: AbortSignal;
+  /**
+   * Kompresi gambar otomatis sebelum kirim. Default aktif untuk image/*,
+   * KECUALI `visibility: "private"` (scan KK/KTP/ijazah butuh fidelitas asli
+   * untuk verifikasi/cetak — kompresi WebP bisa mengaburkan teks kecil).
+   * Isi `false` untuk mengirim berkas asli apa adanya, atau objek
+   * CompressSettings untuk memaksa kompresi dengan pengaturan sendiri
+   * (berlaku juga untuk berkas privat).
+   */
+  compress?: boolean | CompressSettings;
 }
 
 /**
@@ -68,6 +93,70 @@ export function pickImageFiles(files: File[]): { images: File[]; error: string |
   return { images, error: null };
 }
 
+/**
+ * Perkecil gambar sebelum diunggah: resize sisi terpanjang + konversi ke WebP.
+ * GIF (animasi) dan SVG tidak disentuh. Dokumen non-gambar dilewati.
+ *
+ * Selalu aman dipanggil: mengembalikan berkas asli bila kompresi tidak
+ * diperlukan (sudah kecil), tidak didukung browser ini (SSR / browser lama),
+ * atau gagal di tengah jalan. Kompresi tidak boleh menggagalkan upload.
+ */
+export async function compressImageFile(
+  file: File,
+  settings?: boolean | CompressSettings,
+): Promise<File> {
+  const maxDimension =
+    typeof settings === "object" && settings.maxDimension !== undefined
+      ? settings.maxDimension
+      : MAX_IMAGE_DIMENSION;
+  const quality =
+    typeof settings === "object" && settings.quality !== undefined
+      ? settings.quality
+      : COMPRESS_QUALITY;
+  if (settings === false) return file;
+  if (!file.type.startsWith("image/")) return file;
+  if (file.type === "image/gif" || file.type === "image/svg+xml") return file;
+  if (file.size <= COMPRESS_SKIP_BELOW) return file;
+  // SSR / Bun test / browser lama tanpa API decode gambar
+  if (typeof createImageBitmap === "undefined" || typeof document === "undefined") {
+    return file;
+  }
+
+  try {
+    const bitmap = await createImageBitmap(file);
+    try {
+      const longest = Math.max(bitmap.width, bitmap.height);
+      if (!longest) return file;
+      const scale = Math.min(1, maxDimension / longest);
+      // Sudah cukup kecil & di bawah batas server → kirim asli, hemat CPU
+      // sekaligus jaga kualitas dari kompresi ulang yang tidak perlu.
+      if (scale >= 1 && file.size <= MAX_IMAGE_SIZE) return file;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return file;
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+      // WebP mendukung transparansi (aman untuk PNG) dan jauh lebih kecil
+      // dari JPEG untuk kualitas setara.
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob(resolve, "image/webp", quality);
+      });
+      // toBlob null (format tak didukung) atau malah lebih besar → pakai asli.
+      if (!blob || blob.size >= file.size) return file;
+
+      const base = file.name.replace(/\.[a-z0-9]+$/i, "") || "gambar";
+      return new File([blob], `${base}.webp`, { type: "image/webp" });
+    } finally {
+      bitmap.close();
+    }
+  } catch {
+    return file;
+  }
+}
+
 function readToken(): string | null {
   // localStorage bisa melempar saat mode privat / penyimpanan situs diblokir
   try {
@@ -112,6 +201,10 @@ const deleteTokens = new Map<string, string>();
  * pemanggil yang menentukan cara menampilkannya (toast, pesan inline, fallback
  * offline), karena tiap form punya UX berbeda.
  *
+ * Gambar otomatis dikompresi dulu (resize + WebP, lihat compressImageFile)
+ * kecuali `options.compress === false` atau `visibility: "private"`
+ * (dokumen identitas butuh keaslian — bisa dipaksa lewat `compress: {...}`).
+ *
  * Berkas yang diunggah tapi batal dipakai wajib dibuang lewat `discardUpload`,
  * kalau tidak ia menumpuk di storage tanpa ada yang mereferensikannya.
  */
@@ -123,8 +216,12 @@ export async function uploadFile(file: File, options: UploadOptions = {}): Promi
     throw new UploadError("Sesi Anda telah berakhir. Silakan login ulang.", "auth");
   }
 
+  // Berkas privat (scan identitas) default dikirim asli tanpa kompresi —
+  // nilai eksplisit `compress` dari pemanggil selalu menang.
+  const compress = options.compress ?? options.visibility !== "private";
+  const payload = await compressImageFile(file, compress);
   const body = new FormData();
-  body.append("file", file);
+  body.append("file", payload);
   if (options.visibility === "private") body.append("private", "true");
   else if (options.visibility === "public") body.append("public", "true");
 

@@ -4,6 +4,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import {
   commitUploads,
+  compressImageFile,
   discardUpload,
   isNetworkError,
   MAX_IMAGE_SIZE,
@@ -199,6 +200,188 @@ describe("uploadFiles", () => {
     // Berkas pertama sudah masuk state pemanggil, berkas ketiga tidak dicoba
     expect(uploaded).toEqual(["/foto-1.png"]);
     expect(calls).toHaveLength(2);
+  });
+});
+
+describe("kompresi gambar", () => {
+  function bigImage(name = "foto.jpg") {
+    // Di atas ambang lewati-kompresi (512KB) agar masuk jalur kompresi
+    return new File([new Uint8Array(600 * 1024)], name, { type: "image/jpeg" });
+  }
+
+  test("melewatkan berkas non-gambar apa adanya", async () => {
+    const pdf = new File(["x"], "a.pdf", { type: "application/pdf" });
+    await expect(compressImageFile(pdf)).resolves.toBe(pdf);
+  });
+
+  test("melewatkan GIF (animasi) apa adanya", async () => {
+    const gif = new File([new Uint8Array(600 * 1024)], "a.gif", { type: "image/gif" });
+    await expect(compressImageFile(gif)).resolves.toBe(gif);
+  });
+
+  test("melewatkan berkas kecil tanpa decode (hemat CPU)", async () => {
+    const small = imageFile();
+    await expect(compressImageFile(small)).resolves.toBe(small);
+  });
+
+  test("compress:false mengirim berkas asli", async () => {
+    const big = bigImage();
+    await expect(compressImageFile(big, false)).resolves.toBe(big);
+  });
+
+  test("tanpa API browser (mis. SSR) mengembalikan berkas asli, tidak melempar", async () => {
+    const big = bigImage();
+    // Bun test memang tidak punya createImageBitmap/document
+    await expect(compressImageFile(big)).resolves.toBe(big);
+  });
+
+  test("memperkecil gambar besar dan konversi ke WebP bila API tersedia", async () => {
+    const big = bigImage("liburan.jpg");
+    const g = globalThis as Record<string, unknown>;
+    const prevBitmap = g["createImageBitmap"];
+    const prevDocument = g["document"];
+    try {
+      let drawnTo: { w: number; h: number } | null = null;
+      const fakeBitmap = { width: 4000, height: 3000, close: () => {} };
+      g["createImageBitmap"] = async () => fakeBitmap;
+      g["document"] = {
+        createElement: () => ({
+          width: 0,
+          height: 0,
+          getContext: () => ({
+            drawImage: (_bmp: unknown, _x: number, _y: number, w: number, h: number) => {
+              drawnTo = { w, h };
+            },
+          }),
+          // Hasilkan blob kecil agar jalur "lebih besar → pakai asli" tidak kepicu
+          toBlob: (cb: (b: Blob | null) => void) => cb(new Blob([new Uint8Array(100 * 1024)])),
+        }),
+      };
+
+      const out = await compressImageFile(big);
+      expect(out.type).toBe("image/webp");
+      expect(out.name).toBe("liburan.webp");
+      // 4000x3000, sisi terpanjang 1920 → 1920x1440
+      expect(drawnTo).toEqual({ w: 1920, h: 1440 });
+      expect(out.size).toBeLessThan(big.size);
+    } finally {
+      if (prevBitmap === undefined) delete g["createImageBitmap"];
+      else g["createImageBitmap"] = prevBitmap;
+      if (prevDocument === undefined) delete g["document"];
+      else g["document"] = prevDocument;
+    }
+  });
+
+  test("hasil kompresi yang malah lebih besar → pakai berkas asli", async () => {
+    const big = bigImage();
+    const g = globalThis as Record<string, unknown>;
+    const prevBitmap = g["createImageBitmap"];
+    const prevDocument = g["document"];
+    try {
+      g["createImageBitmap"] = async () => ({ width: 4000, height: 3000, close: () => {} });
+      g["document"] = {
+        createElement: () => ({
+          width: 0,
+          height: 0,
+          getContext: () => ({ drawImage: () => {} }),
+          toBlob: (cb: (b: Blob | null) => void) =>
+            cb(new Blob([new Uint8Array(10 * 1024 * 1024)])),
+        }),
+      };
+      await expect(compressImageFile(big)).resolves.toBe(big);
+    } finally {
+      if (prevBitmap === undefined) delete g["createImageBitmap"];
+      else g["createImageBitmap"] = prevBitmap;
+      if (prevDocument === undefined) delete g["document"];
+      else g["document"] = prevDocument;
+    }
+  });
+
+  test("uploadFile mengirim hasil kompresi, bukan berkas asli", async () => {
+    const big = bigImage();
+    const g = globalThis as Record<string, unknown>;
+    const prevBitmap = g["createImageBitmap"];
+    const prevDocument = g["document"];
+    try {
+      g["createImageBitmap"] = async () => ({ width: 4000, height: 3000, close: () => {} });
+      g["document"] = {
+        createElement: () => ({
+          width: 0,
+          height: 0,
+          getContext: () => ({ drawImage: () => {} }),
+          toBlob: (cb: (b: Blob | null) => void) => cb(new Blob([new Uint8Array(100 * 1024)])),
+        }),
+      };
+      mockFetch(() => Response.json({ success: true, url: "/api/files/liburan.webp" }));
+      await uploadFile(big);
+      const sent = calls[0].body.get("file") as File;
+      expect(sent.type).toBe("image/webp");
+    } finally {
+      if (prevBitmap === undefined) delete g["createImageBitmap"];
+      else g["createImageBitmap"] = prevBitmap;
+      if (prevDocument === undefined) delete g["document"];
+      else g["document"] = prevDocument;
+    }
+  });
+
+  test("berkas privat (scan identitas) dikirim asli tanpa kompresi", async () => {
+    const big = bigImage();
+    const g = globalThis as Record<string, unknown>;
+    const prevBitmap = g["createImageBitmap"];
+    const prevDocument = g["document"];
+    let decoded = false;
+    try {
+      g["createImageBitmap"] = async () => {
+        decoded = true;
+        return { width: 4000, height: 3000, close: () => {} };
+      };
+      g["document"] = {
+        createElement: () => ({
+          width: 0,
+          height: 0,
+          getContext: () => ({ drawImage: () => {} }),
+          toBlob: (cb: (b: Blob | null) => void) => cb(new Blob([new Uint8Array(100)])),
+        }),
+      };
+      mockFetch(() => Response.json({ success: true, url: "/api/files/priv-x.jpg" }));
+      await uploadFile(big, { visibility: "private" });
+      const sent = calls[0].body.get("file") as File;
+      expect(decoded).toBe(false);
+      expect(sent.type).toBe("image/jpeg");
+    } finally {
+      if (prevBitmap === undefined) delete g["createImageBitmap"];
+      else g["createImageBitmap"] = prevBitmap;
+      if (prevDocument === undefined) delete g["document"];
+      else g["document"] = prevDocument;
+    }
+  });
+
+  test("compress eksplisit tetap menang untuk berkas privat", async () => {
+    const big = bigImage();
+    const g = globalThis as Record<string, unknown>;
+    const prevBitmap = g["createImageBitmap"];
+    const prevDocument = g["document"];
+    try {
+      g["createImageBitmap"] = async () => ({ width: 4000, height: 3000, close: () => {} });
+      g["document"] = {
+        createElement: () => ({
+          width: 0,
+          height: 0,
+          getContext: () => ({ drawImage: () => {} }),
+          toBlob: (cb: (b: Blob | null) => void) => cb(new Blob([new Uint8Array(100 * 1024)])),
+        }),
+      };
+      mockFetch(() => Response.json({ success: true, url: "/api/files/priv-x.webp" }));
+      await uploadFile(big, { visibility: "private", compress: { maxDimension: 1920 } });
+      const sent = calls[0].body.get("file") as File;
+      expect(sent.type).toBe("image/webp");
+      expect(calls[0].body.get("private")).toBe("true");
+    } finally {
+      if (prevBitmap === undefined) delete g["createImageBitmap"];
+      else g["createImageBitmap"] = prevBitmap;
+      if (prevDocument === undefined) delete g["document"];
+      else g["document"] = prevDocument;
+    }
   });
 });
 
