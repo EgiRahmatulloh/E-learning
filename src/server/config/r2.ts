@@ -6,7 +6,7 @@ const R2_ACCESS_KEY_ID = Bun.env.R2_ACCESS_KEY_ID ?? "";
 const R2_SECRET_ACCESS_KEY = Bun.env.R2_SECRET_ACCESS_KEY ?? "";
 const R2_PUBLIC_BUCKET = Bun.env.R2_PUBLIC_BUCKET ?? "public";
 const R2_PRIVATE_BUCKET = Bun.env.R2_PRIVATE_BUCKET ?? "private";
-const R2_SUBMISSIONS_BUCKET = Bun.env.R2_SUBMISSIONS_BUCKET ?? "submissions";
+const R2_SUBMISSIONS_BUCKET = Bun.env.R2_SUBMISSIONS_BUCKET ?? "submission";
 // R2_PUBLIC_URL: domain publik untuk bucket public (mis. https://pub-xxxxx.r2.dev atau custom domain)
 // Hapus trailing slash agar konsisten saat join dengan filename
 const rawPublicUrl = Bun.env.R2_PUBLIC_URL ?? "";
