@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Trash2, Edit3, Plus, Search, UploadCloud, X, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
-import { commitUploads, discardUpload, isNetworkError, uploadFile, validateImageFile } from "@/lib/upload";
+import { commitUploads, discardUpload, uploadFile, validateImageFile } from "@/lib/upload";
 import { toast } from "sonner";
 
 interface SlideData {
@@ -96,6 +96,12 @@ export function HeaderManager() {
     }
     if (!formImage) {
       toast.error("Gambar harus diunggah atau diisi!");
+      return;
+    }
+    // Tolak data URI base64: byte gambar ikut di dalam JSON API dan
+    // memperlambat semua client. Gambar wajib lewat upload (URL /api/files/).
+    if (formImage.trim().startsWith("data:")) {
+      toast.error("Gambar base64 tidak diperbolehkan. Unggah ulang gambar saat koneksi tersedia!");
       return;
     }
 
@@ -285,8 +291,8 @@ export function HeaderManager() {
   };
 
   // Batal menutup form: gambar yang sudah terunggah tapi belum tersimpan dibuang
-  // dari storage. discardUpload melewati gambar yang sudah tersimpan (termasuk
-  // Base64 fallback offline), jadi aman dipanggil dari mode lihat juga.
+  // dari storage. discardUpload melewati gambar yang sudah tersimpan di DB,
+  // jadi aman dipanggil dari mode lihat juga.
   const handleCancel = () => {
     void discardUpload(formImage);
     closeForm();
@@ -315,17 +321,10 @@ export function HeaderManager() {
       void discardUpload(previous);
       toast.success("Gambar berhasil diunggah!");
     } catch (err) {
-      // Fallback lokal: simpan sebagai Base64 HANYA saat koneksi gagal (offline)
-      if (isNetworkError(err)) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setFormImage(reader.result as string);
-          toast.info("Gambar disimpan secara lokal (Offline)!");
-        };
-        reader.readAsDataURL(file);
-      } else {
-        toast.error(err instanceof Error ? err.message : "Gagal mengunggah gambar.");
-      }
+      // Tidak ada fallback base64: gambar base64 membuat JSON API membengkak
+      // (byte foto ikut di dalam tiap respons) dan memperlambat semua client.
+      // Kalau upload gagal, pengguna harus coba lagi saat koneksi pulih.
+      toast.error(err instanceof Error ? err.message : "Gagal mengunggah gambar.");
     } finally {
       setUploading(false);
     }

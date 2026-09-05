@@ -17,7 +17,7 @@ import {
 X,
 } from "lucide-react";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
-import { commitUploads, discardUpload, discardUploads, isNetworkError, uploadFile, validateImageFile } from "@/lib/upload";
+import { commitUploads, discardUpload, discardUploads, uploadFile, validateImageFile } from "@/lib/upload";
 import { toast } from "sonner";
 import BerkasUpload, { type BerkasItem } from "@/components/ui/BerkasUpload";
 
@@ -316,6 +316,12 @@ export default function ManagerManager() {
       toast.error("Email wajib diisi!");
       return;
     }
+    // Tolak data URI base64: byte foto ikut di dalam JSON API dan
+    // memperlambat semua client. Foto wajib lewat upload (URL /api/files/).
+    if (typeof selectedManager.foto === "string" && selectedManager.foto.trim().startsWith("data:")) {
+      toast.error("Foto base64 tidak diperbolehkan. Unggah ulang foto saat koneksi tersedia!");
+      return;
+    }
 
     setSaving(true);
     const token = getSafeItem("token");
@@ -503,22 +509,10 @@ export default function ManagerManager() {
       void discardUpload(previous);
       toast.success("Foto berhasil diunggah!");
     } catch (err) {
-      // Fallback lokal: simpan sebagai Base64 HANYA saat koneksi gagal (offline)
-      if (isNetworkError(err)) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64Data = reader.result as string;
-          if (base64Data.length > 1.5 * 1024 * 1024) { // Limit to 1.5MB base64 characters (~1.1MB file size) to prevent localStorage quota issues
-            toast.error("⚠️ Offline: Berkas gambar terlalu besar untuk disimpan offline (Maks 1MB)!");
-            return;
-          }
-          handleFieldChange("foto", base64Data);
-          toast.success("Foto disimpan secara lokal (Offline)!");
-        };
-        reader.readAsDataURL(file);
-      } else {
-        toast.error(err instanceof Error ? err.message : "Gagal mengunggah foto.");
-      }
+      // Tidak ada fallback base64: foto base64 membuat JSON API membengkak
+      // (byte foto ikut di dalam tiap respons) dan memperlambat semua client.
+      // Kalau upload gagal, pengguna harus coba lagi saat koneksi pulih.
+      toast.error(err instanceof Error ? err.message : "Gagal mengunggah foto.");
     } finally {
       setUploadingFoto(false);
     }

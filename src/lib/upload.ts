@@ -47,9 +47,10 @@ export interface UploadOptions {
 }
 
 /**
- * Error upload dengan sebab yang bisa dibedakan. `kind: "network"` dipakai
- * beberapa form untuk jatuh ke penyimpanan base64 offline — sebelumnya dideteksi
- * lewat `err instanceof TypeError`, yang ikut menangkap bug lain di blok try.
+ * Error upload dengan sebab yang bisa dibedakan. `kind: "network"` menandakan
+ * kegagalan koneksi — pemanggil menampilkan pesan error dan pengguna mencoba
+ * lagi saat koneksi pulih (tidak ada penyimpanan base64: byte gambar di dalam
+ * JSON API memperlambat semua client).
  */
 export class UploadError extends Error {
   readonly kind: UploadErrorKind;

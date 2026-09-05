@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Edit3, Save, UploadCloud, Loader2 } from "lucide-react";
-import { commitUploads, discardUploads, isNetworkError, uploadFile, validateImageFile } from "@/lib/upload";
+import { commitUploads, discardUploads, uploadFile, validateImageFile } from "@/lib/upload";
 import { toast } from "sonner";
 
 interface InstitutionProfileData {
@@ -109,6 +109,12 @@ export default function InstitutionProfileManager() {
   };
 
   const handleSave = async () => {
+    // Tolak data URI base64: byte gambar ikut di dalam JSON API dan
+    // memperlambat semua client. Gambar wajib lewat upload (URL /api/files/).
+    if (profile.foto.trim().startsWith("data:") || profile.gambar.trim().startsWith("data:")) {
+      toast.error("Foto/gambar base64 tidak diperbolehkan. Unggah ulang gambar saat koneksi tersedia!");
+      return;
+    }
     setSaving(true);
     const token = getSafeItem("token");
     let isNetworkError = false;
@@ -177,17 +183,10 @@ export default function InstitutionProfileManager() {
       void discardUploads([previous]);
       toast.success(`${type === "foto" ? "Foto" : "Gambar"} berhasil diunggah!`);
     } catch (err) {
-      // Fallback lokal: simpan sebagai Base64 HANYA saat koneksi gagal (offline)
-      if (isNetworkError(err)) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          handleFieldChange(type, reader.result as string);
-          toast.info("Gambar disimpan secara lokal (Offline)!");
-        };
-        reader.readAsDataURL(file);
-      } else {
-        toast.error(err instanceof Error ? err.message : "Gagal mengunggah gambar.");
-      }
+      // Tidak ada fallback base64: gambar base64 membuat JSON API membengkak
+      // (byte foto ikut di dalam tiap respons) dan memperlambat semua client.
+      // Kalau upload gagal, pengguna harus coba lagi saat koneksi pulih.
+      toast.error(err instanceof Error ? err.message : "Gagal mengunggah gambar.");
     } finally {
       if (type === "foto") setUploadingFoto(false);
     }
