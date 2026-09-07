@@ -133,6 +133,8 @@ function SesiContent({
     { question: string; options: string[]; correctAnswer: number }[]
   >([]);
   const [isLatihanLoading, setIsLatihanLoading] = useState(false);
+  const [savedQuestionsSnapshot, setSavedQuestionsSnapshot] = useState<string>("[]");
+  const isQuestionsModified = JSON.stringify(questions) !== savedQuestionsSnapshot;
   const pptInputRef = useRef<HTMLInputElement>(null);
   const tugasUploadRef = useRef<HTMLInputElement>(null);
 
@@ -388,13 +390,13 @@ function SesiContent({
       });
       const data = await res.json();
       if (data.success) {
-        setQuestions(
-          data.data.questions.map((q: any) => ({
-            ...q,
-            options:
-              typeof q.options === "string" ? JSON.parse(q.options) : q.options,
-          })),
-        );
+        const mapped = data.data.questions.map((q: any) => ({
+          ...q,
+          options:
+            typeof q.options === "string" ? JSON.parse(q.options) : q.options,
+        }));
+        setQuestions(mapped);
+        setSavedQuestionsSnapshot(JSON.stringify(mapped));
       }
     } catch (err) {}
     setIsLatihanLoading(false);
@@ -415,6 +417,7 @@ function SesiContent({
       const data = await res.json();
       if (data.success) {
         toast.success(data.message, { id: toastId });
+        setSavedQuestionsSnapshot(JSON.stringify(questions));
       } else {
         toast.error(data.message, { id: toastId });
       }
@@ -1645,7 +1648,7 @@ function SesiContent({
                 onClick={saveQuestions}
                 className="bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-md hover:shadow-lg transition-all rounded-xl h-11"
               >
-                <Save className="w-4 h-4 mr-2" /> Simpan Soal Latihan
+                <Save className="w-4 h-4 mr-2" /> {isQuestionsModified ? "Simpan Perubahan" : "Simpan Soal Latihan"}
               </Button>
             </div>
 

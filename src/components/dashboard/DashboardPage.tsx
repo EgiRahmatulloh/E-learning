@@ -111,6 +111,7 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
   // Profile Form States
   const [profileLoading, setProfileLoading] = useState(false);
   const [uploadingFoto, setUploadingFoto] = useState(false);
+  const [deletingFoto, setDeletingFoto] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [profileMsg, setProfileMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -279,6 +280,35 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
     }
   };
 
+  const handleDeleteFoto = async () => {
+    setDeletingFoto(true);
+    setProfileMsg(null);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/auth/update-profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ foto: "" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setProfileMsg({ type: "success", text: "Foto profil berhasil dihapus." });
+        setUser(data.user);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        setFormData(prev => ({ ...prev, foto: "" }));
+      } else {
+        setProfileMsg({ type: "error", text: data.message || "Gagal menghapus foto profil." });
+      }
+    } catch (err) {
+      setProfileMsg({ type: "error", text: "Terjadi kesalahan saat menghapus foto profil." });
+    } finally {
+      setDeletingFoto(false);
+    }
+  };
+
   // Render akademik / profil / other tabs content
   const renderActiveContent = () => {
     if (activeTab === "dashboard") {
@@ -372,15 +402,11 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
                     {formData.foto && (
                       <Button
                         type="button"
-                        onClick={() => {
-                          // No-op untuk foto yang sudah tersimpan di DB — itu
-                          // dilepas server saat perubahan disimpan.
-                          void discardUpload(formData.foto);
-                          setFormData((prev) => ({ ...prev, foto: "" }));
-                        }}
-                        className="rounded-xl bg-slate-200 hover:bg-rose-100 text-rose-600 font-bold text-xs px-4 py-2 cursor-pointer transition-colors"
+                        onClick={handleDeleteFoto}
+                        disabled={deletingFoto}
+                        className="rounded-xl bg-slate-200 hover:bg-rose-100 text-rose-600 font-bold text-xs px-4 py-2 cursor-pointer transition-colors disabled:opacity-60"
                       >
-                        <Trash2 className="h-4 w-4 mr-1.5" /> HAPUS
+                        <Trash2 className="h-4 w-4 mr-1.5" /> {deletingFoto ? "MENGHAPUS..." : "HAPUS"}
                       </Button>
                     )}
                   </div>
