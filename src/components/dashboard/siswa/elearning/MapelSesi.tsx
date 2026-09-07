@@ -1104,6 +1104,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
                             setQuizGrade(data.grade);
                             setCorrectCount(data.correctCount ?? null);
                             handleMarkComplete(`sesi_${sessionNumber}_latihan`);
+                            if (sessionId) loadQuestions(sessionId);
                           } else {
                             toast.error(data.message, { id: toastId });
                           }
