@@ -1252,7 +1252,7 @@ function SesiContent({
                 <thead>
                   <tr className="border-b border-slate-100 text-slate-500 font-bold uppercase text-xs">
                     <th className="p-3">Siswa ID</th>
-                    <th className="p-3 text-center">Status</th>
+                    <th className="p-3 text-center">Kehadiran & TTD</th>
                     <th className="p-3 text-right">Waktu Konfirmasi</th>
                   </tr>
                 </thead>
@@ -1275,10 +1275,14 @@ function SesiContent({
                         <td className="p-3 font-bold text-slate-700">
                           {att.studentName || att.studentId}
                         </td>
-                        <td className="p-3 text-center">
-                          <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md text-xs font-bold">
-                            Hadir
-                          </span>
+                        <td className="p-3 text-center flex justify-center items-center gap-2">
+                          {att.signature ? (
+                            <img src={att.signature} alt={`TTD ${att.studentName || att.studentId}`} className="h-10 w-24 object-contain bg-white rounded border border-slate-200" />
+                          ) : (
+                            <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md text-xs font-bold">
+                              Hadir
+                            </span>
+                          )}
                         </td>
                         <td className="p-3 text-right text-slate-500">
                           {new Date(att.createdAt).toLocaleString("id-ID")}

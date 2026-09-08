@@ -60,6 +60,7 @@ export const attendanceHandlers = new Elysia()
               id: elearningAttendances.id,
               sessionId: elearningAttendances.sessionId,
               studentId: elearningAttendances.studentId,
+              signature: elearningAttendances.signature,
               createdAt: elearningAttendances.createdAt,
               studentName: students.nama
             })
@@ -109,7 +110,7 @@ export const attendanceHandlers = new Elysia()
 
         const inserted = await db
           .insert(elearningAttendances)
-          .values({ sessionId, studentId })
+          .values({ sessionId, studentId, signature: body.signature || "" })
           .onConflictDoNothing()
           .returning();
 
@@ -133,6 +134,7 @@ export const attendanceHandlers = new Elysia()
       body: t.Object({
         sessionId: t.Number(),
         studentId: t.Optional(t.Number()),
+        signature: t.Optional(t.String()),
       }),
     }
   )

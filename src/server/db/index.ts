@@ -521,6 +521,7 @@ CREATE TABLE IF NOT EXISTS elearning_attendances (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   session_id INTEGER NOT NULL,
   student_id INTEGER NOT NULL,
+  signature TEXT DEFAULT '',
   attended_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   UNIQUE(session_id, student_id),
@@ -627,6 +628,7 @@ CREATE TABLE IF NOT EXISTS tutor_attendances (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   tutor_id INTEGER NOT NULL,
   date TEXT NOT NULL,
+  signature TEXT DEFAULT '',
   created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   UNIQUE(tutor_id, date),
   FOREIGN KEY (tutor_id) REFERENCES tutors(id) ON DELETE CASCADE
@@ -647,6 +649,10 @@ CREATE TABLE IF NOT EXISTS elearning_session_angkets (
   FOREIGN KEY (evaluation_id) REFERENCES elearning_evaluations(id) ON DELETE CASCADE
 );
 `);
+
+// Migrasi kolom signature
+try { sqlite.exec(`ALTER TABLE elearning_attendances ADD COLUMN signature TEXT DEFAULT ''`); } catch {}
+try { sqlite.exec(`ALTER TABLE tutor_attendances ADD COLUMN signature TEXT DEFAULT ''`); } catch {}
 
 // Tambahkan UNIQUE index secara eksplisit untuk mendukung existing database yang tidak dibuat dari awal
 try { sqlite.exec("CREATE UNIQUE INDEX IF NOT EXISTS unq_elearning_attendances ON elearning_attendances(session_id, student_id);"); } catch (e) {}

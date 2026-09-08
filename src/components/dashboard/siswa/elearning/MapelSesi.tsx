@@ -6,6 +6,7 @@ import { safeHtml } from "@/lib/sanitize";
 import { commitUploads, discardUpload, uploadFile } from "@/lib/upload";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { SignaturePad } from "@/components/ui/signature-pad";
 
 interface MapelSesiProps {
   subjectName: string;
@@ -34,6 +35,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
   };
 
   const [isHadir, setIsHadir] = useState(false);
+  const [showSignaturePad, setShowSignaturePad] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [teksPembuka, setTeksPembuka] = useState("");
@@ -389,7 +391,11 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
     openFileWithAuth(url);
   };
 
-  const handleKehadiran = async () => {
+  const handleKehadiranClick = () => {
+    setShowSignaturePad(true);
+  };
+
+  const handleSignatureSubmit = async (signatureDataUrl: string) => {
     if (!sessionId || !user?.id) return;
     try {
       const res = await fetch("/api/elearning/attendance", {
@@ -398,11 +404,12 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem("token")}`
         },
-        body: JSON.stringify({ sessionId, studentId: Number(user.id) })
+        body: JSON.stringify({ sessionId, studentId: Number(user.id), signature: signatureDataUrl })
       });
       const data = await res.json();
       if (data.success) {
         setIsHadir(true);
+        setShowSignaturePad(false);
         handleMarkComplete(`sesi_${sessionNumber}_kehadiran`);
         toast.success("Kehadiran berhasil dicatat!");
       }
@@ -505,7 +512,7 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
             <Button
-              onClick={handleKehadiran}
+              onClick={handleKehadiranClick}
               disabled={isHadir}
               className={`flex-1 sm:flex-none font-bold rounded-xl px-6 ${isHadir
                 ? "bg-slate-200 text-slate-500 hover:bg-slate-200 cursor-not-allowed"
@@ -1139,10 +1146,17 @@ export function MapelSesi({ subjectName, sessionNumber, user, setupId, onAngketC
         open={cancelTaskConfirmId !== null}
         onConfirm={executeCancelTask}
         onCancel={() => setCancelTaskConfirmId(null)}
-        title="Batalkan Tugas"
-        description="Apakah Anda yakin ingin membatalkan pengiriman tugas ini? Data nilai dan masukan dari tutor mungkin akan hilang."
+        title="Batal Kirim Tugas"
+        description="Apakah Anda yakin ingin membatalkan kiriman tugas ini? Berkas yang sudah dikirim akan dihapus."
       />
 
+      {showSignaturePad && (
+        <SignaturePad 
+          onSave={handleSignatureSubmit} 
+          onCancel={() => setShowSignaturePad(false)} 
+          title={`Tanda Tangan Kehadiran Sesi ${sessionNumber}`} 
+        />
+      )}
     </div>
   );
 }

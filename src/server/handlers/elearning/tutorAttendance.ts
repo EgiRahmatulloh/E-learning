@@ -60,7 +60,7 @@ export const tutorAttendanceHandlers = new Elysia()
     }
   })
   .post("/tutor-attendance", async (context: any) => {
-    const { headers, jwt, set } = context;
+    const { headers, jwt, body, set } = context;
     const authError = await verifyAdminOrTutor(headers, jwt, set);
     if (authError) return authError;
 
@@ -78,6 +78,7 @@ export const tutorAttendanceHandlers = new Elysia()
         await db.insert(tutorAttendances).values({
           tutorId: Number(payload.id),
           date: today,
+          signature: body?.signature || "",
         });
         return { success: true, message: "Kehadiran berhasil ditandai" };
       } catch (err: any) {

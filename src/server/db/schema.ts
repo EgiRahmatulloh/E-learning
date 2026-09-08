@@ -630,6 +630,7 @@ export const elearningAttendances = sqliteTable(
     studentId: integer("student_id")
       .notNull()
       .references(() => students.id, { onDelete: "cascade" }),
+    signature: text("signature").default(""),
     attendedAt: text("attended_at").$defaultFn(() => new Date().toISOString()),
     createdAt: text("created_at").$defaultFn(() => new Date().toISOString()),
   },
@@ -708,6 +709,7 @@ export const tutorAttendances = sqliteTable(
       .notNull()
       .references(() => tutors.id, { onDelete: "cascade" }),
     date: text("date").notNull(), // format: YYYY-MM-DD
+    signature: text("signature").default(""),
     createdAt: text("created_at").$defaultFn(() => new Date().toISOString()),
   },
   (t) => ({
