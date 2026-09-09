@@ -46,6 +46,7 @@ import {
   getTahunAjaran,
 } from "./helpers";
 import { fillTemplate } from "../../utils/templateXlsx";
+import { injectSignaturesToExcel } from "../../utils/excelSignatures";
 
 const stripHtml = (input?: string | null): string =>
   (input || "")
@@ -134,7 +135,7 @@ export const laporanHandlers = new Elysia()
         );
         const allActivities = [...tutorPosts, ...tutorAtt];
 
-        const { dayData, rekap } = buildAttendanceGrid(
+        const { dayData, signatureData, rekap } = buildAttendanceGrid(
           allActivities,
           (item) => item.date || item.createdAt,
           currentMonth,
@@ -162,6 +163,7 @@ export const laporanHandlers = new Elysia()
           mapel,
           kelas: kelasLabel,
           ...dayData,
+          signatureData,
           rekap,
         });
       }
@@ -276,6 +278,12 @@ export const laporanHandlers = new Elysia()
         17,
       );
 
+      const finalBuffer = await injectSignaturesToExcel(buffer, {
+        firstDataRow: 18,
+        firstDateCol: 4,
+        rowData: tutorsData,
+      });
+
       set.headers = {
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -286,7 +294,7 @@ export const laporanHandlers = new Elysia()
           (currentMonth + 1) +
           '.xlsx"',
       };
-      return buffer;
+      return finalBuffer;
     } catch (error: any) {
       set.status = 500;
       console.error("Laporan error:", error);
@@ -398,7 +406,7 @@ export const laporanHandlers = new Elysia()
         const studentAtt = attendances.filter(
           (a) => a.studentId === student.id,
         );
-        const { dayData, rekap } = buildAttendanceGrid(
+        const { dayData, signatureData, rekap } = buildAttendanceGrid(
           studentAtt,
           (a) => a.attendedAt || a.createdAt,
           currentMonth,
@@ -414,6 +422,7 @@ export const laporanHandlers = new Elysia()
           jenisKelamin: student.jenisKelamin || "",
           rombel: setup.kelas,
           ...dayData,
+          signatureData,
           rekap,
         };
       });
@@ -448,19 +457,27 @@ export const laporanHandlers = new Elysia()
         17,
       );
 
+      const finalBuffer = await injectSignaturesToExcel(buffer, {
+        firstDataRow: 18,
+        firstDateCol: 7,
+        rowData: siswaData,
+      });
+
       set.headers = {
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition":
           'attachment; filename="kehadiran_wb_' +
-          sanitizeFilename(setup.mapel) +
+          course.namaMapel.replace(/\s+/g, "_") +
+          "_" +
+          setup.kelas.replace(/\s+/g, "_") +
           "_" +
           currentYear +
           "_" +
           (currentMonth + 1) +
           '.xlsx"',
       };
-      return buffer;
+      return finalBuffer;
     } catch (error: any) {
       set.status = 500;
       console.error("Laporan error:", error);
@@ -626,7 +643,7 @@ export const laporanHandlers = new Elysia()
         const studentAtt = allAttendances.filter(
           (a) => a.studentId === student.id,
         );
-        const { dayData, rekap } = buildAttendanceGrid(
+        const { dayData, signatureData, rekap } = buildAttendanceGrid(
           studentAtt,
           (a) => a.attendedAt || a.createdAt,
           currentMonth,
@@ -642,6 +659,7 @@ export const laporanHandlers = new Elysia()
           jenisKelamin: student.jenisKelamin || "",
           rombel: kelasLabel,
           ...dayData,
+          signatureData,
           rekap,
         };
       });
@@ -700,19 +718,25 @@ export const laporanHandlers = new Elysia()
         17,
       );
 
+      const finalBuffer = await injectSignaturesToExcel(buffer, {
+        firstDataRow: 18,
+        firstDateCol: 7,
+        rowData: siswaData,
+      });
+
       set.headers = {
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition":
           'attachment; filename="rekap_kehadiran_wb_' +
-          sanitizeFilename(kelasLabel) +
+          kelasLabel.replace(/\s+/g, "_") +
           "_" +
           currentYear +
           "_" +
           (currentMonth + 1) +
           '.xlsx"',
       };
-      return buffer;
+      return finalBuffer;
     } catch (error: any) {
       set.status = 500;
       console.error("Laporan error:", error);
@@ -817,7 +841,7 @@ export const laporanHandlers = new Elysia()
         const studentAtt = attendances.filter(
           (a) => a.studentId === student.id,
         );
-        const { dayData, rekap } = buildAttendanceGrid(
+        const { dayData, signatureData, rekap } = buildAttendanceGrid(
           studentAtt,
           (a) => a.attendedAt || a.createdAt,
           currentMonth,
@@ -830,6 +854,7 @@ export const laporanHandlers = new Elysia()
           namaSiswa: student.nama,
           rombel: setup.kelas,
           ...dayData,
+          signatureByDay: signatureData,
           rekap,
         };
       });

@@ -150,6 +150,7 @@ function SesiContent({
   // Attendance state
   const [attendance, setAttendance] = useState<any[]>([]);
   const [showAttendance, setShowAttendance] = useState(false);
+  const [viewSignatureDetail, setViewSignatureDetail] = useState<{ studentName: string; signature: string } | null>(null);
 
   useEffect(() => {
     async function fetchSession() {
@@ -1277,7 +1278,12 @@ function SesiContent({
                         </td>
                         <td className="p-3 text-center flex justify-center items-center gap-2">
                           {att.signature ? (
-                            <img src={att.signature} alt={`TTD ${att.studentName || att.studentId}`} className="h-10 w-24 object-contain bg-white rounded border border-slate-200" />
+                            <img 
+                              src={att.signature} 
+                              alt={`TTD ${att.studentName || att.studentId}`} 
+                              className="h-10 w-24 object-contain bg-white rounded border border-slate-200 cursor-pointer hover:border-[#00badb] transition-colors" 
+                              onClick={() => setViewSignatureDetail({ studentName: att.studentName || String(att.studentId), signature: att.signature })} 
+                            />
                           ) : (
                             <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md text-xs font-bold">
                               Hadir
@@ -1676,6 +1682,31 @@ function SesiContent({
         title="Hapus Pesan"
         description="Apakah Anda yakin ingin menghapus pesan ini? Semua balasan di bawahnya mungkin juga akan ikut terhapus."
       />
+
+      {/* Modal TTD Detail */}
+      {viewSignatureDetail && (
+        <div 
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in"
+          onClick={() => setViewSignatureDetail(null)}
+        >
+          <div 
+            className="bg-white rounded-2xl p-6 shadow-2xl max-w-sm w-full relative animate-in zoom-in-95"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="font-black text-slate-800 text-lg mb-1 text-center border-b border-slate-100 pb-2">Tanda Tangan Kehadiran</h3>
+            <p className="text-sm font-semibold text-slate-500 text-center mb-4">{viewSignatureDetail.studentName}</p>
+            <div className="bg-slate-50 rounded-xl p-4 flex justify-center border border-slate-200">
+              <img src={viewSignatureDetail.signature} alt="Tanda Tangan" className="w-full h-auto object-contain max-h-48" />
+            </div>
+            <Button 
+              onClick={() => setViewSignatureDetail(null)}
+              className="w-full mt-4 bg-slate-100 text-slate-700 hover:bg-slate-200"
+            >
+              Tutup
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

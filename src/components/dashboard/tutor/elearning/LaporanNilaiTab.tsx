@@ -35,6 +35,7 @@ export default function LaporanNilaiTab({ activeTab, user }: Props) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [viewSignatureDetail, setViewSignatureDetail] = useState<{ studentName: string; signature: string } | null>(null);
 
   const parts = activeTab?.split("-") || [];
   const setupId = parts[1] === "setup" ? parseInt(parts[2], 10) : null;
@@ -245,7 +246,17 @@ export default function LaporanNilaiTab({ activeTab, user }: Props) {
                       className="py-2 px-2 text-center border-l border-slate-100"
                     >
                       {val === "H" ? (
-                        <span className="text-emerald-600 font-bold">H</span>
+                        student.signatureByDay && student.signatureByDay[`d${dayIdx + 1}`] ? (
+                          <button 
+                            className="text-emerald-600 font-bold cursor-pointer hover:bg-emerald-100 rounded px-1 transition-colors"
+                            onClick={() => setViewSignatureDetail({ studentName: student.namaSiswa, signature: student.signatureByDay[`d${dayIdx + 1}`] })}
+                            title="Klik untuk lihat TTD"
+                          >
+                            H
+                          </button>
+                        ) : (
+                          <span className="text-emerald-600 font-bold">H</span>
+                        )
                       ) : val === "A" ? (
                         <span className="text-red-500 font-bold">A</span>
                       ) : (
@@ -575,6 +586,31 @@ export default function LaporanNilaiTab({ activeTab, user }: Props) {
           )}
         </Card>
       </div>
+
+      {/* Modal TTD Detail */}
+      {viewSignatureDetail && (
+        <div 
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in"
+          onClick={() => setViewSignatureDetail(null)}
+        >
+          <div 
+            className="bg-white rounded-2xl p-6 shadow-2xl max-w-sm w-full relative animate-in zoom-in-95"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="font-black text-slate-800 text-lg mb-1 text-center border-b border-slate-100 pb-2">Tanda Tangan Kehadiran</h3>
+            <p className="text-sm font-semibold text-slate-500 text-center mb-4">{viewSignatureDetail.studentName}</p>
+            <div className="bg-slate-50 rounded-xl p-4 flex justify-center border border-slate-200">
+              <img src={viewSignatureDetail.signature} alt="Tanda Tangan" className="w-full h-auto object-contain max-h-48" />
+            </div>
+            <Button 
+              onClick={() => setViewSignatureDetail(null)}
+              className="w-full mt-4 bg-slate-100 text-slate-700 hover:bg-slate-200"
+            >
+              Tutup
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -67,32 +67,38 @@ export const buildAttendanceGrid = (
   currentYear: number,
   daysInMonth: number,
   sessionDates: Set<number> | null = null // Set of days in the month where a session occurred. If null, uses Tutor format (✓)
-): { dayData: Record<string, string>; rekap: number } => {
+): { dayData: Record<string, string>; signatureData: Record<string, string>; rekap: number } => {
   const dayData: Record<string, string> = {};
+  const signatureData: Record<string, string> = {};
   let rekap = 0;
   for (let d = 1; d <= daysInMonth; d++) {
-    const hasActivity = items.some(item => {
+    const activity = items.find(item => {
       const raw = dateAccessor(item);
       if (!raw) return false;
       const { year, month, day } = toJakartaDate(raw);
       return month === currentMonth && year === currentYear && day === d;
     });
 
+    const hasActivity = !!activity;
+
     if (sessionDates === null) {
       // Tutor mode: output ✓ or empty
       dayData["d" + d] = hasActivity ? "✓" : "";
+      signatureData["d" + d] = hasActivity ? (activity.signature || "") : "";
       if (hasActivity) rekap++;
     } else {
       // Student mode: output H, A, or -
       if (hasActivity) {
         dayData["d" + d] = "H";
+        signatureData["d" + d] = activity.signature || "";
         rekap++;
       } else {
         dayData["d" + d] = "-";
+        signatureData["d" + d] = "";
       }
     }
   }
-  return { dayData, rekap };
+  return { dayData, signatureData, rekap };
 };
 
 // Helper: calculate final grade from components
