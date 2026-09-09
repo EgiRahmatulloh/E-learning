@@ -42,10 +42,10 @@ export async function injectSignaturesToExcel(
             extension: 'png',
           });
 
-          // Add image to cover the cell (with small padding)
+          // Add image to cover the cell explicitly with ext (width 31px, height 16px to fit 33px cell width)
           worksheet.addImage(imageId, {
-            tl: { col: colIdx - 1 + 0.1, row: rowIdx - 1 + 0.1 } as any,
-            br: { col: colIdx - 0.1, row: rowIdx - 0.1 } as any,
+            tl: { col: colIdx - 1 + 0.02, row: rowIdx - 1 + 0.05 } as any,
+            ext: { width: 31, height: 16 } as any,
             editAs: 'oneCell'
           });
 
