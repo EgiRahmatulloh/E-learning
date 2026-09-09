@@ -1,4 +1,29 @@
 import ExcelJS from "exceljs";
+import Jimp from "jimp";
+
+async function makeWhiteTransparent(base64: string): Promise<string> {
+  try {
+    const buffer = Buffer.from(base64, 'base64');
+    const image = await Jimp.read(buffer);
+    
+    image.scan(0, 0, image.bitmap.width, image.bitmap.height, function (_x, _y, idx) {
+      const red = this.bitmap.data[idx + 0];
+      const green = this.bitmap.data[idx + 1];
+      const blue = this.bitmap.data[idx + 2];
+
+      // If white or very close to white, make transparent
+      if (red > 240 && green > 240 && blue > 240) {
+        this.bitmap.data[idx + 3] = 0; // alpha to 0
+      }
+    });
+
+    const processedBuffer = await image.getBufferAsync(Jimp.MIME_PNG);
+    return processedBuffer.toString('base64');
+  } catch (error) {
+    console.error("Failed to process image background", error);
+    return base64; // Fallback to original
+  }
+}
 
 export interface SignatureCellConfig {
   firstDataRow: number; // e.g., 18
@@ -36,7 +61,9 @@ export async function injectSignaturesToExcel(
 
       if (sigDataUrl && sigDataUrl.includes(",")) {
         try {
-          const base64Data = sigDataUrl.split(',')[1];
+          let base64Data = sigDataUrl.split(',')[1];
+          base64Data = await makeWhiteTransparent(base64Data);
+          
           const imageId = workbook.addImage({
             base64: base64Data,
             extension: 'png',
