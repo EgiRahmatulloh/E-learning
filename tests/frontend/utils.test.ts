@@ -3,10 +3,10 @@
 // - parseExcel & mapCsvRows: logic impor Excel/CSV yang dipakai form impor
 //   massal (tutor, siswa, alumni, dsb) — termasuk header berjudul di atas tabel
 //   dan sel tanggal yang harus terbaca sebagai teks.
-// Jalankan: bun test tests/utils.test.ts
+// Jalankan: bun run test:fe
 import { beforeEach, describe, expect, test } from "bun:test";
 import * as XLSX from "xlsx";
-import { cn, mapCsvRows, parseExcel } from "../src/lib/utils";
+import { cn, mapCsvRows, parseExcel } from "../../src/lib/utils";
 
 // Bun test tidak punya FileReader (API browser). parseExcel hanya memakai
 // readAsArrayBuffer + onload(e.target.result) + onerror, jadi shim minimal

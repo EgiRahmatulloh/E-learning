@@ -2,9 +2,11 @@
 // Matriks: privat (priv-*) wajib auth; gambar publik bebas auth + cache publik;
 // dokumen non-publik wajib auth; query ?token= diterima untuk iframe/download;
 // prefix submission/priv-/pub- sesuai flag; batas ukuran; cleanup via deleteToken.
-// Prasyarat: server jalan (BASE_URL). Jalankan: bun test tests/live-files-access.test.ts
+// Prasyarat: server test jalan (BASE_URL). Jalankan: bun run test:be:integration
 import { beforeAll, describe, expect, test } from "bun:test";
 import { api, authHeader, BASE_URL, loginAdmin, tag } from "./live-helpers";
+
+// Menguji kontrak endpoint backend melalui HTTP tanpa browser.
 
 let token: string;
 beforeAll(async () => {

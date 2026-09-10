@@ -3,9 +3,11 @@
 // kolom `answers` tidak ada di tabel elearning_quiz_submissions (db/index.ts
 // tidak punya ALTER TABLE untuknya) — test mengunci perilaku AKTUAL + pesan
 // agar bila migrasi ditambahkan, perubahan ketahuan di sini.
-// Prasyarat: server jalan (BASE_URL). Jalankan: bun test tests/live-quiz-angket.test.ts
+// Prasyarat: server test jalan (BASE_URL). Jalankan: bun run test:be:integration
 import { beforeAll, describe, expect, test } from "bun:test";
 import { api, authHeader, createdId, loginAdmin, tag } from "./live-helpers";
+
+// Menguji kontrak endpoint backend melalui HTTP tanpa browser.
 
 let token: string;
 beforeAll(async () => {

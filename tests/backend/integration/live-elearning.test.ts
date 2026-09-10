@@ -3,9 +3,11 @@
 // Pembersihan: quiz dikosongkan (questions:[]), forum dihapus, setups dihapus.
 // Course tidak punya endpoint DELETE — sebagai gantinya dipakai nama unik
 // IT-TEST-* agar tidak bentrok antar run (didokumentasikan di bawah).
-// Prasyarat: server jalan (BASE_URL). Jalankan: bun test tests/live-elearning.test.ts
+// Prasyarat: server test jalan (BASE_URL). Jalankan: bun run test:be:integration
 import { beforeAll, describe, expect, test } from "bun:test";
 import { api, authHeader, loginAdmin, tag } from "./live-helpers";
+
+// Menguji kontrak endpoint backend melalui HTTP tanpa browser.
 
 let token: string;
 beforeAll(async () => {

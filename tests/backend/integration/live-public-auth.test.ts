@@ -1,8 +1,10 @@
 // Integration test live-server: endpoint publik + auth.
 // Prasyarat: server jalan (BASE_URL, default http://localhost:3000).
-// Jalankan: bun test tests/live-public-auth.test.ts
+// Prasyarat: server test jalan (BASE_URL). Jalankan: bun run test:be:integration
 import { describe, expect, test } from "bun:test";
 import { api, authHeader, loginAdmin } from "./live-helpers";
+
+// Menguji kontrak endpoint backend melalui HTTP tanpa browser.
 
 describe("endpoint publik (tanpa token)", () => {
   test("hello + public-stats 200 dengan bentuk respons benar", async () => {

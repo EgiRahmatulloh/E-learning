@@ -3,7 +3,7 @@
 // dokumen tanpa prefix → private. R2_PUBLIC_URL hanya dipakai bila valid
 // (bukan endpoint S3). Modul diimpor langsung: tanpa env R2 ia nonaktif
 // (isR2Enabled=false, client null) — kondisi yang aman untuk CI.
-// Jalankan: bun test tests/r2-config.test.ts
+// Jalankan: bun run test:be:unit
 import { describe, expect, test } from "bun:test";
 import {
   getR2PublicUrl,
@@ -14,7 +14,7 @@ import {
   R2_PUBLIC_URL,
   R2_SUBMISSIONS_BUCKET_NAME,
   resolveR2Bucket,
-} from "../src/server/config/r2";
+} from "../../../src/server/config/r2";
 
 describe("resolveR2Bucket", () => {
   test("priv-* selalu private walau berupa gambar", () => {

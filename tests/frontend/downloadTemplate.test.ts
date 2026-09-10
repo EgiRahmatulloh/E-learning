@@ -2,7 +2,7 @@
 // unduhan laporan xlsx dari endpoint template server.
 // toast sonner di-mock agar tidak butuh React; DOM (URL/document) di-stub
 // karena Bun test tidak punya browser.
-// Jalankan: bun test tests/downloadTemplate.test.ts
+// Jalankan: bun run test:fe
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 
 const toastError = mock(() => {});
@@ -11,7 +11,7 @@ mock.module("sonner", () => ({
   toast: { error: toastError, success: toastSuccess },
 }));
 
-const { downloadFromTemplate } = await import("../src/lib/downloadTemplate");
+const { downloadFromTemplate } = await import("../../src/lib/downloadTemplate");
 
 type Harness = {
   clicks: number;

@@ -1,9 +1,11 @@
 // Integration test live-server: managers + impor massal + bulk siswa + sync rombel.
 // Impor memakai nama unik IT-TEST-* lalu dibersihkan via DELETE per baris
 // (endpoint import tidak punya bulk-delete). Dedup NIK/email ikut diverifikasi.
-// Prasyarat: server jalan (BASE_URL). Jalankan: bun test tests/live-managers-import.test.ts
+// Prasyarat: server test jalan (BASE_URL). Jalankan: bun run test:be:integration
 import { beforeAll, describe, expect, test } from "bun:test";
 import { api, authHeader, createdId, loginAdmin, tag } from "./live-helpers";
+
+// Menguji kontrak endpoint backend melalui HTTP tanpa browser.
 
 let token: string;
 beforeAll(async () => {

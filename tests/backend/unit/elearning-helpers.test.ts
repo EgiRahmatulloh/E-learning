@@ -2,7 +2,7 @@
 // (tanpa DB) yang dipakai semua endpoint laporan e-learning: grid absensi
 // bulanan d1..d31, kalkulasi nilai akhir + predikat, tahun ajaran, parsing
 // tanggal WIB, dan util nama file/kelas.
-// Jalankan: bun test tests/elearning-helpers.test.ts
+// Jalankan: bun run test:be:unit
 import { describe, expect, test } from "bun:test";
 import {
   buildAttendanceGrid,
@@ -14,7 +14,7 @@ import {
   sanitizeFilename,
   toJakartaDate,
   verifyUser,
-} from "../src/server/handlers/elearning/helpers";
+} from "../../../src/server/handlers/elearning/helpers";
 
 // --- jwt stub: verify(token) → payload | null ---
 const jwtOk = (payload: unknown = { id: 1 }) => ({

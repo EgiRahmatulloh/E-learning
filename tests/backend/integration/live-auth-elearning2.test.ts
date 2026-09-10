@@ -2,9 +2,11 @@
 // monitoring, grades, submissions (kumpul→nilai), attendance idempoten,
 // completions, evaluations, setups/copy, session toggle, tutor-attendance,
 // reset-password super_admin.
-// Prasyarat: server jalan (BASE_URL). Jalankan: bun test tests/live-auth-elearning2.test.ts
+// Prasyarat: server test jalan (BASE_URL). Jalankan: bun run test:be:integration
 import { beforeAll, describe, expect, test } from "bun:test";
 import { api, authHeader, createdId, loginAdmin, tag } from "./live-helpers";
+
+// Menguji kontrak endpoint backend melalui HTTP tanpa browser.
 
 let token: string;
 beforeAll(async () => {

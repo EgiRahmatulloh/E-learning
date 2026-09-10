@@ -1,7 +1,7 @@
 // Uji unit untuk src/server/services/storage.ts — pembersihan berkas R2.
 // R2 dimatikan (isR2Enabled=false) dan bucket di-stub, sehingga semua jalur
 // diamati lewat resolveR2Bucket palsu + pencatat DELETE, tanpa jaringan.
-// Jalankan: bun test tests/storage.test.ts
+// Jalankan: bun run test:be:unit
 import { describe, expect, mock, test } from "bun:test";
 
 // jwt.ts melempar bila JWT_SECRET hilang — bun test tidak selalu memuat
@@ -17,7 +17,7 @@ const fakeClient = {
   }),
 };
 
-mock.module("../src/server/config/r2.ts", () => ({
+mock.module("../../../src/server/config/r2.ts", () => ({
   // R2 "mati" agar deleteStoredFiles berhenti sebelum menyentuh jaringan.
   isR2Enabled: false,
   R2_PUBLIC_URL: "https://cdn.test",
@@ -33,7 +33,7 @@ const {
   deleteStoredFiles,
   storedFileName,
   verifyDeleteToken,
-} = await import("../src/server/services/storage");
+} = await import("../../../src/server/services/storage");
 
 describe("storedFileName", () => {
   test("URL proxy /api/files/ → nama objek", () => {

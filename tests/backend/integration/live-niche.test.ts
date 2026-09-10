@@ -2,9 +2,11 @@
 // students-by-setup, siswa/tutor-stats, attendance/completions GET, bulk/continue,
 // alumni/import sukses penuh. Memakai data real read-only (siswa id 36, setup 394)
 // untuk GET; yang menulis memakai data IT-TEST-* + cleanup.
-// Prasyarat: server jalan (BASE_URL). Jalankan: bun test tests/live-niche.test.ts
+// Prasyarat: server test jalan (BASE_URL). Jalankan: bun run test:be:integration
 import { beforeAll, describe, expect, test } from "bun:test";
 import { api, authHeader, createdId, loginAdmin, tag } from "./live-helpers";
+
+// Menguji kontrak endpoint backend melalui HTTP tanpa browser.
 
 let token: string;
 beforeAll(async () => {

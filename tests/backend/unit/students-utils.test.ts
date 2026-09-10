@@ -2,7 +2,7 @@
 // deriveProgramFromKelas (dipakai saat impor & simpan siswa agar program
 // selalu konsisten dengan nama kelas).
 // Handler Elysia-nya sendiri butuh DB sehingga tidak diuji di sini.
-// Jalankan: bun test tests/students-utils.test.ts
+// Jalankan: bun run test:be:unit
 import { describe, expect, test } from "bun:test";
 
 // students.ts → jwt.ts melempar bila JWT_SECRET hilang. bun test tidak selalu
@@ -11,7 +11,7 @@ import { describe, expect, test } from "bun:test";
 // dievaluasi SEBELUM baris di bawah ini jalan, sehingga fallback-nya telat.
 if (!Bun.env.JWT_SECRET) Bun.env.JWT_SECRET = "test-secret-untuk-unit-test";
 
-const { deriveProgramFromKelas } = await import("../src/server/handlers/students");
+const { deriveProgramFromKelas } = await import("../../../src/server/handlers/students");
 
 describe("deriveProgramFromKelas", () => {
   test("mengenali Paket A/B/C dari awalan (case-insensitive)", () => {

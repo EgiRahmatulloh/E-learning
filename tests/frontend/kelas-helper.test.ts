@@ -1,5 +1,5 @@
 // Uji unit untuk src/lib/kelas-helper.ts — normalisasi nama kelas & program.
-// Jalankan: bun test tests/kelas-helper.test.ts
+// Jalankan: bun run test:fe
 import { describe, expect, test } from "bun:test";
 import {
   buildNamaKelas,
@@ -7,7 +7,7 @@ import {
   extractSub,
   normalizeKelasName,
   PROGRAM_LEVELS,
-} from "../src/lib/kelas-helper";
+} from "../../src/lib/kelas-helper";
 
 describe("extractLevel", () => {
   test("mengekstrak angka level dari nama kelas baru", () => {

@@ -2,10 +2,10 @@
 // xlsx (daftar hadir, nilai, agenda) berbasis placeholder ${...}.
 // Memakai template ASLI di public/templates agar perubahan template yang
 // merusak placeholder langsung ketahuan. fillTemplate murni sync + tanpa DB.
-// Jalankan: bun test tests/templateXlsx.test.ts
+// Jalankan: bun run test:be:unit
 import { describe, expect, test } from "bun:test";
 import * as XLSX from "xlsx";
-import { fillTemplate, templateExists } from "../src/server/utils/templateXlsx";
+import { fillTemplate, templateExists } from "../../../src/server/utils/templateXlsx";
 
 /** Seluruh teks sheet sebagai satu string untuk pencarian isi. */
 function sheetText(buf: Buffer): string {

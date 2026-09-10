@@ -2,14 +2,14 @@
 // endpoint: verifyUser (semua role), verifyAdmin (admin/super_admin),
 // verifyAdminOrTutor (+ tutor), getAdminPayload (tanpa side-effect).
 // jwt di-stub; tidak butuh DB/jaringan.
-// Jalankan: bun test tests/auth-middleware.test.ts
+// Jalankan: bun run test:be:unit
 import { describe, expect, test } from "bun:test";
 import {
   getAdminPayload,
   verifyAdmin,
   verifyAdminOrTutor,
   verifyUser,
-} from "../src/server/middleware/auth";
+} from "../../../src/server/middleware/auth";
 
 type Payload = { role: string; id: number };
 const jwtFor = (payload: Payload | null) => ({

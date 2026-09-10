@@ -2,12 +2,12 @@
 // injeksi gambar tanda tangan ke sel tanggal laporan kehadiran xlsx.
 // Memakai template asli format-upload-wb.xlsx sebagai workbook dasar.
 // Gambar uji: PNG 1x1 (putih → ditransparankan jimp, ~200ms per gambar).
-// Jalankan: bun test tests/excelSignatures.test.ts
+// Jalankan: bun run test:be:unit
 import { describe, expect, test } from "bun:test";
 import { unzipSync } from "fflate";
 import * as XLSX from "xlsx";
-import { injectSignaturesToExcel } from "../src/server/utils/excelSignatures";
-import { fillTemplate } from "../src/server/utils/templateXlsx";
+import { injectSignaturesToExcel } from "../../../src/server/utils/excelSignatures";
+import { fillTemplate } from "../../../src/server/utils/templateXlsx";
 
 // PNG 1x1 putih — mewakili dataURL dari signature-pad client.
 const TINY_PNG =

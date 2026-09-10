@@ -1,7 +1,7 @@
 // Uji unit untuk src/lib/photos.ts — penyimpanan foto multi sebagai JSON array.
-// Jalankan: bun test tests/photos.test.ts
+// Jalankan: bun run test:fe
 import { describe, expect, test } from "bun:test";
-import { parsePhotos, serializePhotos } from "../src/lib/photos";
+import { parsePhotos, serializePhotos } from "../../src/lib/photos";
 
 describe("parsePhotos", () => {
   test("mengembalikan [] untuk null/undefined/kosong", () => {

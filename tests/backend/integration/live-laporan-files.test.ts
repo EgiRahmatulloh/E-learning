@@ -2,9 +2,11 @@
 // Laporan dibaca sebagai binary lalu diverifikasi magic bytes ZIP (xlsx =
 // arsip ZIP: "PK\x03\x04") + content-type spreadsheet. Upload memakai nama
 // unik dan selalu dibersihkan via deleteToken agar tidak mencemari bucket R2.
-// Prasyarat: server jalan (BASE_URL). Jalankan: bun test tests/live-laporan-files.test.ts
+// Prasyarat: server test jalan (BASE_URL). Jalankan: bun run test:be:integration
 import { beforeAll, describe, expect, test } from "bun:test";
 import { api, authHeader, BASE_URL, loginAdmin } from "./live-helpers";
+
+// Menguji kontrak endpoint backend melalui HTTP tanpa browser.
 
 let token: string;
 beforeAll(async () => {

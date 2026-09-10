@@ -1,8 +1,10 @@
 // Integration test live-server: semua PUT /:id + PATCH approve-angket.
 // Setiap entitas: create → update (nilai berubah) → verifikasi → delete.
-// Prasyarat: server jalan (BASE_URL). Jalankan: bun test tests/live-put-updates.test.ts
+// Prasyarat: server test jalan (BASE_URL). Jalankan: bun run test:be:integration
 import { beforeAll, describe, expect, test } from "bun:test";
 import { api, authHeader, createdId, loginAdmin, tag } from "./live-helpers";
+
+// Menguji kontrak endpoint backend melalui HTTP tanpa browser.
 
 let token: string;
 beforeAll(async () => {

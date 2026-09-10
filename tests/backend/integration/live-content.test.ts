@@ -2,9 +2,11 @@
 // singleton (profile, visi-misi) + entitas ber-foto (program, sarana,
 // prestasi, titik layanan, agenda) + downloads/products/gallery + alumni
 // admin. Semua create memakai nama unik IT-TEST-* dan dihapus lagi.
-// Prasyarat: server jalan (BASE_URL). Jalankan: bun test tests/live-content.test.ts
+// Prasyarat: server test jalan (BASE_URL). Jalankan: bun run test:be:integration
 import { beforeAll, describe, expect, test } from "bun:test";
 import { api, authHeader, createdId, loginAdmin, tag } from "./live-helpers";
+
+// Menguji kontrak endpoint backend melalui HTTP tanpa browser.
 
 let token: string;
 beforeAll(async () => {

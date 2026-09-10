@@ -1,6 +1,6 @@
 // Uji unit untuk src/lib/upload.ts — helper ini dipakai ~20 komponen, jadi
 // perilaku error-nya (offline vs ditolak server) perlu dijaga.
-// Jalankan: bun test
+// Jalankan: bun run test:fe
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import {
   commitUploads,
@@ -13,7 +13,7 @@ import {
   UploadError,
   uploadFiles,
   validateImageFile,
-} from "../src/lib/upload";
+} from "../../src/lib/upload";
 
 const originalFetch = globalThis.fetch;
 let calls: { url: string; body: FormData }[] = [];

@@ -9,6 +9,8 @@
 // bukan timeout menggantung.
 import { expect } from "bun:test";
 
+// Dipakai hanya oleh test integrasi backend.
+
 export const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
 export const ADMIN_USER = process.env.IT_ADMIN_USER ?? "admin@pkbmmakmur.org";
 export const ADMIN_PASS = process.env.IT_ADMIN_PASS ?? "admin123";
