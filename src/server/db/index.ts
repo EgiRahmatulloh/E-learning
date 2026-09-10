@@ -654,6 +654,11 @@ CREATE TABLE IF NOT EXISTS elearning_session_angkets (
 try { sqlite.exec(`ALTER TABLE elearning_attendances ADD COLUMN signature TEXT DEFAULT ''`); } catch {}
 try { sqlite.exec(`ALTER TABLE tutor_attendances ADD COLUMN signature TEXT DEFAULT ''`); } catch {}
 
+// Migrasi kolom answers: tabel lama dibuat sebelum kolom ini ada di skema,
+// sehingga submit kuis 500 (no such column). IF NOT EXISTS tidak menolong
+// untuk tabel yang sudah ada — wajib ALTER.
+try { sqlite.exec(`ALTER TABLE elearning_quiz_submissions ADD COLUMN answers TEXT`); } catch {}
+
 // Tambahkan UNIQUE index secara eksplisit untuk mendukung existing database yang tidak dibuat dari awal
 try { sqlite.exec("CREATE UNIQUE INDEX IF NOT EXISTS unq_elearning_attendances ON elearning_attendances(session_id, student_id);"); } catch (e) {}
 try { sqlite.exec("CREATE UNIQUE INDEX IF NOT EXISTS unq_elearning_submissions ON elearning_submissions(assignment_id, student_id);"); } catch (e) {}
