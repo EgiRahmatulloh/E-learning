@@ -44,6 +44,11 @@ import {
 } from "./helpers";
 import { fillTemplate } from "../../utils/templateXlsx";
 
+const denyClassAccess = (set: any) => {
+  set.status = 403;
+  return { success: false, message: "Anda tidak terdaftar di kelas ini" };
+};
+
 // ---------------------------------------------------------
 // SESSION ANGKET PROGRESS (for navigation gating)
 // ---------------------------------------------------------
@@ -87,10 +92,7 @@ export const angketHandlers = new Elysia()
           ),
         )
         .get();
-      if (!studentRombel) {
-        set.status = 403;
-        return { success: false, message: "Anda tidak terdaftar di kelas ini" };
-      }
+      if (!studentRombel) return denyClassAccess(set);
 
       const program = deriveProgram(setup.kelas);
 
@@ -198,13 +200,7 @@ export const angketHandlers = new Elysia()
                 ),
               )
               .get();
-            if (!rombelCheck) {
-              set.status = 403;
-              return {
-                success: false,
-                message: "Anda tidak terdaftar di kelas ini",
-              };
-            }
+            if (!rombelCheck) return denyClassAccess(set);
           }
         }
       }
@@ -282,20 +278,14 @@ export const angketHandlers = new Elysia()
                   ),
                 )
                 .get();
-              if (!rombelCheck) {
-                set.status = 403;
-                return {
-                  success: false,
-                  message: "Anda tidak terdaftar di kelas ini",
-                };
-              }
+              if (!rombelCheck) return denyClassAccess(set);
             }
           }
         }
 
-        await db.transaction(async (tx) => {
+        db.transaction((tx) => {
           for (const res of responses) {
-            await tx
+            tx
               .insert(elearningSessionAngkets)
               .values({
                 sessionId: Number(sessionId),
@@ -303,7 +293,8 @@ export const angketHandlers = new Elysia()
                 evaluationId: Number(res.evaluationId),
                 score: Number(res.score),
               })
-              .onConflictDoNothing();
+              .onConflictDoNothing()
+              .run();
           }
         });
 

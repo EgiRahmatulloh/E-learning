@@ -213,14 +213,14 @@ export const setupHandlers = new Elysia()
             skipped++;
             continue;
           }
-          await db.insert(elearningSetups).values({
+          db.insert(elearningSetups).values({
             kelas: s.kelas,
             mapel: s.mapel,
             tutorId: s.tutorId,
             skk: s.skk,
             jumlahSesi: s.jumlahSesi,
             semester: toSemester,
-          });
+          }).run();
           copied++;
         }
 

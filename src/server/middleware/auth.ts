@@ -1,9 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export const verifyAdmin = async (
-  headers: Record<string, string | undefined>,
-  jwt: any,
-  set: any
-) => {
+export const verifyAdmin = async (headers: Record<string, string | undefined>, jwt: any, set: any) => {
   const authHeader = headers["authorization"];
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     set.status = 401;
@@ -25,11 +21,7 @@ export const verifyAdmin = async (
   return null; // Valid
 };
 
-export const verifyAdminOrTutor = async (
-  headers: Record<string, string | undefined>,
-  jwt: any,
-  set: any
-) => {
+export const verifyAdminOrTutor = async (headers: Record<string, string | undefined>, jwt: any, set: any) => {
   const authHeader = headers["authorization"];
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     set.status = 401;
@@ -51,21 +43,14 @@ export const verifyAdminOrTutor = async (
   return null; // Valid
 };
 
-export const getAdminPayload = async (
-  headers: Record<string, string | undefined>,
-  jwt: any
-) => {
+export const getAdminPayload = async (headers: Record<string, string | undefined>, jwt: any) => {
   const authHeader = headers["authorization"];
   if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
   const token = authHeader.split(" ")[1];
   return await jwt.verify(token);
 };
 
-export const verifyUser = async (
-  headers: Record<string, string | undefined>,
-  jwt: any,
-  set: any
-) => {
+export const verifyUser = async (headers: Record<string, string | undefined>, jwt: any, set: any) => {
   const authHeader = headers["authorization"];
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     set.status = 401;

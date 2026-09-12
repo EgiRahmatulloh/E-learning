@@ -1,3 +1,25 @@
 [serve.static]
 plugins = ["bun-plugin-tailwind"]
 env = "BUN_PUBLIC_*"
+
+[test]
+preload = ["./tests/backend/setup.ts"]
+# Coverage backend: text (observable) + lcov (gate validator).
+# test:be:coverage memanggil dengan flag eksplisit yang sama; config ini
+# memastikan default yang konsisten bila reporter tidak disebut di CLI.
+coverageReporter = ["text", "lcov"]
+coverageDir = "coverage/backend"
+# Test/helpers tidak masuk denominator application gate.
+coverageSkipTestFiles = true
+# Hanya path deklaratif/bootstrap yang disepakati di luar gate.
+# JANGAN tambahkan handler/service ke sini untuk menggelembungkan angka.
+coveragePathIgnorePatterns = [
+  "src/index.ts",
+  "src/server/db/index.ts",
+  "src/server/db/schema.ts",
+  "src/server/db/seed.ts",
+  "src/server/models/index.ts",
+]
+# Threshold 1.0 baru dipasang setelah semua file in-scope benar-benar 100%
+# (saat ini gate ditegakkan oleh scripts/assert-backend-coverage.ts agar
+# daftar gap-nya eksplisit, bukan sekadar angka agregat).

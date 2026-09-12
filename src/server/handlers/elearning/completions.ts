@@ -87,11 +87,11 @@ export const completionsHandlers = new Elysia()
           )).get();
 
         if (!existing) {
-          await db.insert(elearningSectionCompletions).values({
+          db.insert(elearningSectionCompletions).values({
             studentId,
             setupId,
             sectionKey
-          });
+          }).run();
         }
 
         return { success: true, message: "Berhasil menyimpan progress" };

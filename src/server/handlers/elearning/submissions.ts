@@ -34,11 +34,7 @@ import {
   tutorAttendances,
   elearningSessionAngkets,
 } from "../../models";
-import {
-  verifyAdmin,
-  verifyAdminOrTutor,
-  getAdminPayload,
-} from "../../middleware/auth";
+import { verifyAdminOrTutor } from "../../middleware/auth";
 
 import {
   verifyUser,
@@ -197,11 +193,11 @@ export const submissionsHandlers = new Elysia()
         // diakses lagi dari mana pun, jadi lepas dari storage.
         await cleanupReplacedFiles(existing, { fileUrl }, ["fileUrl"]);
       } else {
-        await db.insert(elearningSubmissions).values({
+        db.insert(elearningSubmissions).values({
           assignmentId: assignment.id,
           studentId,
           fileUrl,
-        });
+        }).run();
       }
 
       return { success: true, message: "Berhasil mengumpulkan tugas" };
@@ -227,11 +223,8 @@ export const submissionsHandlers = new Elysia()
       if (authError) return authError;
 
       try {
-        const payload = await getAdminPayload(headers, jwt);
-        if (!payload) {
-          set.status = 401;
-          return { success: false, message: "Token tidak valid" };
-        }
+        const authHeader = headers["authorization"]!;
+        const payload = await jwt.verify(authHeader.split(" ")[1]);
 
         const subId = parseInt(submissionId);
         if (Number.isNaN(subId)) {

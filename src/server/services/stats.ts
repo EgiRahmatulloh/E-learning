@@ -3,7 +3,41 @@ import { jwt } from "@elysia/jwt";
 import { finalJwtSecret } from "../config/jwt";
 import { verifyAdmin } from "../middleware/auth";
 import { db } from "../config/db";
-import { tutors, students, products, alumni, managers, servicePoints, rombels, elearningSetups, elearningMaterials } from "../models";
+import {
+  alumni,
+  elearningMaterials,
+  elearningSetups,
+  managers,
+  products,
+  rombels,
+  servicePoints,
+  students,
+  tutors,
+} from "../models";
+
+export function countActiveStudents(studentsList: Array<{ status: string }>) {
+  return studentsList.filter((student) => student.status === "AKTIF").length;
+}
+
+export function countActiveProducts(productsList: Array<{ status: string }>) {
+  return productsList.filter((product) => product.status === "AKTIF").length;
+}
+
+export function countStudentsInProgram(
+  studentsList: Array<{ program: string }>,
+  program: string,
+) {
+  return studentsList.filter(
+    (student) => student.program.toLowerCase().includes(program),
+  ).length;
+}
+
+export function countMaterialsByType(
+  materials: Array<{ type: string }>,
+  type: string,
+) {
+  return materials.filter((material) => material.type === type).length;
+}
 
 export const statsServices = new Elysia()
   .use(
@@ -29,12 +63,10 @@ export const statsServices = new Elysia()
       const servicePointsList = await db.select().from(servicePoints).all();
       const rombelList = await db.select().from(rombels).all();
 
-      const activeStudents = studentsList.filter((s) => s.status === "AKTIF");
-
       return {
         success: true,
         data: {
-          students: activeStudents.length,
+          students: countActiveStudents(studentsList),
           alumni: alumniList.length,
           tutors: tutorsList.length,
           rombel: rombelList.length,
@@ -58,25 +90,10 @@ export const statsServices = new Elysia()
       const alumniList = await db.select().from(alumni).all();
       const rombelList = await db.select().from(rombels).all();
 
-      const activeStudents = studentsList.filter((s) => s.status === "AKTIF");
-      const activeProducts = productsList.filter((p) => p.status === "AKTIF");
+      const activeStudents = studentsList.filter((student) => student.status === "AKTIF");
 
-      const paketA = activeStudents.filter(
-        (s) => s.program && s.program.toLowerCase().includes("paket a")
-      ).length;
-      const paketB = activeStudents.filter(
-        (s) => s.program && s.program.toLowerCase().includes("paket b")
-      ).length;
-      const paketC = activeStudents.filter(
-        (s) => s.program && s.program.toLowerCase().includes("paket c")
-      ).length;
-
-      // E-Learning Stats
       const setups = await db.select().from(elearningSetups).all();
-      const mapelAktif = setups.length;
-      
       const materials = await db.select().from(elearningMaterials).all();
-      const tugasDiberikan = materials.filter((m: any) => m.type === "TUGAS").length;
 
       return {
         success: true,
@@ -84,13 +101,13 @@ export const statsServices = new Elysia()
           tutors: tutorsList.length,
           students: activeStudents.length,
           rombel: rombelList.length,
-          products: activeProducts.length,
-          paketA,
-          paketB,
-          paketC,
+          products: countActiveProducts(productsList),
+          paketA: countStudentsInProgram(activeStudents, "paket a"),
+          paketB: countStudentsInProgram(activeStudents, "paket b"),
+          paketC: countStudentsInProgram(activeStudents, "paket c"),
           alumni: alumniList.length,
-          mapelAktif,
-          tugas: tugasDiberikan,
+          mapelAktif: setups.length,
+          tugas: countMaterialsByType(materials, "TUGAS"),
           ip: "0.0", // Placeholder for global IP until full grading is implemented
         },
       };

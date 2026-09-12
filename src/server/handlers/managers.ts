@@ -63,12 +63,12 @@ export const managersHandlers = new Elysia()
         ]
           .filter(Boolean)
           .join(", ");
-
-        const safeItem = { ...item };
+        const safeItem = {
+          ...item,
+        };
         delete (safeItem as any).password;
-        // Keep alamatLengkap for backward compatibility if frontend needs it,
-        // but frontend ManagerManager uses explicit fields (rt, rw, dst).
-        (safeItem as any).alamat = alamatLengkap;
+        (safeItem as any).alamat =
+          alamatLengkap;
         return safeItem;
       });
       return { success: true, data: safeList };
@@ -298,7 +298,6 @@ export const managersHandlers = new Elysia()
                 ? item.Password.trim()
                 : null;
             const password = rawPass ? await Bun.password.hash(rawPass) : defaultPassword;
-
             return {
               nama: item.nama,
               nik: typeof item.nik === "string" ? item.nik : "",

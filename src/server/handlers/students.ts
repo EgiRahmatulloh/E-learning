@@ -496,8 +496,6 @@ export const studentsHandlers = new Elysia()
           .where(eq(students.id, id))
           .returning()
           .get();
-
-        // Find or create target rombel
         let targetRombel = allRombelsList.find(r => r.nama.toUpperCase() === targetRombelName);
         if (!targetRombel) {
           targetRombel = tx.insert(rombels)
@@ -505,7 +503,6 @@ export const studentsHandlers = new Elysia()
             .returning()
             .get();
         }
-
         if (currentRels.length > 0) {
           const currentRombelIds = currentRels.map(r => r.rombelId);
           tx.delete(rombelStudents)
@@ -578,10 +575,7 @@ export const studentsHandlers = new Elysia()
           .where(eq(students.id, id))
           .returning()
           .get();
-
         if (!updated) return;
-
-        // Masukkan ke tabel alumni
         tx.insert(alumni).values({
           nama: updated.nama,
           nik: updated.nik,
@@ -606,8 +600,6 @@ export const studentsHandlers = new Elysia()
           cerita: `Lulusan program ${updated.program}`,
           foto: updated.foto,
         }).run();
-
-        // Hapus dari rombel
         for (const rombelId of affectedRombelIds) {
           tx.delete(rombelStudents)
             .where(and(eq(rombelStudents.studentId, id), eq(rombelStudents.rombelId, rombelId)))
@@ -675,15 +667,12 @@ export const studentsHandlers = new Elysia()
             .where(eq(students.id, id))
             .returning()
             .get();
-
           if (kelasUpper) {
-            // Remove from current rombel
             if (currentRel) {
               tx.delete(rombelStudents)
                 .where(and(eq(rombelStudents.studentId, id), eq(rombelStudents.rombelId, currentRel.rombelId)))
                 .run();
             }
-            // Find or create target rombel
             let targetRombel = existingTarget;
             if (!targetRombel) {
               targetRombel = tx.insert(rombels).values({ nama: kelasUpper }).returning().get();
@@ -749,10 +738,6 @@ export const studentsHandlers = new Elysia()
       if (authError) return authError;
 
       const list = body;
-      if (!Array.isArray(list)) {
-        set.status = 400;
-        return { success: false, message: "Format data tidak valid, harus berupa array" };
-      }
 
       try {
         const validItems = list.filter(
@@ -806,7 +791,6 @@ export const studentsHandlers = new Elysia()
                 ? item.Password.trim()
                 : null;
             const password = rawPass ? await Bun.password.hash(rawPass) : defaultPassword;
-
             return {
               nama: item.nama,
               nik: typeof item.nik === "string" ? item.nik : "",
@@ -938,24 +922,17 @@ export const studentsHandlers = new Elysia()
             if (gradeNum >= maxGrade) { skipped++; continue; }
             const progLetter = s.program ? s.program.toUpperCase().replace("PAKET ", "").trim() : "C";
             const newKelas = `PAKET ${progLetter} ${gradeNum + 1}`;
-
-            // Update kelas field
             tx.update(students)
               .set({ kelas: newKelas, updatedAt: new Date().toISOString() })
               .where(eq(students.id, s.id))
               .run();
-
-            // Move student to new rombel: preserve section letter (e.g. PAKET C 10 A → PAKET C 11 A)
             const currentRombelIds = currentRombelMap.get(s.id) || [];
             const currentRombelObj = currentRombelIds.length > 0 ? allRombels.find(r => r.id === currentRombelIds[0]) : null;
             const currentRombelName = currentRombelObj?.nama.toUpperCase() || "";
             const sectionLetter = extractSectionLetter(currentRombelName);
             const targetRombelName = sectionLetter ? `${newKelas} ${sectionLetter}` : newKelas;
-
-            // Find or create target rombel
             let targetRombel = allRombels.find(r => r.nama.toUpperCase() === targetRombelName);
             if (!targetRombel) {
-              // Create new rombel
               const newRombel = tx.insert(rombels)
                 .values({ nama: targetRombelName })
                 .returning()
@@ -963,21 +940,17 @@ export const studentsHandlers = new Elysia()
               allRombels.push(newRombel);
               targetRombel = newRombel;
             }
-
-            // Remove from all current rombels
             if (currentRombelIds.length > 0) {
               tx.delete(rombelStudents)
                 .where(and(eq(rombelStudents.studentId, s.id), inArray(rombelStudents.rombelId, currentRombelIds)))
                 .run();
               currentRombelIds.forEach(rid => emptiedRombelIds.add(rid));
             }
-            // Add to target rombel (ignore duplicate)
             try {
               tx.insert(rombelStudents)
                 .values({ rombelId: targetRombel.id, studentId: s.id })
                 .run();
             } catch { /* already in rombel, skip */ }
-
             promoted++;
           }
         });
@@ -1060,8 +1033,6 @@ export const studentsHandlers = new Elysia()
               cerita: `Lulusan program ${s.program}`,
               foto: s.foto,
             }).run();
-
-            // Hapus dari rombel
             const relasi = tx
               .select({ rombelId: rombelStudents.rombelId })
               .from(rombelStudents)
@@ -1073,7 +1044,6 @@ export const studentsHandlers = new Elysia()
                 .where(and(eq(rombelStudents.studentId, s.id), eq(rombelStudents.rombelId, rel.rombelId)))
                 .run();
             }
-
             graduated++;
           }
         });
@@ -1146,8 +1116,6 @@ export const studentsHandlers = new Elysia()
               .set({ program, kelas, status: "AKTIF", updatedAt: now })
               .where(eq(students.id, id))
               .run();
-
-            // Move to new rombel based on new kelas
             if (kelasUpper) {
               let targetRombel = allRombels.find(r => r.nama.toUpperCase() === kelasUpper);
               if (!targetRombel) {
@@ -1170,7 +1138,6 @@ export const studentsHandlers = new Elysia()
                   .run();
               } catch { /* already assigned */ }
             }
-
             continued++;
           }
         });

@@ -176,14 +176,11 @@ export const rombelHandlers = new Elysia()
             })
             .where(eq(rombels.id, id))
             .run();
-
-          // Jika nama rombel berubah, update semua siswa dan elearningSetups yang mengacu pada nama rombel lama
           if (newNama && newNama !== oldNama) {
             tx.update(students)
               .set({ kelas: newNama, updatedAt: new Date().toISOString() })
               .where(sql`UPPER(${students.kelas}) = UPPER(${oldNama})`)
               .run();
-
             tx.update(elearningSetups)
               .set({ kelas: newNama })
               .where(sql`UPPER(${elearningSetups.kelas}) = UPPER(${oldNama})`)
@@ -228,16 +225,11 @@ export const rombelHandlers = new Elysia()
       }
 
       db.transaction((tx) => {
-        // Cascade delete: hapus relasi siswa dulu
         tx.delete(rombelStudents).where(eq(rombelStudents.rombelId, id)).run();
-
-        // Kosongkan field kelas pada tabel students untuk semua siswa di rombel ini
         tx.update(students)
           .set({ kelas: "", updatedAt: new Date().toISOString() })
           .where(sql`UPPER(${students.kelas}) = UPPER(${existing.nama})`)
           .run();
-
-        // Hapus rombel
         tx.delete(rombels).where(eq(rombels.id, id)).run();
       });
 
@@ -361,14 +353,11 @@ export const rombelHandlers = new Elysia()
           tx.insert(rombelStudents)
             .values(newIds.map((sid) => ({ rombelId, studentId: sid })))
             .run();
-
           const targetProgram = deriveProgramFromKelas(existing.nama);
-
           for (const sid of newIds) {
             tx.delete(rombelStudents)
               .where(and(eq(rombelStudents.studentId, sid), sql`${rombelStudents.rombelId} != ${rombelId}`))
               .run();
-
             tx.update(students)
               .set({
                 kelas: existing.nama,
@@ -415,12 +404,9 @@ export const rombelHandlers = new Elysia()
 
     try {
       db.transaction((tx) => {
-        // 1. Hapus relasi dari rombel_students
         tx.delete(rombelStudents)
           .where(and(eq(rombelStudents.rombelId, rombelId), eq(rombelStudents.studentId, studentId)))
           .run();
-
-        // 2. Kosongkan field kelas pada tabel students
         tx.update(students)
           .set({ kelas: "", updatedAt: new Date().toISOString() })
           .where(eq(students.id, studentId))

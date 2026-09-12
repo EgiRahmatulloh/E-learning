@@ -59,24 +59,23 @@ export const monitoringHandlers = new Elysia()
         const allSubmissions = await db.select().from(elearningSubmissions).where(isNull(elearningSubmissions.grade)).all();
 
         const enrichedTutors = tutorsList.map(tutor => {
-          // 1. diskusiCount (posts made by this tutor)
-          const diskusiCount = allPosts.filter(p => p.authorId == tutor.id && p.authorRole === "tutor").length;
-
-          // 2. tugasBelumDinilai & jumlahKelas dari filteredSetups sesuai level
+          const diskusiCount = allPosts.filter(p =>
+            p.authorId == tutor.id && p.authorRole === "tutor"
+          ).length;
           const tutorSetups = filteredSetups.filter(s => s.tutorId === tutor.id);
           const jumlahKelas = new Set(tutorSetups.map(s => s.kelas)).size;
-
-          const tutorCourseIds = allCourses.filter(c =>
-            tutorSetups.some(s => s.mapel === c.namaMapel && deriveProgram(s.kelas) === c.program)
-          ).map(c => c.id);
-
-          const tutorSessionIds = allSessions.filter(s => tutorCourseIds.includes(s.courseId)).map(s => s.id);
-          const tutorAssignmentIds = allAssignments.filter(a => tutorSessionIds.includes(a.sessionId)).map(a => a.id);
-
+          const tutorCourseIds = allCourses.filter(c => tutorSetups.some(s =>
+            s.mapel === c.namaMapel && deriveProgram(s.kelas) === c.program
+          )).map(c => c.id);
+          const tutorSessionIds = allSessions
+            .filter(s => tutorCourseIds.includes(s.courseId))
+            .map(s => s.id);
+          const tutorAssignmentIds = allAssignments
+            .filter(a => tutorSessionIds.includes(a.sessionId))
+            .map(a => a.id);
           const tugasBelumDinilai = allSubmissions.filter(s =>
-            tutorAssignmentIds.includes(s.assignmentId) && (s.grade === null || s.grade === undefined)
+            tutorAssignmentIds.includes(s.assignmentId) && s.grade == null
           ).length;
-
           return {
             ...tutor,
             jumlahKelas: jumlahKelas || tutorSetups.length,
@@ -147,17 +146,22 @@ export const monitoringHandlers = new Elysia()
           grade: elearningSubmissions.grade,
         }).from(elearningSubmissions).all();
 
-        const uniqueStudentsList = studentsList.filter((s, idx, arr) => arr.findIndex(x => x.id === s.id) === idx);
+        const uniqueStudentsList = studentsList.filter(
+          (student, index, list) => list.findIndex(item => item.id === student.id) === index
+        );
 
-        const enhancedStudents = uniqueStudentsList.map(s => {
-          const studentPosts = allPosts.filter(p => p.authorId === s.id && p.authorRole === "siswa");
-          const kehadiranCount = allAttendances.filter(a => a.studentId === s.id).length;
-          const studentGrades = allGradedSubs
-            .filter(sub => sub.studentId === s.id && sub.grade != null)
-            .map(sub => sub.grade as number);
-
+        const enhancedStudents = uniqueStudentsList.map(student => {
+          const studentPosts = allPosts.filter(post =>
+            post.authorId === student.id && post.authorRole === "siswa"
+          );
+          const kehadiranCount = allAttendances.filter(attendance =>
+            attendance.studentId === student.id
+          ).length;
+          const studentGrades = allGradedSubs.filter(submission =>
+            submission.studentId === student.id && submission.grade != null
+          ).map(submission => submission.grade as number);
           return {
-            ...s,
+            ...student,
             forumCount: studentPosts.length,
             kehadiranCount,
             tugasCount: studentGrades.length,
@@ -273,82 +277,66 @@ export const monitoringHandlers = new Elysia()
           let kehadiran = 0;
           let partisipasi = 0;
           let tugas = 0;
-
           const detailKehadiran: any[] = [];
           const detailDiskusi: any[] = [];
           const detailTugas: any[] = [];
           const sessionsCount = defaultSessions;
-
           if (courseId && allSessionIds.length > 0) {
-            // Exclude session 0 (Pendahuluan) from numerator — session 0 is not counted in sessionsCount
-            const attendedSessions = new Set(
-              allAttendances.filter(a => a.studentId === student.id && !session0Ids.has(a.sessionId)).map(a => a.sessionId)
-            );
+            const attendedSessions = new Set(allAttendances.filter(attendance =>
+              attendance.studentId === student.id && !session0Ids.has(attendance.sessionId)
+            ).map(attendance => attendance.sessionId));
             kehadiran = Math.min(100, Math.round((attendedSessions.size / sessionsCount) * 100));
-
-            const participatedSessions = new Set(
-              allForumPosts.filter(p => p.authorId === student.id && !session0Ids.has(p.sessionId)).map(p => p.sessionId)
-            );
+            const participatedSessions = new Set(allForumPosts.filter(post =>
+              post.authorId === student.id && !session0Ids.has(post.sessionId)
+            ).map(post => post.sessionId));
             partisipasi = Math.min(100, Math.round((participatedSessions.size / sessionsCount) * 100));
-
-            const studentSubmissions = allSubmissions.filter(s => s.studentId === student.id);
+            const studentSubmissions = allSubmissions.filter(
+              submission => submission.studentId === student.id
+            );
             const totalAssignments = allAssignments.length;
             const studentGrades = studentSubmissions
-              .filter(s => s.grade != null)
-              .map(s => s.grade as number);
+              .filter(submission => submission.grade != null)
+              .map(submission => submission.grade as number);
             if (totalAssignments > 0) {
-              const sumGrade = studentGrades.reduce((a, b) => a + b, 0);
+              const sumGrade = studentGrades.reduce((sum, grade) => sum + grade, 0);
               tugas = Math.min(100, Math.round(sumGrade / totalAssignments));
             }
-
-            // Build per-session details (1 to sessionsCount)
             for (let i = 1; i <= sessionsCount; i++) {
-              // Find session id for this session number
-              const sessIdStr = Object.keys(sessionsMap).find(key => sessionsMap[parseInt(key)] === i);
-              const sessId = sessIdStr ? parseInt(sessIdStr) : null;
-
-              if (sessId) {
+              const sessionIdText = Object.keys(sessionsMap).find(
+                key => sessionsMap[parseInt(key)] === i
+              );
+              const sessionId = sessionIdText ? parseInt(sessionIdText) : null;
+              if (sessionId) {
                 detailKehadiran.push({
                   sessionNumber: i,
-                  hadir: attendedSessions.has(sessId)
+                  hadir: attendedSessions.has(sessionId)
                 });
-
                 detailDiskusi.push({
                   sessionNumber: i,
-                  ikutDiskusi: participatedSessions.has(sessId)
+                  ikutDiskusi: participatedSessions.has(sessionId)
                 });
-
-                const assignForSess = allAssignments.find(a => a.sessionId === sessId);
-                if (assignForSess) {
-                  const subForAssign = studentSubmissions.find(s => s.assignmentId === assignForSess.id);
+                const assignment = allAssignments.find(item => item.sessionId === sessionId);
+                if (assignment) {
+                  const submission = studentSubmissions.find(
+                    item => item.assignmentId === assignment.id
+                  );
                   detailTugas.push({
                     sessionNumber: i,
-                    grade: subForAssign?.grade ?? null,
-                    feedback: subForAssign?.feedback ?? null
+                    grade: submission?.grade ?? null,
+                    feedback: submission?.feedback ?? null
                   });
-                } else {
-                  detailTugas.push({
-                    sessionNumber: i,
-                    grade: null,
-                    feedback: null
-                  });
-                }
+                } else { detailTugas.push({ sessionNumber: i, grade: null, feedback: null }); }
               } else {
                 detailKehadiran.push({ sessionNumber: i, hadir: false });
                 detailDiskusi.push({ sessionNumber: i, ikutDiskusi: false });
-                detailTugas.push({ sessionNumber: i, grade: null, feedback: null });
-              }
+                detailTugas.push({ sessionNumber: i, grade: null, feedback: null }); }
             }
           } else {
             for (let i = 1; i <= sessionsCount; i++) {
               detailKehadiran.push({ sessionNumber: i, hadir: false });
               detailDiskusi.push({ sessionNumber: i, ikutDiskusi: false });
-              detailTugas.push({ sessionNumber: i, grade: null, feedback: null });
-            }
-          }
-
-          const { final, predikat } = calculateGrade(kehadiran, partisipasi, tugas);
-
+              detailTugas.push({ sessionNumber: i, grade: null, feedback: null }); }
+          } const { final, predikat } = calculateGrade(kehadiran, partisipasi, tugas);
           return {
             id: student.id,
             nama: student.nama,

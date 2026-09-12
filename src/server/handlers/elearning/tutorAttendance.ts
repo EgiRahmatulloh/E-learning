@@ -75,11 +75,11 @@ export const tutorAttendanceHandlers = new Elysia()
 
       const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
       try {
-        await db.insert(tutorAttendances).values({
+        db.insert(tutorAttendances).values({
           tutorId: Number(payload.id),
           date: today,
           signature: body?.signature || "",
-        });
+        }).run();
         return { success: true, message: "Kehadiran berhasil ditandai" };
       } catch (err: any) {
         if (err.message && err.message.includes("UNIQUE constraint failed")) {
