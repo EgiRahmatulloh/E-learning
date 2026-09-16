@@ -17,4 +17,26 @@ export default defineConfig({
      "@": path.resolve(__dirname, "./src"),
    },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('xlsx') || id.includes('exceljs') || id.includes('fflate')) {
+              return 'vendor-excel';
+            }
+            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+              return 'vendor-react';
+            }
+            if (id.includes('lucide') || id.includes('embla') || id.includes('radix') || id.includes('sonner')) {
+              return 'vendor-ui';
+            }
+            if (id.includes('dompurify') || id.includes('sanitize-html')) {
+              return 'vendor-sanitize';
+            }
+          }
+        }
+      }
+    }
+  }
 })
