@@ -1,4 +1,4 @@
-const CACHE_NAME = 'elearning-pkbm-cache-v2';
+const CACHE_NAME = 'elearning-pkbm-cache-v3';
 
 // Daftar aset statis yang ingin di-cache
 const urlsToCache = [
@@ -7,6 +7,8 @@ const urlsToCache = [
   '/manifest.json',
   '/pwa-icons/icon-192x192.png',
   '/pwa-icons/icon-512x512.png',
+  '/pwa-icons/icon-maskable-192x192.png',
+  '/pwa-icons/icon-maskable-512x512.png',
 ];
 
 self.addEventListener('install', (event) => {
