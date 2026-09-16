@@ -114,16 +114,15 @@ export const attendanceHandlers = new Elysia()
           .onConflictDoNothing()
           .returning();
 
-        if (inserted.length === 0) {
-          const conflict = await db
-            .select()
-            .from(elearningAttendances)
-            .where(and(eq(elearningAttendances.sessionId, sessionId), eq(elearningAttendances.studentId, studentId)))
-            .get();
-          return { success: true, data: conflict };
-        }
+        // Returning bisa kosong bila request paralel kalah pada UNIQUE
+        // (sessionId, studentId). Baca ulang agar kedua request tetap idempoten.
+        const result = inserted[0] ?? await db
+          .select()
+          .from(elearningAttendances)
+          .where(and(eq(elearningAttendances.sessionId, sessionId), eq(elearningAttendances.studentId, studentId)))
+          .get();
 
-        return { success: true, data: inserted[0] };
+        return { success: true, data: result };
       } catch (error: any) {
         set.status = 500;
         console.error("Attendance error:", error);

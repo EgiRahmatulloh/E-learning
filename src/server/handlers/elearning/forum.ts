@@ -73,12 +73,8 @@ export const forumHandlers = new Elysia()
             }
           } else {
             const student = allStudents.find(s => s.id === post.authorId);
-            if (student) {
-              authorName = student.nama;
-              authorFoto = student.foto;
-            }
-          }
-          return {
+            if (student) [authorName, authorFoto] = [student.nama, student.foto];
+          } return {
             ...post,
             authorName,
             authorFoto
@@ -235,11 +231,11 @@ export const forumHandlers = new Elysia()
         }
 
         // Recursively delete all descendants, then the post itself (in a transaction)
-        await db.transaction(async (tx) => {
+        db.transaction((tx) => {
           const descendantIds: number[] = [];
           let parentIds = [postId];
           while (parentIds.length > 0) {
-            const children = await tx.select({ id: elearningForumPosts.id })
+            const children = tx.select({ id: elearningForumPosts.id })
               .from(elearningForumPosts)
               .where(inArray(elearningForumPosts.parentId, parentIds))
               .all();
@@ -249,9 +245,9 @@ export const forumHandlers = new Elysia()
             parentIds = childIds;
           }
           if (descendantIds.length > 0) {
-            await tx.delete(elearningForumPosts).where(inArray(elearningForumPosts.id, descendantIds));
+            tx.delete(elearningForumPosts).where(inArray(elearningForumPosts.id, descendantIds)).run();
           }
-          await tx.delete(elearningForumPosts).where(eq(elearningForumPosts.id, postId));
+          tx.delete(elearningForumPosts).where(eq(elearningForumPosts.id, postId)).run();
         });
 
         return { success: true, message: "Pesan berhasil dihapus" };

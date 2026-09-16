@@ -93,12 +93,9 @@ export const quizHandlers = new Elysia()
         const sId = parseInt(sessionId);
         const { questions } = body as { questions: any[] };
 
-        await db.transaction(async (tx) => {
-          // Delete existing questions and their corresponding submissions
-          await tx.delete(elearningQuestions).where(eq(elearningQuestions.sessionId, sId));
-          await tx.delete(elearningQuizSubmissions).where(eq(elearningQuizSubmissions.sessionId, sId));
-
-          // Insert new ones
+        db.transaction((tx) => {
+          tx.delete(elearningQuestions).where(eq(elearningQuestions.sessionId, sId)).run();
+          tx.delete(elearningQuizSubmissions).where(eq(elearningQuizSubmissions.sessionId, sId)).run();
           if (questions && questions.length > 0) {
             const inserts = questions.map((q: any) => ({
               sessionId: sId,
@@ -106,7 +103,7 @@ export const quizHandlers = new Elysia()
               options: JSON.stringify(q.options),
               correctAnswer: q.correctAnswer
             }));
-            await tx.insert(elearningQuestions).values(inserts);
+            tx.insert(elearningQuestions).values(inserts).run();
           }
         });
 
@@ -164,9 +161,9 @@ export const quizHandlers = new Elysia()
         const existing = await db.select().from(elearningQuizSubmissions).where(and(eq(elearningQuizSubmissions.sessionId, sId), eq(elearningQuizSubmissions.studentId, studentId))).get();
 
         if (existing) {
-          await db.update(elearningQuizSubmissions).set({ grade, answers: JSON.stringify(answers) }).where(eq(elearningQuizSubmissions.id, existing.id));
+          db.update(elearningQuizSubmissions).set({ grade, answers: JSON.stringify(answers) }).where(eq(elearningQuizSubmissions.id, existing.id)).run();
         } else {
-          await db.insert(elearningQuizSubmissions).values({ sessionId: sId, studentId, grade, answers: JSON.stringify(answers) });
+          db.insert(elearningQuizSubmissions).values({ sessionId: sId, studentId, grade, answers: JSON.stringify(answers) }).run();
         }
 
         return { success: true, message: "Jawaban berhasil disubmit", grade, correctCount: correct, totalQuestions: questions.length };

@@ -1285,9 +1285,11 @@ export const laporanHandlers = new Elysia()
           );
       }
 
-      const siswaData = studentsList.map((student, idx) => {
+      const siswaData: any[] = [];
+      let studentIndex = 0;
+      for (const student of studentsList) {
         const sData: any = {
-          no: idx + 1,
+          no: studentIndex + 1,
           nis: student.nis || "",
           nisn: student.nisn || "",
           namaSiswa: student.nama,
@@ -1295,15 +1297,17 @@ export const laporanHandlers = new Elysia()
           rombel: student.kelas,
         };
 
-        mapelNames.forEach((mapelName, mIdx) => {
-          const mKey = `mapel${mIdx + 1}`;
+        let mapelIndex = 0;
+        for (const mapelName of mapelNames) {
+          const mKey = `mapel${mapelIndex + 1}`;
           sData[mKey] = mapelName.toUpperCase(); // contains the mapel name
 
           const setup = setupsMap.get(`${student.kelas}-${mapelName}`);
           if (!setup) {
             sData[`${mKey}Nilai`] = "-";
             sData[`${mKey}Predikat`] = "-";
-            return;
+            mapelIndex++;
+            continue;
           }
 
           const prog = deriveProgram(setup.kelas);
@@ -1311,7 +1315,8 @@ export const laporanHandlers = new Elysia()
           if (!course) {
             sData[`${mKey}Nilai`] = "-";
             sData[`${mKey}Predikat`] = "-";
-            return;
+            mapelIndex++;
+            continue;
           }
 
           const sessions = sessionsByCourse.get(course.id) || [];
@@ -1363,10 +1368,12 @@ export const laporanHandlers = new Elysia()
 
           sData[`${mKey}Nilai`] = final;
           sData[`${mKey}Predikat`] = predikat;
-        });
+          mapelIndex++;
+        }
 
-        return sData;
-      });
+        siswaData.push(sData);
+        studentIndex++;
+      }
 
       const program =
         filteredSetups.length > 0
@@ -1565,22 +1572,23 @@ export const laporanHandlers = new Elysia()
 
       const agendaData = sessionsList.map((s, idx) => {
         const sessMaterials = materialsList.filter((m) => m.sessionId === s.id);
-        const materiList = sessMaterials
-          .map((m) => m.title)
-          .map(stripHtml)
-          .filter(Boolean);
+        const materiList: string[] = [];
+        for (const material of sessMaterials) {
+          const cleanTitle = stripHtml(material.title);
+          if (cleanTitle) materiList.push(cleanTitle);
+        }
         // Materi diambil dari isian "Materi yang diajarkan" tutor (description); fallback ke judul materi unggah; selain itu "-"
         const materi = stripHtml(s.description) || materiList.join(", ") || "-";
-        const attendedIds = new Set(
-          attendances
-            .filter((a) => a.sessionId === s.id)
-            .map((a) => a.studentId),
-        );
+        const attendedIds = new Set<number>();
+        for (const attendance of attendances) {
+          if (attendance.sessionId === s.id) attendedIds.add(attendance.studentId);
+        }
         const hadir = attendedIds.size;
         const tidakHadir = Math.max(0, totalStudents - hadir);
-        const absentNames = studentsList
-          .filter((st) => !attendedIds.has(st.id))
-          .map((st) => st.nama);
+        const absentNames: string[] = [];
+        for (const listedStudent of studentsList) {
+          if (!attendedIds.has(listedStudent.id)) absentNames.push(listedStudent.nama);
+        }
         const keterangan = tidakHadir > 0 ? absentNames.join(", ") : "-";
         // Hari, Tanggal otomatis terisi tanggal terakhir sesi di-Simpan (updated_at) saat tutor simpan materi/tujuan/uraian; "-" jika belum ada isian
         const adaIsian = Boolean(

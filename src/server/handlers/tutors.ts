@@ -427,7 +427,6 @@ export const tutorsHandlers = new Elysia()
                 ? item.Password.trim()
                 : null;
             const password = rawPass ? await Bun.password.hash(rawPass) : defaultPassword;
-
             return {
               nama: item.nama,
               tutorMapel: typeof item.tutorMapel === "string" ? item.tutorMapel : "",

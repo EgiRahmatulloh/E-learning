@@ -36,15 +36,10 @@ export const courseHandlers = new Elysia()
     "/course",
     async (context: any) => {
       const { headers, jwt, body, set } = context;
-
-      // Auth: semua role yang terautentikasi boleh lihat/buat course
       const authError = await verifyUser(headers, jwt, set);
       if (authError) return authError;
-
       try {
         const { subjectName, program, kelas, setupId } = body;
-
-        // Derive program from setup's kelas if setupId provided (consistency with tutor derivation)
         let resolvedProgram = program || "";
         let resolvedKelas = kelas || "";
         if (setupId) {
@@ -54,7 +49,6 @@ export const courseHandlers = new Elysia()
             resolvedKelas = setup.kelas;
           }
         }
-
         let course = await db
           .select()
           .from(elearningCourses)
@@ -65,7 +59,6 @@ export const courseHandlers = new Elysia()
             )
           )
           .get();
-
         if (!course) {
           const inserted = await db
             .insert(elearningCourses)
@@ -77,7 +70,6 @@ export const courseHandlers = new Elysia()
             .returning();
           course = inserted[0];
         }
-
         return { success: true, data: course };
       } catch (error: any) {
         set.status = 500;
@@ -100,15 +92,11 @@ export const courseHandlers = new Elysia()
     "/session",
     async (context: any) => {
       const { headers, jwt, query, set } = context;
-
-      // Auth: semua user yang login boleh baca sesi
       const authError = await verifyUser(headers, jwt, set);
       if (authError) return authError;
-
       try {
         const courseId = query.courseId;
         const sessionNumber = query.sessionNumber;
-
         let session = await db
           .select()
           .from(elearningSessions)
@@ -119,7 +107,6 @@ export const courseHandlers = new Elysia()
             )
           )
           .get();
-
         if (!session) {
           const inserted = await db
             .insert(elearningSessions)
@@ -134,7 +121,6 @@ export const courseHandlers = new Elysia()
             })
             .onConflictDoNothing()
             .returning();
-            
           if (inserted.length === 0) {
             session = await db
               .select()
@@ -150,14 +136,11 @@ export const courseHandlers = new Elysia()
             session = inserted[0];
           }
         }
-
-        // Ambil Material terkait
         const materials = await db
           .select()
           .from(elearningMaterials)
           .where(eq(elearningMaterials.sessionId, session.id))
           .all();
-
         return { success: true, data: { session, materials } };
       } catch (error: any) {
         set.status = 500;
@@ -178,11 +161,8 @@ export const courseHandlers = new Elysia()
     "/session/:id",
     async (context: any) => {
       const { headers, jwt, params: { id }, body, set } = context;
-
-      // Auth: admin atau tutor saja
       const authError = await verifyAdminOrTutor(headers, jwt, set);
       if (authError) return authError;
-
       try {
         const sanitizeOptions = {
           allowedTags: sanitizeHtml.defaults.allowedTags.concat(['font', 'u', 'span']),
@@ -192,25 +172,24 @@ export const courseHandlers = new Elysia()
             '*': ['class', 'style', 'align']
           }
         };
-
-        const cleanHtml = typeof body.description === 'string' ? sanitizeHtml(body.description, sanitizeOptions) : undefined;
-        const cleanTujuan = typeof body.tujuanPembelajaran === 'string' ? sanitizeHtml(body.tujuanPembelajaran, sanitizeOptions) : undefined;
-        const cleanUraian = typeof body.uraianKegiatan === 'string' ? sanitizeHtml(body.uraianKegiatan, sanitizeOptions) : undefined;
-
         const updateData: any = {};
-        if (cleanHtml !== undefined) updateData.description = cleanHtml;
-        if (cleanTujuan !== undefined) updateData.tujuanPembelajaran = cleanTujuan;
-        if (cleanUraian !== undefined) updateData.uraianKegiatan = cleanUraian;
+        if (body.description !== undefined) {
+          updateData.description = sanitizeHtml(body.description, sanitizeOptions);
+        }
+        if (body.tujuanPembelajaran !== undefined) {
+          updateData.tujuanPembelajaran = sanitizeHtml(body.tujuanPembelajaran, sanitizeOptions);
+        }
+        if (body.uraianKegiatan !== undefined) {
+          updateData.uraianKegiatan = sanitizeHtml(body.uraianKegiatan, sanitizeOptions);
+        }
         if (body.startDate !== undefined) updateData.startDate = body.startDate;
         if (body.endDate !== undefined) updateData.endDate = body.endDate;
-
         if (Object.keys(updateData).length > 0) {
           await db
             .update(elearningSessions)
             .set(updateData)
             .where(eq(elearningSessions.id, parseInt(id)));
         }
-
         return { success: true, message: "Berhasil menyimpan pengaturan sesi" };
       } catch (error: any) {
         set.status = 500;
@@ -234,15 +213,10 @@ export const courseHandlers = new Elysia()
     "/material",
     async (context: any) => {
       const { headers, jwt, body, set } = context;
-
-      // Auth: admin atau tutor saja
       const authError = await verifyAdminOrTutor(headers, jwt, set);
       if (authError) return authError;
-
       try {
         const { sessionId, title, type, fileUrl } = body;
-
-        // Cek apakah material dengan tipe tersebut di sesi yang sama sudah ada
         const existing = await db
           .select()
           .from(elearningMaterials)
@@ -253,14 +227,11 @@ export const courseHandlers = new Elysia()
             )
           )
           .get();
-
         if (existing) {
           await db
             .update(elearningMaterials)
             .set({ title, fileUrl })
             .where(eq(elearningMaterials.id, existing.id));
-          // Unggah ulang material menggantikan berkas lama — lepas dari storage
-          // supaya bucket tidak menyimpan tiap versi yang pernah diunggah.
           await cleanupReplacedFiles(existing, { fileUrl }, ["fileUrl"]);
         } else {
           await db
@@ -270,9 +241,7 @@ export const courseHandlers = new Elysia()
               title,
               type,
               fileUrl,
-            });
-        }
-
+            }); }
         return { success: true, message: "Berhasil menyimpan material" };
       } catch (error: any) {
         set.status = 500;
@@ -295,11 +264,8 @@ export const courseHandlers = new Elysia()
     "/evaluations",
     async (context: any) => {
       const { headers, jwt, set } = context;
-
-      // Auth: semua user yang login boleh baca evaluasi
       const authError = await verifyUser(headers, jwt, set);
       if (authError) return authError;
-
       try {
         const evaluations = await db.select().from(elearningEvaluations).all();
         return { success: true, data: evaluations };
@@ -316,35 +282,28 @@ export const courseHandlers = new Elysia()
     "/evaluations",
     async (context: any) => {
       const { headers, jwt, set, body } = context;
-
-      // Auth: admin atau super_admin saja (operasi destructif)
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
-
       try {
-        await db.transaction(async (tx) => {
-          const existing = await tx.select().from(elearningEvaluations).orderBy(asc(elearningEvaluations.id)).all();
+        db.transaction((tx) => {
+          const existing = tx.select().from(elearningEvaluations).orderBy(asc(elearningEvaluations.id)).all();
           const newQuestions = body.questions || [];
-
           for (let i = 0; i < Math.max(existing.length, newQuestions.length); i++) {
             if (i < existing.length && i < newQuestions.length) {
-              // Update existing
               if (existing[i].question !== newQuestions[i].text) {
-                await tx.update(elearningEvaluations)
+                tx.update(elearningEvaluations)
                   .set({ question: newQuestions[i].text })
-                  .where(eq(elearningEvaluations.id, existing[i].id));
+                  .where(eq(elearningEvaluations.id, existing[i].id))
+                  .run();
               }
             } else if (i >= existing.length) {
-              // Insert new
-              await tx.insert(elearningEvaluations).values({
-                sessionId: 0, // Global evaluation, not tied to a specific session
+              tx.insert(elearningEvaluations).values({
+                sessionId: 0,
                 question: newQuestions[i].text,
                 scaleMax: 5,
-              });
+              }).run();
             } else {
-              // Delete removed
-              await tx.delete(elearningEvaluations).where(eq(elearningEvaluations.id, existing[i].id));
-            }
+              tx.delete(elearningEvaluations).where(eq(elearningEvaluations.id, existing[i].id)).run(); }
           }
         });
         return { success: true, message: "Berhasil menyimpan angket evaluasi" };
@@ -372,13 +331,11 @@ export const courseHandlers = new Elysia()
       const { headers, jwt, set } = context;
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
-
       try {
         const evaluations = await db.select().from(elearningEvaluations).all();
         if (evaluations.length === 0) {
           return { success: true, data: { evaluations: [], responses: [], aggregated: [] } };
         }
-
         const responses = await db
           .select({
             id: elearningSessionAngkets.id,
@@ -398,8 +355,6 @@ export const courseHandlers = new Elysia()
           .leftJoin(elearningSessions, eq(elearningSessionAngkets.sessionId, elearningSessions.id))
           .leftJoin(elearningCourses, eq(elearningSessions.courseId, elearningCourses.id))
           .all();
-
-        // Aggregate: rata-rata skor per pertanyaan
         const aggregated = evaluations.map(ev => {
           const evResponses = responses.filter(r => r.evaluationId === ev.id);
           const totalScore = evResponses.reduce((sum, r) => sum + r.score, 0);
@@ -412,7 +367,6 @@ export const courseHandlers = new Elysia()
             avgScore,
           };
         });
-
         return { success: true, data: { evaluations, responses, aggregated } };
       } catch (error: any) {
         set.status = 500;

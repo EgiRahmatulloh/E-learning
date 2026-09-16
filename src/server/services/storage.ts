@@ -60,13 +60,17 @@ export function collectFileNames(value: unknown): string[] {
   if (single) return [single];
 
   if (Array.isArray(value)) {
-    return value.flatMap((item) => collectFileNames(item));
+    const names: string[] = [];
+    for (const item of value) names.push(...collectFileNames(item));
+    return names;
   }
 
   if (value && typeof value === "object") {
-    return Object.values(value as Record<string, unknown>).flatMap((item) =>
-      collectFileNames(item),
-    );
+    const names: string[] = [];
+    for (const item of Object.values(value as Record<string, unknown>)) {
+      names.push(...collectFileNames(item));
+    }
+    return names;
   }
 
   // Kolom JSON kadang sampai ke sini sebagai string mentah: `berkas` ditulis
@@ -92,23 +96,22 @@ export function collectFileNames(value: unknown): string[] {
  * berkas tidak boleh membuat operasi utamanya ikut gagal.
  */
 export async function deleteStoredFiles(names: string[]): Promise<void> {
-  if (names.length === 0) return;
-  if (!isR2Enabled) return;
+  if (names.length === 0 || !isR2Enabled) return;
 
   const unique = [...new Set(names)];
-  await Promise.all(
-    unique.map(async (name) => {
-      try {
-        const { client } = resolveR2Bucket(name);
-        if (!client) return;
-        await client.file(name).delete();
-      } catch (err) {
-        // Objek yang sudah tidak ada juga masuk sini — tidak perlu ditangani
-        // khusus, hasil akhirnya sama-sama "berkas tidak ada di storage".
-        console.error("[R2] Gagal menghapus berkas:", name, err);
-      }
-    }),
-  );
+  for (const name of unique) {
+    await deleteStoredFile(name);
+  }
+}
+
+async function deleteStoredFile(name: string): Promise<void> {
+  try {
+    const { client } = resolveR2Bucket(name);
+    if (!client) return;
+    await client.file(name).delete();
+  } catch (err) {
+    console.error("[R2] Gagal menghapus berkas:", name, err);
+  }
 }
 
 export interface CleanupOptions {
@@ -138,15 +141,25 @@ export async function cleanupReplacedFiles(
 ): Promise<void> {
   if (!before) return;
 
-  const oldNames = fields.flatMap((field) => collectFileNames(before[field]));
+  const oldNames: string[] = [];
+  for (const field of fields) oldNames.push(...collectFileNames(before[field]));
   if (oldNames.length === 0) return;
 
-  const keptNames = new Set([
-    ...(after ? fields.flatMap((field) => collectFileNames(after[field])) : []),
-    ...(options.keep ?? []).flatMap((value) => collectFileNames(value)),
-  ]);
+  const keptNames = new Set<string>();
+  if (after) {
+    for (const field of fields) {
+      for (const name of collectFileNames(after[field])) keptNames.add(name);
+    }
+  }
+  for (const value of options.keep ?? []) {
+    for (const name of collectFileNames(value)) keptNames.add(name);
+  }
 
-  await deleteStoredFiles(oldNames.filter((name) => !keptNames.has(name)));
+  const removed: string[] = [];
+  for (const name of oldNames) {
+    if (!keptNames.has(name)) removed.push(name);
+  }
+  await deleteStoredFiles(removed);
 }
 
 /** Hapus seluruh berkas milik baris yang dihapus dari DB. */
@@ -166,14 +179,19 @@ export async function cleanupRowsFiles(
   options: CleanupOptions = {},
 ): Promise<void> {
   if (!rows || rows.length === 0) return;
-  const keptNames = new Set(
-    (options.keep ?? []).flatMap((value) => collectFileNames(value)),
-  );
-  await deleteStoredFiles(
-    rows
-      .flatMap((row) => fields.flatMap((field) => collectFileNames(row[field])))
-      .filter((name) => !keptNames.has(name)),
-  );
+  const keptNames = new Set<string>();
+  for (const value of options.keep ?? []) {
+    for (const name of collectFileNames(value)) keptNames.add(name);
+  }
+  const removed: string[] = [];
+  for (const row of rows) {
+    for (const field of fields) {
+      for (const name of collectFileNames(row[field])) {
+        if (!keptNames.has(name)) removed.push(name);
+      }
+    }
+  }
+  await deleteStoredFiles(removed);
 }
 
 function sign(payload: string): string {

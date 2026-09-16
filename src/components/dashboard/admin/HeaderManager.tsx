@@ -316,7 +316,9 @@ export function HeaderManager() {
     setUploading(true);
     try {
       const previous = formImage;
-      setFormImage(await uploadFile(file));
+      // Paksa percobaan WebP walau file kecil — landing butuh file ringan.
+      // compressImageFile tetap fallback ke asli bila hasil WebP malah lebih besar.
+      setFormImage(await uploadFile(file, { compress: { maxDimension: 1920, quality: 0.82 } }));
       // Ganti gambar sebelum disimpan: unggahan sebelumnya tidak akan dipakai lagi
       void discardUpload(previous);
       toast.success("Gambar berhasil diunggah!");

@@ -64,10 +64,15 @@ describe("verifyAdmin", () => {
     }
   });
 
-  test("401 bila tanpa token", async () => {
-    const set = makeSet();
-    await verifyAdmin({}, jwtFor({ role: "admin", id: 1 }), set);
-    expect(set.status).toBe(401);
+  test("401 bila tanpa token atau token basi", async () => {
+    const missingSet = makeSet();
+    await verifyAdmin({}, jwtFor({ role: "admin", id: 1 }), missingSet);
+    expect(missingSet.status).toBe(401);
+
+    const staleSet = makeSet();
+    const result = await verifyAdmin(bearer, jwtFor(null), staleSet);
+    expect(staleSet.status).toBe(401);
+    expect(result).toMatchObject({ success: false, message: expect.stringContaining("kedaluwarsa") });
   });
 });
 
@@ -84,7 +89,11 @@ describe("verifyAdminOrTutor", () => {
     expect(set.status).toBe(403);
   });
 
-  test("401 bila token tak valid", async () => {
+  test("401 bila tanpa token atau token basi", async () => {
+    const missingSet = makeSet();
+    await verifyAdminOrTutor({}, jwtFor({ role: "admin", id: 1 }), missingSet);
+    expect(missingSet.status).toBe(401);
+
     const set = makeSet();
     await verifyAdminOrTutor(bearer, jwtFor(null), set);
     expect(set.status).toBe(401);

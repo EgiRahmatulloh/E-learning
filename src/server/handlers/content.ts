@@ -533,8 +533,7 @@ export const contentHandlers = new Elysia()
     }
   })
   .post(
-    "/api/facilities",
-    async ({ body, headers, jwt, set }) => {
+    "/api/facilities", async ({ body, headers, jwt, set }) => {
       const authError = await verifyAdmin(headers, jwt, set);
       if (authError) return authError;
 
@@ -643,10 +642,6 @@ export const contentHandlers = new Elysia()
       if (authError) return authError;
 
       const list = body;
-      if (!Array.isArray(list)) {
-        set.status = 400;
-        return { success: false, message: "Format data tidak valid, harus berupa array" };
-      }
 
       try {
         const existingRecords = await db.select({ nama: facilities.nama }).from(facilities).all();
@@ -851,10 +846,6 @@ export const contentHandlers = new Elysia()
       if (authError) return authError;
 
       const list = body;
-      if (!Array.isArray(list)) {
-        set.status = 400;
-        return { success: false, message: "Format data tidak valid, harus berupa array" };
-      }
 
       try {
         const validItems = list.filter(
@@ -1061,10 +1052,6 @@ export const contentHandlers = new Elysia()
       if (authError) return authError;
 
       const list = body;
-      if (!Array.isArray(list)) {
-        set.status = 400;
-        return { success: false, message: "Format data tidak valid, harus berupa array" };
-      }
 
       try {
         const validItems = list.filter(
@@ -1292,10 +1279,6 @@ export const contentHandlers = new Elysia()
       if (authError) return authError;
 
       const list = body;
-      if (!Array.isArray(list)) {
-        set.status = 400;
-        return { success: false, message: "Format data tidak valid, harus berupa array" };
-      }
 
       try {
         const existingRecords = await db.select({ nama: agendas.nama }).from(agendas).all();
@@ -1574,10 +1557,6 @@ export const contentHandlers = new Elysia()
       if (authError) return authError;
 
       const { namaProduk, deskripsi, noHp, penjual, satuan, harga, status, gambar } = body as any;
-      if (harga < 0) {
-        set.status = 400;
-        return { success: false, message: "Harga tidak boleh bernilai negatif" };
-      }
 
       try {
         const inserted = await db
@@ -1627,10 +1606,6 @@ export const contentHandlers = new Elysia()
       }
 
       const { namaProduk, deskripsi, noHp, penjual, satuan, harga, status, gambar } = body as any;
-      if (harga < 0) {
-        set.status = 400;
-        return { success: false, message: "Harga tidak boleh bernilai negatif" };
-      }
 
       try {
         const existing = await db.select().from(products).where(eq(products.id, id)).get();
@@ -1845,10 +1820,6 @@ export const contentHandlers = new Elysia()
       if (authError) return authError;
 
       const list = body;
-      if (!Array.isArray(list)) {
-        set.status = 400;
-        return { success: false, message: "Format data tidak valid, harus berupa array" };
-      }
 
       try {
         const existingRecords = await db.select({ nama: alumni.nama }).from(alumni).all();
@@ -2004,11 +1975,6 @@ export const contentHandlers = new Elysia()
           .where(eq(alumni.id, id))
           .returning()
           .get();
-
-        if (!updated) {
-          set.status = 404;
-          return { success: false, message: "Data alumni tidak ditemukan" };
-        }
 
         await cleanupReplacedFiles(existing, updated, ["foto", "berkas"], {
           keep: await fotoDipakaiStudent(existing.foto),
