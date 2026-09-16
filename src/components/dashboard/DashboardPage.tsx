@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
@@ -12,26 +12,27 @@ import {
   Eye,
   EyeOff
 } from "lucide-react";
-import { ElearningSiswa } from "./siswa/ElearningSiswa";
-import { HeaderManager } from "./admin/HeaderManager";
-import AnnouncementManager from "./admin/AnnouncementManager";
-import InstitutionProfileManager from "./admin/InstitutionProfileManager";
-import ManagerManager from "./admin/ManagerManager";
-import VisiMisiManager from "./admin/VisiMisiManager";
-import EducationProgramManager from "./admin/EducationProgramManager";
-import FacilitiesManager from "./admin/FacilitiesManager";
-import { AchievementsManager } from "./admin/AchievementsManager";
-import { ServicePointsManager } from "./admin/ServicePointsManager";
-import AgendaManager from "./admin/AgendaManager";
-import NewsManager from "./admin/NewsManager";
-import TutorManager from "./admin/TutorManager";
-import WargaBelajarManager from "./admin/WargaBelajarManager";
-import DownloadsManager from "./admin/DownloadsManager";
-import ProductsManager from "./admin/ProductsManager";
-import AlumniManager from "./admin/AlumniManager";
-import GalleryManager from "./admin/GalleryManager";
-import RombelManager from "./admin/RombelManager";
-import ElearningAdminDashboard from "./admin/elearning/ElearningAdminDashboard";
+
+const ElearningSiswa = lazy(() => import("./siswa/ElearningSiswa").then(m => ({ default: m.ElearningSiswa })));
+const HeaderManager = lazy(() => import("./admin/HeaderManager").then(m => ({ default: m.HeaderManager })));
+const AnnouncementManager = lazy(() => import("./admin/AnnouncementManager"));
+const InstitutionProfileManager = lazy(() => import("./admin/InstitutionProfileManager"));
+const ManagerManager = lazy(() => import("./admin/ManagerManager"));
+const VisiMisiManager = lazy(() => import("./admin/VisiMisiManager"));
+const EducationProgramManager = lazy(() => import("./admin/EducationProgramManager"));
+const FacilitiesManager = lazy(() => import("./admin/FacilitiesManager"));
+const AchievementsManager = lazy(() => import("./admin/AchievementsManager").then(m => ({ default: m.AchievementsManager })));
+const ServicePointsManager = lazy(() => import("./admin/ServicePointsManager").then(m => ({ default: m.ServicePointsManager })));
+const AgendaManager = lazy(() => import("./admin/AgendaManager"));
+const NewsManager = lazy(() => import("./admin/NewsManager"));
+const TutorManager = lazy(() => import("./admin/TutorManager"));
+const WargaBelajarManager = lazy(() => import("./admin/WargaBelajarManager"));
+const DownloadsManager = lazy(() => import("./admin/DownloadsManager"));
+const ProductsManager = lazy(() => import("./admin/ProductsManager"));
+const AlumniManager = lazy(() => import("./admin/AlumniManager"));
+const GalleryManager = lazy(() => import("./admin/GalleryManager"));
+const RombelManager = lazy(() => import("./admin/RombelManager"));
+const ElearningAdminDashboard = lazy(() => import("./admin/elearning/ElearningAdminDashboard"));
 
 // Dashboard Sub-components
 import DashboardSidebar, { getTabLabel } from "./DashboardSidebar";
@@ -39,10 +40,10 @@ import WelcomeBanner from "./WelcomeBanner";
 import RoleStatsGrid from "./RoleStatsGrid";
 
 // Tutor Sub-components
-import PendahuluanTab from "./tutor/elearning/PendahuluanTab";
-import SesiKelasTab from "./tutor/elearning/SesiKelasTab";
-import LaporanNilaiTab from "./tutor/elearning/LaporanNilaiTab";
-import KehadiranTab from "./tutor/elearning/KehadiranTab";
+const PendahuluanTab = lazy(() => import("./tutor/elearning/PendahuluanTab"));
+const SesiKelasTab = lazy(() => import("./tutor/elearning/SesiKelasTab"));
+const LaporanNilaiTab = lazy(() => import("./tutor/elearning/LaporanNilaiTab"));
+const KehadiranTab = lazy(() => import("./tutor/elearning/KehadiranTab"));
 import { commitUploads, discardUpload, uploadFile, validateImageFile } from "@/lib/upload";
 
 interface DashboardPageProps {
@@ -1318,7 +1319,13 @@ export default function DashboardPage({ user, handleLogout, setUser }: Dashboard
         <div className="flex-1 flex min-h-0">
           {/* Main Content */}
           <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-            {renderActiveContent()}
+            <Suspense fallback={
+              <div className="flex h-full items-center justify-center">
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-cyan-600 border-t-transparent"></div>
+              </div>
+            }>
+              {renderActiveContent()}
+            </Suspense>
           </main>
         </div>
       </div>

@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import './App.css';
-import DashboardPage from "@/components/dashboard/DashboardPage";
+const DashboardPage = lazy(() => import("@/components/dashboard/DashboardPage"));
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -13,11 +13,11 @@ import Agenda from "./components/landing/Agenda";
 import Profile from "./components/landing/Profile";
 import News from "./components/landing/News";
 import Tutors from "./components/landing/Tutors";
-import WargaBelajar from "./components/landing/WargaBelajar";
-import DownloadPage from "./components/landing/DownloadPage";
-import ProductsPage from "./components/landing/ProductsPage";
-import AlumniPage from "./components/landing/AlumniPage";
-import GalleryPage from "./components/landing/GalleryPage";
+const WargaBelajar = lazy(() => import("./components/landing/WargaBelajar"));
+const DownloadPage = lazy(() => import("./components/landing/DownloadPage"));
+const ProductsPage = lazy(() => import("./components/landing/ProductsPage"));
+const AlumniPage = lazy(() => import("./components/landing/AlumniPage"));
+const GalleryPage = lazy(() => import("./components/landing/GalleryPage"));
 import Products from "./components/landing/Products";
 import Testimonials from "./components/landing/Testimonials";
 import Gallery from "./components/landing/Gallery";
@@ -151,7 +151,9 @@ function App() {
     return (
       <TooltipProvider>
         <Toaster />
-        <DashboardPage user={user} handleLogout={handleLogout} setUser={setUser} />
+        <Suspense fallback={<LoadingScreen />}>
+          <DashboardPage user={user} handleLogout={handleLogout} setUser={setUser} />
+        </Suspense>
       </TooltipProvider>
     );
   }
@@ -181,23 +183,23 @@ function App() {
           </div>
         ) : currentPath === "/warga-belajar" ? (
           <div className="pt-20">
-            <WargaBelajar onNavigate={navigate} />
+            <Suspense fallback={<LoadingScreen />}><WargaBelajar onNavigate={navigate} /></Suspense>
           </div>
         ) : currentPath === "/download" ? (
           <div className="pt-20">
-            <DownloadPage onNavigate={navigate} />
+            <Suspense fallback={<LoadingScreen />}><DownloadPage onNavigate={navigate} /></Suspense>
           </div>
         ) : currentPath === "/produk-wb" ? (
           <div className="pt-20">
-            <ProductsPage />
+            <Suspense fallback={<LoadingScreen />}><ProductsPage /></Suspense>
           </div>
         ) : currentPath === "/alumni" ? (
           <div className="pt-20">
-            <AlumniPage onNavigate={navigate} />
+            <Suspense fallback={<LoadingScreen />}><AlumniPage onNavigate={navigate} /></Suspense>
           </div>
         ) : currentPath === "/galeri" ? (
           <div className="pt-20">
-            <GalleryPage onNavigate={navigate} />
+            <Suspense fallback={<LoadingScreen />}><GalleryPage onNavigate={navigate} /></Suspense>
           </div>
         ) : (
           <>
