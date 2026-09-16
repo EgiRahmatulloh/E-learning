@@ -117,7 +117,10 @@ export async function compressImageFile(
   if (settings === false) return file;
   if (!file.type.startsWith("image/")) return file;
   if (file.type === "image/gif" || file.type === "image/svg+xml") return file;
-  if (file.size <= COMPRESS_SKIP_BELOW) return file;
+  const isExplicit = typeof settings === "object";
+  // Setting eksplisit (mis. header/slider) boleh memaksa konversi walau file kecil.
+  // Default path tetap hemat CPU untuk file sangat kecil.
+  if (!isExplicit && file.size <= COMPRESS_SKIP_BELOW) return file;
   // SSR / Bun test / browser lama tanpa API decode gambar
   if (typeof createImageBitmap === "undefined" || typeof document === "undefined") {
     return file;
@@ -129,9 +132,12 @@ export async function compressImageFile(
       const longest = Math.max(bitmap.width, bitmap.height);
       if (!longest) return file;
       const scale = Math.min(1, maxDimension / longest);
-      // Sudah cukup kecil & di bawah batas server → kirim asli, hemat CPU
-      // sekaligus jaga kualitas dari kompresi ulang yang tidak perlu.
-      if (scale >= 1 && file.size <= MAX_IMAGE_SIZE) return file;
+      // Sudah WebP & tidak perlu resize → kirim asli, hindari re-encode yang
+      // menurunkan kualitas tanpa manfaat.
+      if (scale >= 1 && file.type === "image/webp") return file;
+      // Sengaja TIDAK return untuk JPG/PNG yang tidak perlu resize — transcode
+      // ke WebP tanpa resize tetap jauh lebih kecil (fallback ke asli bila
+      // hasil malah lebih besar, lihat bawah).
 
       const canvas = document.createElement("canvas");
       canvas.width = Math.max(1, Math.round(bitmap.width * scale));
