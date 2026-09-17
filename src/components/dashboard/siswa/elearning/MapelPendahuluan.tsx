@@ -395,16 +395,25 @@ export function MapelPendahuluan({ subjectName, user, setupId }: MapelPendahulua
             </div>
           ))}
 
-          <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-slate-200">
-            <h4 className="text-sm font-bold text-slate-700">Perkenalkan diri Anda</h4>
-            <textarea
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Tulis perkenalan Anda di sini..."
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:border-[#280f91] focus:outline-none focus:ring-1 focus:ring-[#280f91] min-h-[50px] resize-y"
-            />
-            <div className="flex justify-end">
-              <Button onClick={handleSendMessage} className="rounded-xl bg-[#280f91] hover:bg-[#3a1bca] text-white font-bold px-6">Kirim</Button>
+          <div className="mt-4 pt-4 border-t border-slate-200">
+            <h4 className="text-sm font-bold text-slate-700 mb-2">Perkenalkan diri Anda</h4>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Tulis perkenalan Anda di sini..."
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && handleSendMessage()
+                }
+                className="flex-1 h-9 rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:border-[#280f91]"
+              />
+              <Button 
+                onClick={handleSendMessage} 
+                className="bg-[#280f91] hover:bg-[#3a1bca] text-white font-bold px-6 h-9"
+              >
+                Kirim
+              </Button>
             </div>
           </div>
         </div>
