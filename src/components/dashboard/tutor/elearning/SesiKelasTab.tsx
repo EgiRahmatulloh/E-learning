@@ -292,11 +292,11 @@ function SesiContent({
 
               {editingMessageId === reply.id ? (
                 <div className="mt-2 space-y-2">
-                  <textarea
+                  <RichTextEditor
                     value={editInputValue}
-                    onChange={(e) => setEditInputValue(e.target.value)}
+                    onChange={setEditInputValue}
                     placeholder="Edit balasan..."
-                    className="w-full min-h-[60px] border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-[#280f91] bg-slate-50"
+                    className="min-h-[100px]"
                   />
                   <div className="flex gap-2 justify-end">
                     <Button
@@ -325,24 +325,22 @@ function SesiContent({
 
               {/* Reply Input */}
               {activeReplyId === reply.id && (
-                <div className="mt-3 flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Ketik balasan Anda..."
+                <div className="mt-3 flex flex-col gap-2 w-full">
+                  <RichTextEditor
                     value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
-                    onKeyDown={(e) =>
-                      e.key === "Enter" && submitReply(reply.id)
-                    }
-                    className="flex-1 h-8 rounded-lg border border-slate-200 px-3 text-xs focus:outline-none focus:border-[#280f91]"
+                    onChange={setReplyText}
+                    placeholder="Ketik balasan Anda..."
+                    className="min-h-[100px]"
                   />
-                  <Button
-                    size="sm"
-                    onClick={() => submitReply(reply.id)}
-                    className="h-8 bg-[#280f91] hover:bg-[#ff6105] text-white text-xs px-3"
-                  >
-                    Kirim
-                  </Button>
+                  <div className="flex justify-end">
+                    <Button
+                      size="sm"
+                      onClick={() => submitReply(reply.id)}
+                      className="bg-[#280f91] hover:bg-[#ff6105] text-white text-xs px-3"
+                    >
+                      Kirim Balasan
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
