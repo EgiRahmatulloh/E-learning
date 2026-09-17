@@ -292,18 +292,6 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
                         </button>
                       </div>
                     )}
-                  { (reply.authorId !== user?.id || reply.authorRole !== user?.role) && (
-                    <button
-                      onClick={() =>
-                        setActiveReplyId(
-                          activeReplyId === reply.id ? null : reply.id,
-                        )
-                      }
-                      className="text-slate-400 hover:text-cyan-600 text-xs font-semibold ml-2"
-                    >
-                      Balas
-                    </button>
-                  )}
                 </div>
               </div>
 
@@ -338,29 +326,6 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
                   className="text-xs text-slate-600 prose mt-1"
                   dangerouslySetInnerHTML={{ __html: safeHtml(reply.content) }}
                 />
-              )}
-
-              {/* Reply Input */}
-              {activeReplyId === reply.id && (
-                <div className="mt-3 flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Ketik balasan Anda..."
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
-                    onKeyDown={(e) =>
-                      e.key === "Enter" && submitReply(reply.id)
-                    }
-                    className="flex-1 h-8 rounded-lg border border-slate-200 px-3 text-xs focus:outline-none focus:border-[#280f91]"
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => submitReply(reply.id)}
-                    className="h-8 bg-[#280f91] hover:bg-[#ff6105] text-white text-xs px-3"
-                  >
-                    Kirim
-                  </Button>
-                </div>
               )}
             </div>
           </div>
@@ -675,20 +640,6 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
                                     </Button>
                                   </>
                                 )}
-                              { (post.authorId !== user?.id || post.authorRole !== user?.role) && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 text-xs text-cyan-600 hover:bg-cyan-50"
-                                  onClick={() =>
-                                    setActiveReplyId(
-                                      activeReplyId === post.id ? null : post.id,
-                                    )
-                                  }
-                                >
-                                  Balas
-                                </Button>
-                              )}
                             </div>
                           </div>
 
@@ -731,29 +682,6 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
 
                           {/* Replies */}
                           {renderReplies(post.id)}
-
-                          {/* Reply Input */}
-                          {activeReplyId === post.id && (
-                            <div className="mt-4 flex gap-2">
-                              <input
-                                type="text"
-                                placeholder="Ketik balasan Anda..."
-                                value={replyText}
-                                onChange={(e) => setReplyText(e.target.value)}
-                                onKeyDown={(e) =>
-                                  e.key === "Enter" && submitReply(post.id)
-                                }
-                                className="flex-1 h-9 rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:border-[#280f91]"
-                              />
-                              <Button
-                                size="sm"
-                                onClick={() => submitReply(post.id)}
-                                className="h-9 bg-[#280f91] hover:bg-[#ff6105] text-white"
-                              >
-                                Kirim
-                              </Button>
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -765,12 +693,12 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
           {/* New Pancingan Post Input (At the bottom) */}
           <div className="mt-4 pt-4 border-t border-slate-100">
             <h4 className="text-sm font-bold text-slate-700 mb-2">
-              Buat Topik / Teks Pancingan Baru
+              Buat Perkenalan
             </h4>
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="Tulis pancingan diskusi di sini..."
+                placeholder="Tulis perkenalan di sini..."
                 value={topicText}
                 onChange={(e) => setTopicText(e.target.value)}
                 onKeyDown={(e) =>
