@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -41,6 +41,10 @@ export function RichTextEditor({
   placeholder = "Tulis sesuatu...",
   className = "",
 }: RichTextEditorProps) {
+  const [showLinkInput, setShowLinkInput] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  const linkInputRef = useRef<HTMLInputElement>(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -77,26 +81,34 @@ export function RichTextEditor({
     }
   }, [value, editor]);
 
-  const setLink = useCallback(() => {
+  const handleLinkClick = useCallback(() => {
     if (!editor) return;
-    
     const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('URL:', previousUrl);
-
-    // cancelled
-    if (url === null) {
-      return;
-    }
-
-    // empty
-    if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run();
-      return;
-    }
-
-    // update link
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+    setLinkUrl(previousUrl || "");
+    setShowLinkInput(true);
+    setTimeout(() => {
+      linkInputRef.current?.focus();
+    }, 50);
   }, [editor]);
+
+  const saveLink = useCallback(() => {
+    if (!editor) return;
+    if (linkUrl === "") {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run();
+    } else {
+      editor.chain().focus().extendMarkRange('link').setLink({ href: linkUrl }).run();
+    }
+    setShowLinkInput(false);
+  }, [editor, linkUrl]);
+
+  const handleKeyDownLink = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveLink();
+    } else if (e.key === 'Escape') {
+      setShowLinkInput(false);
+    }
+  };
 
   if (!editor) {
     return null;
@@ -237,8 +249,8 @@ export function RichTextEditor({
         <div className="w-[1px] h-4 bg-slate-300 mx-1"></div>
 
         <ToolbarButton
-          onClick={setLink}
-          isActive={editor.isActive('link')}
+          onClick={handleLinkClick}
+          isActive={editor.isActive('link') || showLinkInput}
           icon={LinkIcon}
           title="Link"
         />
@@ -264,6 +276,32 @@ export function RichTextEditor({
           title="Redo"
         />
       </div>
+
+      {showLinkInput && (
+        <div className="absolute top-[52px] left-2 z-10 bg-white shadow-lg border border-slate-200 rounded-lg p-2 flex gap-2 items-center">
+          <input 
+            ref={linkInputRef}
+            type="url" 
+            placeholder="Masukkan URL..." 
+            value={linkUrl}
+            onChange={(e) => setLinkUrl(e.target.value)}
+            onKeyDown={handleKeyDownLink}
+            className="border border-slate-200 rounded-md px-2 py-1.5 text-sm w-64 focus:outline-none focus:border-[#280f91]"
+          />
+          <button 
+            onClick={saveLink}
+            className="bg-[#280f91] text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors"
+          >
+            Simpan
+          </button>
+          <button 
+            onClick={() => setShowLinkInput(false)}
+            className="text-slate-500 hover:bg-slate-100 px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+          >
+            Batal
+          </button>
+        </div>
+      )}
 
       <style>{`
         .is-editor-empty:first-child::before {
