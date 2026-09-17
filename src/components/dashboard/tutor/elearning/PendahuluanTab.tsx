@@ -44,9 +44,7 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
   // Format: mapel-setup-{setupId}-{mapelSlug}-pendahuluan
   const setupId = parts[1] === "setup" ? parseInt(parts[2], 10) : null;
   const [forumPosts, setForumPosts] = useState<any[]>([]);
-  const [replyText, setReplyText] = useState("");
   const [topicText, setTopicText] = useState("");
-  const [activeReplyId, setActiveReplyId] = useState<number | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [editInputValue, setEditInputValue] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
@@ -146,7 +144,7 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
   };
 
   const submitReply = async (parentId?: number, text?: string) => {
-    const replyContent = text !== undefined ? text : replyText;
+    const replyContent = text !== undefined ? text : "";
     if (!replyContent.trim()) return toast.error("Komentar tidak boleh kosong");
     try {
       const res = await fetch("/api/elearning/forum", {
@@ -165,12 +163,9 @@ export default function PendahuluanTab({ activeTab, user }: Props) {
       const data = await res.json();
       if (data.success) {
         toast.success("Komentar berhasil dikirim!");
-        if (parentId) {
-          setReplyText("");
-        } else {
+        if (!parentId) {
           setTopicText("");
         }
-        setActiveReplyId(null);
         if (sessionId) fetchForumPosts(sessionId);
       } else {
         toast.error(data.message);
