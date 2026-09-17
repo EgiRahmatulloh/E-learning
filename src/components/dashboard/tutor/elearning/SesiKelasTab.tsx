@@ -1464,24 +1464,22 @@ function SesiContent({
 
                             {/* Reply Input */}
                             {activeReplyId === post.id && (
-                              <div className="mt-4 flex gap-2">
-                                <input
-                                  type="text"
-                                  placeholder="Ketik balasan Anda..."
+                              <div className="mt-4 flex flex-col gap-2 w-full">
+                                <RichTextEditor
                                   value={replyText}
-                                  onChange={(e) => setReplyText(e.target.value)}
-                                  onKeyDown={(e) =>
-                                    e.key === "Enter" && submitReply(post.id)
-                                  }
-                                  className="flex-1 h-9 rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:border-[#280f91]"
+                                  onChange={setReplyText}
+                                  placeholder="Ketik balasan Anda..."
+                                  className="min-h-[100px]"
                                 />
-                                <Button
-                                  size="sm"
-                                  onClick={() => submitReply(post.id)}
-                                  className="h-9 bg-[#280f91] hover:bg-[#ff6105] text-white"
-                                >
-                                  Kirim
-                                </Button>
+                                <div className="flex justify-end">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => submitReply(post.id)}
+                                    className="bg-[#280f91] hover:bg-[#ff6105] text-white"
+                                  >
+                                    Kirim Balasan
+                                  </Button>
+                                </div>
                               </div>
                             )}
                           </div>
