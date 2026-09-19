@@ -30,7 +30,7 @@ export default function Contact() {
                 <div>
                   <h4 className="text-sm font-black text-[#280f91] uppercase tracking-wider mb-1">Alamat Lengkap</h4>
                   <p className="text-slate-600 text-sm font-semibold leading-relaxed">
-                    Dusun Pangrumasan Rt. 004 Rw. 001 Desa Cintanagara, Kecamatan Jatinagara Kab. Ciamis Prov. Jawa Barat
+                    Dusun Pangrumasan Rt. 001 Rw. 003 Desa Cintanagara, Kecamatan Jatinagara Kab. Ciamis Prov. Jawa Barat
                   </p>
                 </div>
               </div>
@@ -41,8 +41,8 @@ export default function Contact() {
                 </div>
                 <div>
                   <h4 className="text-sm font-black text-[#280f91] uppercase tracking-wider mb-1">E-mail Resmi</h4>
-                  <a href="mailto:admin@pkbmmenujumakmur.sch.id" className="text-blue-600 text-sm font-semibold hover:underline">
-                    admin@pkbmmenujumakmur.sch.id
+                  <a href="mailto:pkbmmenujumakmur@gmail.com" className="text-blue-600 text-sm font-semibold hover:underline">
+                    pkbmmenujumakmur@gmail.com
                   </a>
                 </div>
               </div>
