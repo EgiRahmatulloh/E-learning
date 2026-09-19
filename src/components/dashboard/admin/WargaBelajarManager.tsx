@@ -1269,7 +1269,7 @@ export default function WargaBelajarManager() {
                     <div className="flex flex-col gap-0.5">
                       <label className="text-xs font-black text-slate-500 uppercase tracking-wide">ROMBEL</label>
                       <select
-                        value={formData.kelas || ""}
+                        value={rombels.find((r) => r.nama.trim().toUpperCase() === (formData.kelas || "").trim().toUpperCase())?.nama ?? formData.kelas ?? ""}
                         onChange={(e) => {
                           const selectedRombel = e.target.value;
                           const derived = deriveProgramFromKelas(selectedRombel);

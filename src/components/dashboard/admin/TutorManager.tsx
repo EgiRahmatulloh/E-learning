@@ -1004,7 +1004,7 @@ const deriveProgramFromKelas = (kelasName?: string | null): string => {
                       <label className="text-xs font-black text-slate-500 uppercase tracking-wide">KELAS (WALI KELAS)</label>
                       <select
                         disabled={!isEditing}
-                        value={formData.kelas || ""}
+                        value={rombels.find((r) => r.nama.trim().toUpperCase() === (formData.kelas || "").trim().toUpperCase())?.nama ?? formData.kelas ?? ""}
                         onChange={(e) => {
                           const selectedRombel = e.target.value;
                           const derived = deriveProgramFromKelas(selectedRombel);
