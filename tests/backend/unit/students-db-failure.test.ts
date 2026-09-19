@@ -64,6 +64,7 @@ describe("students db-failure catch branches", () => {
       expect((await request("/api/students/1", json({ nama: "Student" }, "PUT"))).status).toBe(500);
       expect((await request("/api/students/1", { method: "DELETE" })).status).toBe(500);
       expect((await request("/api/students/import", json([{ nama: "Student" }]))).status).toBe(500);
+      expect((await request("/api/students/import/update", json([{ nama: "Student", nik: "NIK-1" }]))).status).toBe(500);
     } finally {
       console.error = originalError;
     }

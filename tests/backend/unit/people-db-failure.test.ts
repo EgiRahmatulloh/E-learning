@@ -94,6 +94,7 @@ describe("people db-failure catch branches", () => {
     ).toBe(500);
     expect((await authed(managersHandlers, "/api/managers/1", { method: "DELETE" })).status).toBe(500);
     expect((await authed(managersHandlers, "/api/managers/import", json([{ nama: "x" }]))).status).toBe(500);
+    expect((await authed(managersHandlers, "/api/managers/import/update", json([{ nama: "x", nik: "n" }]))).status).toBe(500);
   });
 
   test("tutors: GET/POST/PUT/DELETE/import → 500", async () => {
@@ -105,6 +106,7 @@ describe("people db-failure catch branches", () => {
     ).toBe(500);
     expect((await authed(tutorsHandlers, "/api/tutors/1", { method: "DELETE" })).status).toBe(500);
     expect((await authed(tutorsHandlers, "/api/tutors/import", json([{ nama: "x" }]))).status).toBe(500);
+    expect((await authed(tutorsHandlers, "/api/tutors/import/update", json([{ nama: "x", nik: "n" }]))).status).toBe(500);
   });
 
   test("rombels: semua route → 500", async () => {

@@ -322,8 +322,8 @@ describe("students", () => {
         },
         { nama: `Import Custom ${stamp}`, nisn: `IMP-CUSTOM-${stamp}`, password: "lower-pass", kelas: "PAKET B 8" },
         { nama: `Import Default ${stamp}`, nisn: `IMP-DEFAULT-${stamp}`, kelas: "PAKET C 10" },
-        { nama: `Existing Duplicate ${stamp}`, nisn: existing.nisn },
-        { nama: `File Duplicate ${stamp}`, nisn: `IMP-FULL-NISN-${stamp}` },
+        { nama: `Existing Duplicate ${stamp}`, nik: existing.nik },
+        { nama: `File Duplicate ${stamp}`, nik: `IMP-FULL-NIK-${stamp}` },
       ],
     });
     expect(first.response.status).toBe(200);
@@ -349,12 +349,65 @@ describe("students", () => {
     const chunks = await api<any>("/api/students/import", {
       method: "POST",
       token,
-      json: Array.from({ length: 101 }, (_, index) => ({ nama: `${chunkPrefix}-${index}`, nisn: `${chunkPrefix}-N-${index}` })),
+      json: Array.from({ length: 101 }, (_, index) => ({ nama: `${chunkPrefix}-${index}`, nik: `${chunkPrefix}-N-${index}` })),
     });
     expect(chunks.response.status).toBe(200);
     expect(chunks.data).toMatchObject({ imported: 101, skipped: 0 });
     expect(chunks.data.message).not.toContain("duplikat");
     expect(await db.select().from(models.students).where(like(models.students.nama, `${chunkPrefix}-%`)).all()).toHaveLength(101);
+  });
+
+  test("import/update massal berdasarkan NIK (popup duplikat)", async () => {
+    expect((await api("/api/students/import/update", { method: "POST", json: [{ nama: "x", nik: "n" }] })).response.status).toBe(401);
+    expect((await api("/api/students/import/update", { method: "POST", token, json: [] })).response.status).toBe(400);
+    expect((await api("/api/students/import/update", { method: "POST", token, json: [{ nama: "x" }] })).response.status).toBe(422);
+    expect((await api("/api/students/import/update", { method: "POST", token, json: { nama: "x" } })).response.status).toBe(422);
+
+    const stamp = Date.now();
+    const nikA = `UPD-S-A-${stamp}`;
+    const nikB = `UPD-S-B-${stamp}`;
+    await api("/api/students/import", {
+      method: "POST", token,
+      json: [
+        { nama: `Old A ${stamp}`, nik: nikA, kelas: "PAKET C 10", alamat: "Lama" },
+        { nama: `Old B ${stamp}`, nik: nikB, kelas: "PAKET B 7" },
+      ],
+    });
+
+    const dupe = await api<any>("/api/students/import", {
+      method: "POST", token, json: [{ nama: `New A ${stamp}`, nik: nikA }],
+    });
+    expect(dupe.data.duplicates).toHaveLength(1);
+    expect(dupe.data.duplicates[0]).toMatchObject({ nik: nikA });
+
+    const upd = await api<any>("/api/students/import/update", {
+      method: "POST", token,
+      json: [
+        { nama: `New A ${stamp}`, nik: nikA, program: "paket c", kelas: "PAKET C 11", alamat: "Baru", password: "baru123" },
+        { nama: `New A Final ${stamp}`, nik: nikA, program: "paket c", kelas: "PAKET C 11", alamat: "Final", password: "baru123" },
+        { nama: `New B ${stamp}`, nik: nikB, kelas: "PAKET B 8", Password: "alias123" },
+        { nama: "Ghost", nik: `UPD-S-GHOST-${stamp}`, kelas: "PAKET C 10" },
+      ],
+    });
+    expect(upd.response.status).toBe(200);
+    expect(upd.data).toMatchObject({ updated: 2, notFound: 1 });
+    expect(upd.data.message).toContain("tidak ditemukan");
+
+    const rowA = await db.select().from(models.students).where(eq(models.students.nik, nikA)).get();
+    expect(rowA).toMatchObject({ nama: `New A Final ${stamp}`, program: "PAKET C", kelas: "PAKET C 11", alamat: "Final" });
+    expect(await Bun.password.verify("baru123", rowA!.password)).toBe(true);
+    const rowB = await db.select().from(models.students).where(eq(models.students.nik, nikB)).get();
+    expect(rowB!.program).toBe("PAKET B");
+    expect(await Bun.password.verify("alias123", rowB!.password)).toBe(true);
+
+    const upd2 = await api<any>("/api/students/import/update", {
+      method: "POST", token, json: [{ nama: `New A2 ${stamp}`, nik: nikA, kelas: "PAKET C 12" }],
+    });
+    expect(upd2.data).toMatchObject({ updated: 1, notFound: 0 });
+    expect(upd2.data.message).not.toContain("tidak ditemukan");
+    const rowA2 = await db.select().from(models.students).where(eq(models.students.nik, nikA)).get();
+    expect(rowA2!.nama).toBe(`New A2 ${stamp}`);
+    expect(await Bun.password.verify("baru123", rowA2!.password)).toBe(true);
   });
 
   test("bulk promote covers skips, sections, target reuse/create, duplicates, and old-rombel cleanup", async () => {

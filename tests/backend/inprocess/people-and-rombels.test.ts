@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, test } from "bun:test";
-import { api, login } from "../helpers/in-process-app";
+import { api, db, login } from "../helpers/in-process-app";
+import { eq } from "drizzle-orm";
 import {
   assignStudent,
   createManager,
@@ -368,21 +369,22 @@ describe("people and rombels", () => {
       (await api("/api/managers/import", { method: "POST", token: adminToken, json: [] })).response.status,
     ).toBe(400);
     const prefix = `MGR-${Date.now()}`;
+    const nikA = `${prefix}-NIK-A`;
     const ok = await api<any>("/api/managers/import", {
       method: "POST",
       token: adminToken,
       json: [
-        { nama: `${prefix}-A` },
-        { nama: `${prefix}-B`, email: `${prefix}@t.l`, Password: "LegacyPass123!" },
+        { nama: `${prefix}-A`, nik: nikA },
+        { nama: `${prefix}-B`, nik: `${prefix}-NIK-B`, email: `${prefix}@t.l`, Password: "LegacyPass123!" },
       ],
     });
     expect(ok.response.status).toBe(200);
     expect(ok.data.imported).toBe(2);
-    // Import ulang nama sama (tanpa NIK/email) → masuk lagi (dedup hanya NIK/email)
+    // Import ulang NIK sama → ditolak (dedup hanya NIK)
     const dupe = await api<any>("/api/managers/import", {
       method: "POST",
       token: adminToken,
-      json: [{ nama: `${prefix}-A`, email: `${prefix}@t.l` }],
+      json: [{ nama: `${prefix}-A`, nik: nikA }],
     });
     expect(dupe.response.status).toBe(400);
     expect(dupe.data.message).toContain("duplikat");
@@ -390,6 +392,92 @@ describe("people and rombels", () => {
     const list = await api<any>("/api/managers", { token: adminToken });
     for (const row of list.data.data.filter((m: any) => m.nama.startsWith(prefix))) {
       await api(`/api/managers/${row.id}`, { method: "DELETE", token: adminToken });
+    }
+  });
+
+  test("managers import/update massal berdasarkan NIK (popup duplikat)", async () => {
+    expect((await api("/api/managers/import/update", { method: "POST", json: [{ nama: "x", nik: "n" }] })).response.status).toBe(401);
+    expect((await api("/api/managers/import/update", { method: "POST", token: adminToken, json: [] })).response.status).toBe(400);
+    expect((await api("/api/managers/import/update", { method: "POST", token: adminToken, json: [{ nama: "x" }] })).response.status).toBe(422);
+
+    const stamp = Date.now();
+    const nikA = `UPD-M-A-${stamp}`;
+    const nikB = `UPD-M-B-${stamp}`;
+    await api("/api/managers/import", { method: "POST", token: adminToken, json: [{ nama: `M Old A ${stamp}`, nik: nikA }, { nama: `M Old B ${stamp}`, nik: nikB }] });
+
+    const dupe = await api<any>("/api/managers/import", { method: "POST", token: adminToken, json: [{ nama: `M New ${stamp}`, nik: nikA }] });
+    expect(dupe.data.duplicates).toHaveLength(1);
+
+    const upd = await api<any>("/api/managers/import/update", {
+      method: "POST", token: adminToken,
+      json: [
+        { nama: `M New A ${stamp}`, nik: nikA, jabatan: "Ketua", password: "mpw123" },
+        { nama: `M New A Final ${stamp}`, nik: nikA, jabatan: "Ketua", password: "mpw123" },
+        { nama: `M New B ${stamp}`, nik: nikB, Password: "malias123" },
+        { nama: "Ghost", nik: `UPD-M-GHOST-${stamp}` },
+      ],
+    });
+    expect(upd.data).toMatchObject({ updated: 2, notFound: 1 });
+
+    const { managers } = await import("../../../src/server/models");
+    const rowA = await db.select().from(managers).where(eq(managers.nik, nikA)).get();
+    expect(rowA).toMatchObject({ nama: `M New A Final ${stamp}`, jabatan: "Ketua" });
+    expect(await Bun.password.verify("mpw123", rowA!.password)).toBe(true);
+
+    const upd2 = await api<any>("/api/managers/import/update", {
+      method: "POST", token: adminToken, json: [{ nama: `M A2 ${stamp}`, nik: nikA }],
+    });
+    expect(upd2.data).toMatchObject({ updated: 1, notFound: 0 });
+    const rowA2 = await db.select().from(managers).where(eq(managers.nik, nikA)).get();
+    expect(await Bun.password.verify("mpw123", rowA2!.password)).toBe(true);
+
+    const list = await api<any>("/api/managers", { token: adminToken });
+    for (const row of list.data.data.filter((m: any) => typeof m.nama === "string" && m.nama.includes(String(stamp)))) {
+      await api(`/api/managers/${row.id}`, { method: "DELETE", token: adminToken });
+    }
+  });
+
+  test("tutors import/update massal berdasarkan NIK (popup duplikat)", async () => {
+    expect((await api("/api/tutors/import/update", { method: "POST", json: [{ nama: "x", nik: "n" }] })).response.status).toBe(401);
+    expect((await api("/api/tutors/import/update", { method: "POST", token: adminToken, json: [] })).response.status).toBe(400);
+    expect((await api("/api/tutors/import/update", { method: "POST", token: adminToken, json: [{ nama: "x" }] })).response.status).toBe(422);
+
+    const stamp = Date.now();
+    const nikA = `UPD-T-A-${stamp}`;
+    const nikB = `UPD-T-B-${stamp}`;
+    await api("/api/tutors/import", { method: "POST", token: adminToken, json: [{ nama: `T Old A ${stamp}`, nik: nikA }, { nama: `T Old B ${stamp}`, nik: nikB }] });
+
+    const dupe = await api<any>("/api/tutors/import", { method: "POST", token: adminToken, json: [{ nama: `T New ${stamp}`, nik: nikA }] });
+    expect(dupe.data.duplicates).toHaveLength(1);
+
+    const upd = await api<any>("/api/tutors/import/update", {
+      method: "POST", token: adminToken,
+      json: [
+        { nama: `T New A ${stamp}`, nik: nikA, email: `t-new-${stamp}@t.l`, password: "tpw123" },
+        { nama: `T New A Final ${stamp}`, nik: nikA, email: `t-new-${stamp}@t.l`, password: "tpw123" },
+        { nama: `T New B ${stamp}`, nik: nikB, Password: "talias123" },
+        { nama: "Ghost", nik: `UPD-T-GHOST-${stamp}` },
+      ],
+    });
+    expect(upd.data).toMatchObject({ updated: 2, notFound: 1 });
+
+    const { tutors } = await import("../../../src/server/models");
+    const rowA = await db.select().from(tutors).where(eq(tutors.nik, nikA)).get();
+    expect(rowA).toMatchObject({ nama: `T New A Final ${stamp}`, email: `t-new-${stamp}@t.l` });
+    expect(await Bun.password.verify("tpw123", rowA!.password)).toBe(true);
+
+    const upd2 = await api<any>("/api/tutors/import/update", {
+      method: "POST", token: adminToken, json: [{ nama: `T A2 ${stamp}`, nik: nikA }],
+    });
+    expect(upd2.data).toMatchObject({ updated: 1, notFound: 0 });
+    const rowA2 = await db.select().from(tutors).where(eq(tutors.nik, nikA)).get();
+    expect(await Bun.password.verify("tpw123", rowA2!.password)).toBe(true);
+
+    for (const row of await db.select().from(tutors).where(eq(tutors.nik, nikA)).all()) {
+      await db.delete(tutors).where(eq(tutors.id, row.id)).run();
+    }
+    for (const row of await db.select().from(tutors).where(eq(tutors.nik, nikB)).all()) {
+      await db.delete(tutors).where(eq(tutors.id, row.id)).run();
     }
   });
 
@@ -458,24 +546,24 @@ describe("people and rombels", () => {
     });
     expect([400, 422]).toContain(nonArray.response.status);
 
-    // Semua duplikat → 400 baris 416-417
-    const email = `dupe-${Date.now()}@test.local`;
+    // Semua duplikat NIK → 400 (dedup hanya berdasarkan NIK)
+    const nik = `DUPE-NIK-${Date.now()}`;
     await api("/api/tutors/import", {
       method: "POST",
       token: adminToken,
-      json: [{ nama: "Dupe", email }],
+      json: [{ nama: "Dupe", nik, email: `dupe-${Date.now()}-a@test.local` }],
     });
     const allDupe = await api<any>("/api/tutors/import", {
       method: "POST",
       token: adminToken,
-      json: [{ nama: "Dupe2", email }],
+      json: [{ nama: "Dupe2", nik, email: `dupe-${Date.now()}-b@test.local` }],
     });
     expect(allDupe.response.status).toBe(400);
     expect(allDupe.data.message).toContain("duplikat");
     const { db } = await import("../helpers/in-process-app");
     const { tutors } = await import("../../../src/server/models");
     const { eq } = await import("drizzle-orm");
-    const created = await db.select().from(tutors).where(eq(tutors.email, email)).get();
+    const created = await db.select().from(tutors).where(eq(tutors.nik, nik)).get();
     if (created) await db.delete(tutors).where(eq(tutors.id, created.id)).run();
   });
 

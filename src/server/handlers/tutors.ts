@@ -3,7 +3,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysia/jwt";
 import { db } from "../config/db";
 import { tutors } from "../models";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { verifyAdmin, verifyUser } from "../middleware/auth";
 import { finalJwtSecret } from "../config/jwt";
 import { cleanupReplacedFiles, cleanupRowFiles } from "../services/storage";
@@ -389,32 +389,36 @@ export const tutorsHandlers = new Elysia()
           return { success: false, message: "Tidak ada data valid untuk diimpor" };
         }
 
-        // Dedup: skip baris yang NIK/email-nya sudah ada di DB atau duplikat di file
+        // Dedup: skip baris yang NIK-nya sudah ada di DB atau duplikat di file
+        // duplicates dikembalikan ke frontend untuk popup pilih update massal.
         const existingTutors = await db
-          .select({ nik: tutors.nik, email: tutors.email })
+          .select({ nik: tutors.nik, nama: tutors.nama })
           .from(tutors)
           .all();
-        const existingNik = new Set(existingTutors.map((t) => t.nik).filter(Boolean));
-        const existingEmail = new Set(existingTutors.map((t) => t.email).filter(Boolean));
+        const existingMap = new Map(
+          existingTutors.filter((t) => t.nik).map((t) => [t.nik as string, t.nama as string])
+        );
         const seenNik = new Set<string>();
-        const seenEmail = new Set<string>();
+        const dupeMap = new Map<string, { nik: string; namaExisting: string; namaNew: string }>();
         let skippedDuplicate = 0;
         const dedupedItems = validItems.filter((item) => {
           const nik = typeof item.nik === "string" ? item.nik.trim() : "";
-          const email = typeof item.email === "string" ? item.email.trim() : "";
-          if ((nik && (existingNik.has(nik) || seenNik.has(nik))) ||
-              (email && (existingEmail.has(email) || seenEmail.has(email)))) {
+          const namaNew = typeof item.nama === "string" ? item.nama.trim() : "";
+          if (nik && (existingMap.has(nik) || seenNik.has(nik))) {
             skippedDuplicate++;
+            if (existingMap.has(nik) && !dupeMap.has(nik)) {
+              dupeMap.set(nik, { nik, namaExisting: existingMap.get(nik) || "", namaNew });
+            }
             return false;
           }
           if (nik) seenNik.add(nik);
-          if (email) seenEmail.add(email);
           return true;
         });
+        const duplicates = Array.from(dupeMap.values());
 
         if (dedupedItems.length === 0) {
           set.status = 400;
-          return { success: false, message: `Semua data duplikat (${skippedDuplicate} baris dilewati berdasarkan NIK/email)` };
+          return { success: false, message: `Semua data duplikat (${skippedDuplicate} baris dilewati berdasarkan NIK)`, duplicates };
         }
 
         const defaultPassword = await Bun.password.hash("password123");
@@ -474,6 +478,7 @@ export const tutorsHandlers = new Elysia()
             : `Berhasil mengimpor ${insertValues.length} data tutor`,
           imported: insertValues.length,
           skipped: skippedDuplicate,
+          duplicates,
         };
       } catch (err) {
         console.error("Gagal mengimpor data tutor:", err);
@@ -494,6 +499,145 @@ export const tutorsHandlers = new Elysia()
           pendidikan: t.Optional(t.String()),
           email: t.Optional(t.String()),
           nik: t.Optional(t.String()),
+          alamat: t.Optional(t.String()),
+          rt: t.Optional(t.String()),
+          rw: t.Optional(t.String()),
+          desa: t.Optional(t.String()),
+          kecamatan: t.Optional(t.String()),
+          kabupaten: t.Optional(t.String()),
+          provinsi: t.Optional(t.String()),
+          password: t.Optional(t.String()),
+          Password: t.Optional(t.String()),
+          foto: t.Optional(t.String()),
+          tanggalMulaiTugas: t.Optional(t.String()),
+          nomorSkPengangkatan: t.Optional(t.String()),
+          lembagaPengangkat: t.Optional(t.String()),
+          nomorSkPenugasan: t.Optional(t.String()),
+          lembagaPenugas: t.Optional(t.String()),
+        })
+      ),
+    }
+  )
+  // Update massal tutor via Excel berdasarkan NIK (dipilih via popup duplikat)
+  .post(
+    "/api/tutors/import/update",
+    async ({ body, headers, jwt, set }) => {
+      const authError = await verifyAdmin(headers, jwt, set);
+      if (authError) return authError;
+
+      const list = body as any[];
+      try {
+        const validItems = (Array.isArray(list) ? list : []).filter(
+          (item) =>
+            item &&
+            typeof item === "object" &&
+            typeof item.nama === "string" &&
+            item.nama.trim().length > 0 &&
+            typeof item.nik === "string" &&
+            item.nik.trim().length > 0
+        );
+
+        if (validItems.length === 0) {
+          set.status = 400;
+          return { success: false, message: "Tidak ada data NIK valid untuk diupdate" };
+        }
+
+        const byNik = new Map<string, any>();
+        for (const item of validItems) {
+          byNik.set(item.nik.trim(), item);
+        }
+        const niks = Array.from(byNik.keys());
+        const existingRows = await db
+          .select({ nik: tutors.nik })
+          .from(tutors)
+          .where(inArray(tutors.nik, niks))
+          .all();
+        const existingSet = new Set(existingRows.map((r) => r.nik).filter(Boolean));
+
+        let updated = 0;
+        let notFound = 0;
+        const now = new Date().toISOString();
+
+        db.transaction((tx) => {
+          for (const [nik, item] of byNik) {
+            if (!existingSet.has(nik)) {
+              notFound++;
+              continue;
+            }
+            tx.update(tutors)
+              .set({
+                nama: item.nama,
+                tutorMapel: typeof item.tutorMapel === "string" ? item.tutorMapel : "",
+                program: typeof item.program === "string" ? item.program : "",
+                nip: typeof item.nip === "string" ? item.nip : "",
+                tempatTglLahir: typeof item.tempatTglLahir === "string" ? item.tempatTglLahir : "",
+                jenisKelamin: typeof item.jenisKelamin === "string" ? item.jenisKelamin : "",
+                agama: typeof item.agama === "string" ? item.agama : "",
+                pendidikan: typeof item.pendidikan === "string" ? item.pendidikan : "",
+                email: typeof item.email === "string" ? item.email : "",
+                alamat: typeof item.alamat === "string" ? item.alamat : "",
+                rt: typeof item.rt === "string" ? item.rt : "",
+                rw: typeof item.rw === "string" ? item.rw : "",
+                desa: typeof item.desa === "string" ? item.desa : "",
+                kecamatan: typeof item.kecamatan === "string" ? item.kecamatan : "",
+                kabupaten: typeof item.kabupaten === "string" ? item.kabupaten : "",
+                provinsi: typeof item.provinsi === "string" ? item.provinsi : "",
+                foto: typeof item.foto === "string" ? item.foto : "",
+                tanggalMulaiTugas: typeof item.tanggalMulaiTugas === "string" ? item.tanggalMulaiTugas : "",
+                nomorSkPengangkatan: typeof item.nomorSkPengangkatan === "string" ? item.nomorSkPengangkatan : "",
+                lembagaPengangkat: typeof item.lembagaPengangkat === "string" ? item.lembagaPengangkat : "",
+                nomorSkPenugasan: typeof item.nomorSkPenugasan === "string" ? item.nomorSkPenugasan : "",
+                lembagaPenugas: typeof item.lembagaPenugas === "string" ? item.lembagaPenugas : "",
+                updatedAt: now,
+              })
+              .where(eq(tutors.nik, nik))
+              .run();
+            updated++;
+          }
+        });
+
+        for (const [nik, item] of byNik) {
+          if (!existingSet.has(nik)) continue;
+          const rawPass =
+            typeof item.password === "string" && item.password.trim()
+              ? item.password.trim()
+              : typeof item.Password === "string" && item.Password.trim()
+                ? item.Password.trim()
+                : null;
+          if (rawPass) {
+            const hashed = await Bun.password.hash(rawPass);
+            await db.update(tutors).set({ password: hashed, updatedAt: now }).where(eq(tutors.nik, nik)).run();
+          }
+        }
+
+        return {
+          success: true,
+          message:
+            notFound > 0
+              ? `Berhasil mengupdate ${updated} data tutor (${notFound} NIK tidak ditemukan)`
+              : `Berhasil mengupdate ${updated} data tutor`,
+          updated,
+          notFound,
+        };
+      } catch (err) {
+        console.error("Gagal mengupdate massal tutor:", err);
+        set.status = 500;
+        return { success: false, message: "Gagal mengupdate massal tutor" };
+      }
+    },
+    {
+      body: t.Array(
+        t.Object({
+          nama: t.String({ minLength: 1 }),
+          nik: t.String({ minLength: 1 }),
+          tutorMapel: t.Optional(t.String()),
+          program: t.Optional(t.String()),
+          nip: t.Optional(t.String()),
+          tempatTglLahir: t.Optional(t.String()),
+          jenisKelamin: t.Optional(t.String()),
+          agama: t.Optional(t.String()),
+          pendidikan: t.Optional(t.String()),
+          email: t.Optional(t.String()),
           alamat: t.Optional(t.String()),
           rt: t.Optional(t.String()),
           rw: t.Optional(t.String()),

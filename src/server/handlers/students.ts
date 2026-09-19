@@ -753,32 +753,36 @@ export const studentsHandlers = new Elysia()
           return { success: false, message: "Tidak ada data valid untuk diimpor" };
         }
 
-        // Dedup: skip baris yang NISN/NIK-nya sudah ada di DB atau duplikat di file
+        // Dedup: skip baris yang NIK-nya sudah ada di DB atau duplikat di file
+        // duplicates dikembalikan ke frontend untuk popup pilih update massal.
         const existingStudents = await db
-          .select({ nisn: students.nisn, nik: students.nik })
+          .select({ nik: students.nik, nama: students.nama })
           .from(students)
           .all();
-        const existingNisn = new Set(existingStudents.map((s) => s.nisn).filter(Boolean));
-        const existingNik = new Set(existingStudents.map((s) => s.nik).filter(Boolean));
-        const seenNisn = new Set<string>();
+        const existingMap = new Map(
+          existingStudents.filter((s) => s.nik).map((s) => [s.nik as string, s.nama as string])
+        );
         const seenNik = new Set<string>();
+        const dupeMap = new Map<string, { nik: string; namaExisting: string; namaNew: string }>();
         let skippedDuplicate = 0;
         const dedupedItems = validItems.filter((item) => {
-          const nisn = typeof item.nisn === "string" ? item.nisn.trim() : "";
           const nik = typeof item.nik === "string" ? item.nik.trim() : "";
-          if ((nisn && (existingNisn.has(nisn) || seenNisn.has(nisn))) ||
-              (nik && (existingNik.has(nik) || seenNik.has(nik)))) {
+          const namaNew = typeof item.nama === "string" ? item.nama.trim() : "";
+          if (nik && (existingMap.has(nik) || seenNik.has(nik))) {
             skippedDuplicate++;
+            if (existingMap.has(nik) && !dupeMap.has(nik)) {
+              dupeMap.set(nik, { nik, namaExisting: existingMap.get(nik) || "", namaNew });
+            }
             return false;
           }
-          if (nisn) seenNisn.add(nisn);
           if (nik) seenNik.add(nik);
           return true;
         });
+        const duplicates = Array.from(dupeMap.values());
 
         if (dedupedItems.length === 0) {
           set.status = 400;
-          return { success: false, message: `Semua data duplikat (${skippedDuplicate} baris dilewati berdasarkan NISN/NIK)` };
+          return { success: false, message: `Semua data duplikat (${skippedDuplicate} baris dilewati berdasarkan NIK)`, duplicates };
         }
 
         const defaultPassword = await Bun.password.hash("password123");
@@ -836,6 +840,7 @@ export const studentsHandlers = new Elysia()
             : `Berhasil mengimpor ${insertValues.length} data warga belajar`,
           imported: insertValues.length,
           skipped: skippedDuplicate,
+          duplicates,
         };
       } catch (err) {
         console.error("Gagal mengimpor data warga belajar:", err);
@@ -848,6 +853,150 @@ export const studentsHandlers = new Elysia()
         t.Object({
           nama: t.String({ minLength: 1 }),
           nik: t.Optional(t.String()),
+          program: t.Optional(t.String()),
+          kelas: t.Optional(t.String()),
+          nisn: t.Optional(t.String()),
+          nis: t.Optional(t.String()),
+          tempatTglLahir: t.Optional(t.String()),
+          titikLayanan: t.Optional(t.String()),
+          jenisKelamin: t.Optional(t.String()),
+          noHp: t.Optional(t.String()),
+          agama: t.Optional(t.String()),
+          namaAyah: t.Optional(t.String()),
+          email: t.Optional(t.String()),
+          namaIbu: t.Optional(t.String()),
+          alamat: t.Optional(t.String()),
+          rt: t.Optional(t.String()),
+          rw: t.Optional(t.String()),
+          desa: t.Optional(t.String()),
+          kecamatan: t.Optional(t.String()),
+          kabupaten: t.Optional(t.String()),
+          provinsi: t.Optional(t.String()),
+          sekolahAsal: t.Optional(t.String()),
+          password: t.Optional(t.String()),
+          Password: t.Optional(t.String()),
+          foto: t.Optional(t.String()),
+          status: t.Optional(t.String()),
+        })
+      ),
+    }
+  )
+  // Update massal warga belajar via Excel berdasarkan NIK (dipilih via popup duplikat)
+  .post(
+    "/api/students/import/update",
+    async ({ body, headers, jwt, set }) => {
+      const authError = await verifyAdmin(headers, jwt, set);
+      if (authError) return authError;
+
+      const list = body as any[];
+      try {
+        const validItems = (Array.isArray(list) ? list : []).filter(
+          (item) =>
+            item &&
+            typeof item === "object" &&
+            typeof item.nama === "string" &&
+            item.nama.trim().length > 0 &&
+            typeof item.nik === "string" &&
+            item.nik.trim().length > 0
+        );
+
+        if (validItems.length === 0) {
+          set.status = 400;
+          return { success: false, message: "Tidak ada data NIK valid untuk diupdate" };
+        }
+
+        // Dedup pilihan frontend: pakai baris terakhir per NIK
+        const byNik = new Map<string, any>();
+        for (const item of validItems) {
+          byNik.set(item.nik.trim(), item);
+        }
+        const niks = Array.from(byNik.keys());
+        const existingRows = await db
+          .select({ nik: students.nik })
+          .from(students)
+          .where(inArray(students.nik, niks))
+          .all();
+        const existingSet = new Set(existingRows.map((r) => r.nik).filter(Boolean));
+
+        let updated = 0;
+        let notFound = 0;
+        const now = new Date().toISOString();
+
+        db.transaction((tx) => {
+          for (const [nik, item] of byNik) {
+            if (!existingSet.has(nik)) {
+              notFound++;
+              continue;
+            }
+            const patch: Record<string, unknown> = {
+              nama: item.nama,
+              program:
+                typeof item.program === "string" && item.program.trim()
+                  ? item.program.trim().toUpperCase()
+                  : deriveProgramFromKelas(typeof item.kelas === "string" ? item.kelas : ""),
+              kelas: typeof item.kelas === "string" ? item.kelas.trim() : "",
+              nisn: typeof item.nisn === "string" ? item.nisn : "",
+              nis: typeof item.nis === "string" ? item.nis : "",
+              tempatTglLahir: typeof item.tempatTglLahir === "string" ? item.tempatTglLahir : "",
+              titikLayanan: typeof item.titikLayanan === "string" ? item.titikLayanan : "",
+              jenisKelamin: typeof item.jenisKelamin === "string" ? item.jenisKelamin : "",
+              noHp: typeof item.noHp === "string" ? item.noHp : "",
+              agama: typeof item.agama === "string" ? item.agama : "",
+              namaAyah: typeof item.namaAyah === "string" ? item.namaAyah : "",
+              email: typeof item.email === "string" ? item.email : "",
+              namaIbu: typeof item.namaIbu === "string" ? item.namaIbu : "",
+              alamat: typeof item.alamat === "string" ? item.alamat : "",
+              rt: typeof item.rt === "string" ? item.rt : "",
+              rw: typeof item.rw === "string" ? item.rw : "",
+              desa: typeof item.desa === "string" ? item.desa : "",
+              kecamatan: typeof item.kecamatan === "string" ? item.kecamatan : "",
+              kabupaten: typeof item.kabupaten === "string" ? item.kabupaten : "",
+              provinsi: typeof item.provinsi === "string" ? item.provinsi : "",
+              sekolahAsal: typeof item.sekolahAsal === "string" ? item.sekolahAsal : "",
+              foto: typeof item.foto === "string" ? item.foto : "",
+              status: typeof item.status === "string" ? item.status : "AKTIF",
+              updatedAt: now,
+            };
+            tx.update(students).set(patch).where(eq(students.nik, nik)).run();
+            updated++;
+          }
+        });
+
+        // Password hanya ditimpa bila diisi di Excel (per NIK, di luar tx karena async hash)
+        for (const [nik, item] of byNik) {
+          if (!existingSet.has(nik)) continue;
+          const rawPass =
+            typeof item.password === "string" && item.password.trim()
+              ? item.password.trim()
+              : typeof item.Password === "string" && item.Password.trim()
+                ? item.Password.trim()
+                : null;
+          if (rawPass) {
+            const hashed = await Bun.password.hash(rawPass);
+            await db.update(students).set({ password: hashed, updatedAt: now }).where(eq(students.nik, nik)).run();
+          }
+        }
+
+        return {
+          success: true,
+          message:
+            notFound > 0
+              ? `Berhasil mengupdate ${updated} data warga belajar (${notFound} NIK tidak ditemukan)`
+              : `Berhasil mengupdate ${updated} data warga belajar`,
+          updated,
+          notFound,
+        };
+      } catch (err) {
+        console.error("Gagal mengupdate massal warga belajar:", err);
+        set.status = 500;
+        return { success: false, message: "Gagal mengupdate massal warga belajar" };
+      }
+    },
+    {
+      body: t.Array(
+        t.Object({
+          nama: t.String({ minLength: 1 }),
+          nik: t.String({ minLength: 1 }),
           program: t.Optional(t.String()),
           kelas: t.Optional(t.String()),
           nisn: t.Optional(t.String()),

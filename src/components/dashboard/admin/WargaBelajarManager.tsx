@@ -6,6 +6,7 @@ import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { commitUploads, discardUpload, discardUploads, uploadFile } from "@/lib/upload";
 import { toast } from "sonner";
 import BerkasUpload from "@/components/ui/BerkasUpload";
+import ImportDupeDialog, { type DupeRow } from "./ImportDupeDialog";
 
 import { extractLevel } from "@/lib/kelas-helper";
 
@@ -102,6 +103,12 @@ export default function WargaBelajarManager() {
 
   // Upload dialog state
   const [showUploadDialog, setShowUploadDialog] = useState(false);
+
+  // Duplikat NIK → popup pilih update massal
+  const [dupeList, setDupeList] = useState<DupeRow[]>([]);
+  const [showDupeDialog, setShowDupeDialog] = useState(false);
+  const [pendingImportData, setPendingImportData] = useState<any[]>([]);
+  const [dupeUpdating, setDupeUpdating] = useState(false);
 
   // Rombel filter
   const [rombels, setRombels] = useState<Rombel[]>([]);
@@ -322,17 +329,71 @@ export default function WargaBelajarManager() {
         body: JSON.stringify(importedData),
       });
       const resData = await res.json();
+      const dupes: DupeRow[] = Array.isArray(resData.duplicates) ? resData.duplicates : [];
       if (resData.success) {
         toast.success(resData.message || "Berhasil mengimpor data!");
         fetchStudents();
         setShowUploadDialog(false);
+        if (dupes.length > 0) {
+          setPendingImportData(importedData);
+          setDupeList(dupes);
+          setShowDupeDialog(true);
+        }
       } else {
-        toast.error(resData.message || "Gagal mengimpor data");
+        // Semua duplikat pun tetap tampilkan popup agar bisa dipilih untuk update
+        if (dupes.length > 0) {
+          setPendingImportData(importedData);
+          setDupeList(dupes);
+          setShowDupeDialog(true);
+          fetchStudents();
+          setShowUploadDialog(false);
+        } else {
+          toast.error(resData.message || "Gagal mengimpor data");
+        }
       }
     } catch (err) {
       toast.error("Kesalahan saat mengunggah file ke server.");
     }
     e.target.value = "";
+  };
+
+  const handleConfirmDupeUpdate = async (selectedNiks: string[]) => {
+    if (selectedNiks.length === 0) {
+      setShowDupeDialog(false);
+      return;
+    }
+    const set = new Set(selectedNiks);
+    const payload = pendingImportData.filter((d) => d.nik && set.has(String(d.nik).trim()));
+    if (payload.length === 0) {
+      toast.error("Tidak ada data yang dipilih.");
+      return;
+    }
+    try {
+      setDupeUpdating(true);
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/students/import/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      const resData = await res.json();
+      if (resData.success) {
+        toast.success(resData.message || `Berhasil mengupdate ${payload.length} data!`);
+        fetchStudents();
+        setShowDupeDialog(false);
+        setDupeList([]);
+        setPendingImportData([]);
+      } else {
+        toast.error(resData.message || "Gagal mengupdate data");
+      }
+    } catch {
+      toast.error("Kesalahan saat mengupdate data.");
+    } finally {
+      setDupeUpdating(false);
+    }
   };
 
   const openAddForm = () => {
@@ -1847,6 +1908,18 @@ export default function WargaBelajarManager() {
           </div>
         </div>
       )}
+
+      <ImportDupeDialog
+        open={showDupeDialog}
+        title="NIK sudah ada — pilih yang mau diupdate"
+        description="Data baru sudah masuk untuk NIK yang tidak duplikat. Centang NIK di bawah untuk menimpa data lama dengan data dari Excel (timpa semua field). Password hanya ditimpa bila diisi di Excel."
+        duplicates={dupeList}
+        loading={dupeUpdating}
+        onClose={() => {
+          setShowDupeDialog(false);
+        }}
+        onConfirm={handleConfirmDupeUpdate}
+      />
 
     </div>
   );
