@@ -28,7 +28,7 @@ export default function Footer() {
             <ul className="space-y-3 text-xs font-semibold text-slate-500">
               <li className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 text-[#ff6105] shrink-0 mt-0.5" />
-                <span className="leading-relaxed">Dusun Pangrumasan Rt. 004 Rw. 001 Desa Cintanagara, Kec. Jatinagara Kab. Ciamis</span>
+                <span className="leading-relaxed">Dusun Pangrumasan Rt. 001 Rw. 003 Desa Cintanagara, Kec. Jatinagara Kab. Ciamis</span>
               </li>
               <li className="flex items-start gap-2">
                 <Phone className="h-4 w-4 text-[#ff6105] shrink-0 mt-0.5" />
@@ -36,8 +36,8 @@ export default function Footer() {
               </li>
               <li className="flex items-start gap-2">
                 <Mail className="h-4 w-4 text-[#ff6105] shrink-0 mt-0.5" />
-                <a href="mailto:admin@pkbmmenujumakmur.sch.id" className="hover:text-white transition-colors break-all">
-                  admin@pkbmmenujumakmur.sch.id
+                <a href="mailto:pkbmmenujumakmur@gmail.com" className="hover:text-white transition-colors break-all">
+                  pkbmmenujumakmur@gmail.com
                 </a>
               </li>
             </ul>
